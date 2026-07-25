@@ -456,6 +456,30 @@ properties.Add( "break_limb", {
 		spine3:SetChecked(ent.organism.rleg > 0)
 		spine3:SetIsCheckable(true)
 		spine3.OnChecked = function(s, checked) self:BreakLimb(ent, 7) end
+
+		local larmup = submenu:AddOption("Left Upper Arm")
+		larmup:SetRadio(true)
+		larmup:SetChecked(ent.organism.larm > 0)
+		larmup:SetIsCheckable(true)
+		larmup.OnChecked = function(s, checked) self:BreakLimb(ent, 8) end
+
+		local rarmup = submenu:AddOption("Right Upper Arm")
+		rarmup:SetRadio(true)
+		rarmup:SetChecked(ent.organism.rarm > 0)
+		rarmup:SetIsCheckable(true)
+		rarmup.OnChecked = function(s, checked) self:BreakLimb(ent, 9) end
+
+		local llegup = submenu:AddOption("Left Upper Leg")
+		llegup:SetRadio(true)
+		llegup:SetChecked(ent.organism.lleg > 0)
+		llegup:SetIsCheckable(true)
+		llegup.OnChecked = function(s, checked) self:BreakLimb(ent, 10) end
+
+		local rlegup = submenu:AddOption("Right Upper Leg")
+		rlegup:SetRadio(true)
+		rlegup:SetChecked(ent.organism.rleg > 0)
+		rlegup:SetIsCheckable(true)
+		rlegup.OnChecked = function(s, checked) self:BreakLimb(ent, 11) end
 	end,
 
 	BreakLimb = function( self, ent, id )
@@ -476,19 +500,27 @@ properties.Add( "break_limb", {
 		if limb == 0 then
             hg.BreakNeck(ent)
         elseif limb == 1 then
-            hg.organism.input_list.larmup(ent.organism, 0, 1, dmgInfo)
+            hg.organism.input_list.larmdown(ent.organism, 0, 1, dmgInfo)
 		elseif limb == 2 then
-			hg.organism.input_list.rarmup(ent.organism, 0, 1, dmgInfo)
+			hg.organism.input_list.rarmdown(ent.organism, 0, 1, dmgInfo)
 		elseif limb == 3 then
-			hg.organism.input_list.llegup(ent.organism, 0, 1, dmgInfo)
+			hg.organism.input_list.llegdown(ent.organism, 0, 1, dmgInfo)
 		elseif limb == 4 then
-			hg.organism.input_list.rlegup(ent.organism, 0, 1, dmgInfo)
+			hg.organism.input_list.rlegdown(ent.organism, 0, 1, dmgInfo)
 		elseif limb == 5 then
 			hg.organism.input_list.spine1(ent.organism, 0, 1, dmgInfo)
 		elseif limb == 6 then
 			hg.organism.input_list.spine2(ent.organism, 0, 1, dmgInfo)
 		elseif limb == 7 then
 			hg.organism.input_list.spine3(ent.organism, 0, 1, dmgInfo)
+		elseif limb == 8 then
+			hg.organism.input_list.larmup(ent.organism, 0, 1, dmgInfo)
+		elseif limb == 9 then
+			hg.organism.input_list.rarmup(ent.organism, 0, 1, dmgInfo)
+		elseif limb == 10 then
+			hg.organism.input_list.llegup(ent.organism, 0, 1, dmgInfo)
+		elseif limb == 11 then
+			hg.organism.input_list.rlegup(ent.organism, 0, 1, dmgInfo)
 		end
 	end
 } )
@@ -545,6 +577,30 @@ properties.Add( "amputate_limb", {
 		rhand:SetChecked(ent.organism.rhandamputated)
 		rhand:SetIsCheckable(true)
 		rhand.OnChecked = function(s, checked) self:AmputateLimb(ent, 6) end
+
+		local larmup = submenu:AddOption("Left Upper Arm")
+		larmup:SetRadio(true)
+		larmup:SetChecked(ent.organism.larmupamputated)
+		larmup:SetIsCheckable(true)
+		larmup.OnChecked = function(s, checked) self:AmputateLimb(ent, 7) end
+
+		local rarmup = submenu:AddOption("Right Upper Arm")
+		rarmup:SetRadio(true)
+		rarmup:SetChecked(ent.organism.rarmupamputated)
+		rarmup:SetIsCheckable(true)
+		rarmup.OnChecked = function(s, checked) self:AmputateLimb(ent, 8) end
+
+		local llegup = submenu:AddOption("Left Upper Leg")
+		llegup:SetRadio(true)
+		llegup:SetChecked(ent.organism.llegupamputated)
+		llegup:SetIsCheckable(true)
+		llegup.OnChecked = function(s, checked) self:AmputateLimb(ent, 9) end
+
+		local rlegup = submenu:AddOption("Right Upper Leg")
+		rlegup:SetRadio(true)
+		rlegup:SetChecked(ent.organism.rlegupamputated)
+		rlegup:SetIsCheckable(true)
+		rlegup.OnChecked = function(s, checked) self:AmputateLimb(ent, 10) end
 	end,
 
 	AmputateLimb = function( self, ent, id )
@@ -578,6 +634,14 @@ properties.Add( "amputate_limb", {
 			hg.organism.AmputateLimb(ent.organism, "lhand")
 		elseif limb == 6 then
 			hg.organism.AmputateLimb(ent.organism, "rhand")
+		elseif limb == 7 then
+			hg.organism.AmputateLimb(ent.organism, "larmup")
+		elseif limb == 8 then
+			hg.organism.AmputateLimb(ent.organism, "rarmup")
+		elseif limb == 9 then
+			hg.organism.AmputateLimb(ent.organism, "llegup")
+		elseif limb == 10 then
+			hg.organism.AmputateLimb(ent.organism, "rlegup")
 		end
 	end
 } )

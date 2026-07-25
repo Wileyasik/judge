@@ -6,6 +6,7 @@ hook.Add("Think", "CAI_LightReport", function()
     if not IsValid(ply) or not ply:Alive() then return end
     local c = render.GetLightColor(ply:EyePos())
     local level = math.Clamp((c.x + c.y + c.z) / 3, 0, 1)
+    if net.Started then return end
     net.Start(CAI.Net.Light)
     net.WriteFloat(level)
     net.SendToServer()

@@ -16,7 +16,7 @@ SWEP.WorldModelReal = "models/weapons/c_ai_axmc.mdl"
 SWEP.FakePos = Vector(-9, 2.6, 6)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
-SWEP.AttachmentPos = Vector(-8.5, 0, 0)
+SWEP.AttachmentPos = Vector(-0, 0.1, 0)
 SWEP.AttachmentAng = Angle(0, 0, 0)
 SWEP.FakeBodyGroups = "011111111111"
 SWEP.CantFireFromCollision = true
@@ -38,8 +38,8 @@ SWEP.FakeVPShouldUseHand = false
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_ai_axmc.png")
 SWEP.IconOverride = "entities/arc9_eft_ai_axmc.png"
 
-SWEP.LocalMuzzlePos = Vector(40, -0.66, 3.8)
-SWEP.LocalMuzzleAng = Angle(1, -0.2, 0)
+SWEP.LocalMuzzlePos = Vector(38.5, -1.675, 3.15)
+SWEP.LocalMuzzleAng = Angle(0, 0, 0)
 SWEP.WeaponEyeAngles = Angle(-0.7, 0.1, 0)
 
 SWEP.CustomShell = "762x51"
@@ -67,11 +67,12 @@ SWEP.NumBullet = 1
 
 SWEP.availableAttachments = {
     barrel = {
-        [1] = {"supressor8", Vector(7.3, 0.1, 0), {}},
+        [1] = {"supressor11", Vector(0, 0, 0), {}},
+        ["mount"] = Vector(-1.4, 0.05, 0)
     },
     sight = {
 		["mountType"] = {"picatinny",},
-		["mount"] = {picatinny = Vector(-22, 1.8, 0)}
+		["mount"] = {picatinny = Vector(-29, 1.7, 0)}
 	}
 }
 
@@ -83,7 +84,7 @@ SWEP.AnimShootHandMul = 10
 SWEP.DeploySnd = {"homigrad/weapons/draw_hmg.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/hmg_holster.mp3", 55, 100, 110}
 SWEP.HoldType = "rpg"
-SWEP.ZoomPos = Vector(0, -1.7, 5)
+SWEP.ZoomPos = Vector(0, -1.6824, 4.7931)
 SWEP.RHandPos = Vector(0, 0, -1)
 SWEP.LHandPos = Vector(7, 0, -2)
 SWEP.Ergonomics = 0.9
@@ -125,7 +126,7 @@ local path = "weapons/darsu_eft/axmc/"
 
 SWEP.AnimsSounds = {
     ["ready0"] = {
-        [0.72] = function(self) self:EmitSound(path .. "aiax_bolt_out.ogg") end,
+        [0.5] = function(self) self:EmitSound(path .. "aiax_bolt_out.ogg") end,
         [1.21] = function(self) self:EmitSound(path .. "aiax_bolt_in.ogg") end,
     },
     ["draw"] = {
@@ -234,7 +235,7 @@ function SWEP:Reload(time)
         local animName = isEmpty and "reload_empty" or "reload"
         
         local animSpeed = 4
-        local reloadTime = isEmpty and 4.1 or 2.8
+        local reloadTime = isEmpty and 2.6 or 1.3
         
         self:SetNetVar("shootgunReload", CurTime() + reloadTime)
         self.reloadCoolDown = CurTime() + reloadTime

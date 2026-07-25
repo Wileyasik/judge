@@ -17,8 +17,8 @@ SWEP.Secondary.Automatic = false
 SWEP.Secondary.Ammo = "none"
 SWEP.HoldType = "normal"
 if CLIENT then
-	SWEP.WepSelectIcon = Material("vgui/wep_jack_hmcd_ied")
-	SWEP.IconOverride = "vgui/wep_jack_hmcd_ied"
+	SWEP.WepSelectIcon = Material("vgui/ied.png")
+	SWEP.IconOverride = "vgui/ied.png"
 	SWEP.BounceWeaponIcon = false
 end
 
@@ -30,8 +30,8 @@ SWEP.DrawCrosshair = false
 SWEP.Slot = 4
 SWEP.SlotPos = 1
 SWEP.WorkWithFake = true
-SWEP.offsetVec = Vector(3, -3, 0)
-SWEP.offsetAng = Angle(0, 0, 0)
+SWEP.offsetVec = Vector(2, -7.7, -2)
+SWEP.offsetAng = Angle(0, 50, 130)
 SWEP.ModelScale = 0.4
 
 SWEP.traceLen = 5
@@ -114,8 +114,8 @@ function SWEP:GetEyeTrace()
 	return hg.eyeTrace(self:GetOwner())
 end
 
-SWEP.BlastDis = 18
-SWEP.BlastDamage = 350
+SWEP.BlastDis = 20
+SWEP.BlastDamage = 600
 SWEP.CallStartDelay = 1
 SWEP.MaxDialTime = 10
 SWEP.MaxDialDistance = 3000
@@ -123,8 +123,8 @@ SWEP.CallSound = "rem_iedcall.mp3"
 SWEP.CallSoundLevel = 100
 SWEP.DisorientationRange = 15
 SWEP.FireEntForceBonus = 70
-SWEP.AttachedBombModel = "models/props_junk/cardboard_jox004a.mdl"
-SWEP.AttachedBombScale = 0.4
+SWEP.AttachedBombModel = "models/saraphines/insurgency explosives/ied/insurgency_ied.mdl"
+SWEP.AttachedBombScale = 0.8
 SWEP.ExplosionSounds = {
 	"explosions/explode3.wav",
 	"explosions/explode4.wav",
@@ -432,11 +432,11 @@ ExplodeTheItem = function(self,ent)
 			else
 				local effectdata = EffectData()
 				effectdata:SetOrigin(EntPos)
-				effectdata:SetScale(3)
+				effectdata:SetScale(5)
 				effectdata:SetNormal(-entAngles:Forward())
 				util.Effect("eff_jack_genericboom", effectdata)
 			end
-			hg.ExplosionEffect(EntPos, BlastDis / 0.2, 80)
+			hg.ExplosionEffect(EntPos, BlastDis / 0.12, 80)
 
 			if mat == MAT_METAL then
 				local Poof=EffectData()
@@ -592,9 +592,9 @@ function SWEP:SecondaryAttack(calledFrom)
 			local Tr = self:GetEyeTrace()
 
 			local bomb = ents.Create("prop_physics")
-			bomb:SetModel("models/props_junk/cardboard_jox004a.mdl")
+			bomb:SetModel("models/saraphines/insurgency explosives/ied/insurgency_ied.mdl")
 			bomb:SetPos(Tr.HitPos + Tr.HitNormal * 4)
-			bomb:SetModelScale(0.4)
+			bomb:SetModelScale(0.8)
 			bomb:Spawn()
 			bomb:Activate()
 
@@ -622,7 +622,7 @@ function SWEP:Initialize()
 	self:SetHold(self.HoldType)
 	self.Planted = false
 	self.HaveTheBomb = false
-	self.WorldModel = "models/props_junk/cardboard_jox004a.mdl"
+	self.WorldModel = "models/saraphines/insurgency explosives/ied/insurgency_ied.mdl"
 end
 
 if SERVER then

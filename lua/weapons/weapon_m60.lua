@@ -17,7 +17,7 @@ SWEP.Primary.Sound = {"homigrad/weapons/rifle/hmg2.wav", 75, 100, 110}
 SWEP.SupressedSound = {"homigrad/weapons/rifle/hmg2.wav", 75, 100, 110}
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/fnfal/handling/fnfal_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.11
-SWEP.ReloadTime = 7.9
+SWEP.ReloadTime = 6.4
 
 function SWEP:PostFireBullet(bullet)
 	local owner = self:GetOwner()
@@ -41,7 +41,7 @@ SWEP.WorldModelFake = "models/weapons/c_m60.mdl"
 SWEP.FakeAttachment = "1"
 SWEP.FakePos = Vector(-15, 2.32, 7.3)
 SWEP.FakeAng = Angle(0, 0, 0)
-SWEP.AttachmentPos = Vector(0, -1, -6.5)
+SWEP.AttachmentPos = Vector(3.8, 0.05, 0)
 SWEP.AttachmentAng = Angle(0, 0, 0)
 
 SWEP.FakeVPShouldUseHand = true
@@ -88,7 +88,7 @@ SWEP.GunCamAng = Angle(190, 0, -90)
 SWEP.FakeBodyGroups = "111141322121"
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_UpperArm"
-SWEP.ViewPunchDiv = 40
+SWEP.ViewPunchDiv = 45
 SWEP.NoIdleLoop = true
 SWEP.GetDebug = false
 
@@ -109,6 +109,8 @@ SWEP.ShockMultiplier = 2
 
 SWEP.CustomShell = "762x51"
 SWEP.CustomSecShell = "m60len"
+SWEP.EjectPos = Vector(6.25,15,-3)
+SWEP.EjectAng = Angle(0,0,0)
 
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_m60e4.png")
 SWEP.IconOverride = "entities/arc9_eft_m60e4.png"
@@ -124,7 +126,7 @@ for i = 1, 200 do
 	SWEP.Spray[i] = Angle(-0.05 - math.cos(i) * 0.04, math.cos(i * i) * 0.05, 0) * 2
 end
 
-SWEP.LocalMuzzlePos = Vector(30.382, -1.8, 6.1)
+SWEP.LocalMuzzlePos = Vector(26.5, -1.92, 3.7)
 SWEP.LocalMuzzleAng = Angle(0.15, 0, 0)
 SWEP.WeaponEyeAngles = Angle(0, 0, 0)
 
@@ -145,8 +147,10 @@ SWEP.RecoilMul = 0.3
 
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"supressor8", Vector(0, 0, 0), {}},
-		["mount"] = Vector(3, 0.9, 6.5),
+		[1] = {"supressor9", Vector(0, 0, 0), {}},
+		[2] = {"supressor16", Vector(0, 0, 0), {}},
+		[3] = {"supressor15", Vector(0, 0, 0), {}},
+		["mount"] = Vector(-2, 0, 0.1),
 	},
 	underbarrel = {
 		["mount"] = Vector(1.5, -0.5, 5.75),

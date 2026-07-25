@@ -13,7 +13,7 @@ SWEP.WorldModelFake = "models/weapons/c_pm.mdl"
 
 SWEP.FakePos = Vector(-24, 2.5, 5)
 SWEP.FakeAng = Angle(0, 0, 0)
-SWEP.AttachmentPos = Vector(0, 0, -0.2)
+SWEP.AttachmentPos = Vector(0, 0, 0)
 SWEP.AttachmentAng = Angle(0, 0, 90)
 SWEP.FakeAttachment = "1"
 SWEP.FakeEjectBrassATT = "2"
@@ -62,11 +62,13 @@ end
 
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"supressor4", Vector(0, 0, 0), {}},
-		["mount"] = Vector(-0.2, 0.8, 0.03),
+		[1] = {"supressor2", Vector(0, 0.0, 0), {}},
+		[2] = {"supressor1", Vector(0, 0.0, 0), {}},
+		["mount"] = Vector(-0.5, 0, -0.05),
+		["mountAngle"] = Angle(0, 0, 180),
 	},
 	underbarrel = {
-		["mount"] = Vector(13.5, 1.2, -1),
+		["mount"] = Vector(13.2, 1.05, -1),
 		["mountAngle"] = Angle(0, -0.75, -90),
 		["mountType"] = "picatinny_small"
 	},
@@ -95,12 +97,12 @@ SWEP.Primary.Sound = {"weapons/darsu_eft/pm/pm_indoor_close1.wav", 75, 90, 100}
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/m1911/handling/m1911_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Force = 26
 SWEP.Primary.Wait = PISTOLS_WAIT
-SWEP.ReloadTime = 6.5
+SWEP.ReloadTime = 5
 
 SWEP.DeploySnd = {"homigrad/weapons/draw_pistol.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/holster_pistol.mp3", 55, 100, 110}
 SWEP.HoldType = "revolver"
-SWEP.ZoomPos = Vector(-3, -1.8, 2.6)
+SWEP.ZoomPos = Vector(0, -1.7693, 2.7508)
 SWEP.RHandPos = Vector(-5, -1.5, 2)
 SWEP.LHandPos = false
 SWEP.SprayRand = {Angle(-0.02, -0.02, 0), Angle(-0.03, 0.02, 0)}
@@ -110,8 +112,8 @@ SWEP.ShockMultiplier = 1
 SWEP.punchmul = 1.5
 SWEP.punchspeed = 3
 
-SWEP.LocalMuzzlePos = Vector(0, -1.4, 4)
-SWEP.LocalMuzzleAng = Angle(0.398, 0, 0)
+SWEP.LocalMuzzlePos = Vector(0.7, -1.77, 2.25)
+SWEP.LocalMuzzleAng = Angle(0, 0, 0)
 SWEP.WeaponEyeAngles = Angle(0, 0, 0)
 
 SWEP.WorldPos = Vector(5.5, -2, -1.5)

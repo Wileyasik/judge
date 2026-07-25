@@ -1359,7 +1359,7 @@ function hg.FlashlightPos(ply)
         return
     end
 
-    if not ply:GetNetVar("Inventory") or not ply:GetNetVar("Inventory")["Weapons"] or not ply:GetNetVar("Inventory")["Weapons"]["hg_flashlight"] or ply.organism and ply.organism.larmamputated then
+    if not ply:GetNetVar("Inventory") or not ply:GetNetVar("Inventory")["Weapons"] or not ply:GetNetVar("Inventory")["Weapons"]["hg_flashlight"] or ply.organism and (ply.organism.larmamputated or ply.organism.larmupamputated) then
         if IsValid(ply.flashlight) then
             ply.flashlight:Remove()
         end
@@ -1410,7 +1410,7 @@ function hg.FlashlightPos(ply)
     if IsValid(ply.FakeRagdoll) then return end
     if not rhmat or not lhmat then return end
     if not ishgweapon(wep) or wep.reload then return end
-	if ply.organism and ply.organism.larmamputated then return end
+	if ply.organism and (ply.organism.larmamputated or ply.organism.larmupamputated) then return end
 
     if veclh and lang then
 	    lhmat:SetTranslation(veclh)
@@ -1492,7 +1492,7 @@ function hg.DragHands(ply,self)
         --ply_spine_matrix:SetAngles(matang)
         --hg.bone_apply_matrix(ply, ply_spine_index, ply_spine_matrix)
 
-		local amputee = ply.organism and ply.organism.larmamputated
+		local amputee = ply.organism and (ply.organism.larmamputated or ply.organism.larmupamputated)
 
 		local posDot = (pos - ply_spine_matrix:GetTranslation()):GetNormalized():Dot(ply_spine_matrix:GetAngles():Forward()) * -50
 		local posMul = math_Clamp(-(-posDot / 20), 0.1, 1.5)

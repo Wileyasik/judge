@@ -18,7 +18,7 @@ SWEP.IconOverride = "entities/arc9_eft_t5000.png"
 SWEP.FakePos = Vector(-12, 3.2, 7)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
-SWEP.AttachmentPos = Vector(-8.5, 0, 0)
+SWEP.AttachmentPos = Vector(-1, 0.1, 0)
 SWEP.AttachmentAng = Angle(0, 0, 0)
 SWEP.FakeBodyGroups = "11111111011"
 SWEP.CantFireFromCollision = true
@@ -31,14 +31,14 @@ SWEP.FakeViewBobBone = "ValveBiped.Bip01_L_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
 SWEP.ViewPunchDiv = 30
 
-SWEP.MagModel = "models/weapons/arc9/darsu_eft/mods/mag_t5000_5.mdl"
+SWEP.MagModel = "models/weapons/mods/mag_t5000_5.mdl"
 SWEP.FakeReloadEvents = {}
 
 SWEP.FakeVPShouldUseHand = false
 
 
-SWEP.LocalMuzzlePos = Vector(42, -0.66, 3.8)
-SWEP.LocalMuzzleAng = Angle(1, -0.2, 0)
+SWEP.LocalMuzzlePos = Vector(36.8, -1.08, 3.4)
+SWEP.LocalMuzzleAng = Angle(0, -0, 0)
 SWEP.WeaponEyeAngles = Angle(-0.7, 0.1, 0)
 
 SWEP.CustomShell = "762x51"
@@ -64,11 +64,14 @@ SWEP.NumBullet = 1
 
 SWEP.availableAttachments = {
     barrel = {
-        [1] = {"supressor8", Vector(7.3, 0, 0), {}},
-    },
+		[1] = {"supressor9", Vector(0, 0, 0), {}},
+		[2] = {"supressor16", Vector(0, 0, 0), {}},
+		[3] = {"supressor15", Vector(0, 0, 0), {}},
+		["mount"] = Vector(-1.2, -0, 0),
+	},
     sight = {
         ["mountType"] = {"picatinny"},
-        ["mount"] = {picatinny = Vector(-20, 1.1, 0)}
+        ["mount"] = {picatinny = Vector(-28, 1.1, 0)}
     }
 }
 
@@ -79,7 +82,7 @@ SWEP.AnimShootHandMul = 10
 SWEP.DeploySnd = {"homigrad/weapons/draw_hmg.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/hmg_holster.mp3", 55, 100, 110}
 SWEP.HoldType = "rpg"
-SWEP.ZoomPos = Vector(0, -1.7, 5)
+SWEP.ZoomPos = Vector(0, -1.0992, 4.5822)
 SWEP.RHandPos = Vector(0, 0, -1)
 SWEP.LHandPos = Vector(7, 0, -2)
 SWEP.Ergonomics = 0.9
@@ -246,7 +249,7 @@ function SWEP:Reload(time)
         local animName = isEmpty and "reload_empty" or "reload"
 
         local animSpeed = 4
-        local reloadTime = isEmpty and 4.1 or 2.8
+        local reloadTime = isEmpty and 2.6 or 1.3
 
         self:SetNetVar("shootgunReload", CurTime() + reloadTime)
         self.reloadCoolDown = CurTime() + reloadTime

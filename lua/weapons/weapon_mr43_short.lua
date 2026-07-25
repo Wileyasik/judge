@@ -139,7 +139,7 @@ SWEP.DistSound = "toz_shotgun/toz_dist.wav"
 SWEP.IsPistol = false
 SWEP.podkid = 2
 SWEP.animposmul = 1
-SWEP.ReloadTime = 12
+SWEP.ReloadTime = 4
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_UpperArm"

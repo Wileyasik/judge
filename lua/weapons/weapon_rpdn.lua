@@ -17,7 +17,7 @@ SWEP.Primary.Sound = {"weapons/darsu_eft/rpd/fire/rpd_indoor_distant_loop1.wav",
 SWEP.SupressedSound = {"weapons/darsu_eft/rpd/fire/rpd_indoor_silenced_distant_loop1.wav", 75, 100, 110}
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/ak47/handling/ak47_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.10
-SWEP.ReloadTime = 7.5
+SWEP.ReloadTime = 6
 
 function SWEP:PostFireBullet(bullet)
 	local owner = self:GetOwner()
@@ -42,7 +42,7 @@ SWEP.WorldModelFake = "models/weapons/c_rpd.mdl"
 SWEP.FakeAttachment = "1"
 SWEP.FakePos = Vector(-10, 2.85, 6.7)
 SWEP.FakeAng = Angle(0, 0, 0)
-SWEP.AttachmentPos = Vector(1, 0, 0)
+SWEP.AttachmentPos = Vector(-6.2, 0, 0)
 SWEP.AttachmentAng = Angle(0, 0, 90)
 
 SWEP.FakeVPShouldUseHand = true
@@ -147,8 +147,8 @@ SWEP.ShockMultiplier = 2
 
 SWEP.CustomShell = "762x54"
 SWEP.CustomSecShell = "m60len"
-SWEP.EjectPos = Vector(2, 13, -3)
-SWEP.EjectAng = Angle(0, 90, 0)
+SWEP.EjectPos = Vector(5.7, 18.8, -3)
+SWEP.EjectAng = Angle(0, -90, 0)
 
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_rpd.png")
 SWEP.IconOverride = "entities/arc9_eft_rpd.png"
@@ -164,8 +164,8 @@ for i = 1, 100 do
 	SWEP.Spray[i] = Angle(-0.05 - math.cos(i) * 0.04, math.cos(i * i) * 0.05, 0) * 2
 end
 
-SWEP.LocalMuzzlePos = Vector(0, -1.6, 4)
-SWEP.LocalMuzzleAng = Angle(-0.2, -0.05, 0)
+SWEP.LocalMuzzlePos = Vector(25.4, -1.39, 3.9)
+SWEP.LocalMuzzleAng = Angle(0, 0, 0)
 SWEP.WeaponEyeAngles = Angle(0, 0, 0)
 
 SWEP.Ergonomics = 0.6
@@ -187,11 +187,13 @@ SWEP.RecoilMul = 0.3
 SWEP.availableAttachments = {
 	sight = {
 		["mountType"] = {"picatinny"},
-		["mount"] = Vector(-18, 1.3, 0),
+		["mount"] = Vector(-11.5, 1.3, 0.09),
 	},
 	barrel = {
-		[1] = {"supressor1", Vector(-1, 0.2, 0), {}},
-		["mount"] = Vector(-5.9, 0.4, 0.03),
+		[1] = {"supressor7", Vector(0, 0, 0), {}},
+		[2] = {"supressor8", Vector(0, 0, 0), {}},
+		[3] = {"supressor15", Vector(1.5, 0, 0), {}},
+		["mount"] = Vector(-0.25, 0, 0),
 	},
 	underbarrel = {
 		["mount"] = Vector(-5, -0.2, 0.),

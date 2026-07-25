@@ -590,8 +590,8 @@ hook.Add("Think", "Fake", function()
 		ang = spine:GetAngles()
 		local holdWound, holdWoundArterial = getHoldWound(org, ragdoll)
 		local wantsManualHold = holdWound and org.canmove and hg.KeyDown(ply, IN_USE) and hg.KeyDown(ply, IN_JUMP)
-		local canHoldLeft = IsValid(lupper) and IsValid(lforearm) and IsValid(lhand) and not org.larmamputated
-		local canHoldRight = IsValid(rupper) and IsValid(rforearm) and IsValid(rhand) and not org.rarmamputated
+		local canHoldLeft = IsValid(lupper) and IsValid(lforearm) and IsValid(lhand) and not org.larmamputated and not org.larmupamputated
+		local canHoldRight = IsValid(rupper) and IsValid(rforearm) and IsValid(rhand) and not org.rarmamputated and not org.rarmupamputated
 		local hasBothArms = canHoldLeft and canHoldRight
 		local canUseTwoHandHold = not IsValid(wep) or wep:GetClass() == "weapon_hands_sh"
 		local manualUseLeft = false
@@ -907,7 +907,7 @@ hook.Add("Think", "Fake", function()
 				ply:Notify( math.random(1,2) == 1 and "I'm at my limits here!" or "I can't hold much longer...", 25, "ragdoll_almostfall", 0, nil, Color(200, 55, 55))
 			end
 
-			if ply:KeyDown(IN_SPEED) and org.canmove and !org.larmamputated and (!ply.HandsStun or ply.HandsStun < CurTime()) then
+			if ply:KeyDown(IN_SPEED) and org.canmove and !org.larmamputated and !org.larmupamputated and (!ply.HandsStun or ply.HandsStun < CurTime()) then
 				if IsValid(ragdoll.ConsLH) then
 					if hg_fake_stamina:GetBool() then
 						org.stamina.subadd = org.stamina.subadd + 0.06 * (ragdoll.staminaLeftModifyer or 0.5) * ( IsValid(ragdoll.ConsRH) and 0.35 or 1.25) * (on_ground and 0.25 or 1)
@@ -996,7 +996,7 @@ hook.Add("Think", "Fake", function()
 				end
 			end
 
-			if ply:KeyDown(IN_WALK) and org.canmove and !(ishgweapon(wep) or wep.ismelee2) and !org.rarmamputated and (!ply.HandsStun or ply.HandsStun < CurTime()) then
+			if ply:KeyDown(IN_WALK) and org.canmove and !(ishgweapon(wep) or wep.ismelee2) and !org.rarmamputated and !org.rarmupamputated and (!ply.HandsStun or ply.HandsStun < CurTime()) then
 				if IsValid(ragdoll.ConsRH) then
 					if hg_fake_stamina:GetBool() then
 						org.stamina.subadd = org.stamina.subadd + 0.06 * (ragdoll.staminaRightModifyer or 1) * ( IsValid(ragdoll.ConsLH) and 0.35 or 1.25) * (on_ground and 0.25 or 1)
@@ -1368,33 +1368,6 @@ hook.Add("Think", "Fake", function()
 						end
 					end
 
-					local gravity = Vector(0, 0, -1)
-					local downhill = gravity - groundNormal * gravity:Dot(groundNormal)
-					downhill = Vector(downhill.x, downhill.y, 0)
-					if downhill:LengthSqr() > 0.0001 then
-						downhill:Normalize()
-						local slopeAngle = math.deg(math.acos(math.Clamp(groundNormal:Dot(vector_up), -1, 1)))
-						local slopeStrength = math.sin(math.rad(slopeAngle)) * slideSlopeMult * ragdoll.dtime / 0.015
-						local slopeDirDot = slideDir:Dot(downhill)
-						
-						if slopeDirDot > 0.1 then
-							for _, physNum in ipairs(slidePhys) do
-								local phys = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, physNum))
-								if IsValid(phys) then
-									phys:ApplyForceCenter(downhill * slopeStrength * slopeDirDot * 700 / #slidePhys)
-								end
-							end
-						elseif slopeDirDot < -0.1 then
-							local decelForce = slopeStrength * math.abs(slopeDirDot) * 12000
-							for _, physNum in ipairs(slidePhys) do
-								local phys = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, physNum))
-								if IsValid(phys) then
-									phys:ApplyForceCenter(downhill * decelForce / #slidePhys)
-								end
-							end
-						end
-					end
-
 					local dragForce = curVel * -2 * ragdoll.dtime / 0.015
 
 					for _, physNum in ipairs(slidePhys) do
@@ -1441,7 +1414,10 @@ hook.Add("Think", "Fake", function()
 
 					local slidePending = checkSpeed >= slideMinStartSpeed and onGround and not ragdoll._slideCooldown
 
-					if ply:KeyDown(IN_ATTACK) and ply:KeyDown(IN_ATTACK2) and not slidePending and not onGround then
+					local isDropkicking = ply:KeyDown(IN_ATTACK) and ply:KeyDown(IN_ATTACK2) and not slidePending and not onGround
+					ragdoll.isDropkicking = isDropkicking
+
+					if isDropkicking then
 						legAng1:Set(angles)
 						legAng1:RotateAroundAxis(angles:Right(), 75)
 						legAng1:RotateAroundAxis(angles:Forward(), -100)
@@ -1483,7 +1459,10 @@ hook.Add("Think", "Fake", function()
 					end
 				end
 			else
-				if IsValid(ragdoll) then ragdoll.isSliding = false end
+				if IsValid(ragdoll) then
+					ragdoll.isSliding = false
+					ragdoll.isDropkicking = false
+				end
 			end
 		end
 		local vel = ragdoll:GetVelocity()
@@ -1510,7 +1489,7 @@ hook.Add("Think", "Fake", function()
 end)
 
 hook.Add("Ragdoll Collide", "SlideDamage", function(ragdoll, data)
-	if not ragdoll.isSliding then return end
+	if not ragdoll.isSliding and not ragdoll.isDropkicking then return end
 
 	local hitEnt = data.HitEntity
 	if not IsValid(hitEnt) or hitEnt == game.GetWorld() then return end
@@ -1534,7 +1513,7 @@ hook.Add("Ragdoll Collide", "SlideDamage", function(ragdoll, data)
 	local boneName = ragdoll:GetBoneName(bone)
 	if not boneName then return end
 
-	local slideBones = {
+	local hitBones = {
 		["ValveBiped.Bip01_L_Foot"] = true,
 		["ValveBiped.Bip01_R_Foot"] = true,
 		["ValveBiped.Bip01_L_Calf"] = true,
@@ -1543,35 +1522,66 @@ hook.Add("Ragdoll Collide", "SlideDamage", function(ragdoll, data)
 		["ValveBiped.Bip01_R_Thigh"] = true,
 	}
 
-	if not slideBones[boneName] then return end
+	if not hitBones[boneName] then return end
 
 	local ply = hg.RagdollOwner(ragdoll)
 	if not IsValid(ply) or not ply:Alive() then return end
 
-	ragdoll.slideHits = ragdoll.slideHits or {}
-	if (ragdoll.slideCd or 0) > CurTime() then return end
-	if (ragdoll.slideHits[hitEnt] or 0) > CurTime() then return end
-	ragdoll.slideHits[hitEnt] = CurTime() + 0.5
-	ragdoll.slideCd = CurTime() + 1
+	local isDropkick = ragdoll.isDropkicking
 
-	local speed = data.OurOldVelocity:Length()
-	local dmg = math.Clamp(speed / 25, 2, 20)
-
-	local dmgInfo = DamageInfo()
-	dmgInfo:SetDamage(dmg)
-	dmgInfo:SetDamageType(DMG_CLUB)
-	dmgInfo:SetAttacker(ply)
-	dmgInfo:SetInflictor(ragdoll)
-	dmgInfo:SetDamagePosition(physObj:GetPos())
-	dmgInfo:SetDamageForce(data.OurOldVelocity:GetNormalized() * dmg * 50)
-
-	hitEnt:TakeDamageInfo(dmgInfo)
-
-	if hg_fake_stamina:GetBool() and ply.organism then
-		ply.organism.stamina.subadd = ply.organism.stamina.subadd + 26
+	if isDropkick then
+		ragdoll.dropkickHits = ragdoll.dropkickHits or {}
+		if (ragdoll.dropkickCd or 0) > CurTime() then return end
+		if (ragdoll.dropkickHits[hitEnt] or 0) > CurTime() then return end
+		ragdoll.dropkickHits[hitEnt] = CurTime() + 0.5
+		ragdoll.dropkickCd = CurTime() + 0.8
+	else
+		ragdoll.slideHits = ragdoll.slideHits or {}
+		if (ragdoll.slideCd or 0) > CurTime() then return end
+		if (ragdoll.slideHits[hitEnt] or 0) > CurTime() then return end
+		ragdoll.slideHits[hitEnt] = CurTime() + 0.5
+		ragdoll.slideCd = CurTime() + 1
 	end
 
-	ragdoll:EmitSound("kickland" .. math.random(1, 2) .. ".mp3", 60, math.random(95, 110))
+	local speed = data.OurOldVelocity:Length()
+	local dmg = isDropkick and math.Clamp(speed / 15, 8, 35) or math.Clamp(speed / 25, 2, 20)
+
+	local targetPly = hg.RagdollOwner(hitEnt) or (hitEnt:IsPlayer() and hitEnt)
+	if not IsValid(targetPly) then
+		local dmgInfo = DamageInfo()
+		dmgInfo:SetDamage(dmg)
+		dmgInfo:SetDamageType(DMG_CLUB)
+		dmgInfo:SetAttacker(ply)
+		dmgInfo:SetInflictor(ragdoll)
+		dmgInfo:SetDamagePosition(physObj:GetPos())
+		dmgInfo:SetDamageForce(data.OurOldVelocity:GetNormalized() * dmg * 50)
+		hitEnt:TakeDamageInfo(dmgInfo)
+	else
+		local dmgInfo = DamageInfo()
+		dmgInfo:SetDamage(dmg)
+		dmgInfo:SetDamageType(DMG_CLUB)
+		dmgInfo:SetAttacker(ply)
+		dmgInfo:SetInflictor(ragdoll)
+		dmgInfo:SetDamagePosition(physObj:GetPos())
+		dmgInfo:SetDamageForce(data.OurOldVelocity:GetNormalized() * dmg * 50)
+
+		local hitgroup = HITGROUP_GENERIC
+		if boneName:find("Foot") then
+			hitgroup = HITGROUP_LEFTLEG
+		elseif boneName:find("Calf") then
+			hitgroup = HITGROUP_LEFTLEG
+		elseif boneName:find("Thigh") then
+			hitgroup = HITGROUP_LEFTLEG
+		end
+
+		hook.Run("HomigradDamage", targetPly, dmgInfo, hitgroup, hg.GetCurrentCharacter(targetPly), dmg)
+	end
+
+	if hg_fake_stamina:GetBool() and ply.organism then
+		ply.organism.stamina.subadd = ply.organism.stamina.subadd + (isDropkick and 12 or 26)
+	end
+
+	ragdoll:EmitSound("kickland" .. math.random(1, 2) .. ".mp3", 75, math.random(95, 110))
 end)
 
 hook.Add("PlayerDeath", "homigrad-fake-control", function(ply)

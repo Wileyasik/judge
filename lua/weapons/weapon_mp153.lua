@@ -1,4 +1,4 @@
-﻿--ByLAZZY
+--ByLAZZY
 SWEP.Base = "weapon_m4super"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -16,7 +16,7 @@ SWEP.WorldModelReal = "models/weapons/c_mr153.mdl"
 SWEP.FakePos = Vector(-11, 3.6, 6.2)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
-SWEP.AttachmentPos = Vector(-8.5, 0, 0)
+SWEP.AttachmentPos = Vector(-0.4, 0.2, 0)
 SWEP.AttachmentAng = Angle(0, 0, 0)
 SWEP.FakeBodyGroups = "11100410010"
 SWEP.CantFireFromCollision = true
@@ -36,8 +36,8 @@ SWEP.FakeVPShouldUseHand = false
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_mr153.png")
 SWEP.IconOverride = "entities/arc9_eft_mr153.png"
 
-SWEP.LocalMuzzlePos = Vector(25, -1.3, 4.098)
-SWEP.LocalMuzzleAng = Angle(0.2, -0.0, 0)
+SWEP.LocalMuzzlePos = Vector(32.2, -0.66, 4.45)
+SWEP.LocalMuzzleAng = Angle(0, -0.0, 0)
 SWEP.WeaponEyeAngles = Angle(-0.7, 0.1, 0)
 
 SWEP.CustomShell = "12x70"
@@ -68,11 +68,14 @@ SWEP.NumBullet = 8
 
 SWEP.availableAttachments = {
     barrel = {
-        [1] = {"supressor5", Vector(8, 0, 0.3), {}},
+        [1] = {"supressor13", Vector(0, 0, 0), {}},
+        [2] = {"supressor12", Vector(0, 0, 0), {}},
+        ["mount"] = Vector(-0.5, -0, 0.1),
+        ["mountAngle"] = Angle(0, -0, 90),
     },
     sight = {
         ["mountType"] = "picatinny",
-        ["mount"] = Vector(-19, 0.25, 0.9),
+        ["mount"] = Vector(-26.5, 0.05, 0.9),
         ["mountAngle"] = Angle(0, 0, 90),
     },
 }
@@ -82,7 +85,7 @@ SWEP.AnimShootHandMul = 10
 SWEP.DeploySnd = {"homigrad/weapons/draw_hmg.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/hmg_holster.mp3", 55, 100, 110}
 SWEP.HoldType = "rpg"
-SWEP.ZoomPos = Vector(0, -0.67, 5.4)
+SWEP.ZoomPos = Vector(0, -0.6725, 5.376)
 SWEP.RHandPos = Vector(0, 0, -1)
 SWEP.LHandPos = Vector(7, 0, -2)
 SWEP.Ergonomics = 0.9
@@ -181,10 +184,6 @@ SWEP.GunCamAng = Angle(190, -5, -95)
 local vector_full = Vector(1, 1, 1)
 SWEP.FakeEjectBrassATT = "2"
 
-function SWEP:PrimaryShootPost()
-    self.drawBullet = true
-end
-
 function SWEP:GetAnimPos_Insert(time) return 0 end
 function SWEP:GetAnimPos_Draw(time) return 0 end
 
@@ -269,22 +268,41 @@ function SWEP:AllowedInspect()
     return true
 end
 
-SWEP.InspectAnimLH = { Vector(0, 0, 0) }
-SWEP.InspectAnimLHAng = { Angle(0, 0, 0) }
-SWEP.InspectAnimRH = { Vector(0, 0, 0) }
-SWEP.InspectAnimRHAng = { Angle(0, 0, 0) }
-SWEP.InspectAnimWepAng = {
-    Angle(0, 0, 0),
-    Angle(-5, 9, 5),
-    Angle(-5, 9, 14),
-    Angle(-5, 9, 16),
-    Angle(-6, 10, 15),
-    Angle(-5, 9, 16),
-    Angle(-10, 15, -15),
-    Angle(-2, 22, -15),
-    Angle(0, 25, -32),
-    Angle(0, 24, -45),
-    Angle(0, 22, -55),
-    Angle(0, 20, -56),
-    Angle(0, 0, 0)
-}
+--========================================================
+-- FIRE ANIMATION
+--========================================================
+
+SWEP.FireAnimTime = 0.15
+SWEP.FireAnimCandidates = {"fire", "fire1"}
+
+function SWEP:PrimaryShootPost()
+	self.drawBullet = true
+
+	if not CLIENT then return end
+	if self.reload then return end
+	if not self:ShouldUseFakeModel() then return end
+
+	local worldModel = self:GetWM()
+	if not IsValid(worldModel) then return end
+
+	local selectedSequence
+	for _, sequenceName in ipairs(self.FireAnimCandidates) do
+		local sequenceID = worldModel:LookupSequence(sequenceName)
+		if sequenceID ~= nil and sequenceID >= 0 then
+			selectedSequence = sequenceName
+			break
+		end
+	end
+
+	if not selectedSequence then return end
+
+	self.AnimList.fire = selectedSequence
+	self:PlayAnim("fire", self.FireAnimTime, false)
+
+	local timerName = "BC_FireAnimation_" .. self:EntIndex()
+	timer.Create(timerName, self.FireAnimTime, 1, function()
+		if not IsValid(self) or self.reload then return end
+		if self.Primary and (self.Primary.Next or 0) > CurTime() then return end
+		self:PlayAnim("idle", 1, not self.NoIdleLoop)
+	end)
+end

@@ -66,7 +66,10 @@ SWEP.WepSelectIcon2 = Material("entities/arc9_eft_m9a3.png")
 SWEP.IconOverride = "entities/arc9_eft_m9a3.png"
 SWEP.WepSelectIcon2box = true
 
+
 SWEP.CustomShell = "9x19"
+SWEP.EjectPos = Vector(4.5, 3, -21)
+SWEP.EjectAng = Angle(0,0,0)
 
 SWEP.weight = 1
 SWEP.ScrappersSlot = "Secondary"
@@ -82,12 +85,12 @@ SWEP.Primary.Sound = {"sound/weapons/darsu_eft/m9a3/m9a3_fire_indoor_close.wav",
 SWEP.Primary.SoundEmpty = {"sound/weapons/darsu_eft/m9a3/m9a3_fire_close_indoor_silenced.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Force = 22
 SWEP.Primary.Wait = PISTOLS_WAIT
-SWEP.ReloadTime = 5.5
+SWEP.ReloadTime = 4
 
 SWEP.DeploySnd = {"homigrad/weapons/draw_pistol.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/holster_pistol.mp3", 55, 100, 110}
 SWEP.HoldType = "revolver"
-SWEP.ZoomPos = Vector(0, -2.2404, 3.0768)
+SWEP.ZoomPos = Vector(0, -2.2848, 3.1469)
 SWEP.RHandPos = Vector(-3, -1, 0)
 SWEP.LHandPos = false
 SWEP.SprayRand = {Angle(-0.02, -0.02, 0), Angle(-0.03, 0.02, 0)}
@@ -97,8 +100,8 @@ SWEP.ShockMultiplier = 1
 SWEP.punchmul = 1.5
 SWEP.punchspeed = 3
 
-SWEP.LocalMuzzlePos = Vector(0, -2.5, 2.7)
-SWEP.LocalMuzzleAng = Angle(0.398, 0, 0)
+SWEP.LocalMuzzlePos = Vector(2.8, -2.27, 2.7)
+SWEP.LocalMuzzleAng = Angle(0, 0, 0)
 SWEP.WeaponEyeAngles = Angle(0, 0, 90)
 
 SWEP.WorldPos = Vector(3.5, -1.5, -1)
@@ -123,17 +126,18 @@ SWEP.podkid = 1
 
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"supressor4", Vector(-1, 0.5, 0), {}},
-		[2] = {"supressor3", Vector(-1, 0.5, 0), {}},
-		["mount"] = Vector(-0.1, 0.4, 0.03),
+		[1] = {"supressor2", Vector(0, 0.0, 0), {}},
+		[2] = {"supressor1", Vector(0, 0.0, 0), {}},
+		["mount"] = Vector(-0.5, 0.15, 0),
+		["mountAngle"] = Angle(0, 0, 80),
 	},
 	sight = {
 		["mountType"] = "pistolmount",
-		["mount"] = Vector(-6, -0.9, 0.05),
+		["mount"] = Vector(-5.5, -1.1, 0.05),
 		["mountAngle"] = Angle(0, 0, 180),
 	},
 	underbarrel = {
-		["mount"] = Vector(12.2, 1.2, -1),
+		["mount"] = Vector(12.2, 1, -1),
 		["mountAngle"] = Angle(0, -0.75, -90),
 		["mountType"] = "picatinny_small"
 	},

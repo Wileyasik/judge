@@ -80,10 +80,19 @@ end
 
 local grub, mat, gamemod = Model("models/grub_nugget_small.mdl"), "models/flesh", engine.ActiveGamemode()
 local meatModels = {
-	Model("models/props_junk/watermelon01_chunk02a.mdl"),
+	Model("models/gore/debris_goredebris01.mdl"),
+	Model("models/gore/debris_goredebris02.mdl"),
+	Model("models/gore/debris_goredebris03.mdl"),
+	Model("models/gore/debris_goredebris04.mdl"),
 }
+local eyeModels = {
+	Model("models/gore/head_eye01.mdl"),
+	Model("models/gore/head_eye02.mdl"),
+}
+for _, mdl in ipairs(meatModels) do util.PrecacheModel(mdl) end
+for _, mdl in ipairs(eyeModels) do util.PrecacheModel(mdl) end
 local gibRemoveTime = 60 --120
-function SpawnMeatGore(mainent, pos, count, force, scale)
+function SpawnMeatGore(mainent, pos, count, force, scale, spawnEyes)
 	force = force or Vector(0,0,0)
 	for i = 1, (count or math.random(8, 10)) do
 		local ent = ents_Create("prop_physics")
@@ -110,6 +119,34 @@ function SpawnMeatGore(mainent, pos, count, force, scale)
 
 		ent:AddCallback( "PhysicsCollide", PhysCallback )
 	end
+
+	if spawnEyes then
+		for i = 1, math.random(1, 2) do
+			local ent = ents_Create("prop_physics")
+			ent:SetModel(eyeModels[math.random(#eyeModels)])
+			ent:SetSubMaterial(0, mat)
+			ent:SetPos(pos)
+			ent:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+			ent:SetModelScale(math.Rand(0.8,1.1) * (scale or 1))
+			ent:SetAngles(AngleRand(-180,180))
+			ent:Activate()
+			ent:Spawn()
+
+			local phys = ent:GetPhysicsObject()
+			if IsValid(phys) then
+				phys:SetVelocity(mainent:GetVelocity() + VectorRand(-65,65) + force / 10)
+				phys:AddAngleVelocity(VectorRand(-65,65))
+			end
+
+			if zb.CROUND and zb.CROUND ~= "hmcd" or gamemod == "sandbox" then
+				ent:DrawShadow(false)
+				ent:SetModelScale(0, gibRemoveTime)
+				SafeRemoveEntityDelayed(ent, gibRemoveTime)
+			end
+
+			ent:AddCallback( "PhysicsCollide", PhysCallback )
+		end
+	end
 end
 
 local headpos_male, headpos_female, headang = Vector(0,0,5), Vector(-2,0,4), Angle(0,0,-0)
@@ -117,7 +154,17 @@ local headpos_male, headpos_female, headang = Vector(0,0,5), Vector(-2,0,4), Ang
 util.AddNetworkString("addfountain")
 
 hg.fountains = hg.fountains or {}
-local headboom_mdl = Model("models/gleb/zcity/headboom.mdl")
+local headModels = {
+	{ model = Model("models/headpartial/headpartial.mdl"), pos = Vector(0,0,0), ang = Angle(0,0,0) },
+	{ model = Model("models/headpartial/headpartial1.mdl"), pos = Vector(0,0,0), ang = Angle(0,0,0) },
+	{ model = Model("models/headpartial/headpartial2.mdl"), pos = Vector(0,0,0), ang = Angle(0,0,0) },
+	{ model = Model("models/headpartial/headpartial3.mdl"), pos = Vector(0,0,0), ang = Angle(0,0,0) },
+	{ model = Model("models/headpartial/headpartial4.mdl"), pos = Vector(0,0,0), ang = Angle(0,0,0) },
+	{ model = Model("models/headpartial/headpartial5.mdl"), pos = Vector(0,0,0), ang = Angle(0,0,0) },
+}
+for _, head in ipairs(headModels) do
+	util.PrecacheModel(head.model)
+end
 local sounds = {
 	Sound("player/zombie_head_explode_01.wav"),
 	Sound("player/zombie_head_explode_02.wav"),
@@ -126,7 +173,6 @@ local sounds = {
 	Sound("player/zombie_head_explode_05.wav"),
 	Sound("player/zombie_head_explode_06.wav")
 }
-util.PrecacheModel(headboom_mdl)
 for _, snd in ipairs(sounds) do
 	util.PrecacheSound(snd)
 end
@@ -157,17 +203,23 @@ function Gib_Input(rag, bone, force)
 		--rag:ManipulateBoneScale(rag:LookupBone("ValveBiped.Bip01_Neck1"),vecZero)
 		rag:ManipulateBonePosition(rag:LookupBone("ValveBiped.Bip01_Neck1"),Vector(-1,0,0))
 
-		local ent = ents_Create("prop_dynamic")
-		ent:SetModel(headboom_mdl)
+		local headChoice = headModels[math.random(#headModels)]
+		local headVis = ents_Create("prop_dynamic")
+		headVis:SetModel(headChoice.model)
 		local att = rag:GetAttachment(3)
 		local pos, ang = LocalToWorld(ThatPlyIsFemale(rag) and headpos_female or headpos_male, headang, att.Pos, att.Ang)
-		ent:SetPos(pos)
-		ent:SetAngles(ang)
-		--ent:AddEffects(EF_FOLLOWBONE)
-		ent:SetParent(rag, 3)--rag:LookupBone("ValveBiped.Bip01_Head1"))
-		ent:Spawn()
+		
+		local extraOffset = vector_origin
+		if ThatPlyIsFemale(rag) and headChoice.model == "models/headpartial/headpartial5.mdl" then
+			extraOffset = Vector(0,0,2)
+		end
+		
+		headVis:SetPos(pos + headChoice.pos + extraOffset)
+		headVis:SetAngles(ang + headChoice.ang)
+		headVis:SetParent(rag, 3)
+		headVis:Spawn()
 
-		SpawnMeatGore(ent, pos, nil, force) --модельки поменять и будет эпик
+		SpawnMeatGore(headVis, pos, nil, force, nil, true) --модельки поменять и будет эпик
 
 		local armors = rag:GetNetVar("Armor",{})
 

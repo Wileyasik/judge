@@ -16,7 +16,7 @@ SWEP.WorldModelReal = "models/weapons/c_sv98.mdl"
 SWEP.FakePos = Vector(-11, 3.6, 6)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
-SWEP.AttachmentPos = Vector(-8.5, 0, 0)
+SWEP.AttachmentPos = Vector(-0.5, 0, 0)
 SWEP.AttachmentAng = Angle(0, 0, 0)
 SWEP.FakeBodyGroups = "01011"
 SWEP.CantFireFromCollision = true
@@ -39,8 +39,8 @@ SWEP.FakeVPShouldUseHand = false
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_sv98.png")
 SWEP.IconOverride = "entities/arc9_eft_sv98.png"
 
-SWEP.LocalMuzzlePos = Vector(40, -0.66, 3.8)
-SWEP.LocalMuzzleAng = Angle(1, -0.2, 0)
+SWEP.LocalMuzzlePos = Vector(37.5, -0.66, 3.66)
+SWEP.LocalMuzzleAng = Angle(0, -0, 0)
 SWEP.WeaponEyeAngles = Angle(-0.7, 0.1, 0)
 
 SWEP.CustomShell = "762x51"
@@ -64,11 +64,14 @@ SWEP.SupressedSound = {"weapons/darsu_eft/sv98/sv98_fire_indoor_silenced_close.o
 
 SWEP.availableAttachments = {
     barrel = {
-        [1] = {"supressor7", Vector(7.3, 0.1, 0), {}},
-    },
+		[1] = {"supressor9", Vector(0, 0, 0), {}},
+		[2] = {"supressor16", Vector(0, 0, 0), {}},
+		[3] = {"supressor15", Vector(0, 0, 0), {}},
+		["mount"] = Vector(-0.9, -0, 0),
+	},
     sight = {
         ["mountType"] = "picatinny",
-        ["mount"] = Vector(-22, 1, 0),
+        ["mount"] = Vector(-28, 1, 0),
     },
 }
 
@@ -79,7 +82,7 @@ SWEP.AnimShootHandMul = 10
 SWEP.DeploySnd = {"homigrad/weapons/draw_hmg.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/hmg_holster.mp3", 55, 100, 110}
 SWEP.HoldType = "rpg"
-SWEP.ZoomPos = Vector(0, -0.70, 4.5)
+SWEP.ZoomPos = Vector(0, -0.7128, 4.8427)
 SWEP.RHandPos = Vector(0, 0, -1)
 SWEP.LHandPos = Vector(7, 0, -2)
 SWEP.Ergonomics = 0.9
@@ -307,7 +310,7 @@ function SWEP:Reload(time)
         local animName = isEmpty and "reload_empty" or "reload"
         
         local animSpeed = 4
-        local reloadTime = isEmpty and 3.8 or 2.8
+        local reloadTime = isEmpty and 2.3 or 1.3
         
         self:SetNetVar("shootgunReload", CurTime() + reloadTime)
         self.reloadCoolDown = CurTime() + reloadTime

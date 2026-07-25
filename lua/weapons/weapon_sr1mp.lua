@@ -13,12 +13,12 @@ SWEP.WorldModelFake = "models/weapons/c_sr1mp.mdl"
 
 SWEP.FakePos = Vector(-24, 2.5, 4)
 SWEP.FakeAng = Angle(0, 0, 0)
-SWEP.AttachmentPos = Vector(0, 0, -0.2)
+SWEP.AttachmentPos = Vector(0.4, 0, -0.1)
 SWEP.AttachmentAng = Angle(0, 0, 90)
 SWEP.FakeAttachment = "1"
 SWEP.FakeEjectBrassATT = "2"
 SWEP.MagIndex = nil
-SWEP.FakeScale = 1.2
+SWEP.FakeScale = 1
 SWEP.FakeBodyGroups = "111001"
 SWEP.FakeBodyGroupsPresets = {
 	"111001",
@@ -69,6 +69,8 @@ SWEP.IconOverride = "entities/arc9_eft_sr1mp.png"
 SWEP.WepSelectIcon2box = true
 
 SWEP.CustomShell = "9x39"
+SWEP.EjectPos = Vector(4.5, 3, -21)
+SWEP.EjectAng = Angle(0,0,0)
 
 SWEP.weight = 1
 SWEP.ScrappersSlot = "Secondary"
@@ -85,12 +87,12 @@ SWEP.SupressedSound = {"weapons/darsu_eft/sr1mp/gyrza_silenced_indoor_close1.wav
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/m1911/handling/m1911_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Force = 26
 SWEP.Primary.Wait = PISTOLS_WAIT
-SWEP.ReloadTime = 5
+SWEP.ReloadTime = 3.5
 
 SWEP.DeploySnd = {"homigrad/weapons/draw_pistol.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/holster_pistol.mp3", 55, 100, 110}
 SWEP.HoldType = "revolver"
-SWEP.ZoomPos = Vector(0, -2.6141, 1.4918)
+SWEP.ZoomPos = Vector(0, -1.7871, 2.0428)
 SWEP.RHandPos = Vector(-5, -1.5, 2)
 SWEP.LHandPos = false
 SWEP.SprayRand = {Angle(-0.02, -0.02, 0), Angle(-0.03, 0.02, 0)}
@@ -100,8 +102,8 @@ SWEP.ShockMultiplier = 1
 SWEP.punchmul = 1.5
 SWEP.punchspeed = 3
 
-SWEP.LocalMuzzlePos = Vector(0, -2.6, 2.7)
-SWEP.LocalMuzzleAng = Angle(0.398, 0, 0)
+SWEP.LocalMuzzlePos = Vector(1.8, -1.76, 1.48)
+SWEP.LocalMuzzleAng = Angle(0, 0, 0)
 SWEP.WeaponEyeAngles = Angle(0, 0, 0)
 
 SWEP.WorldPos = Vector(5.5, -2, -1.5)
@@ -129,8 +131,10 @@ SWEP.podkid = 1
 
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"supressor4", Vector(0, 0, 0), {}},
-		["mount"] = Vector(-1.2, 0.73, 0),
+		[1] = {"supressor2", Vector(0, 0.0, 0), {}},
+		[2] = {"supressor1", Vector(0, 0.0, 0), {}},
+		["mount"] = Vector(-0.5, 0, -0.05),
+		["mountAngle"] = Angle(0, 0, 180),
 	},
 	underbarrel = {
 		["mount"] = Vector(12.4, 1.2, -1),

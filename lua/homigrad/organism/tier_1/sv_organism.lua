@@ -82,6 +82,10 @@ hook.Add("Org Clear", "Main", function(org)
 	org.larmamputated = false
 	org.rhandamputated = false
 	org.lhandamputated = false
+	org.larmupamputated = false
+	org.rarmupamputated = false
+	org.llegupamputated = false
+	org.rlegupamputated = false
 	org.headamputated = false
 	org.furryinfected = false
 	org.health = 100
@@ -207,6 +211,10 @@ local function send_organism(org, ply)
 	sendtable.larmamputated = org.larmamputated
 	sendtable.lhandamputated = org.lhandamputated
 	sendtable.rhandamputated = org.rhandamputated
+	sendtable.larmupamputated = org.larmupamputated
+	sendtable.rarmupamputated = org.rarmupamputated
+	sendtable.llegupamputated = org.llegupamputated
+	sendtable.rlegupamputated = org.rlegupamputated
 	sendtable.headamputated = org.headamputated
 	sendtable.lungsfunction = org.lungsfunction
 	sendtable.eyeL = org.eyeL
@@ -281,6 +289,10 @@ local function send_bareinfo(org)
 	sendtable.larmamputated = org.larmamputated
 	sendtable.lhandamputated = org.lhandamputated
 	sendtable.rhandamputated = org.rhandamputated
+	sendtable.larmupamputated = org.larmupamputated
+	sendtable.rarmupamputated = org.rarmupamputated
+	sendtable.llegupamputated = org.llegupamputated
+	sendtable.rlegupamputated = org.rlegupamputated
 	sendtable.headamputated = org.headamputated
 	sendtable.LodgedEntities = org.LodgedEntities
 	sendtable.berserkActive2 = org.berserkActive2
@@ -671,13 +683,15 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 			end
 		end
 	end
-	if (org.llegamputated or org.rlegamputated) and org.berserk <= 0.3 then
+	if (org.llegamputated or org.rlegamputated or org.llegupamputated or org.rlegupamputated) and org.berserk <= 0.3 then
 		org.needfake = true
 	end
-	if org.rarmamputated and org.larmamputated and owner:IsPlayer() then
-		local hands = owner:GetWeapon("weapon_hands_sh")
-		if owner:GetActiveWeapon() != hands then
-			owner:SetActiveWeapon(hands)
+	if (org.rarmamputated and org.larmamputated) or (org.rarmupamputated and org.larmupamputated) then
+		if owner:IsPlayer() then
+			local hands = owner:GetWeapon("weapon_hands_sh")
+			if owner:GetActiveWeapon() != hands then
+				owner:SetActiveWeapon(hands)
+			end
 		end
 	end
 	if org.otrub then
@@ -748,6 +762,12 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	else
 		org.deathStateEnd = nil
 		org.deathStateKilled = nil
+	end
+
+	if isPly and org.brain and org.brain >= 1 and owner:Alive() and not org.deathStateKilled then
+		org.deathStateKilled = true
+		owner:Kill()
+		return
 	end
 
 	if just_went_uncon then

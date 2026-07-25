@@ -22,16 +22,16 @@ hg.bonetohitgroup = {
 }
 
 hg.amputeetable = {
-	--["ValveBiped.Bip01_L_UpperArm"] = "larm",
+	["ValveBiped.Bip01_L_UpperArm"] = "larmup",
 	["ValveBiped.Bip01_L_Forearm"] = "larm",
 	["ValveBiped.Bip01_L_Hand"] = "lhand",
-	--["ValveBiped.Bip01_R_UpperArm"] = "rarm",
+	["ValveBiped.Bip01_R_UpperArm"] = "rarmup",
 	["ValveBiped.Bip01_R_Forearm"] = "rarm",
 	["ValveBiped.Bip01_R_Hand"] = "rhand",
-	--["ValveBiped.Bip01_L_Thigh"] = "lleg",
+	["ValveBiped.Bip01_L_Thigh"] = "llegup",
 	["ValveBiped.Bip01_L_Calf"] = "lleg",
 	["ValveBiped.Bip01_L_Foot"] = "lleg",
-	--["ValveBiped.Bip01_R_Thigh"] = "rleg",
+	["ValveBiped.Bip01_R_Thigh"] = "rlegup",
 	["ValveBiped.Bip01_R_Calf"] = "rleg",
 	["ValveBiped.Bip01_R_Foot"] = "rleg"
 }
@@ -1187,7 +1187,7 @@ hook.Add("Player-Ragdoll think", "organism-think-client-blood", function(ply, en
 	end
 end)
 
-local grub = Model("models/grub_nugget_small.mdl")
+local grub = Model("models/limbspartial/elbowleft.mdl")
 local vecalmostzero = Vector(0.01, 0.01, 0.01)
 
 local modelPlacements = {
@@ -1198,14 +1198,22 @@ local modelPlacements = {
 		["ValveBiped.Bip01_L_Forearm"] = {Vector(11, 0.5, -0.5), Angle(0, 90, 0)},
 		["ValveBiped.Bip01_R_Hand"] = {Vector(2, 0.5, 0.5), Angle(0, 90, 0)},
 		["ValveBiped.Bip01_L_Hand"] = {Vector(2, 0.5, -0.5), Angle(0, 90, 0)},
+		["ValveBiped.Bip01_L_UpperArm"] = {Vector(5, 0.5, -0.5), Angle(0, 0, 0)},
+		["ValveBiped.Bip01_R_UpperArm"] = {Vector(12, 0.5, 0.5), Angle(0, 90, 0)},
+		["ValveBiped.Bip01_L_Thigh"] = {Vector(14, 0, 0), Angle(0, 90, 0)},
+		["ValveBiped.Bip01_R_Thigh"] = {Vector(14, 0, 0), Angle(0, 90, 0)},
 	},
 	[0] = {
 		["ValveBiped.Bip01_L_Calf"] = {Vector(17.5, 0, 0), Angle(0, 90, 0)},
 		["ValveBiped.Bip01_R_Calf"] = {Vector(17.5, 0, 0), Angle(0, 90, 0)},
-		["ValveBiped.Bip01_R_Forearm"] = {Vector(11, 0.5, 0.5), Angle(0, 90, 0)},
+		["ValveBiped.Bip01_R_Forearm"] = {Vector(12, 0.5, 0.5), Angle(0, 90, 0)},
 		["ValveBiped.Bip01_L_Forearm"] = {Vector(11, 0, -1), Angle(0, 90, 0)},
 		["ValveBiped.Bip01_R_Hand"] = {Vector(2, 0.5, 0.5), Angle(0, 90, 0)},
 		["ValveBiped.Bip01_L_Hand"] = {Vector(2, 0, -1), Angle(0, 90, 0)},
+		["ValveBiped.Bip01_L_UpperArm"] = {Vector(13, 0.5, -0.5), Angle(0, 90, 0)},
+		["ValveBiped.Bip01_R_UpperArm"] = {Vector(13, 0.5, 0.5), Angle(0, 90, 0)},
+		["ValveBiped.Bip01_L_Thigh"] = {Vector(16, 0, 0), Angle(0, 90, 0)},
+		["ValveBiped.Bip01_R_Thigh"] = {Vector(16, 0, 0), Angle(0, 90, 0)},
 	}
 }
 
@@ -1216,6 +1224,10 @@ local limbs = {
 	["rarm"] = "ValveBiped.Bip01_R_Forearm",
 	["lhand"] = "ValveBiped.Bip01_L_Hand",
 	["rhand"] = "ValveBiped.Bip01_R_Hand",
+	["llegup"] = "ValveBiped.Bip01_L_Thigh",
+	["rlegup"] = "ValveBiped.Bip01_R_Thigh",
+	["larmup"] = "ValveBiped.Bip01_L_UpperArm",
+	["rarmup"] = "ValveBiped.Bip01_R_UpperArm",
 	["head"] = "ValveBiped.Bip01_Head1"
 }
 
@@ -1235,6 +1247,15 @@ for k, v in pairs(limbs) do
 end
 
 local vecFull = Vector(1, 1, 1)
+
+local limbParent = {
+	["lleg"] = "llegup",
+	["rleg"] = "rlegup",
+	["larm"] = "larmup",
+	["rarm"] = "rarmup",
+	["lhand"] = "larm",
+	["rhand"] = "rarm",
+}
 
 function hg.GoreCalc(ent, ply)
 	local org = ent.new_organism or ent.organism
@@ -1264,6 +1285,9 @@ function hg.GoreCalc(ent, ply)
 		if IsValid(ply.OldFakeRagdoll) then
 			hg.bone_apply_matrix(ply, bon, mat)
 		end
+
+		local parent = limbParent[bone]
+		if parent and org[parent.."amputated"] then continue end
 
 		local fem = ThatPlyIsFemale(ent) and 1 or 0
 		

@@ -701,13 +701,81 @@ input_list.pelvis = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoc
 	return result
 end
 
-input_list.rarmup = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return arms(org, bone * 1.25, dmg, dmgInfo, "rarm", "up", boneindex, dir, hit, ricochet) end
+local function upper_limb(org, bone, dmg, dmgInfo, amputate_key, limb_key, segment, boneindex, dir, hit, ricochet)
+	local oldDmg = org[limb_key]
+	local dmg = dmg * 4
+	local amputateThreshold = org.isPly and player_crush_amputation_threshold or 4
+
+	if dmgInfo:IsDamageType(DMG_CRUSH) and dmg > amputateThreshold and !org[amputate_key.."amputated"] then
+		hg.organism.AmputateLimb(org, amputate_key)
+		return 0
+	end
+
+	if org[limb_key] == 1 then return 0 end
+
+	local result, vecrand = damageBone(org, 0.3, dmg, dmgInfo, limb_key, boneindex, dir, hit, ricochet)
+
+	local d = org[limb_key]
+	org[limb_key] = org[limb_key] * 0.5
+
+	if d < 0.7 then return 0 end
+	if d < 1 and !dmgInfo:IsDamageType(DMG_CLUB+DMG_CRUSH+DMG_FALL) then return 0 end
+
+	if org.isPly and !org[amputate_key.."amputated"] then org.just_damaged_bone = CurTime() end
+
+	local stabilized = org[limb_key.."stabilized"]
+
+	if d >= 1 and (!dmgInfo:IsDamageType(DMG_CLUB+DMG_CRUSH+DMG_FALL) or math.random(3) != 1) then
+		org[limb_key] = 1
+		if hg.fakeBoneFlop then
+			hg.fakeBoneFlop.SetLimbSegmentState(org, limb_key, segment, not stabilized)
+		end
+
+		if not stabilized then
+			org.painadd = org.painadd + 55
+			org.immobilization = org.immobilization + d * 25
+		else
+			org.painadd = org.painadd + 10
+			org.immobilization = org.immobilization + d * 5
+		end
+		org.owner:AddNaturalAdrenaline(1)
+		org.fearadd = org.fearadd + 0.5
+
+		playBoneFractureSound(org.owner)
+		if org.isPly and hg.QueuePainScream then hg.QueuePainScream(org.owner, 1.35) end
+	else
+		org[limb_key.."dislocation"] = true
+		if hg.fakeBoneFlop then
+			hg.fakeBoneFlop.SetLimbSegmentState(org, limb_key, segment, not stabilized)
+		end
+
+		if not stabilized then
+			org.painadd = org.painadd + 35
+			org.immobilization = org.immobilization + d * 10
+		else
+			org.painadd = org.painadd + 10
+			org.immobilization = org.immobilization + d * 3
+		end
+		org.owner:AddNaturalAdrenaline(0.5)
+		org.fearadd = org.fearadd + 0.5
+
+		timer.Simple(0, function() hg.LightStunPlayer(org.owner,2) end)
+		playBoneFractureSound(org.owner)
+		if org.isPly and hg.QueuePainScream then hg.QueuePainScream(org.owner, 1) end
+	end
+
+	hg.AddHarmToAttacker(dmgInfo, (org[limb_key] - oldDmg) * 1.5, "Upper limb bone damage harm")
+
+	return result, vecrand
+end
+
+input_list.rarmup = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return upper_limb(org, bone * 1.25, dmg, dmgInfo, "rarmup", "rarm", "up", boneindex, dir, hit, ricochet) end
 input_list.rarmdown = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return arms(org, bone, dmg, dmgInfo, "rarm", "down", boneindex, dir, hit, ricochet) end
-input_list.larmup = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return arms(org, bone * 1.25, dmg, dmgInfo, "larm", "up", boneindex, dir, hit, ricochet) end
+input_list.larmup = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return upper_limb(org, bone * 1.25, dmg, dmgInfo, "larmup", "larm", "up", boneindex, dir, hit, ricochet) end
 input_list.larmdown = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return arms(org, bone, dmg, dmgInfo, "larm", "down", boneindex, dir, hit, ricochet) end
-input_list.rlegup = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return legs(org, bone, dmg * 1.25, dmgInfo, "rleg", "up", boneindex, dir, hit, ricochet) end
+input_list.rlegup = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return upper_limb(org, bone, dmg * 1.25, dmgInfo, "rlegup", "rleg", "up", boneindex, dir, hit, ricochet) end
 input_list.rlegdown = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return legs(org, bone, dmg, dmgInfo, "rleg", "down", boneindex, dir, hit, ricochet) end
-input_list.llegup = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return legs(org, bone, dmg * 1.25, dmgInfo, "lleg", "up", boneindex, dir, hit, ricochet) end
+input_list.llegup = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return upper_limb(org, bone, dmg * 1.25, dmgInfo, "llegup", "lleg", "up", boneindex, dir, hit, ricochet) end
 input_list.llegdown = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return legs(org, bone, dmg, dmgInfo, "lleg", "down", boneindex, dir, hit, ricochet) end
 input_list.spine1 = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return spine(org, bone, dmg, dmgInfo, 1, boneindex, dir, hit, ricochet) end
 input_list.spine2 = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return spine(org, bone, dmg, dmgInfo, 2, boneindex, dir, hit, ricochet) end

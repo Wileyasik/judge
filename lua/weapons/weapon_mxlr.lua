@@ -15,7 +15,7 @@ SWEP.WorldModelFake = "models/weapons/c_mxlr.mdl"
 SWEP.FakePos = Vector(-11, 3.6, 6)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
-SWEP.AttachmentPos = Vector(-8.5,0,0)
+SWEP.AttachmentPos = Vector(-0.4,0.3,0)
 SWEP.AttachmentAng = Angle(0,0,0)
 SWEP.CantFireFromCollision = true
 
@@ -38,8 +38,8 @@ SWEP.FakeVPShouldUseHand = false
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_mxlr.png")
 SWEP.IconOverride = "entities/arc9_eft_mxlr.png"
 
-SWEP.LocalMuzzlePos = Vector(20, -0.66, 7)
-SWEP.LocalMuzzleAng = Angle(1, -0.2, 0)
+SWEP.LocalMuzzlePos = Vector(31.6, -0.66, 3.84)
+SWEP.LocalMuzzleAng = Angle(0, -0, 0)
 SWEP.WeaponEyeAngles = Angle(-0.7, 0.1, 0)
 
 SWEP.CustomShell = ".357 Magnum"
@@ -60,11 +60,14 @@ SWEP.SupressedSound = {"mosin/mosin_suppressed_fp.wav", 65, 90, 100}
 
 SWEP.availableAttachments = {
     barrel = {
-        [1] = {"supressor7", Vector(9,0,0), {}},
-    },
+		[1] = {"supressor9", Vector(0, 0, 0), {}},
+		[2] = {"supressor16", Vector(0, 0, 0), {}},
+		[3] = {"supressor15", Vector(0, 0, 0), {}},
+		["mount"] = Vector(1, -0.1, 0),
+	},
     sight = {
         ["mountType"] = "picatinny",
-        ["mount"] = Vector(-15, 1, 0),
+        ["mount"] = Vector(-26, 1, 0.05),
     },
 }
 
@@ -75,7 +78,7 @@ SWEP.AnimShootHandMul = 1
 SWEP.DeploySnd = {"homigrad/weapons/draw_hmg.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/hmg_holster.mp3", 55, 100, 110}
 SWEP.HoldType = "rpg"
-SWEP.ZoomPos = Vector(0, -0.6758, 4.9886)
+SWEP.ZoomPos = Vector(0, -0.6667, 5.0008)
 SWEP.RHandPos = Vector(0, 0, -1)
 SWEP.LHandPos = Vector(7, 0, -2)
 SWEP.Ergonomics = 1.2
@@ -134,7 +137,10 @@ SWEP.AnimList = {
 local path = "weapons/darsu_eft/mxlr/"
 local randspin = {"arc9_eft_shared/weapon_generic_rifle_spin1.ogg","arc9_eft_shared/weapon_generic_rifle_spin2.ogg","arc9_eft_shared/weapon_generic_rifle_spin3.ogg","arc9_eft_shared/weapon_generic_rifle_spin4.ogg","arc9_eft_shared/weapon_generic_rifle_spin5.ogg","arc9_eft_shared/weapon_generic_rifle_spin6.ogg","arc9_eft_shared/weapon_generic_rifle_spin7.ogg","arc9_eft_shared/weapon_generic_rifle_spin8.ogg","arc9_eft_shared/weapon_generic_rifle_spin9.ogg","arc9_eft_shared/weapon_generic_rifle_spin10.ogg"}
 
-SWEP.AnimsSounds = {
+SWEP.AnimsEvents = {
+    ["inspect"] = {
+        [0.01] = function(self) self:EmitSound("weapons/universal/uni_crawl_l_03.wav") end,
+    },
     ["ready"] = {
         [0] = function(self) self:EmitSound("weapons/darsu_eft/mosin/mr133_draw.ogg") end,
         [0.41] = function(self) self:EmitSound(path .. "marlin_bolt_out_empt.ogg") end,
@@ -309,12 +315,6 @@ SWEP.AnimsSounds = {
         [2.35] = function(self) self:EmitSound(path .. "marlin_bolt_out_shell.ogg") end,
         [2.57] = function(self) self:EmitSound(path .. "marlin_bolt_in.ogg") end,
     },
-}
-
-SWEP.AnimsEvents = {
-	["inspect"] = {
-		[0.01] = function(self) self:EmitSound("weapons/universal/uni_crawl_l_03.wav") end,
-	},
 }
 
 SWEP.stupidgun = true

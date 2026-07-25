@@ -17,7 +17,7 @@ SWEP.Primary.Sound = {"weapons/darsu_eft/pkm/fire/pkm_indoor_distant_loop1.wav",
 SWEP.SupressedSound = {"weapons/darsu_eft/pkm/fire/pkm_indoor_silenced_distant_loop1.wav", 75, 100, 110}
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/ak47/handling/ak47_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.09
-SWEP.ReloadTime = 7.5
+SWEP.ReloadTime = 6
 
 function SWEP:PostFireBullet(bullet)
 	local owner = self:GetOwner()
@@ -105,8 +105,8 @@ SWEP.ShockMultiplier = 2
 
 SWEP.CustomShell = "762x54"
 SWEP.CustomSecShell = "m60len"
-SWEP.EjectPos = Vector(2, 13, -3)
-SWEP.EjectAng = Angle(0, 90, 0)
+SWEP.EjectPos = Vector(5.2, 17, -4.5)
+SWEP.EjectAng = Angle(0, -90, 0)
 
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_pkm.png")
 SWEP.IconOverride = "entities/arc9_eft_pkm.png"
@@ -122,8 +122,8 @@ for i = 1, 100 do
 	SWEP.Spray[i] = Angle(-0.05 - math.cos(i) * 0.04, math.cos(i * i) * 0.05, 0) * 2
 end
 
-SWEP.LocalMuzzlePos = Vector(0, -1.6, 2)
-SWEP.LocalMuzzleAng = Angle(-0.2, -0.05, 0)
+SWEP.LocalMuzzlePos = Vector(38, -1.4, 2.3)
+SWEP.LocalMuzzleAng = Angle(0, 0, 0)
 SWEP.WeaponEyeAngles = Angle(0, 0, 0)
 
 SWEP.Ergonomics = 0.6

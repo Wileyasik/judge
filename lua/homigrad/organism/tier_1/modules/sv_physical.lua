@@ -188,10 +188,10 @@ module[2] = function(owner, org, timeValue)
 	end
 	org.adrenalineAdd = Approach(org.adrenalineAdd, 0, org.adrenalineAdd < 0 and timeValue / 30 or timeValue / 5)
 	org.adrenaline = Approach(org.adrenaline, 0, timeValue / 25)
-	if org.lleg < 1 and !org.llegamputated then
+	if org.lleg < 1 and !org.llegamputated and !org.llegupamputated then
 		org.lleg = max(org.lleg - timeValue / 240, 0)
 	end
-	if org.rleg < 1 and !org.rlegamputated then
+	if org.rleg < 1 and !org.rlegamputated and !org.rlegupamputated then
 		org.rleg = max(org.rleg - timeValue / 240, 0)
 	end
 	if org.rarm < 1 then

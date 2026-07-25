@@ -117,16 +117,16 @@ local hitgrouptolimb = {
 hg.bonetohitgroup = bonetohitgroup
 
 hg.amputeetable = {
-	--["ValveBiped.Bip01_L_UpperArm"] = "larm",
+	["ValveBiped.Bip01_L_UpperArm"] = "larmup",
 	["ValveBiped.Bip01_L_Forearm"] = "larm",
 	["ValveBiped.Bip01_L_Hand"] = "lhand",
-	--["ValveBiped.Bip01_R_UpperArm"] = "rarm",
+	["ValveBiped.Bip01_R_UpperArm"] = "rarmup",
 	["ValveBiped.Bip01_R_Forearm"] = "rarm",
 	["ValveBiped.Bip01_R_Hand"] = "rhand",
-	--["ValveBiped.Bip01_L_Thigh"] = "lleg",
+	["ValveBiped.Bip01_L_Thigh"] = "llegup",
 	["ValveBiped.Bip01_L_Calf"] = "lleg",
 	["ValveBiped.Bip01_L_Foot"] = "lleg",
-	--["ValveBiped.Bip01_R_Thigh"] = "rleg",
+	["ValveBiped.Bip01_R_Thigh"] = "rlegup",
 	["ValveBiped.Bip01_R_Calf"] = "rleg",
 	["ValveBiped.Bip01_R_Foot"] = "rleg"
 }
@@ -161,6 +161,10 @@ local limbs = {
 	["rarm"] = "ValveBiped.Bip01_R_Forearm",
 	["lhand"] = "ValveBiped.Bip01_L_Hand",
 	["rhand"] = "ValveBiped.Bip01_R_Hand",
+	["llegup"] = "ValveBiped.Bip01_L_Thigh",
+	["rlegup"] = "ValveBiped.Bip01_R_Thigh",
+	["larmup"] = "ValveBiped.Bip01_L_UpperArm",
+	["rarmup"] = "ValveBiped.Bip01_R_UpperArm",
 }
 
 local function getHeadImpactPos(ent, fallback)
@@ -224,6 +228,11 @@ function hg.organism.AmputateLimb(org, limb)
 	SpawnMeatGore(ent, select(1, ent:GetBonePosition(ent:LookupBone(bone))), 4)
 
 	hook.Run("OnAmputateLimb", org, ent, limb)
+
+	if limb == "larmup" and not org.larmamputated then hg.organism.AmputateLimb(org, "larm") end
+	if limb == "rarmup" and not org.rarmamputated then hg.organism.AmputateLimb(org, "rarm") end
+	if limb == "llegup" and not org.llegamputated then hg.organism.AmputateLimb(org, "lleg") end
+	if limb == "rlegup" and not org.rlegamputated then hg.organism.AmputateLimb(org, "rleg") end
 
 	if org.owner:IsNPC() then
 		org.shock = 100
@@ -1048,6 +1057,10 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 				"rleg",
 				"larm",
 				"rarm",
+				"llegup",
+				"rlegup",
+				"larmup",
+				"rarmup",
 			}
 
 			if should and hitgrouptolimb[hitgroup] then
@@ -1701,7 +1714,7 @@ function hg.BreakNeck(ent)
 end
 
 hook.Add("OnAmputateLimb", "amputate_cuffs", function(org, ent, limb)
-	if (limb == "larm" or limb == "rarm") and (org.handcuffed and ent:GetNetVar("handcuffed", false)) then
+	if (limb == "larm" or limb == "rarm" or limb == "larmup" or limb == "rarmup") and (org.handcuffed and ent:GetNetVar("handcuffed", false)) then
 		if ent.handcuffs then
 			if IsValid(ent.handcuffs[1]) then ent.handcuffs[1]:Remove() end
 			if IsValid(ent.handcuffs[2]) then ent.handcuffs[2]:Remove() end
@@ -1723,7 +1736,7 @@ end)
 
 hook.Add("OnAmputateLimb", "amputate_flashlight", function(org, ent, limb)
 	local inv = ent:GetNetVar("Inventory", {})
-	if limb == "larm" and inv["Weapons"] and inv["Weapons"]["hg_flashlight"] and ent:GetNetVar("flashlight", false) then
+	if (limb == "larm" or limb == "larmup") and inv["Weapons"] and inv["Weapons"]["hg_flashlight"] and ent:GetNetVar("flashlight", false) then
 		local flashlight = ents.Create("hg_flashlight")
 		flashlight:SetPos(ent:EyePos())
 		flashlight:SetAngles(ent:EyeAngles())

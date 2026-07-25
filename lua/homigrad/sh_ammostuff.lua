@@ -2340,6 +2340,17 @@ hg.ammotypes = {
 			PreRemove = preremove_explosive,
 		},
 	},
+	["grenade_40x381"] = {
+		name = "40mm Grenade M381",
+		dmgtype = DMG_BLAST,
+		tracer = TRACER_NONE,
+		plydmg = 0,
+		npcdmg = 0,
+		force = 150,
+		maxcarry = 20,
+		minsplash = 10,
+		maxsplash = 5,
+	},
 	["pulse"] = {
 		name = "Pulse",
 		dmgtype = DMG_BULLET,
@@ -2836,6 +2847,11 @@ local ammoents = {
 		Icon = "vgui/hud/ahuetzcity",
 		Model = "models/Items/BoxMRounds.mdl",
 		Count = 15
+	},
+	["grenade_40x381"] = {
+		Icon = "vgui/hud/ahuetzcity",
+		Model = "models/Items/BoxMRounds.mdl",
+		Count = 6
 	},
 	["pulse"] = {
 		Icon = "vgui/hud/hmcd_round_impulse",

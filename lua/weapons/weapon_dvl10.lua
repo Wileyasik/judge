@@ -62,6 +62,7 @@ SWEP.SupressedSound = {"weapons/darsu_eft/dvl10/dvl_fire_silenced_indoor_close.o
 SWEP.Primary.Wait = 0.25
 SWEP.NumBullet = 1
 SWEP.SetSupressor = true
+SWEP.SupressorOnly = true
 
 SWEP.availableAttachments = {
     barrel = {

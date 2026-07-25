@@ -14,7 +14,7 @@ SWEP.WorldModelFake = "models/weapons/c_m9a3.mdl"
 SWEP.FakePos = Vector(-24, 2, 5)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeScale = 1
-SWEP.AttachmentPos = Vector(0, 0, -0.2)
+SWEP.AttachmentPos = Vector(0, 0, 0)
 SWEP.AttachmentAng = Angle(0, 0, 90)
 SWEP.FakeAttachment = "1"
 SWEP.FakeEjectBrassATT = "2"
@@ -74,6 +74,9 @@ SWEP.IconOverride = "entities/arc9_eft_m9a3.png"
 SWEP.WepSelectIcon2box = true
 
 SWEP.CustomShell = "9x19"
+SWEP.EjectPos = Vector(4.5, 3, -21)
+SWEP.EjectAng = Angle(0,0,0)
+
 
 SWEP.weight = 1
 SWEP.ScrappersSlot = "Secondary"
@@ -94,7 +97,7 @@ SWEP.ReloadTime = 5.5
 SWEP.DeploySnd = {"homigrad/weapons/draw_pistol.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/holster_pistol.mp3", 55, 100, 110}
 SWEP.HoldType = "revolver"
-SWEP.ZoomPos = Vector(0, -2.2445, 3.1373)
+SWEP.ZoomPos = Vector(0, -2.2848, 3.1488)
 SWEP.RHandPos = Vector(-3, -1, 0)
 SWEP.LHandPos = false
 SWEP.SprayRand = {Angle(-0.02, -0.02, 0), Angle(-0.03, 0.02, 0)}
@@ -104,8 +107,8 @@ SWEP.ShockMultiplier = 1
 SWEP.punchmul = 1.5
 SWEP.punchspeed = 3
 
-SWEP.LocalMuzzlePos = Vector(0, -2.5, 2.7)
-SWEP.LocalMuzzleAng = Angle(0.398, 0, 0)
+SWEP.LocalMuzzlePos = Vector(2, -2.27, 2.6)
+SWEP.LocalMuzzleAng = Angle(0, 0, 0)
 SWEP.WeaponEyeAngles = Angle(0, 0, 90)
 
 SWEP.WorldPos = Vector(3.5, -1.5, -1)
@@ -130,17 +133,18 @@ SWEP.podkid = 1
 
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"supressor4", Vector(-1, 0.5, 0), {}},
-		[2] = {"supressor3", Vector(-1, 0.5, 0), {}},
-		["mount"] = Vector(-0.1, 0.4, 0.03),
+		[1] = {"supressor2", Vector(0, 0.0, 0), {}},
+		[2] = {"supressor1", Vector(0, 0.0, 0), {}},
+		["mount"] = Vector(-0.5, -0.05, 0),
+		["mountAngle"] = Angle(0, 0, 80),
 	},
 	sight = {
 		["mountType"] = "pistolmount",
-		["mount"] = Vector(-6, -0.9, 0.05),
+		["mount"] = Vector(-5.5, -1.35, 0.025),
 		["mountAngle"] = Angle(0, 0, 180),
 	},
 	underbarrel = {
-		["mount"] = Vector(12.2, 1.2, -1),
+		["mount"] = Vector(12.2, 1, -1),
 		["mountAngle"] = Angle(0, -0.75, -90),
 		["mountType"] = "picatinny_small"
 	},

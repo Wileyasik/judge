@@ -9,7 +9,7 @@ SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_snip_g3sg1.mdl"
-SWEP.WorldModelFake = "models/weapons/c_svd.mdl"
+SWEP.WorldModelFake = "models/weapons/arc9/stas_eft/c_svd.mdl"
 
 SWEP.FakeAttachment = "1"
 SWEP.FakeEjectBrassATT = "2"
@@ -17,7 +17,7 @@ SWEP.FakeEjectBrassATT = "2"
 SWEP.FakeBodyGroups = "11101001010111111"
 SWEP.FakePos = Vector(-15, 2.02, 5.25)
 SWEP.FakeAng = Angle(0, 0, 0)
-SWEP.AttachmentPos = Vector(0.5, 0.1, 0.3)
+SWEP.AttachmentPos = Vector(3, 0.1, 0)
 SWEP.AttachmentAng = Angle(0, 0, 0)
 
 SWEP.MagModel = "models/kali/weapons/10rd m14 magazine.mdl"
@@ -108,9 +108,10 @@ SWEP.Primary.Sound = {"weapons/darsu_eft/svds/svd_fire_close.ogg", 85, 100, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/svds/svd_fire_close_silenced.ogg", 65, 100, 100}
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"supressor1", Vector(0, 0, 0), {}},
-		[2] = {"supressor6", Vector(3, 0, 0), {}},
-		["mount"] = Vector(-0.5, 0.6, 0),
+		[1] = {"supressor9", Vector(0, 0, 0), {}},
+		[2] = {"supressor16", Vector(0, 0, 0), {}},
+		[3] = {"supressor15", Vector(0, 0, 0), {}},
+		["mount"] = Vector(-3.4, -0, 0),
 	},
 	sight = {
 		["mountType"] = {"picatinny", "dovetail"},
@@ -136,7 +137,7 @@ SWEP.addSprayMul = 1
 SWEP.cameraShakeMul = 2
 SWEP.RecoilMul = 0.2
 
-SWEP.LocalMuzzlePos = Vector(39.837, -2.5, 3.758)
+SWEP.LocalMuzzlePos = Vector(32.65, -2.26, 2.25)
 SWEP.LocalMuzzleAng = Angle(0, 0, 0)
 SWEP.WeaponEyeAngles = Angle(0, 0, 0)
 
@@ -151,7 +152,7 @@ SWEP.Primary.Wait = 0.15
 SWEP.NumBullet = 1
 SWEP.AnimShootMul = 1
 SWEP.AnimShootHandMul = 1
-SWEP.ReloadTime = 4.8
+SWEP.ReloadTime = 3.3
 SWEP.DeploySnd = {"homigrad/weapons/draw_hmg.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/hmg_holster.mp3", 55, 100, 110}
 SWEP.HoldType = "rpg"

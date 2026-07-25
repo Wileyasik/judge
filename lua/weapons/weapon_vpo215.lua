@@ -16,7 +16,7 @@ SWEP.WorldModelReal = "models/weapons/c_vpo215.mdl"
 SWEP.FakePos = Vector(-11, 2.5, 6)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
-SWEP.AttachmentPos = Vector(-8.5, 0, 0)
+SWEP.AttachmentPos = Vector(-0.5, 0.15, 0)
 SWEP.AttachmentAng = Angle(0, 0, 0)
 SWEP.FakeBodyGroups = "0111111"
 SWEP.CantFireFromCollision = true
@@ -37,8 +37,8 @@ SWEP.FakeVPShouldUseHand = false
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_vpo215.png")
 SWEP.IconOverride = "entities/arc9_eft_vpo215.png"
 
-SWEP.LocalMuzzlePos = Vector(20, -0.66, 7)
-SWEP.LocalMuzzleAng = Angle(1, -0.2, 0)
+SWEP.LocalMuzzlePos = Vector(33.9, -1.77, 3.6)
+SWEP.LocalMuzzleAng = Angle(0, -0, 0)
 SWEP.WeaponEyeAngles = Angle(-0.7, 0.1, 0)
 
 SWEP.CustomShell = "762x51"
@@ -66,11 +66,14 @@ SWEP.NumBullet = 1
 -- АТТАЧМЕНТЫ (ИЗМЕНЕНО)
 SWEP.availableAttachments = {
     barrel = {
-        [1] = {"supressor7", Vector(8.3, 0.1, 0), {}},
-    },
+		[1] = {"supressor9", Vector(0, 0, 0), {}},
+		[2] = {"supressor16", Vector(0, 0, 0), {}},
+		[3] = {"supressor15", Vector(0, 0, 0), {}},
+		["mount"] = Vector(-1.2, -0, 0),
+	},
     sight = {
         ["mountType"] = "picatinny",
-        ["mount"] = Vector(-18, 1, -0.05),
+        ["mount"] = Vector(-26, 1, 0.05),
     },
 }
 
@@ -300,7 +303,7 @@ function SWEP:Reload(time)
         local animSpeed = 4
         
         -- Тайминги (примерно как в ARC9 конфиге, ~3-4 сек)
-        local reloadTime = isEmpty and 4.0 or 3.0
+        local reloadTime = isEmpty and 2.5 or 1.5
         
         self:SetNetVar("shootgunReload", CurTime() + reloadTime)
         self.reloadCoolDown = CurTime() + reloadTime

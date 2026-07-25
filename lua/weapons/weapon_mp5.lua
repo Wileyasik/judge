@@ -17,7 +17,7 @@ SWEP.UseARC9Parts = true
 
 SWEP.ARC9Parts = {
 	magazine = {
-		model = "models/weapons/arc9/darsu_eft/mods/mag_mp5_hk_std_curved_9x19_30.mdl",
+		model = "models/weapons/mods/mag_mp5_hk_std_curved_9x19_30.mdl",
 		bonemerge = false,
 		bone = "mod_magazine",
 		pos = Vector(0, 2.8, 0),
@@ -27,11 +27,11 @@ SWEP.ARC9Parts = {
 
 SWEP.FakePos = Vector(-12, 2.0, 7.5)
 SWEP.FakeAng = Angle(0, -0, 0)
-SWEP.AttachmentPos = Vector(1.5, 0.4, 0)
+SWEP.AttachmentPos = Vector(-1.2, 0, 0)
 SWEP.AttachmentAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
 SWEP.FakeBodyGroups = "111111111"
-SWEP.ZoomPos = Vector(0, -2.2531, 5.7158)
+SWEP.ZoomPos = Vector(0, -2.2752, 5.737)
 
 SWEP.GunCamPos = Vector(4, -15, -6)
 SWEP.GunCamAng = Angle(190, -5, -100)
@@ -137,7 +137,7 @@ end
 SWEP.ReloadHold = nil
 SWEP.FakeVPShouldUseHand = false
 
-SWEP.HeldMagModel = "models/weapons/mag_mp5_hk_std_curved_9x19_30.mdl"
+SWEP.HeldMagModel = "models/weapons/mods/mag_mp5_hk_std_curved_9x19_30.mdl"
 SWEP.HeldMagBone = "mod_magazine"
 SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
 SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
@@ -157,15 +157,15 @@ SWEP.Primary.Sound = {"weapons/darsu_eft/mp5/fire_new/mp5_outdoor_close_loop1.wa
 SWEP.SupressedSound = {"weapons/darsu_eft/mp5/fire_new/mp5_outdoor_close_silenced_loop1.wav", 65, 90, 100}
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/mp5k/mp5k_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.07
-SWEP.ReloadTime = 4.5
+SWEP.ReloadTime = 3
 
-SWEP.PPSMuzzleEffect = "muzzleflash_mp5"
+SWEP.PPSMuzzleEffect = "muzzleflash_FAMAS"
 
 SWEP.CustomShell = "9x19"
 SWEP.ShellEject = "EjectBrass_9mm"
 
-SWEP.LocalMuzzlePos = Vector(14.706, -0.488, 3.525)
-SWEP.LocalMuzzleAng = Angle(0.4, 0.09, 0)
+SWEP.LocalMuzzlePos = Vector(12, -2.3, 3.8)
+SWEP.LocalMuzzleAng = Angle(0, 0, 0)
 SWEP.WeaponEyeAngles = Angle(0, 0, 0)
 
 SWEP.HoldType = "rpg"
@@ -178,17 +178,14 @@ SWEP.ScrappersSlot = "Primary"
 
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"supressor4", Vector(0, 0, 0), {}},
-		[2] = {"supressor6", Vector(0, 0, 0), {}},
-		["mount"] = Vector(-4, 0.45, 0),
+		[1] = {"supressor2", Vector(0, 0, 0), {}},
+		[2] = {"supressor1", Vector(0, 0, 0), {}},
+		[3] = {"supressor15", Vector(1.5, 0, 0), {}},
+		["mount"] = Vector(-0.8, -0.05, 0),
 	},
 	sight = {
 		["mountType"] = {"picatinny"},
-		["mount"] = Vector(-13, 1, 0.05),
-	},
-	grip = {
-		["mount"] = {["picatinny"] = Vector(6, 0.7, 0)},
-		["mountType"] = {"picatinny"},
+		["mount"] = Vector(-10, 1.45, 0.05),
 	},
 }
 
@@ -392,63 +389,76 @@ if CLIENT then
 			fake:SetRenderAngles(baseAngles)
 			fake:SetPos(basePosition)
 			fake:SetAngles(baseAngles)
-			fake:InvalidateBoneCache()
 			fake:SetupBones()
+		end
+
+		if istable(self.ARC9Parts) and istable(self.BC_DroppedPartModels) then
+			for partName, partData in pairs(self.ARC9Parts) do
+				local model = self.BC_DroppedPartModels[partName]
+				if not IsValid(model) or not istable(partData) then continue end
+
+				local boneName = partData.bone or ""
+				local extraPosition = BC_VECTOR_ZERO
+				local extraAngles = BC_ANGLE_ZERO
+
+				if partName == "magazine" and self.WorldMagazineBoneOverride then
+					boneName = self.WorldMagazineBoneOverride
+					extraPosition = self.WorldMagazineOffsetPos or BC_VECTOR_ZERO
+					extraAngles = self.WorldMagazineOffsetAng or BC_ANGLE_ZERO
+				end
+
+				local partBasePosition = basePosition
+				local partBaseAngles = baseAngles
+
+				if IsValid(fake) and isstring(boneName) and boneName ~= "" then
+					local boneID = fake:LookupBone(boneName)
+					if boneID ~= nil then
+						local boneMatrix = fake:GetBoneMatrix(boneID)
+						if boneMatrix then
+							partBasePosition = boneMatrix:GetTranslation()
+							partBaseAngles = boneMatrix:GetAngles()
+						end
+					end
+				end
+
+				local localPosition = (partData.pos or BC_VECTOR_ZERO) + extraPosition
+				local localAngles = Angle(
+					(partData.ang or BC_ANGLE_ZERO).p,
+					(partData.ang or BC_ANGLE_ZERO).y,
+					(partData.ang or BC_ANGLE_ZERO).r
+				)
+				localAngles:Add(extraAngles)
+
+				local position, angles = LocalToWorld(localPosition, localAngles, partBasePosition, partBaseAngles)
+
+				model:SetRenderOrigin(position)
+				model:SetRenderAngles(angles)
+				model:SetPos(position)
+				model:SetAngles(angles)
+				model:SetupBones()
+
+				BC_ApplyPartAppearance(model, partData)
+			end
+		end
+
+		if IsValid(fake) then
 			fake:DrawModel()
 		end
 
-		if not istable(self.ARC9Parts) or not self.BC_DroppedPartModels then return end
+if istable(self.ARC9Parts) and istable(self.BC_DroppedPartModels) then
+        for partName, partData in pairs(self.ARC9Parts) do
+            local model = self.BC_DroppedPartModels[partName]
+            if IsValid(model) then
+                model:DrawModel()
+            end
+        end
+    end
 
-		for partName, partData in pairs(self.ARC9Parts) do
-			local model = self.BC_DroppedPartModels[partName]
-			if not IsValid(model) or not istable(partData) then continue end
-
-			local boneName = partData.bone or ""
-			local extraPosition = BC_VECTOR_ZERO
-			local extraAngles = BC_ANGLE_ZERO
-
-			if partName == "magazine" and self.WorldMagazineBoneOverride then
-				boneName = self.WorldMagazineBoneOverride
-				extraPosition = self.WorldMagazineOffsetPos or BC_VECTOR_ZERO
-				extraAngles = self.WorldMagazineOffsetAng or BC_ANGLE_ZERO
-			end
-
-			local partBasePosition = basePosition
-			local partBaseAngles = baseAngles
-
-			if IsValid(fake) and isstring(boneName) and boneName ~= "" then
-				local boneID = fake:LookupBone(boneName)
-				if boneID ~= nil then
-					local boneMatrix = fake:GetBoneMatrix(boneID)
-					if boneMatrix then
-						partBasePosition = boneMatrix:GetTranslation()
-						partBaseAngles = boneMatrix:GetAngles()
-					end
-				end
-			end
-
-			local localPosition = (partData.pos or BC_VECTOR_ZERO) + extraPosition
-			local localAngles = Angle(
-				(partData.ang or BC_ANGLE_ZERO).p,
-				(partData.ang or BC_ANGLE_ZERO).y,
-				(partData.ang or BC_ANGLE_ZERO).r
-			)
-			localAngles:Add(extraAngles)
-
-			local position, angles = LocalToWorld(localPosition, localAngles, partBasePosition, partBaseAngles)
-
-			model:SetRenderOrigin(position)
-			model:SetRenderAngles(angles)
-			model:SetPos(position)
-			model:SetAngles(angles)
-
-			BC_ApplyPartAppearance(model, partData)
-
-			model:InvalidateBoneCache()
-			model:SetupBones()
-			model:DrawModel()
-		end
-	end
+        local originalWorldModel = self.worldModel
+        self.worldModel = fake
+        self:DrawAttachments()
+        self.worldModel = originalWorldModel
+    end
 
 	function SWEP:DrawWorldModel()
 		local owner = self:GetOwner()

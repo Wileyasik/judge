@@ -16,7 +16,7 @@ SWEP.WorldModelReal = "models/weapons/c_m700.mdl"
 SWEP.FakePos = Vector(-9, 3.6, 6)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
-SWEP.AttachmentPos = Vector(-8.5, 0, 0)
+SWEP.AttachmentPos = Vector(-0.4, 0.1, 0)
 SWEP.AttachmentAng = Angle(0, 0, 0)
 SWEP.FakeBodyGroups = "01100010"
 SWEP.CantFireFromCollision = true
@@ -37,8 +37,8 @@ SWEP.FakeVPShouldUseHand = false
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_m700.png")
 SWEP.IconOverride = "entities/arc9_eft_m700.png"
 
-SWEP.LocalMuzzlePos = Vector(40, -0.66, 3.8)
-SWEP.LocalMuzzleAng = Angle(1, -0.2, 0)
+SWEP.LocalMuzzlePos = Vector(32, -0.69, 3.53)
+SWEP.LocalMuzzleAng = Angle(0, -0, 0)
 SWEP.WeaponEyeAngles = Angle(-0.7, 0.1, 0)
 
 SWEP.CustomShell = "762x51"
@@ -61,11 +61,14 @@ SWEP.SupressedSound = {"weapons/darsu_eft/m700/rem700_outdoor_silenced_close.ogg
 
 SWEP.availableAttachments = {
     barrel = {
-        [1] = {"supressor7", Vector(9, 0, 0), {}},
-    },
+		[1] = {"supressor9", Vector(0, 0, 0), {}},
+		[2] = {"supressor16", Vector(0, 0, 0), {}},
+		[3] = {"supressor15", Vector(0, 0, 0), {}},
+		["mount"] = Vector(-1.2, -0, 0),
+	},
     sight = {
         ["mountType"] = "picatinny",
-        ["mount"] = Vector(-13, 1.5, 0),
+        ["mount"] = Vector(-23, 1.3, 0.05),
     },
 }
 
@@ -76,7 +79,7 @@ SWEP.AnimShootHandMul = 10
 SWEP.DeploySnd = {"homigrad/weapons/draw_hmg.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/hmg_holster.mp3", 55, 100, 110}
 SWEP.HoldType = "rpg"
-SWEP.ZoomPos = Vector(0, -0.7, 5)
+SWEP.ZoomPos = Vector(0, -0.6806, 4.7224)
 SWEP.RHandPos = Vector(0, 0, -1)
 SWEP.LHandPos = Vector(7, 0, -2)
 SWEP.Ergonomics = 0.9
@@ -133,8 +136,10 @@ SWEP.AnimList = {
 }
 
 -- Звуки анимаций
-SWEP.AnimsSounds = {
-    -- Ready
+SWEP.AnimsEvents = {
+    ["inspect"] = {
+        [0.01] = function(self) self:EmitSound("weapons/universal/uni_crawl_l_03.wav") end,
+    },
     ["ready0"] = {
         [0] = function(self) self:EmitSound("weapons/tfa_ins2/k98/mosin_boltback.wav") end,
         [0.4] = function(self) self:EmitSound("weapons/tfa_ins2/k98/mosin_boltforward.wav") end,
@@ -401,12 +406,6 @@ SWEP.AnimsSounds = {
 
 SWEP.stupidgun = true
 
-SWEP.AnimsEvents = {
-	["inspect"] = {
-		[0.01] = function(self) self:EmitSound("weapons/universal/uni_crawl_l_03.wav") end,
-	},
-}
-
 function SWEP:AllowedInspect()
 	return self:Clip1() >= self.Primary.ClipSize and self.drawBullet == true
 end
@@ -502,7 +501,7 @@ local vector_full = Vector(1, 1, 1)
 
 local function reloadFunc(self)
     if not SERVER then return end
-    if SERVER then self:SetNetVar("shootgunReload", CurTime() + 1.1) end
+    if SERVER then self:SetNetVar("shootgunReload", CurTime() + 0.8) end
     if self.MagIndex then
         self:GetWM():ManipulateBoneScale(self.MagIndex, vector_full)
     end
@@ -547,7 +546,7 @@ function SWEP:Reload(time)
     if not self:CanReload() then return end
 
     if SERVER then
-        self:SetNetVar("shootgunReload", CurTime() + 1.1)
+        self:SetNetVar("shootgunReload", CurTime() + 0.8)
         self:PlayAnim(self.AnimList["start"] or "sgreload_start", 1, false, function()
             reloadFunc(self)
         end, false, true)

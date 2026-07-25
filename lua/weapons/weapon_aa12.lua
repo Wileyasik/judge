@@ -1,4 +1,4 @@
-﻿SWEP.Base = "homigrad_base"
+SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "AA-12"
@@ -13,15 +13,16 @@ SWEP.WorldModelFake = "models/weapons/c_aa12.mdl"
 SWEP.WorldModelReal = "models/weapons/c_aa12.mdl"
 SWEP.FakePos = Vector(-15, 1, 6)
 SWEP.FakeAng = Angle(0, 0, 0)
-SWEP.AttachmentPos = Vector(3.8,2.1,-27.8)
+SWEP.AttachmentPos = Vector(-1.4,0.5,-28)
 SWEP.AttachmentAng = Angle(0,0,0)
 SWEP.FakeAttachment = "1"
 SWEP.FakeBodyGroups = "102122003"
-SWEP.ZoomPos = Vector(0, -3.3, 6.6)
+SWEP.ZoomPos = Vector(0, -3.2741, 6.5261)
 
 SWEP.availableAttachments = {
     barrel = {
-        [1] = {"supressor5", Vector(-5, -1.8, 0), {}},
+        [1] = {"supressor13", Vector(0, -0, 0), {}},
+		["mount"] = Vector(-0.6, 0, 0),
     },
 }
 
@@ -34,7 +35,7 @@ SWEP.FakeEjectBrassATT = "2"
 
 SWEP.FakeViewBobBone = "CAM_Homefield"
 
-SWEP.MagModel = "models/weapons/arc9/darsu_eft/mods/mag_aa12_20.mdl"
+SWEP.MagModel = "models/weapons/mods/mag_aa12_20.mdl"
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
@@ -92,12 +93,12 @@ SWEP.Primary.Sound = {"sound/weapons/darsu_eft/aa12_outdoor_close_loop1.wav", 75
 SWEP.SupressedSound = {"weapons/darsu_eft/m3s90/m3_fire_outdoor_silenced_close.wav", 65, 100, 100}
 SWEP.Primary.SoundEmpty = {"sound/weapons/darsu_eft/aa12_outdoor_close_loop1.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.300
-SWEP.ReloadTime = 8.0
+SWEP.ReloadTime = 6.5
 
 SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1"
 
-SWEP.LocalMuzzlePos = Vector(27.985,-3.5,-1)
-SWEP.LocalMuzzleAng = Angle(-0.2,0,0)
+SWEP.LocalMuzzlePos = Vector(18,-3.28,1.82)
+SWEP.LocalMuzzleAng = Angle(0,0,0)
 SWEP.WeaponEyeAngles = Angle(0,0,0)
 
 SWEP.HoldType = "rpg"
@@ -158,4 +159,41 @@ function SWEP:AllowedInspect()
     if self:Clip1() < self.Primary.ClipSize then return end
     if self.drawBullet == false then return end
     return true
+end
+
+--========================================================
+-- FIRE ANIMATION
+--========================================================
+
+SWEP.FireAnimTime = 0.15
+SWEP.FireAnimCandidates = {"fire", "fire1"}
+
+function SWEP:PrimaryShootPost()
+	if not CLIENT then return end
+	if self.reload then return end
+	if not self:ShouldUseFakeModel() then return end
+
+	local worldModel = self:GetWM()
+	if not IsValid(worldModel) then return end
+
+	local selectedSequence
+	for _, sequenceName in ipairs(self.FireAnimCandidates) do
+		local sequenceID = worldModel:LookupSequence(sequenceName)
+		if sequenceID ~= nil and sequenceID >= 0 then
+			selectedSequence = sequenceName
+			break
+		end
+	end
+
+	if not selectedSequence then return end
+
+	self.AnimList.fire = selectedSequence
+	self:PlayAnim("fire", self.FireAnimTime, false)
+
+	local timerName = "BC_FireAnimation_" .. self:EntIndex()
+	timer.Create(timerName, self.FireAnimTime, 1, function()
+		if not IsValid(self) or self.reload then return end
+		if self.Primary and (self.Primary.Next or 0) > CurTime() then return end
+		self:PlayAnim("idle", 1, not self.NoIdleLoop)
+	end)
 end

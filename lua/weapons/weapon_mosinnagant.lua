@@ -15,7 +15,7 @@ SWEP.WorldModelFake = "models/weapons/c_mosin.mdl"
 SWEP.FakePos = Vector(-12, 2.6, 6)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
-SWEP.AttachmentPos = Vector(-8.5, 0, 0)
+SWEP.AttachmentPos = Vector(-0.2, 0.2, 0.1)
 SWEP.AttachmentAng = Angle(0, 0, 0)
 SWEP.FakeBodyGroups = "11110123"
 SWEP.CantFireFromCollision = true
@@ -36,8 +36,8 @@ SWEP.FakeVPShouldUseHand = false
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_mosin_sniper.png")
 SWEP.IconOverride = "entities/arc9_eft_mosin_sniper.png"
 
-SWEP.LocalMuzzlePos = Vector(40, -0.66, 3.8)
-SWEP.LocalMuzzleAng = Angle(1, -0.2, 0)
+SWEP.LocalMuzzlePos = Vector(38.9, -1.78, 3.75)
+SWEP.LocalMuzzleAng = Angle(0, -0, 0)
 SWEP.WeaponEyeAngles = Angle(-0.7, 0.1, 0)
 
 SWEP.CustomShell = "762x51"
@@ -61,11 +61,14 @@ SWEP.SupressedSound = {"weapons/darsu_eft/mosin/mosin_outdoor_silenced_close1.og
 
 SWEP.availableAttachments = {
     barrel = {
-        [1] = {"supressor7", Vector(9, 0, 0), {}},
-    },
+		[1] = {"supressor9", Vector(0, 0, 0), {}},
+		[2] = {"supressor16", Vector(0, 0, 0), {}},
+		[3] = {"supressor15", Vector(0, 0, 0), {}},
+		["mount"] = Vector(0.5, -0.1, 0),
+	},
     sight = {
         ["mountType"] = "kar98mount",
-        ["mount"] = Vector(-17, 2, 0),
+        ["mount"] = Vector(-32.4, 2, -0.5),
     },
 }
 
@@ -76,7 +79,7 @@ SWEP.AnimShootHandMul = 10
 SWEP.DeploySnd = {"homigrad/weapons/draw_hmg.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/hmg_holster.mp3", 55, 100, 110}
 SWEP.HoldType = "rpg"
-SWEP.ZoomPos = Vector(0, -1.85, 4.7)
+SWEP.ZoomPos = Vector(0, -1.8432, 4.741)
 SWEP.RHandPos = Vector(0, 0, -1)
 SWEP.LHandPos = Vector(7, 0, -2)
 SWEP.Ergonomics = 0.9
@@ -151,7 +154,7 @@ local randspin = {
     "weapons/ak74/ak74_magout_rattle.wav",
 }
 
-SWEP.AnimsSounds = {
+SWEP.AnimsEvents = {
     -- Ready анимации
     ["ready0"] = {
         [0] = function(self) self:EmitSound("weapons/tfa_ins2/k98/mosin_boltback.wav") end,
@@ -354,7 +357,7 @@ function SWEP:OnVarChanged(name, old, new)
 end
 
 function SWEP:InitializePost()
-    local randomPreset = table.Random(self.FakeBodyGroupsPresets); if istable(randomPreset) then randomPreset = table.Random(randomPreset) end; if isstring(randomPreset) then self:SetRandomBodygroups(randomPreset) end
+    self:SetRandomBodygroups(table.Random(self.FakeBodyGroupsPresets))
     self.AnimStart_Insert = 0
     self.AnimStart_Draw = 0
 end
@@ -425,7 +428,7 @@ local vector_full = Vector(1, 1, 1)
 
 local function reloadFunc(self)
     if not SERVER then return end
-    if SERVER then self:SetNetVar("shootgunReload", CurTime() + 1.1) end
+    if SERVER then self:SetNetVar("shootgunReload", CurTime() + 0.8) end
     if self.MagIndex then
         self:GetWM():ManipulateBoneScale(self.MagIndex, vector_full)
     end
@@ -470,7 +473,7 @@ function SWEP:Reload(time)
     if not self:CanReload() then return end
 
     if SERVER then
-        self:SetNetVar("shootgunReload", CurTime() + 1.1)
+        self:SetNetVar("shootgunReload", CurTime() + 0.8)
         self:PlayAnim(self.AnimList["start"] or "sgreload_start", 1, false, function()
             reloadFunc(self)
         end, false, true)

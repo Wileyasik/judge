@@ -247,6 +247,11 @@ function ENT:Use( activator )
     if not IsValid( activator ) then return end
     if not activator:IsPlayer() then return end
     
+    if self:GetIsLocked() or self:GetNWBool("HGDoorKeyVehicleLocked", false) then
+        activator:EmitSound("doors/latchlocked2.wav", 50, 100, 1.0, 6, 0, 0)
+        return
+    end
+
     if !hg_glide_only_closest_seat:GetBool() and not IsValid( self:GetDriver() ) and !activator:KeyDown(IN_WALK) then
         local seat = self:GetFreeSeat()
 

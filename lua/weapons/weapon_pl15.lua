@@ -18,7 +18,7 @@ SWEP.AttachmentAng = Angle(0,0,0)
 SWEP.FakeAttachment = "1"
 SWEP.FakeEjectBrassATT = "2"
 SWEP.FakeBodyGroups = "111110101"
-SWEP.MagModel = "models/weapons/arc9/darsu_eft/mods/mag_pl15.mdl"
+SWEP.MagModel = "models/weapons/mods/mag_pl15.mdl"
 
 SWEP.AnimList = {
 	["idle"] = "idle",
@@ -111,6 +111,8 @@ SWEP.ScrappersSlot = "Secondary"
 
 SWEP.weaponInvCategory = 2
 SWEP.ShellEject = "EjectBrass_9mm"
+SWEP.EjectPos = Vector(4.5, 3, -21)
+SWEP.EjectAng = Angle(0,0,0)
 SWEP.Primary.ClipSize = 15
 SWEP.Primary.DefaultClip = 15
 SWEP.Primary.Automatic = false
@@ -122,20 +124,20 @@ SWEP.SupressedSound = {"weapons/darsu_eft/pl15/pl_fire_silenced_indoor_close.wav
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/makarov/handling/makarov_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Force = 23
 SWEP.Primary.Wait = PISTOLS_WAIT
-SWEP.ReloadTime = 5
+SWEP.ReloadTime = 3.5
 
 
 SWEP.DeploySnd = {"homigrad/weapons/draw_pistol.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/holster_pistol.mp3", 55, 100, 110}
 SWEP.HoldType = "revolver"
-SWEP.ZoomPos = Vector(0, 0.2076, 4.2312)
+SWEP.ZoomPos = Vector(0, 0.2169, 4.1947)
 SWEP.SprayRand = {Angle(-0.03, -0.03, 0), Angle(-0.05, 0.03, 0)}
 SWEP.Ergonomics = 1.3
 SWEP.Penetration = 7
 SWEP.WorldPos = Vector(-0.1, -0.7, -0.5)
 SWEP.WorldAng = Angle(0, 0, 0)
 
-SWEP.LocalMuzzlePos = Vector(11,0.25,3.6)
+SWEP.LocalMuzzlePos = Vector(6.6,0.235,3.65)
 SWEP.LocalMuzzleAng = Angle(0.2,0.0,0)
 SWEP.WeaponEyeAngles = Angle(0,0,0)
 
@@ -151,9 +153,10 @@ SWEP.holsteredAng = Angle(0, 20, 30)
 SWEP.shouldntDrawHolstered = true
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"supressor3", Vector(0,0,0), {}},
-		[2] = {"supressor4", Vector(0,0.1,0), {}},
-		["mount"] = Vector(-0.251,0.2,0.03),
+		[1] = {"supressor2", Vector(0, 0.0, 0), {}},
+		[2] = {"supressor1", Vector(0, 0.0, 0), {}},
+		["mount"] = Vector(-0.5, 0, -0.05),
+		["mountAngle"] = Angle(0, 0, 180),
 	},
 	underbarrel = {
 		["mount"] = Vector(13.2, -1.2, -1),

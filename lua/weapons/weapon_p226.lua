@@ -13,8 +13,8 @@ SWEP.WorldModelFake = "models/weapons/c_p226_2.mdl"
 
 SWEP.FakePos = Vector(-23, 2, 5)
 SWEP.FakeAng = Angle(0, 0, 0)
-SWEP.AttachmentPos = Vector(0, 0, -0.2)
-SWEP.AttachmentAng = Angle(0, 0, 90)
+SWEP.AttachmentPos = Vector(-0.37, 0, 0.2)
+SWEP.AttachmentAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
 SWEP.FakeEjectBrassATT = "2"
 SWEP.FakeBodyGroups = "11202111011"
@@ -66,6 +66,9 @@ SWEP.IconOverride = "entities/arc9_eft_p226r.png"
 SWEP.WepSelectIcon2box = true
 
 SWEP.CustomShell = "9x19"
+SWEP.EjectPos = Vector(4.5, 3, -21.5)
+SWEP.EjectAng = Angle(0,0,0)
+
 
 SWEP.weight = 1
 SWEP.ScrappersSlot = "Secondary"
@@ -81,12 +84,12 @@ SWEP.Primary.Sound = {"weapons/darsu_eft/p226/p226_fire_close.ogg", 75, 90, 100}
 SWEP.Primary.SoundEmpty = {"weapons/darsu_eft/p226/p226_fire_silenced_indoor_distant.ogg", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Force = 22
 SWEP.Primary.Wait = PISTOLS_WAIT
-SWEP.ReloadTime = 5
+SWEP.ReloadTime = 3.5
 
 SWEP.DeploySnd = {"homigrad/weapons/draw_pistol.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/holster_pistol.mp3", 55, 100, 110}
 SWEP.HoldType = "revolver"
-SWEP.ZoomPos = Vector(0, -2.2692, 2.8949)
+SWEP.ZoomPos = Vector(0, -2.2911, 2.8963)
 SWEP.RHandPos = Vector(-3, -1, 0)
 SWEP.LHandPos = false
 SWEP.SprayRand = {Angle(-0.02, -0.02, 0), Angle(-0.03, 0.02, 0)}
@@ -96,8 +99,8 @@ SWEP.ShockMultiplier = 1
 SWEP.punchmul = 1.5
 SWEP.punchspeed = 3
 
-SWEP.LocalMuzzlePos = Vector(0, -2.5, 2.7)
-SWEP.LocalMuzzleAng = Angle(0.398, 0, 0)
+SWEP.LocalMuzzlePos = Vector(2.57, -2.28, 2.42)
+SWEP.LocalMuzzleAng = Angle(0, 0, 0)
 SWEP.WeaponEyeAngles = Angle(0, 0, 90)
 
 SWEP.WorldPos = Vector(3.5, -1.5, -1)
@@ -123,19 +126,19 @@ SWEP.podkid = 1
 
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"supressor4", Vector(-1, 0.5, 0), {}},
-		[2] = {"supressor3", Vector(-1, 0.5, 0), {}},
-		["mount"] = Vector(-0.1, 0.4, 0.03),
-		["mountAngle"] = Angle(0, 0, 0),
+		[1] = {"supressor2", Vector(0, 0.0, 0), {}},
+		[2] = {"supressor1", Vector(0, 0.0, 0), {}},
+		["mount"] = Vector(-0.5, 0, -0.05),
+		["mountAngle"] = Angle(0, 0, 180),
 	},
 	sight = {
 		["mountType"] = "pistolmount",
-		["mount"] = Vector(-6, -0.9, 0.05),
-		["mountAngle"] = Angle(0, 0, 180),
+		["mount"] = Vector(-5.55, -1, -0.2),
+		["mountAngle"] = Angle(0, 0, -90),
 	},
 	underbarrel = {
-		["mount"] = Vector(12.2, 1.2, -1),
-		["mountAngle"] = Angle(0, -0.75, -90),
+		["mount"] = Vector(12.2, -0.2, 0),
+		["mountAngle"] = Angle(0, -0.75, 0),
 		["mountType"] = "picatinny_small"
 	},
 }

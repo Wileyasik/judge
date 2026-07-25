@@ -14,7 +14,7 @@ SWEP.WorldModelFake = "models/weapons/c_fn57.mdl"
 SWEP.FakePos = Vector(-22, 2.5, 5)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.AttachmentPos = Vector(0, 0, 0)
-SWEP.AttachmentAng = Angle(90, 0, 0)
+SWEP.AttachmentAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
 SWEP.FakeEjectBrassATT = "2"
 SWEP.FakeBodyGroups = "11111201"
@@ -63,9 +63,9 @@ SWEP.FakeMagDropBone = "glock_mag"
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_fn57.png")
 SWEP.IconOverride = "entities/arc9_eft_fn57.png"
 
-SWEP.CustomShell = "556x45"
-SWEP.EjectPos = Vector(0, 3, 2)
-SWEP.EjectAng = Angle(-80, -90, 0)
+SWEP.CustomShell = "9x19"
+SWEP.EjectPos = Vector(3.7, 4, -21)
+SWEP.EjectAng = Angle(0,0,0)
 
 SWEP.IsPistol = true
 SWEP.podkid = 1
@@ -84,13 +84,13 @@ SWEP.SupressedSound = {"weapons/darsu_eft/57/fiveseven_fire_silenced_indoor_clos
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/makarov/handling/makarov_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Force = 30
 SWEP.Primary.Wait = PISTOLS_WAIT
-SWEP.ReloadTime = 5
+SWEP.ReloadTime = 3.5
 
 
 SWEP.DeploySnd = {"homigrad/weapons/draw_pistol.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/holster_pistol.mp3", 55, 100, 110}
 SWEP.HoldType = "revolver"
-SWEP.ZoomPos = Vector(0, -1.7779, 2.8612)
+SWEP.ZoomPos = Vector(0, -1.7818, 3.1109)
 SWEP.RHandPos = Vector(-3, -1, 0)
 SWEP.LHandPos = false
 SWEP.SprayRand = {Angle(-0.03, -0.03, 0), Angle(-0.05, 0.03, 0)}
@@ -110,8 +110,8 @@ SWEP.shouldntDrawHolstered = true
 SWEP.weight = 0.7
 SWEP.ShockMultiplier = 1
 
-SWEP.LocalMuzzlePos = Vector(0, -2.5, 6)
-SWEP.LocalMuzzleAng = Angle(1.5, 0, 0)
+SWEP.LocalMuzzlePos = Vector(4.49, -1.77, 2.25)
+SWEP.LocalMuzzleAng = Angle(0, 0, 0)
 SWEP.WeaponEyeAngles = Angle(0, 0, 90)
 
 --local to head
@@ -128,14 +128,14 @@ SWEP.punchspeed = 3
 
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"supressor4", Vector(-2.7, 0, 5), {}},
-		[2] = {"supressor3", Vector(-1, 0.2, 0), {}},
-		["mount"] = Vector(-0.1, 0.4, 0.03),
-		["mountAngle"] = Angle(0, -0.75, 90),
+		[1] = {"supressor2", Vector(0, 0.0, 0), {}},
+		[2] = {"supressor1", Vector(0, 0.0, 0), {}},
+		["mount"] = Vector(-0.25, 0, 0.1),
+		["mountAngle"] = Angle(0, 0, 180),
 	},
 	underbarrel = {
-		["mount"] = Vector(12.7, -0.1, -2.5),
-		["mountAngle"] = Angle(90, -0.75, -360),
+		["mount"] = Vector(12.7, -0.1, -0),
+		["mountAngle"] = Angle(0, -0.75, -360),
 		["mountType"] = "picatinny_small"
 	},
 }

@@ -69,6 +69,11 @@ function ENT:Use( activator )
     if not activator:IsPlayer() then return end
     if self:WaterLevel() > 2 then return end
 
+    if self:GetIsLocked() or self:GetNWBool("HGDoorKeyVehicleLocked", false) then
+        activator:EmitSound("doors/latchlocked2.wav", 50, 100, 1.0, 6, 0, 0)
+        return
+    end
+
     local freeSeat = self:GetFreeSeat()
     if not freeSeat then return end
 

@@ -511,3 +511,57 @@ function RenderAccessoriesCool(ent,ply)
 		CoolRenderAccessories(ent, ent:GetNetVar("Accessories", "none"))
 	end
 end
+
+local posesDir = "zcity/appearances/"
+local posesFile = posesDir .. "poses.json"
+
+function hg.Appearance.SavePoses()
+	local data = {}
+	for key, acc in pairs(hg.Accessories) do
+		if acc._poseModified then
+			data[key] = {
+				malepos = {
+					{acc.malepos[1].x, acc.malepos[1].y, acc.malepos[1].z},
+					{acc.malepos[2].p, acc.malepos[2].y, acc.malepos[2].r},
+					acc.malepos[3]
+				},
+				fempos = {
+					{acc.fempos[1].x, acc.fempos[1].y, acc.fempos[1].z},
+					{acc.fempos[2].p, acc.fempos[2].y, acc.fempos[2].r},
+					acc.fempos[3]
+				}
+			}
+		end
+	end
+	file.CreateDir(posesDir)
+	file.Write(posesFile, util.TableToJSON(data, true))
+end
+
+function hg.Appearance.LoadPoses()
+	if not file.Exists(posesFile, "DATA") then return end
+	local data = util.JSONToTable(file.Read(posesFile, "DATA"))
+	if not data then return end
+	for key, saved in pairs(data) do
+		local acc = hg.Accessories[key]
+		if not acc then continue end
+		if saved.malepos then
+			acc.malepos = {
+				Vector(saved.malepos[1][1], saved.malepos[1][2], saved.malepos[1][3]),
+				Angle(saved.malepos[2][1], saved.malepos[2][2], saved.malepos[2][3]),
+				saved.malepos[3]
+			}
+		end
+		if saved.fempos then
+			acc.fempos = {
+				Vector(saved.fempos[1][1], saved.fempos[1][2], saved.fempos[1][3]),
+				Angle(saved.fempos[2][1], saved.fempos[2][2], saved.fempos[2][3]),
+				saved.fempos[3]
+			}
+		end
+		acc._poseModified = true
+	end
+end
+
+hook.Add("InitPostEntity", "HG_LoadAccessoryPoses", function()
+	timer.Simple(1, function() hg.Appearance.LoadPoses() end)
+end)

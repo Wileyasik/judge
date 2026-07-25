@@ -17,7 +17,7 @@ SWEP.Primary.Sound = {"weapons/zwei/m249/fire/m249_outdoor_close1.wav", 75, 90, 
 SWEP.SupressedSound = {"weapons/zwei/m249/fire/m249_outdoor_suppressed_close4.wav", 75, 90, 100}
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/fnfal/handling/fnfal_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.06
-SWEP.ReloadTime = 7.5
+SWEP.ReloadTime = 6
 
 function SWEP:PostFireBullet(bullet)
 	if CLIENT then
@@ -46,7 +46,7 @@ SWEP.FakeAttachment = "1"
 SWEP.FakeScale = 1
 SWEP.FakePos = Vector(-15, 3.53, 9.45)
 SWEP.FakeAng = Angle(0.19, 0.04, 0)
-SWEP.AttachmentPos = Vector(0, 0.7, 0.2)
+SWEP.AttachmentPos = Vector(0.3, 1.05, 0.2)
 SWEP.AttachmentAng = Angle(0, 0, 0)
 
 SWEP.FakeEjectBrassATT = "2"
@@ -134,7 +134,7 @@ for i = 1, 150 do
 	SWEP.Spray[i] = Angle(-0.03 - math.cos(i) * 0.02, math.cos(i * i) * 0.04, 0) * 2
 end
 
-SWEP.LocalMuzzlePos = Vector(23.632, -2.3, 5.860)
+SWEP.LocalMuzzlePos = Vector(23, -1.95, 5)
 SWEP.LocalMuzzleAng = Angle(0.3, 0.02, 0)
 SWEP.WeaponEyeAngles = Angle(0, 0, 0)
 
@@ -152,11 +152,13 @@ SWEP.DistSound = "m249/m249_dist.wav"
 
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"supressor2", Vector(0, 0, 0), {}},
-		["mount"] = Vector(-3, 0.8, 0.15),
+		[1] = {"supressor5", Vector(0, 0, 0), {}},
+		[2] = {"supressor6", Vector(0, 0, 0), {}},
+		[3] = {"supressor15", Vector(1.3, 0, 0), {}},
+		["mount"] = Vector(-1, 0, 0),
 	},
 	sight = {
-		["mount"] = Vector(-15.5, 0.28, 1.4),
+		["mount"] = Vector(-15.5, -0.09, 1.4),
 		["mountType"] = "picatinny",
 		["mountAngle"] = Angle(0, -0.75, 90),
 	},

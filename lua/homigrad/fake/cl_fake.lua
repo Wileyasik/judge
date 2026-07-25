@@ -110,8 +110,8 @@ hook.Add("HG.InputMouseApply", "fakeCameraAngles2", function(tbl)
 
 	local consmul = 1 - hg.CalculateConsciousnessMul()
 
-	if (wep.weight or wep.visualweight) and ((wep.weight and wep.weight > 0 or wep.visualweight and wep.visualweight > 0) or lply.organism.larmamputated or consmul > 0.3) then
-		ViewPunch3(Angle(-y / 50 / 16, x / 50 / 16, 0) * math.min(((wep.visualweight ~= nil and wep.visualweight > 0) and wep.visualweight) or wep.weight, 10) / 3 / (1 - consmul * 0.5) * (lply.organism.larmamputated and 4 or 1) * (lply.organism.rarmamputated and 2 or 1))
+	if (wep.weight or wep.visualweight) and ((wep.weight and wep.weight > 0 or wep.visualweight and wep.visualweight > 0) or lply.organism.larmamputated or lply.organism.larmupamputated or consmul > 0.3) then
+		ViewPunch3(Angle(-y / 50 / 16, x / 50 / 16, 0) * math.min(((wep.visualweight ~= nil and wep.visualweight > 0) and wep.visualweight) or wep.weight, 10) / 3 / (1 - consmul * 0.5) * ((lply.organism.larmamputated or lply.organism.larmupamputated) and 4 or 1) * ((lply.organism.rarmamputated or lply.organism.rarmupamputated) and 2 or 1))
 	end
 
 	ViewPunch4(Angle(y / 50 / 16, -x / 50 / 16, -x / 50 / 1) * 0.1)
@@ -797,7 +797,7 @@ hook.Add("HUDPaint", "HG_WoundHoldPrompt", function()
 	local arterialwounds = ply.arterialwounds
 	local hasWounds = wounds and #wounds > 0 or arterialwounds and #arterialwounds > 0
 	local inFake = IsValid(ply.FakeRagdoll)
-	local hasBothArms = not (ply.organism and (ply.organism.larmamputated or ply.organism.rarmamputated))
+	local hasBothArms = not (ply.organism and (ply.organism.larmamputated or ply.organism.rarmamputated or ply.organism.larmupamputated or ply.organism.rarmupamputated))
 	local shouldShow = inFake and hasWounds and hasBothArms and not (ply.organism and ply.organism.otrub)
 
 	woundHoldPromptFade = LerpFT(0.12, woundHoldPromptFade, shouldShow and 1 or 0)

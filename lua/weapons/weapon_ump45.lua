@@ -1,323 +1,502 @@
 SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
-SWEP.PrintName = "UMP 45"
+SWEP.PrintName = "UMP .45"
 SWEP.Author = "Heckler & Koch"
-SWEP.Instructions = "The H&K UMP is a modern polymer-framed submachine gun, designed as a more affordable and versatile successor to the iconic MP5. Chambered in 9mm, .40 S&W, or .45 ACP, it features a simple blowback action and a folding stock for compactness."
+SWEP.Instructions = "Submachine gun chambered in .45 ACP\n\nRate of fire 600 rounds per minute"
 SWEP.Category = "Weapons - Machine-Pistols"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_ump45.mdl"
-SWEP.WorldModelFake = "models/weapons/c_ump45.mdl"
-//SWEP.FakeScale = 1.2
-//SWEP.ZoomPos = Vector(0, -0.0027, 4.6866)
-SWEP.FakePos = Vector(-9.5, 1.92, 5.77)
+SWEP.WorldModelFake = "models/weapons/c_ump.mdl"
+SWEP.CanCustomize = true
+SWEP.CustomizeCategory = "UMP"
+
+SWEP.UseARC9Parts = true
+
+SWEP.ARC9Parts = {
+	magazine = {
+		model = "models/weapons/mods/mag_hk_ump.mdl",
+		bonemerge = false,
+		bone = "mod_magazine",
+		pos = Vector(0, -2.1, 0),
+		ang = Angle(0, -90, 0)
+	},
+}
+
+SWEP.FakePos = Vector(-12, 2.0, 6.5)
 SWEP.FakeAng = Angle(0, 0, 0)
-SWEP.AttachmentPos = Vector(-0.3,-0.22,-0.8)
-SWEP.AttachmentAng = Angle(0,0,0)
-//SWEP.MagIndex = 53
-//MagazineSwap
---Entity(1):GetActiveWeapon():GetWM():AddLayeredSequence(Entity(1):GetActiveWeapon():GetWM():LookupSequence("delta_foregrip"),1)
---PrintBones(Entity(1):GetActiveWeapon():GetWM())
+SWEP.AttachmentPos = Vector(-1.3, 0, 0)
+SWEP.AttachmentAng = Angle(0, 0, 0)
+SWEP.FakeAttachment = "1"
+SWEP.FakeBodyGroups = "110111"
+SWEP.ZoomPos = Vector(0, -2.2771, 4.9862)
 
--- ОБЫЧНАЯ ПЕРЕЗАРЯДКА
--- Путь: weapons/tfa_ins2/ump45/handling/
-SWEP.FakeReloadSounds = {
-	[0.22] = "weapons/universal/uni_crawl_l_03.wav",                    -- Одежда
-	[0.35] = "weapons/tfa_ins2/ump45/handling/ump45_magout.wav",       -- Вытаскиваем магазин
-	[0.65] = "weapons/universal/uni_crawl_l_02.wav",                    -- Шуршание
-	[0.78] = "weapons/tfa_ins2/ump45/handling/ump45_magin.wav",        -- Вставляем магазин
-	[0.94] = "weapons/universal/uni_crawl_l_04.wav",
-}
+SWEP.GunCamPos = Vector(4, -15, -6)
+SWEP.GunCamAng = Angle(190, -5, -100)
 
--- ПЕРЕЗАРЯДКА ПРИ ПУСТОМ МАГАЗИНЕ
--- Путь: weapons/tfa_ins2/ump45/handling/
-SWEP.FakeEmptyReloadSounds = {
-	[0.16] = "weapons/universal/uni_crawl_l_03.wav",
-	[0.22] = "weapons/tfa_ins2/ump45/handling/ump45_magrelease.wav",   -- Рычаг сброса
-	[0.30] = "weapons/tfa_ins2/ump45/handling/ump45_magout.wav",       -- Выпадение магазина
-	[0.45] = "weapons/tfa_ins2/ump45/handling/ump45_magin.wav",        -- Вставка нового
-	
-	-- Снятие с затворной задержки
-	[0.85] = "weapons/tfa_ins2/ump45/handling/ump45_boltrelease.wav", 
-}
-
-
-SWEP.MagModel = "models/eu_homicide/mp7_magazine.mdl"
-local vector_full = Vector(1,1,1)
-
-SWEP.lmagpos = Vector(0,0,0)
-SWEP.lmagang = Angle(0,0,0)
-SWEP.lmagpos2 = Vector(0,-1,0)
-SWEP.lmagang2 = Angle(0,0,0)
+SWEP.FakeEjectBrassATT = "2"
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
-SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_UpperArm"
-SWEP.ViewPunchDiv = 60
-SWEP.FakeMagDropBone = 14
+SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
+SWEP.ViewPunchDiv = 70
 
-SWEP.FakeReloadEvents = {
-	[0.2] = function( self, timeMul ) 
-		if CLIENT and self:Clip1() < 1 then
-			--self:GetWM():SetBodygroup(1,1)
-			--self:GetOwner():PullLHTowards("ValveBiped.Bip01_L_Thigh", 1.5 * timeMul)
-		end 
-	end,
-	[0.35] = function( self ) 
-		if CLIENT and self:Clip1() < 1 then
-			hg.CreateMag( self, Vector(0,55,-55) )
-			self:GetWM():ManipulateBoneScale(14, vector_origin)
-			self:GetWM():ManipulateBoneScale(15, vector_origin)
-		end 
-	end,
-	[0.45] = function( self ) 
-		if CLIENT and self:Clip1() < 1 then
-			self:GetWM():SetBodygroup(1,0)
-			self:GetWM():ManipulateBoneScale(14, vector_full)
-			self:GetWM():ManipulateBoneScale(15, vector_full)
-		end 
-	end,
+local path = "weapons/darsu_eft/ump45/"
+
+SWEP.AnimsEvents = {
+	["inspect"] = {
+		[0.01] = function(self) self:EmitSound("weapons/universal/uni_crawl_l_03.wav") end,
+	},
+	["reload"] = {
+		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/ump/ump_mag_out.ogg") end,
+		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/ump/ump_mag_in.ogg") end,
+	},
+	["reload_empty"] = {
+		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/ump/ump_magrelease_button.ogg") end,
+		[0.15] = function(self) self:EmitSound("weapons/darsu_eft/ump/ump_mag_out.ogg") end,
+		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/ump/ump_mag_in.ogg") end,
+		[0.75] = function(self) self:EmitSound("weapons/darsu_eft/ump/ump_magrelease_button.ogg") end,
+	},
 }
 
 SWEP.AnimList = {
-	["idle"] = "base_idle",
-	["reload"] = "base_reload",
-	["reload_empty"] = "base_reloadempty",
+	["fire"] = "fire",
+	["idle"] = "idle",
+	["reload"] = "reload",
+	["reload_empty"] = "reload_empty",
+	["inspect"] = "look",
 }
+
+function SWEP:AllowedInspect()
+	if not self:CanUse() then return end
+	if self.isReloading then return end
+	if self:Clip1() < self.Primary.ClipSize then return end
+	if self.drawBullet == false then return end
+	return true
+end
+
+function SWEP:ModelCreated(model)
+	if not CLIENT then return end
+	if not IsValid(model) then return end
+	if not self.FakeBodyGroups then return end
+
+	model:SetBodyGroups(self.FakeBodyGroups)
+
+	for i = 0, #model:GetMaterials() - 1 do
+		model:SetSubMaterial(i, "")
+	end
+end
+
+if CLIENT then
+	local vector_full = Vector(1, 1, 1)
+	SWEP.FakeReloadEvents = {
+		[0.10] = function(self, timeMul)
+			self:GetWM():ManipulateBoneScale(14, vector_origin)
+			self:GetWM():ManipulateBoneScale(15, vector_full)
+		end,
+		[0.20] = function(self, timeMul)
+			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 0.5 * timeMul, nil, nil, function()
+				self:GetWM():ManipulateBoneScale(15, vector_full)
+			end)
+		end,
+		[0.35] = function(self, timeMul)
+			if self:Clip1() < 1 then
+				self:GetWM():ManipulateBoneScale(14, vector_origin)
+				self:GetWM():ManipulateBoneScale(15, vector_origin)
+				self:GetWM():ManipulateBoneScale(16, vector_origin)
+			end
+		end,
+		[0.65] = function(self, timeMul)
+			self:GetWM():ManipulateBoneScale(14, vector_origin)
+			self:GetWM():ManipulateBoneScale(15, vector_origin)
+			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 1 * timeMul, nil, nil, function()
+				self:GetWM():ManipulateBoneScale(14, vector_origin)
+				self:GetWM():ManipulateBoneScale(15, vector_origin)
+			end)
+		end,
+	}
+end
+
+SWEP.ReloadHold = nil
+SWEP.FakeVPShouldUseHand = false
+
+SWEP.HeldMagModel = "models/weapons/mods/mag_hk_ump.mdl"
+SWEP.HeldMagBone = "mod_magazine"
+SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
+SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
+
+SWEP.weaponInvCategory = 1
+SWEP.Primary.ClipSize = 25
+SWEP.Primary.DefaultClip = 25
+SWEP.Primary.Automatic = true
+SWEP.Primary.Ammo = ".45 ACP"
+SWEP.Primary.Cone = 0
+SWEP.Primary.Damage = 28
+SWEP.Primary.Spread = 0
+SWEP.Primary.Force = 25
+SWEP.Primary.Sound = {"weapons/darsu_eft/ump/fire_new/ump_outdoor_close1.wav", 85, 120, 130}
+SWEP.SupressedSound = {"weapons/darsu_eft/ump/fire_new/ump_outdoor_silenced_close1.wav", 75, 90, 100}
+SWEP.Primary.Wait = 0.1
+SWEP.ReloadTime = 2.7
+
+SWEP.PPSMuzzleEffect = "muzzleflash_smg"
+
+SWEP.CustomShell = "50ae"
+SWEP.ShellEject = "EjectBrass_45ACP"
+
+SWEP.LocalMuzzlePos = Vector(16.6, -2.3, 2.4)
+SWEP.LocalMuzzleAng = Angle(0, 0, 0)
+SWEP.WeaponEyeAngles = Angle(0, 0, 0)
+
+SWEP.HoldType = "rpg"
 
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_ump.png")
 SWEP.IconOverride = "entities/arc9_eft_ump.png"
 
-SWEP.CustomShell = "9x19"
-//SWEP.EjectPos = Vector(-2.5,0,-3)
-SWEP.EjectAng = Angle(0,40,-15)
-
-SWEP.ShockMultiplier = 2
-
-SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
-SWEP.holsteredPos = Vector(4, 8, -3)
-SWEP.holsteredAng = Angle(210, 0, 180)
-
-SWEP.LocalMuzzlePos = Vector(15.528,0.5,4)
-SWEP.LocalMuzzleAng = Angle(0.25,-0.026,0)
-SWEP.WeaponEyeAngles = Angle(0,0,0)
-
-SWEP.weight = 3
+SWEP.weight = 2.3
 SWEP.ScrappersSlot = "Primary"
-SWEP.weaponInvCategory = 1
-SWEP.ShellEject = "EjectBrass_57"
-SWEP.Primary.ClipSize = 30
-SWEP.Primary.DefaultClip = 30
-SWEP.Primary.Automatic = true
-SWEP.Primary.Ammo = ".45 ACP"
-SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 37
-SWEP.Primary.Spread = 0
-SWEP.Primary.Force = 37
-SWEP.animposmul = 2
--- ЗВУКИ СТРЕЛЬБЫ
--- Путь: weapons/tfa_ins2/ump45/
-SWEP.Primary.Sound = {"weapons/tfa_ins2/ump45/ump45_fp.wav", 85, 120, 130}
-SWEP.SupressedSound = {"weapons/tfa_ins2/ump45/ump45_suppressed_fp.wav", 75, 90, 100}
 
--- Звук пустого щелчка
-SWEP.Primary.SoundEmpty = {"weapons/tfa_ins2/ump45/ump45_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
-
-SWEP.Primary.Wait = 0.09
-
-SWEP.WepSelectIcon2 = Material("entities/arc9_eft_ump.png")
-
+SWEP.StartAtt = {}
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"", Vector(1,4,12), {}},
-		[2] = {"", Vector(0,0,0), {}},
-		["Mount"] = Vector(0,0,0),
+		[1] = {"supressor2", Vector(0, 0, 0), {}},
+		[2] = {"supressor1", Vector(0, 0, 0), {}},
+		[3] = {"supressor15", Vector(1.9, 0, 0), {}},
+		["mount"] = Vector(-0.8, -0, 0.),
+		["mountAngle"] = Angle(0, 0, 90),
 	},
 	sight = {
-		["mount"] = Vector(-15, 2.65, 0.84),
+		["mount"] = Vector(-12.5, 2.1, 0.05),
 		["mountType"] = "picatinny",
-		["empty"] = {"empty", {}},
-		["removehuy"] = {},
 	},
 }
 
-SWEP.ReloadTime = 3
-SWEP.ReloadSoundes = {
-	"none",
-	"none",
-	"weapons/tfa_ins2/mp7/magout.wav",
-	"none",
-	"none",
-	"weapons/tfa_ins2/mp7/magin.wav",
-	"none",
-	"weapons/tfa_ins2/mp7/boltback.wav",
-	"weapons/tfa_ins2/mp7/boltrelease.wav",
-	"none",
-	"none",
-	"none",
-	"none"
-}
-
-SWEP.PPSMuzzleEffect = "muzzleflash_FAMAS" -- shared in sh_effects.lua
-
-SWEP.HoldType = "rpg"
-SWEP.ZoomPos = Vector(-3, -1.5, 5.0211)
 SWEP.RHandPos = Vector(1, -1, 0)
 SWEP.LHandPos = false
+SWEP.Penetration = 6
 SWEP.Spray = {}
-for i = 1, 40 do
-	SWEP.Spray[i] = Angle(-0.01 - math.cos(i) * 0.01, math.cos(i * 8) * 0.01, 0) * 1
+for i = 1, 30 do
+	SWEP.Spray[i] = Angle(-0.0, 0, 0) * 1
 end
 
-SWEP.Ergonomics = 1.1
-SWEP.Penetration = 9
+SWEP.Ergonomics = 1.0
 SWEP.WorldPos = Vector(-2, 0, -2.5)
 SWEP.WorldAng = Angle(0, 0, 0)
 SWEP.UseCustomWorldModel = true
+SWEP.attPos = Vector(1, 0, 0)
+SWEP.attAng = Angle(-0.02, 0, 0)
 SWEP.lengthSub = 30
 SWEP.handsAng = Angle(-15, 9, 0)
-SWEP.DistSound = "mp5k/mp5k_dist.wav"
+SWEP.DistSound = "weapons/darsu_eft/ump45/ump45_fire_close.ogg"
 
---local to head
-SWEP.RHPos = Vector(8,-7,3)
-SWEP.RHAng = Angle(-5,4,90)
---local to rh
-SWEP.LHPos = Vector(9,-0.5,-3.3)
-SWEP.LHAng = Angle(-40,15,-100)
+-- tpik hand positions
+SWEP.RHPos = Vector(8, -7, 3)
+SWEP.RHAng = Angle(-5, 4, 90)
+SWEP.LHPos = Vector(9, -0.5, -3.3)
+SWEP.LHAng = Angle(-40, 15, -100)
 
 SWEP.ShootAnimMul = 2
 
 function SWEP:AnimHoldPost(model)
-	--self:BoneSet("l_finger0", Vector(0, 0, 0), Angle(-5, -10, 0))
-	--self:BoneSet("l_finger02", Vector(0, 0, 0), Angle(0, 25, 0))
-	--self:BoneSet("l_finger01", Vector(0, 0, 0), Angle(-25, 40, 0))
-	--self:BoneSet("l_finger1", Vector(0, 0, 0), Angle(-10, -40, 0))
-	--self:BoneSet("l_finger11", Vector(0, 0, 0), Angle(-10, -40, 0))
-	--self:BoneSet("l_finger2", Vector(0, 0, 0), Angle(-5, -50, 0))
-	--self:BoneSet("l_finger21", Vector(0, 0, 0), Angle(0, -10, 0))
 end
 
 function SWEP:DrawPost()
 	local wep = self:GetWeaponEntity()
-	if CLIENT and IsValid(wep) then
-		self.shooanim = LerpFT(0.4,self.shooanim or 0,self:Clip1() > 0 and 0 or 0)
-		--wep:ManipulateBonePosition(2,Vector(0 ,0 ,-1.8*self.shooanim ),false)
-		--wep:ManipulateBonePosition(1,Vector(-0.5*self.ReloadSlideOffset ,0 ,0.1*self.ReloadSlideOffset),false)
+	if not IsValid(wep) then return end
+
+	local owner = self:GetOwner()
+	if not IsValid(owner) or not owner:IsPlayer() then return end
+	if not self:ShouldUseFakeModel() then return end
+
+	local wm = self:GetWM()
+	if not IsValid(wm) then return end
+
+	if not IsValid(self.HeldMagCSModel) then
+		self.HeldMagCSModel = ClientsideModel(self.HeldMagModel, RENDERGROUP_BOTH)
+		if IsValid(self.HeldMagCSModel) then
+			self.HeldMagCSModel:SetNoDraw(true)
+		end
+	end
+
+	if not IsValid(self.HeldMagCSModel) then return end
+
+	local boneName = self.HeldMagBone
+	local boneID = wm:LookupBone(boneName)
+	if not boneID then return end
+
+	local boneMatrix = wm:GetBoneMatrix(boneID)
+	if not boneMatrix then return end
+
+	local pos = boneMatrix:GetTranslation()
+	local ang = boneMatrix:GetAngles()
+
+	local lpos, lang = LocalToWorld(self.HeldMagOffsetPos, self.HeldMagOffsetAng, pos, ang)
+
+	self.HeldMagCSModel:SetRenderOrigin(lpos)
+	self.HeldMagCSModel:SetRenderAngles(lang)
+	self.HeldMagCSModel:SetPos(lpos)
+	self.HeldMagCSModel:SetAngles(lang)
+	self.HeldMagCSModel:SetupBones()
+	self.HeldMagCSModel:DrawModel()
+end
+
+
+--========================================================
+-- DROPPED EFT MODEL + MODULAR PARTS
+--========================================================
+
+SWEP.WorldPartsOffsetPos = Vector(-20, 5, 10)
+SWEP.WorldPartsOffsetAng = Angle(0, 0, 0)
+
+SWEP.WorldMagazineBoneOverride = "weapon"
+SWEP.WorldMagazineOffsetPos = Vector(0, -17.3, -0.55)
+SWEP.WorldMagazineOffsetAng = Angle(0, 0, 0)
+
+if CLIENT then
+	local BC_VECTOR_ZERO = Vector(0, 0, 0)
+	local BC_ANGLE_ZERO = Angle(0, 0, 0)
+
+	function SWEP:BC_CreateDroppedFakeWorldModel()
+		if not self.WorldModelFake then return end
+		if IsValid(self.BC_DroppedFakeWorldModel) then return end
+
+		local model = ClientsideModel(self.WorldModelFake, RENDERGROUP_BOTH)
+		if not IsValid(model) then return end
+
+		model:SetNoDraw(true)
+		model:DrawShadow(true)
+
+		if self.FakeScale then
+			model:SetModelScale(self.FakeScale, 0)
+		end
+
+		if self.FakeBodyGroups then
+			model:SetBodyGroups(self.FakeBodyGroups)
+		end
+
+		if self.ModelCreated then
+			self:ModelCreated(model)
+		end
+
+		self.BC_DroppedFakeWorldModel = model
+	end
+
+	function SWEP:BC_CreateDroppedPartModels()
+		if not istable(self.ARC9Parts) then return end
+
+		self.BC_DroppedPartModels = self.BC_DroppedPartModels or {}
+		self.BC_DroppedPartPaths = self.BC_DroppedPartPaths or {}
+
+		for partName, partData in pairs(self.ARC9Parts) do
+			if not istable(partData) or not isstring(partData.model) or partData.model == "" then
+				continue
+			end
+
+			local model = self.BC_DroppedPartModels[partName]
+			local oldPath = self.BC_DroppedPartPaths[partName]
+
+			if IsValid(model) and oldPath ~= partData.model then
+				model:Remove()
+				model = nil
+			end
+
+			if not IsValid(model) then
+				model = ClientsideModel(partData.model, RENDERGROUP_BOTH)
+				if IsValid(model) then
+					model:SetNoDraw(true)
+					model:DrawShadow(true)
+					self.BC_DroppedPartModels[partName] = model
+					self.BC_DroppedPartPaths[partName] = partData.model
+				end
+			end
+		end
+	end
+
+	function SWEP:BC_RemoveDroppedModels()
+		if self.BC_DroppedPartModels then
+			for partName, model in pairs(self.BC_DroppedPartModels) do
+				if IsValid(model) then model:Remove() end
+			end
+		end
+		self.BC_DroppedPartModels = nil
+		self.BC_DroppedPartPaths = nil
+
+		if IsValid(self.BC_DroppedFakeWorldModel) then
+			self.BC_DroppedFakeWorldModel:Remove()
+		end
+		self.BC_DroppedFakeWorldModel = nil
+	end
+
+	local function BC_ApplyPartAppearance(model, partData)
+		if not IsValid(model) or not istable(partData) then return end
+
+		if partData.skin ~= nil then
+			model:SetSkin(partData.skin)
+		end
+
+		if istable(partData.bodygroups) then
+			for bodygroupID, value in pairs(partData.bodygroups) do
+				model:SetBodygroup(tonumber(bodygroupID) or bodygroupID, tonumber(value) or 0)
+			end
+		end
+
+		if istable(partData.submaterials) then
+			for materialID, materialPath in pairs(partData.submaterials) do
+				model:SetSubMaterial(tonumber(materialID) or materialID, materialPath or "")
+			end
+		end
+	end
+
+	function SWEP:BC_DrawDroppedFakeWorldAndParts()
+		local owner = self:GetOwner()
+		if IsValid(owner) and owner:IsPlayer() then return end
+
+		if not IsValid(self.BC_DroppedFakeWorldModel) then
+			self:BC_CreateDroppedFakeWorldModel()
+		end
+
+		self:BC_CreateDroppedPartModels()
+
+		local basePosition, baseAngles = LocalToWorld(
+			self.WorldPartsOffsetPos or BC_VECTOR_ZERO,
+			self.WorldPartsOffsetAng or BC_ANGLE_ZERO,
+			self:GetPos(),
+			self:GetAngles()
+		)
+
+		local fake = self.BC_DroppedFakeWorldModel
+
+		if IsValid(fake) then
+			fake:SetRenderOrigin(basePosition)
+			fake:SetRenderAngles(baseAngles)
+			fake:SetPos(basePosition)
+			fake:SetAngles(baseAngles)
+			fake:SetupBones()
+		end
+
+		if istable(self.ARC9Parts) and istable(self.BC_DroppedPartModels) then
+			for partName, partData in pairs(self.ARC9Parts) do
+				local model = self.BC_DroppedPartModels[partName]
+				if not IsValid(model) or not istable(partData) then continue end
+
+				local boneName = partData.bone or ""
+				local extraPosition = BC_VECTOR_ZERO
+				local extraAngles = BC_ANGLE_ZERO
+
+				if partName == "magazine" and self.WorldMagazineBoneOverride then
+					boneName = self.WorldMagazineBoneOverride
+					extraPosition = self.WorldMagazineOffsetPos or BC_VECTOR_ZERO
+					extraAngles = self.WorldMagazineOffsetAng or BC_ANGLE_ZERO
+				end
+
+				local partBasePosition = basePosition
+				local partBaseAngles = baseAngles
+
+				if IsValid(fake) and isstring(boneName) and boneName ~= "" then
+					local boneID = fake:LookupBone(boneName)
+					if boneID ~= nil then
+						local boneMatrix = fake:GetBoneMatrix(boneID)
+						if boneMatrix then
+							partBasePosition = boneMatrix:GetTranslation()
+							partBaseAngles = boneMatrix:GetAngles()
+						end
+					end
+				end
+
+				local localPosition = (partData.pos or BC_VECTOR_ZERO) + extraPosition
+				local localAngles = Angle(
+					(partData.ang or BC_ANGLE_ZERO).p,
+					(partData.ang or BC_ANGLE_ZERO).y,
+					(partData.ang or BC_ANGLE_ZERO).r
+				)
+				localAngles:Add(extraAngles)
+
+				local position, angles = LocalToWorld(localPosition, localAngles, partBasePosition, partBaseAngles)
+
+				model:SetRenderOrigin(position)
+				model:SetRenderAngles(angles)
+				model:SetPos(position)
+				model:SetAngles(angles)
+				model:SetupBones()
+
+				BC_ApplyPartAppearance(model, partData)
+			end
+		end
+
+		if IsValid(fake) then
+			fake:DrawModel()
+		end
+
+		if istable(self.ARC9Parts) and istable(self.BC_DroppedPartModels) then
+			for partName, partData in pairs(self.ARC9Parts) do
+				local model = self.BC_DroppedPartModels[partName]
+				if IsValid(model) then
+					model:DrawModel()
+				end
+			end
+		end
+
+		local originalWorldModel = self.worldModel
+		self.worldModel = fake
+		self:DrawAttachments()
+		self.worldModel = originalWorldModel
+	end
+
+	function SWEP:DrawWorldModel()
+		local owner = self:GetOwner()
+		if IsValid(owner) and owner:IsPlayer() then return end
+		self:BC_DrawDroppedFakeWorldAndParts()
+	end
+
+	function SWEP:DrawWorldModelTranslucent()
+		local owner = self:GetOwner()
+		if IsValid(owner) and owner:IsPlayer() then return end
+		self:BC_DrawDroppedFakeWorldAndParts()
+	end
+
+	function SWEP:OnRemove()
+		self:BC_RemoveDroppedModels()
+		if IsValid(self.HeldMagCSModel) then
+			self.HeldMagCSModel:Remove()
+		end
 	end
 end
 
---RELOAD ANIMS SMG????
 
-SWEP.ReloadAnimLH = {
-	Vector(0,0,0)
-}
-SWEP.ReloadAnimLHAng = {
-	Angle(0,0,0)
-}
+--========================================================
+-- FIRE ANIMATION
+--========================================================
 
-SWEP.ReloadAnimRH = {
-	Vector(0,0,0),
-	Vector(0,2,4),
-	Vector(0,0,5),
-	Vector(-5,-3,9),
-	Vector(-15,-15,2),
-	Vector(-15,-15,2),
-	Vector(-2,1,8),
-	Vector(0,0,4),
-	Vector(0,0,4),
-	Vector(0,0,2),
-	"fastreload",
-	Vector(-5,2,-1),
-	Vector(-12,1,-3),
-	Vector(-10,1,-3),
-	Vector(-5,4,-1),
-	"reloadend",
-	"reloadend"
-}
-SWEP.ReloadAnimRHAng = {
-	Angle(0,0,0),
-}
-SWEP.ReloadAnimWepAng = {
-	Angle(0,0,0),
-	Angle(-25,25,-44),
-	Angle(-15,25,-45),
-	Angle(-25,25,-45),
-	Angle(-35,26,-44),
-	Angle(-35,25,-45),
-	Angle(-25,25,-44),
-	Angle(-25,25,-44),
-	Angle(-45,45,-55),
-	Angle(-35,45,-55),
-	Angle(-15,15,-24),
-	Angle(0,0,0)
-}
+SWEP.FireAnimTime = 0.1
+SWEP.FireAnimCandidates = {"fire", "fire1"}
 
-SWEP.ReloadSlideAnim = {
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	5,
-	5,
-	5,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0
-}
+function SWEP:PrimaryShootPost()
+	if not CLIENT then return end
+	if self.reload then return end
+	if not self:ShouldUseFakeModel() then return end
 
--- Inspect Assault
+	local worldModel = self:GetWM()
+	if not IsValid(worldModel) then return end
 
-SWEP.InspectAnimLH = {
-	Vector(0,0,0)
-}
-SWEP.InspectAnimLHAng = {
-	Angle(0,0,0)
-}
-SWEP.InspectAnimRH = {
-	Vector(0,0,0)
-}
-SWEP.InspectAnimRHAng = {
-	Angle(0,0,0)
-}
-SWEP.InspectAnimWepAng = {
-	Angle(0,0,0),
-	Angle(15,0,5),
-	Angle(15,0,14),
-	Angle(15,0,14),
-	Angle(15,0,15),
-	Angle(15,0,16),
-	Angle(12,0,5),
-	Angle(2,0,-15),
-	Angle(0,0,-45),
-	Angle(0,0,-45),
-	Angle(0,0,-45),
-	Angle(0,0,-45),
-	Angle(5,15,-65),
-	Angle(5,15,-65),
-	Angle(4,15,-65),
-	Angle(0,0,0)
-}
+	local selectedSequence
+	for _, sequenceName in ipairs(self.FireAnimCandidates) do
+		local sequenceID = worldModel:LookupSequence(sequenceName)
+		if sequenceID ~= nil and sequenceID >= 0 then
+			selectedSequence = sequenceName
+			break
+		end
+	end
+
+	if not selectedSequence then return end
+
+	self.AnimList.fire = selectedSequence
+	self:PlayAnim("fire", self.FireAnimTime, false)
+
+	local timerName = "BC_FireAnimation_" .. self:EntIndex()
+	timer.Create(timerName, self.FireAnimTime, 1, function()
+		if not IsValid(self) or self.reload then return end
+		if self.Primary and (self.Primary.Next or 0) > CurTime() then return end
+		self:PlayAnim("idle", 1, not self.NoIdleLoop)
+	end)
+end

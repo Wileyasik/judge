@@ -29,7 +29,7 @@ local Angle, Vector, AngleRand, VectorRand, math, hook, util, game = Angle, Vect
 
 	hook.Add( "CalcMainActivity", "RunningAnim", function(ply, vel)
 		local wep = IsValid(ply:GetActiveWeapon()) and ply:GetActiveWeapon()
-		local isAmputated = ply:IsBerserk() and ply.organism and (ply.organism.llegamputated or ply.organism.rlegamputated)
+		local isAmputated = ply:IsBerserk() and ply.organism and (ply.organism.llegamputated or ply.organism.rlegamputated or ply.organism.llegupamputated or ply.organism.rlegupamputated)
 		if (not ply:InVehicle()) and ply:IsOnGround() and vel:Length() > 180 and wep and runHoldTypes[wep:GetHoldType()] and not isAmputated then
 			local isFurry = ply.PlayerClassName == "furry"
 			local anim = ACT_HL2MP_RUN_FAST

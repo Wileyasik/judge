@@ -13,7 +13,7 @@ SWEP.WorldModelFake = "models/weapons/c_p90.mdl"
 
 SWEP.FakePos = Vector(-2.5, 3.65, 7.6)
 SWEP.FakeAng = Angle(0, 0, 0)
-SWEP.AttachmentPos = Vector(0, 2.2, -28)
+SWEP.AttachmentPos = Vector(8, 2, -28)
 SWEP.AttachmentAng = Angle(0, 0, 90)
 SWEP.FakeAttachment = "1"
 SWEP.FakeBodyGroups = "11221230002"
@@ -131,11 +131,11 @@ SWEP.Primary.Sound = {"weapons/darsu_eft/p90/fire/p90_indoor1.wav", 75, 120, 130
 SWEP.SupressedSound = {"weapons/darsu_eft/p90/fire/p90_silenced1.ogg", 75, 120, 130}
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/m14/handling/m14_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.05
-SWEP.ReloadTime = 4.2
+SWEP.ReloadTime = 2.7
 
 SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1"
 
-SWEP.LocalMuzzlePos = Vector(17, -0.5, 5)
+SWEP.LocalMuzzlePos = Vector(25.3, -0.5, 3.1)
 SWEP.LocalMuzzleAng = Angle(-0.2, 0, 0)
 SWEP.WeaponEyeAngles = Angle(0, 0, 0)
 
@@ -145,14 +145,14 @@ SWEP.StartAtt = {"holo4"}
 SWEP.availableAttachments = {
 	sight = {
 		["mountType"] = {"picatinny"},
-		["mount"] = Vector(-2, -0.01, -2.1),
+		["mount"] = Vector(-9, -0.01, -2.1),
 		["mountAngle"] = Angle(0, -0.75, -90),
 	},
 	barrel = {
-		[1] = {"supressor1", Vector(0, 0.6, 0.1), {}},
-		[2] = {"supressor8", Vector(0, 0, 0), {}},
-		["mount"] = Vector(4, -0.1, 0),
-		
+		[1] = {"supressor2", Vector(0, 0, 0), {}},
+		[2] = {"supressor1", Vector(0, 0, 0), {}},
+		[3] = {"supressor15", Vector(0.5, 0, 0), {}},
+		["mount"] = Vector(-3, -0.05, -0),
 	},
 }
 

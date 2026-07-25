@@ -225,7 +225,7 @@ function hg.DoZManip(ent, ply)
 		ply.zmodel:SetNoDraw(true)
 	end
 
-	if not ply.zmanipstart or IsValid(ply:GetNetVar("carryent2")) or (ply.organism and ply.organism.larmamputated) then return end
+	if not ply.zmanipstart or IsValid(ply:GetNetVar("carryent2")) or (ply.organism and (ply.organism.larmamputated or ply.organism.larmupamputated)) then return end
 	
 	local time = (math.Clamp((CurTime() - ply.zmanipstart) / ply.zmaniptime, 0, 1))
 	

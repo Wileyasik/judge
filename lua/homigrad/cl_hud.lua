@@ -840,7 +840,7 @@ end
 
 hook.Add("radialOptions", "77", function()
 	local organism = lply.organism or {}
-	if not organism.otrub and IsValid(lply:GetActiveWeapon()) and lply:GetActiveWeapon():GetClass() ~= "weapon_hands_sh" then
+	if not organism.otrub and IsValid(lply:GetActiveWeapon()) and lply:GetActiveWeapon():GetClass() ~= "weapon_hands_sh" and lply:GetActiveWeapon():GetClass() ~= "weapon_hg_coolhands" then
 		local tbl = {dropWeapon, "Drop Weapon"}
 		hg.radialOptions[#hg.radialOptions + 1] = tbl
 	end
@@ -1320,13 +1320,13 @@ local function build_observe_text(entry, ent)
 	end
 
 	local amputated = false
-	if entry.label == "Left Arm" and (org.larmamputated or org.lhandamputated) then
+	if entry.label == "Left Arm" and (org.larmamputated or org.lhandamputated or org.larmupamputated) then
 		amputated = true
-	elseif entry.label == "Right Arm" and (org.rarmamputated or org.rhandamputated) then
+	elseif entry.label == "Right Arm" and (org.rarmamputated or org.rhandamputated or org.rarmupamputated) then
 		amputated = true
-	elseif entry.label == "Left Leg" and org.llegamputated then
+	elseif entry.label == "Left Leg" and (org.llegamputated or org.llegupamputated) then
 		amputated = true
-	elseif entry.label == "Right Leg" and org.rlegamputated then
+	elseif entry.label == "Right Leg" and (org.rlegamputated or org.rlegupamputated) then
 		amputated = true
 	elseif entry.label == "Head" and org.headamputated then
 		amputated = true

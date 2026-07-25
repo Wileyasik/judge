@@ -1,4 +1,4 @@
-﻿--ByLazzy
+--ByLazzy
 SWEP.Base = "weapon_m4super"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -16,7 +16,7 @@ SWEP.WorldModelReal = "models/weapons/c_mr133.mdl"
 SWEP.FakePos = Vector(-10, 3.6, 6.2)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
-SWEP.AttachmentPos = Vector(-8.5, 0, 0)
+SWEP.AttachmentPos = Vector(-1, 0.15, 0.1)
 SWEP.AttachmentAng = Angle(0, 0, 0)
 SWEP.FakeBodyGroups = "111100100011"
 SWEP.CantFireFromCollision = true
@@ -36,8 +36,8 @@ SWEP.FakeVPShouldUseHand = false
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_mr133.png")
 SWEP.IconOverride = "entities/arc9_eft_mr133.png"
 
-SWEP.LocalMuzzlePos = Vector(25, -1.3, 4.098)
-SWEP.LocalMuzzleAng = Angle(0.2, -0.0, 0)
+SWEP.LocalMuzzlePos = Vector(29.8, -0.66, 4.45)
+SWEP.LocalMuzzleAng = Angle(0, -0.0, 0)
 SWEP.WeaponEyeAngles = Angle(-0.7, 0.1, 0)
 
 SWEP.CustomShell = "12x70"
@@ -66,7 +66,10 @@ SWEP.NumBullet = 8
 
 SWEP.availableAttachments = {
     barrel = {
-        [1] = {"supressor5", Vector(7, 0, 0.3), {}},
+        [1] = {"supressor13", Vector(0, 0, 0), {}},
+        [2] = {"supressor12", Vector(0, 0, 0), {}},
+        ["mount"] = Vector(-0.5, -0, 0),
+        ["mountAngle"] = Angle(0, -0, 90),
     },
 }
 
@@ -204,7 +207,7 @@ local function reloadLoop(self, inserted, needed)
         return
     end
 
-    self:SetNetVar("shootgunReload", CurTime() + 1.3)
+    self:SetNetVar("shootgunReload", CurTime() + 1.0)
 
     self:PlayAnim(self.AnimList["insert"], 1.0, false, function()
         if not IsValid(self) then return end
@@ -246,7 +249,7 @@ function SWEP:Reload(time)
         self.isReloading = true
         self.WasEmptyOnReload = not self.drawBullet
         local needed = self.Primary.ClipSize - self:Clip1()
-        self:SetNetVar("shootgunReload", CurTime() + 2.0)
+        self:SetNetVar("shootgunReload", CurTime() + 1.7)
 
         self:PlayAnim(self.AnimList["start"], 1.3, false, function()
             reloadLoop(self, 0, needed)
@@ -260,4 +263,39 @@ end
 
 function SWEP:ReloadEnd() end
 
+--========================================================
+-- FIRE ANIMATION
+--========================================================
 
+SWEP.FireAnimTime = 0.15
+SWEP.FireAnimCandidates = {"fire", "fire1"}
+
+function SWEP:PrimaryShootPost()
+	if not CLIENT then return end
+	if self.reload then return end
+	if not self:ShouldUseFakeModel() then return end
+
+	local worldModel = self:GetWM()
+	if not IsValid(worldModel) then return end
+
+	local selectedSequence
+	for _, sequenceName in ipairs(self.FireAnimCandidates) do
+		local sequenceID = worldModel:LookupSequence(sequenceName)
+		if sequenceID ~= nil and sequenceID >= 0 then
+			selectedSequence = sequenceName
+			break
+		end
+	end
+
+	if not selectedSequence then return end
+
+	self.AnimList.fire = selectedSequence
+	self:PlayAnim("fire", self.FireAnimTime, false)
+
+	local timerName = "BC_FireAnimation_" .. self:EntIndex()
+	timer.Create(timerName, self.FireAnimTime, 1, function()
+		if not IsValid(self) or self.reload then return end
+		if self.Primary and (self.Primary.Next or 0) > CurTime() then return end
+		self:PlayAnim("idle", 1, not self.NoIdleLoop)
+	end)
+end

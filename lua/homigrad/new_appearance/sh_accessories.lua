@@ -2939,6 +2939,18 @@ hg.Accessories = {
 }
 
 
+hg._OrigAccPoses = {}
+for key, acc in pairs(hg.Accessories) do
+    local entry = {}
+    if acc.malepos then
+        entry.malepos = {Vector(acc.malepos[1]), Angle(acc.malepos[2]), acc.malepos[3]}
+    end
+    if acc.fempos then
+        entry.fempos = {Vector(acc.fempos[1]), Angle(acc.fempos[2]), acc.fempos[3]}
+    end
+    hg._OrigAccPoses[key] = entry
+end
+
 --ass pointshop
 
 hook.Add("Think", "RemoveME", function()

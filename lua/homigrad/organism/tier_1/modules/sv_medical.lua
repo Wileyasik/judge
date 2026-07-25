@@ -41,16 +41,16 @@ local function is_alive_org(org)
 	return org and org.alive and IsValid(org.owner)
 end
 local limb_from_bone = {
-	["ValveBiped.Bip01_L_UpperArm"] = "larm",
+	["ValveBiped.Bip01_L_UpperArm"] = "larmup",
 	["ValveBiped.Bip01_L_Forearm"] = "larm",
-	["ValveBiped.Bip01_L_Hand"] = "larm",
-	["ValveBiped.Bip01_R_UpperArm"] = "rarm",
+	["ValveBiped.Bip01_L_Hand"] = "lhand",
+	["ValveBiped.Bip01_R_UpperArm"] = "rarmup",
 	["ValveBiped.Bip01_R_Forearm"] = "rarm",
-	["ValveBiped.Bip01_R_Hand"] = "rarm",
-	["ValveBiped.Bip01_L_Thigh"] = "lleg",
+	["ValveBiped.Bip01_R_Hand"] = "rhand",
+	["ValveBiped.Bip01_L_Thigh"] = "llegup",
 	["ValveBiped.Bip01_L_Calf"] = "lleg",
 	["ValveBiped.Bip01_L_Foot"] = "lleg",
-	["ValveBiped.Bip01_R_Thigh"] = "rleg",
+	["ValveBiped.Bip01_R_Thigh"] = "rlegup",
 	["ValveBiped.Bip01_R_Calf"] = "rleg",
 	["ValveBiped.Bip01_R_Foot"] = "rleg",
 }

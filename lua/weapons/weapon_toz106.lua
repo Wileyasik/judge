@@ -160,7 +160,7 @@ SWEP.Primary.Wait = 0.15
 SWEP.NumBullet = 1
 SWEP.AnimShootMul = 1
 SWEP.AnimShootHandMul = 1
-SWEP.ReloadTime = 4
+SWEP.ReloadTime = 2.5
 SWEP.ReloadSoundes = {
 	"none",
 	"none",
@@ -310,7 +310,7 @@ function SWEP:ReloadEnd()
 	--if not self.CustomAmmoInsertEvent then
 	self:InsertAmmo(self:GetMaxClip1() - self:Clip1() + (self.drawBullet ~= nil and not self.OpenBolt and 1 or 0))
 	--end
-	self.ReloadNext = CurTime() + self.ReloadCooldown --я хуй знает чо это
+	self.ReloadNext = CurTime() + self.ReloadCooldown --СЏ С…СѓР№ Р·РЅР°РµС‚ С‡Рѕ СЌС‚Рѕ
 	if CLIENT and self.drawBullet == nil then
 		self.noeject = true
 	end

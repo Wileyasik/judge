@@ -665,7 +665,22 @@ function SWEP:EmitShoot()
 		end
 	end
 
-	if !self.Supressor and !self.NoWINCHESTERFIRE then
+	if self.Supressor then
+		self:PlaySnd(snd_suppressor, nil, nil, vol * 1.5, 100, 55560, true)
+
+		if !self.SupressorOnly then
+			self:PlaySnd("rifle_win1892/win1892_fire_01.wav", nil, nil, vol * (1 - insideVal / 16) * 0.3, math.Clamp(1 / self.Primary.Force / (self.NumBullet or 1) * 100 * 50,90,150), 55555, true)
+
+			self:PlaySnd("zcitysnd/sound/weapons/firearms/hndg_colt1911/colt_1911_fire1.wav", nil, nil, vol * (insideVal / 16) * 0.25, 150, 51256, true)
+			self:PlaySnd("zcitysnd/sound/weapons/firearms/hndg_colt1911/colt_1911_fire1.wav", nil, nil, vol * (insideVal / 16) * 0.25, 80, 50256, true)
+			
+			if hg_highpitchgunfire:GetBool() or hg_gopro:GetBool() then
+				self:PlaySnd("grenades/grenade_flash_start_indoor_distant.wav", nil, nil, vol * (insideVal / 16) * 0.2, 80, 50257, true)
+			end
+
+			self:PlaySnd("weapons/shoot/shot1.wav", nil, nil, vol * 0.35, 150, 52256, true)
+		end
+	elseif !self.NoWINCHESTERFIRE then
 		self:PlaySnd("rifle_win1892/win1892_fire_01.wav", nil, nil, vol * (1 - insideVal / 16), math.Clamp(1 / self.Primary.Force / (self.NumBullet or 1) * 100 * 50,90,150), 55555, true)
 
 		self:PlaySnd("zcitysnd/sound/weapons/firearms/hndg_colt1911/colt_1911_fire1.wav", nil, nil, vol * (insideVal / 16), 150, 51256, true)
@@ -690,9 +705,9 @@ function SWEP:EmitShoot()
 	end
 
 	if (self.Primary.SoundFP or self.Supressor and self.SupressedSoundFP) and nearDist then
-		self:PlaySnd((self.Supressor and self.SupressedSoundFP) or self.Primary.SoundFP, nil, nil, vol, nil, 55533, not self.Supressor)
+		self:PlaySnd((self.Supressor and self.SupressedSoundFP) or self.Primary.SoundFP, nil, nil, vol * (self.Supressor and 0.6 or 1), nil, 55533, not self.Supressor)
 	else
-		self:PlaySnd(self.Supressor and (self.SupressedSound or (self:IsPistolHoldType() and "homigrad/weapons/pistols/sil.wav" or "m4a1/m4a1_suppressed_fp.wav")) or self.Primary.Sound, nil, nil, vol, nil, 55533, not self.Supressor)
+		self:PlaySnd(self.Supressor and (self.SupressedSound or (self:IsPistolHoldType() and "homigrad/weapons/pistols/sil.wav" or "m4a1/m4a1_suppressed_fp.wav")) or self.Primary.Sound, nil, nil, vol * (self.Supressor and 0.6 or 1), nil, 55533, not self.Supressor)
 	end
 	if !self.Supressor then
 		self:PlaySndDist(self.DistSound, nil, nil, nil, nil, 55511, not self.Supressor)

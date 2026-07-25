@@ -160,14 +160,16 @@ if SERVER then
 		local offset = VectorRand() * 10
 		SelfPos = SelfPos + offset
 
-		net.Start("projectileFarSound")
-			net.WriteString(self.Sound)
-			net.WriteString(self.SoundFar)
-			net.WriteVector(SelfPos)
-			net.WriteEntity(self)
-			net.WriteBool(self:WaterLevel() > 0)
-			net.WriteString(self.SoundWater)
-		net.Broadcast()
+		if not self.NoExplosionSound then
+			net.Start("projectileFarSound")
+				net.WriteString(self.Sound)
+				net.WriteString(self.SoundFar)
+				net.WriteVector(SelfPos)
+				net.WriteEntity(self)
+				net.WriteBool(self:WaterLevel() > 0)
+				net.WriteString(self.SoundWater)
+			net.Broadcast()
+		end
 
 
 		local dis = self.BlastDis / 0.01905
