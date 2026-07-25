@@ -8,7 +8,7 @@ SWEP.Category = "Weapons - Assault Rifles"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/shak_12/ash12/w_mk18.mdl"
+SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_ash12.mdl" -- Проверь путь!
 SWEP.WorldModelReal = "models/weapons/c_ash12.mdl"
 

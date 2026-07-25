@@ -9,7 +9,7 @@ SWEP.Category = "Weapons - Shotguns"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/zcity/w_shot_m3juper90.mdl"
+SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_mr153.mdl"
 SWEP.WorldModelReal = "models/weapons/c_mr153.mdl"
 

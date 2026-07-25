@@ -1,4 +1,4 @@
-﻿SWEP.Base = "homigrad_base"
+SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "MR-43 Short"
@@ -8,7 +8,7 @@ SWEP.Category = "Weapons - Shotguns"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/w_shot_m3super90.mdl"
+SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_mr43.mdl"
 
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_mr43.png")
@@ -139,7 +139,7 @@ SWEP.DistSound = "toz_shotgun/toz_dist.wav"
 SWEP.IsPistol = false
 SWEP.podkid = 2
 SWEP.animposmul = 1
-SWEP.ReloadTime = 4
+$12.5
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_UpperArm"

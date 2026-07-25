@@ -1,4 +1,4 @@
-﻿--ByLazzy
+--ByLazzy
 SWEP.Base = "weapon_m4super"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -9,7 +9,7 @@ SWEP.Category = "Weapons - Shotguns"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/zcity/w_shot_m3juper90.mdl"
+SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_m870_2.mdl"
 SWEP.WorldModelReal = "models/weapons/c_m870_2.mdl"
 
@@ -29,7 +29,7 @@ SWEP.FakeViewBobBone = "ValveBiped.Bip01_L_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
 SWEP.ViewPunchDiv = 30
 
--- Р¤РµР№РєРѕРІС‹Рµ Р·РІСѓРєРё
+-- Фейковые звуки
 SWEP.FakeReloadSounds = {
     [0.25] = "weapons/ak74/ak74_magout.wav",
     [0.85] = "weapons/ak74/ak74_magin.wav",
@@ -58,7 +58,7 @@ SWEP.ShellEject = "ShotgunShellEject"
 SWEP.AutomaticDraw = false
 SWEP.UseCustomWorldModel = true
 
--- РҐР°СЂР°РєС‚РµСЂРёСЃС‚РёРєРё
+-- Характеристики
 SWEP.Primary.ClipSize = 6
 SWEP.Primary.DefaultClip = 6
 SWEP.Primary.Automatic = false
@@ -69,7 +69,7 @@ SWEP.Primary.Cone = 0
 SWEP.Primary.Spread = 0.04
 SWEP.Primary.NumShots = 8
 
--- Р—Р’РЈРљР Р’Р«РЎРўР Р•Р›Рђ (REMINGTON)
+-- ЗВУКИ ВЫСТРЕЛА (REMINGTON)
 local path = "weapons/darsu_eft/m870/" 
 SWEP.Primary.Sound = {path .. "rem870_fire_close1.ogg", 85, 100, 100}
 SWEP.SupressedSound = {path .. "rem870_fire_indoor_close.ogg", 65, 100, 100}
@@ -96,7 +96,7 @@ SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
 SWEP.holsteredPos = Vector(4, 8, -6)
 SWEP.holsteredAng = Angle(210, 0, 180)
 
--- СПИСОК АНИМАЦИЙ
+-- ������ ��������
 SWEP.AnimList = {
     ["idle"] = "idle",
     ["draw"] = "draw",
@@ -287,7 +287,7 @@ function SWEP:CanPrimaryAttack()
 end
 
 -- ============================================
--- ОСМОТР
+-- ������
 -- ============================================
 
 function SWEP:AllowedInspect()

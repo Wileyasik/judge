@@ -6,23 +6,39 @@ hg.Accessories = hg.Accessories or {}
 hg.Appearance.SelectedAppearance = ConVarExists("hg_appearance_selected") and GetConVar("hg_appearance_selected") or CreateClientConVar("hg_appearance_selected","main",true,false,"name of selected appearance json file")
 hg.Appearance.ForcedRandom = ConVarExists("hg_appearance_force_random") and GetConVar("hg_appearance_force_random") or CreateClientConVar("hg_appearance_force_random","0",true,false,"forced appearance random",0,1)
 
-local dir = "ZCity/appearances/"
+local saveDir = "judge/appearances/"
+local searchDirs = { "ZCity/appearances/", "judge/appearances/" }
+
 function hg.Appearance.CreateAppearanceFile(strFile_name, tblAppearance)
-	file.CreateDir(dir)
-	file.Write(dir .. strFile_name .. ".json", util.TableToJSON(tblAppearance, true) )
+	file.CreateDir(saveDir)
+	file.Write(saveDir .. strFile_name .. ".json", util.TableToJSON(tblAppearance, true) )
 end
 
 function hg.Appearance.LoadAppearanceFile(strFile_name)
-	if not file.Exists(dir .. strFile_name .. ".json", "DATA") then return false end
-	local tblAppearance = util.JSONToTable(file.Read(dir .. strFile_name .. ".json"))
+	for _, dir in ipairs(searchDirs) do
+		if not file.Exists(dir .. strFile_name .. ".json", "DATA") then continue end
+		local tblAppearance = util.JSONToTable(file.Read(dir .. strFile_name .. ".json"))
 
-	if not hg.Appearance.AppearanceValidater(tblAppearance) then return false, "file is damaged [data/zcity/appearances/" .. strFile_name .. ".json]"  end
+		if not hg.Appearance.AppearanceValidater(tblAppearance) then continue end
 
-	return tblAppearance
+		return tblAppearance
+	end
+
+	return false, "file is not found [data/zcity/appearances/ or data/judge/appearances/]"
 end
 
 function hg.Appearance.GetAppearanceList()
-	local files = file.Find( dir .. "*.json" )
+	local files = {}
+	for _, dir in ipairs(searchDirs) do
+		file.CreateDir(dir)
+		local found = file.Find(dir .. "*.json", "DATA")
+		for _, f in ipairs(found or {}) do
+			local name = string.StripExtension(f)
+			if not table.HasValue(files, name) then
+				table.insert(files, name)
+			end
+		end
+	end
 	return files
 end
 
@@ -512,7 +528,7 @@ function RenderAccessoriesCool(ent,ply)
 	end
 end
 
-local posesDir = "zcity/appearances/"
+local posesDir = "judge/appearances/"
 local posesFile = posesDir .. "poses.json"
 
 function hg.Appearance.SavePoses()

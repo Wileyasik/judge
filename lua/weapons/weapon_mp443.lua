@@ -1,29 +1,26 @@
 SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
-SWEP.PrintName = "SR1MP"
+SWEP.PrintName = "MP-443 Grach"
 SWEP.Author = "TsNIITochMash"
-SWEP.Instructions = "A modern Russian combat pistol chambered in 9x19mm Parabellum"
+SWEP.Instructions = "A Russian military pistol chambered in 9x19mm"
 SWEP.Category = "Weapons - Pistols"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
-SWEP.WorldModelFake = "models/weapons/c_sr1mp.mdl"
+SWEP.WorldModelFake = "models/weapons/c_mp443_2.mdl"
 
-SWEP.FakePos = Vector(-24, 2.5, 4)
+SWEP.FakePos = Vector(-22, 2, 5)
 SWEP.FakeAng = Angle(0, 0, 0)
-SWEP.AttachmentPos = Vector(0.4, 0, -0.1)
+SWEP.AttachmentPos = Vector(0, 0, 0)
 SWEP.AttachmentAng = Angle(0, 0, 90)
 SWEP.FakeAttachment = "1"
 SWEP.FakeEjectBrassATT = "2"
-SWEP.MagIndex = nil
-SWEP.FakeScale = 1
-SWEP.FakeBodyGroups = "111001"
+SWEP.FakeBodyGroups = "11111"
 SWEP.FakeBodyGroupsPresets = {
-	"111001",
+	"11111",
 }
-
 
 SWEP.FakeVPShouldUseHand = false
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
@@ -32,8 +29,8 @@ SWEP.ViewPunchDiv = 50
 
 SWEP.AnimList = {
 	["idle"] = "base_idle",
-	["reload"] = "reload",
-	["reload_empty"] = "reload_empty0",
+	["reload"] = "reload0",
+	["reload_empty"] = "reload_empty0_0",
 	["inspect"] = "inspect",
 }
 
@@ -42,14 +39,14 @@ SWEP.AnimsEvents = {
 		[0.01] = function(self) self:EmitSound("weapons/universal/uni_crawl_l_03.wav") end,
 	},
     ["reload"] = {
-        [0.15] = function(self) self:EmitSound("weapons/darsu_eft/aps/aps_mag_out.ogg") end,
-        [0.7] = function(self) self:EmitSound("weapons/darsu_eft/aps/aps_mag_in.ogg") end,
+        [0.1] = function(self) self:EmitSound("weapons/darsu_eft/mp443/grach_mag_out.ogg") end,
+        [0.6] = function(self) self:EmitSound("weapons/darsu_eft/mp443/grach_mag_in.ogg") end,
     },
     ["reload_empty"] = {
-        [0.025] = function(self) self:EmitSound("weapons/darsu_eft/sr1mp/gyrza_slide_out.ogg") end,
-		[0.2] = function(self) self:EmitSound("weapons/darsu_eft/aps/aps_mag_out.ogg") end,
-		[0.56] = function(self) self:EmitSound("weapons/darsu_eft/aps/aps_mag_in.ogg") end,
-		[0.7] = function(self) self:EmitSound("weapons/darsu_eft/sr1mp/gyrza_slide_in.ogg") end,
+        [0.025] = function(self) self:EmitSound("weapons/darsu_eft/mp443/grach_slider_out.ogg") end,
+		[0.1] = function(self) self:EmitSound("weapons/darsu_eft/mp443/grach_mag_out.ogg") end,
+		[0.4] = function(self) self:EmitSound("weapons/darsu_eft/mp443/grach_mag_in.ogg") end,
+		[0.7] = function(self) self:EmitSound("weapons/darsu_eft/mp443/grach_slider_in.ogg") end,
     },
 }
 
@@ -64,11 +61,11 @@ end
 SWEP.FakeMagDropBone = "magazine"
 SWEP.MagModel = "models/weapons/upgrades/w_magazine_m45_8.mdl"
 
-SWEP.WepSelectIcon2 = Material("entities/arc9_eft_sr1mp.png")
-SWEP.IconOverride = "entities/arc9_eft_sr1mp.png"
+SWEP.WepSelectIcon2 = Material("entities/arc9_eft_mp443.png")
+SWEP.IconOverride = "entities/arc9_eft_mp443.png"
 SWEP.WepSelectIcon2box = true
 
-SWEP.CustomShell = "9x39"
+SWEP.CustomShell = "9x19"
 SWEP.EjectPos = Vector(4.5, 3, -21)
 SWEP.EjectAng = Angle(0,0,0)
 
@@ -76,24 +73,23 @@ SWEP.weight = 1
 SWEP.ScrappersSlot = "Secondary"
 SWEP.weaponInvCategory = 2
 SWEP.ShellEject = "EjectBrass_9mm"
-SWEP.Primary.ClipSize = 18
-SWEP.Primary.DefaultClip = 18
+SWEP.Primary.ClipSize = 17
+SWEP.Primary.DefaultClip = 17
 SWEP.Primary.Automatic = false
 SWEP.Primary.Ammo = "9x19 mm Parabellum"
 SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 26
-SWEP.Primary.Sound = {"weapons/darsu_eft/sr1mp/gyrza_indoor_close1.wav", 75, 90, 100}
-SWEP.SupressedSound = {"weapons/darsu_eft/sr1mp/gyrza_silenced_indoor_close1.wav", 65, 90, 100}
-SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/m1911/handling/m1911_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
-SWEP.Primary.Force = 26
+SWEP.Primary.Damage = 24
+SWEP.Primary.Sound = {"weapons/darsu_eft/mp443/grach_fire_outdoor_close.wav", 75, 90, 100}
+SWEP.Primary.SoundEmpty = {"weapons/darsu_eft/p226/p226_fire_silenced_indoor_distant.ogg", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.Force = 20
 SWEP.Primary.Wait = PISTOLS_WAIT
-SWEP.ReloadTime = 3.5
+$13.5
 
 SWEP.DeploySnd = {"homigrad/weapons/draw_pistol.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/holster_pistol.mp3", 55, 100, 110}
 SWEP.HoldType = "revolver"
-SWEP.ZoomPos = Vector(0, -1.7871, 2.0428)
-SWEP.RHandPos = Vector(-5, -1.5, 2)
+SWEP.ZoomPos = Vector(0, -2.2906, 2.8488)
+SWEP.RHandPos = Vector(-3, -1, 0)
 SWEP.LHandPos = false
 SWEP.SprayRand = {Angle(-0.02, -0.02, 0), Angle(-0.03, 0.02, 0)}
 SWEP.Ergonomics = 1.2
@@ -102,42 +98,38 @@ SWEP.ShockMultiplier = 1
 SWEP.punchmul = 1.5
 SWEP.punchspeed = 3
 
-SWEP.LocalMuzzlePos = Vector(1.8, -1.76, 1.48)
+SWEP.LocalMuzzlePos = Vector(3.24, -2.29, 2.33)
 SWEP.LocalMuzzleAng = Angle(0, 0, 0)
-SWEP.WeaponEyeAngles = Angle(0, 0, 0)
+SWEP.WeaponEyeAngles = Angle(0, 0, 90)
 
-SWEP.WorldPos = Vector(5.5, -2, -1.5)
+SWEP.WorldPos = Vector(4, -1.5, -1)
 SWEP.WorldAng = Angle(0, 0, 0)
 SWEP.UseCustomWorldModel = true
 SWEP.attPos = Vector(0, 0, 0)
-SWEP.attAng = Angle(0.4, 0, 90)
-SWEP.lengthSub = 25
+SWEP.attAng = Angle(0, 0, 90)
+SWEP.lengthSub = 22
 SWEP.holsteredBone = "ValveBiped.Bip01_R_Thigh"
-SWEP.holsteredPos = Vector(0, -3, 2)
+SWEP.holsteredPos = Vector(0, -2, 1)
 SWEP.holsteredAng = Angle(0, 20, 30)
 SWEP.shouldntDrawHolstered = true
-SWEP.ImmobilizationMul = 1
 
---local to head
 SWEP.RHPos = Vector(12, -4.5, 3.5)
 SWEP.RHAng = Angle(5, -5, 90)
---local to rh
 SWEP.LHPos = Vector(-1.2, -1.4, -2.8)
 SWEP.LHAng = Angle(5, 9, -100)
-SWEP.ShootAnimMul = 3
-SWEP.SightSlideOffset = 1.2
+SWEP.ShootAnimMul = 4
+SWEP.AnimShootMul = 3
 
 SWEP.podkid = 1
 
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"supressor2", Vector(0, 0.0, 0), {}},
-		[2] = {"supressor1", Vector(0, 0.0, 0), {}},
-		["mount"] = Vector(-0.5, 0, -0.05),
-		["mountAngle"] = Angle(0, 0, 180),
+		[1] = {"supressor4", Vector(0, 0, 0), {}},
+		[2] = {"supressor3", Vector(0, 0, 0), {}},
+		["mount"] = Vector(-0.2, 0.8, 0.03),
 	},
 	underbarrel = {
-		["mount"] = Vector(12.4, 1.2, -1),
+		["mount"] = Vector(12.2, 1.2, -1),
 		["mountAngle"] = Angle(0, -0.75, -90),
 		["mountType"] = "picatinny_small"
 	},
@@ -150,5 +142,3 @@ function SWEP:DrawPost()
 		wep:ManipulateBonePosition(54, Vector(0, 1.5 * self.shooanim, 0), false)
 	end
 end
-
-

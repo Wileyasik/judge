@@ -90,12 +90,40 @@ do
     surface.CreateFont("ZCity_Menu_Settings_Tiny", {font="IBM Plex Mono", size=math.max(12, math.floor(16*s)), weight=400, antialias=true})
 end
 
-local presetsDir = "zcity/appearances/presets/"
+local presetSaveDir = "judge/appearances/presets/"
+local presetSearchDirs = { "zcity/appearances/presets/", "judge/appearances/presets/" }
 
-local function SavePreset(n, t) file.CreateDir(presetsDir) file.Write(presetsDir..n..".json", util.TableToJSON(t, true)) end
-local function LoadPreset(n) if not file.Exists(presetsDir..n..".json","DATA") then return nil end return util.JSONToTable(file.Read(presetsDir..n..".json","DATA")) end
-local function GetPresetList() file.CreateDir(presetsDir) local f=file.Find(presetsDir.."*.json","DATA") local p={} for _,v in ipairs(f or {}) do table.insert(p, string.StripExtension(v)) end return p end
-local function DeletePreset(n) if file.Exists(presetsDir..n..".json","DATA") then file.Delete(presetsDir..n..".json") return true end return false end
+local function SavePreset(n, t) file.CreateDir(presetSaveDir) file.Write(presetSaveDir..n..".json", util.TableToJSON(t, true)) end
+local function LoadPreset(n)
+	for _, dir in ipairs(presetSearchDirs) do
+		if not file.Exists(dir..n..".json","DATA") then continue end
+		return util.JSONToTable(file.Read(dir..n..".json","DATA"))
+	end
+	return nil
+end
+local function GetPresetList()
+	file.CreateDir(presetSaveDir)
+	local presets = {}
+	for _, dir in ipairs(presetSearchDirs) do
+		local f = file.Find(dir.."*.json","DATA")
+		for _,v in ipairs(f or {}) do
+			local name = string.StripExtension(v)
+			if not table.HasValue(presets, name) then
+				table.insert(presets, name)
+			end
+		end
+	end
+	return presets
+end
+local function DeletePreset(n)
+	for _, dir in ipairs(presetSearchDirs) do
+		if file.Exists(dir..n..".json","DATA") then
+			file.Delete(dir..n..".json")
+			return true
+		end
+	end
+	return false
+end
 
 hg.Appearance.SavePreset = SavePreset
 hg.Appearance.LoadPreset = LoadPreset

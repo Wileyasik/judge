@@ -8,7 +8,7 @@ SWEP.Category = "Weapons - Carbines"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/w_smg_mp5.mdl"
+SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_stm9.mdl"
 SWEP.CanCustomize = true
 SWEP.CustomizeCategory = "STM-9"
@@ -187,7 +187,7 @@ SWEP.animposmul = 2
 SWEP.Primary.Sound = {"weapons/darsu_eft/mcxmpx/fire_new/mpx_outdoor_close_loop1.wav", 85, 120, 130}
 SWEP.SupressedSound = {"weapons/darsu_eft/mcxmpx/fire_new/mpx_outdoor_close_silenced_loop1.wav", 75, 90, 100}
 SWEP.Primary.Wait = 0.08
-SWEP.ReloadTime = 4.5
+$13
 
 SWEP.PPSMuzzleEffect = "muzzleflash_FAMAS"
 

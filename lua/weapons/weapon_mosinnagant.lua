@@ -9,7 +9,7 @@ SWEP.Category = "Weapons - Sniper Rifles"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/w_shotgun.mdl"  -- ИСПРАВЛЕНО
+SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"  -- ИСПРАВЛЕНО
 SWEP.WorldModelFake = "models/weapons/c_mosin.mdl"
 
 SWEP.FakePos = Vector(-12, 2.6, 6)

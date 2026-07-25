@@ -8,7 +8,7 @@ SWEP.Category = "Weapons - Pistols"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/w_pist_p228.mdl"
+SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_pb.mdl"
 SWEP.FakeBodyGroups = "1111"
 SWEP.FakeBodyGroupsPresets = {
@@ -84,7 +84,7 @@ SWEP.SupressedSound = {"weapons/darsu_eft/pm/pb_silenced_indoor_close1.wav", 65,
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/makarov/handling/makarov_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Force = 12
 SWEP.Primary.Wait = PISTOLS_WAIT
-SWEP.ReloadTime = 3.5
+$12
 
 SWEP.DeploySnd = {"homigrad/weapons/draw_pistol.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/holster_pistol.mp3", 55, 100, 110}

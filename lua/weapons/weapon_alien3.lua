@@ -9,7 +9,7 @@ SWEP.Category = "Weapons - Assault Rifles"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = "" -- Используем FakeWM
-SWEP.WorldModel = "models/weapons/w_m41a.mdl"
+SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 
 -- ВАЖНО: Сюда нужно вписать путь к модели от ПЕРВОГО ЛИЦА (c_m41a.mdl или v_m41a.mdl)
 -- Если у тебя нет c_ модели, оставь w_, но анимации могут выглядеть странно

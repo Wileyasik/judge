@@ -1648,19 +1648,29 @@ function entMeta:NormalOpenDoor(user)
 end
 
 local vpang = Angle(2,0,0)
-function entMeta:FastOpenDoor(user, mul, noanim)
+function entMeta:FastOpenDoor(user, mul, noanim, forceBack)
 	self.oldspeed = self.oldspeed or self:GetInternalVariable( "Speed" )
 
 	self.firstOpen = -1
 
-	if self.openang then
-		self:SetSaveValue( "m_angRotationOpenBack", self.openang )
-		self:SetSaveValue( "m_angRotationOpenForward", self.openang2 )
+	local openBack, openForward = self.openang, self.openang2
+	local openVec1, openVec2 = self.openang3, self.openang4
+	
+	if forceBack ~= nil then
+		if forceBack then
+			openBack, openForward = self.openang2, self.openang
+			openVec1, openVec2 = self.openang4, self.openang3
+		end
 	end
 
-	if self.openang3 then
-		self:SetSaveValue( "m_vecAngle1",self.openang3 )
-		self:SetSaveValue( "m_vecAngle2", self.openang4 )
+	if openBack then
+		self:SetSaveValue( "m_angRotationOpenBack", openBack )
+		self:SetSaveValue( "m_angRotationOpenForward", openForward )
+	end
+
+	if openVec1 then
+		self:SetSaveValue( "m_vecAngle1", openVec1 )
+		self:SetSaveValue( "m_vecAngle2", openVec2 )
 	end
 
 	if self.oldsnd or self.oldsnd3 then
@@ -1692,6 +1702,7 @@ end
 
 hook.Add( "AcceptInput", "StealthOpenDoors", function( ent, inp, act, ply, val )
 	if inp == "Use" and ent:SDOIsDoor() then
+		if IsValid(ply) and ply.DoorBashCD and ply.DoorBashCD > CurTime() then return false end
 		local func = ((ply:KeyDown( IN_SPEED ) and "FastOpenDoor") or ( ply:KeyDown( IN_WALK ) and "StealthOpenDoor") or "NormalOpenDoor")
 		ent[func](ent,ply)
 		if ent:GetInternalVariable( "slavename" ) then
@@ -1726,6 +1737,59 @@ hook.Add("PlayerUse", "DoorClose", function(ply, ent)
 			return false
 		end
 	end	
+end)
+
+hook.Add("PlayerUse", "DoorBashOnRun", function(ply, ent)
+	if IsValid(ply.FakeRagdoll) or not ply:Alive() then return end
+	if not IsValid(ent) or not ent:SDOIsDoor() then return end
+	if not ply:KeyDown(IN_SPEED) then return end
+	
+	local vel = ply:GetVelocity():Length()
+	if vel < 250 then return end
+	
+	local cd = ply.DoorBashCD or 0
+	if cd > CurTime() then return end
+	
+	local door = ent
+	local doorForward = door:GetForward()
+	local hitFromBack = ply:GetVelocity():Dot(doorForward) > 0
+	local forceBack = not hitFromBack
+	
+	door:FastOpenDoor(ply, 1.5, true, forceBack)
+	
+	if door:GetInternalVariable("slavename") then
+		for k, v in pairs(ents.FindByName(door:GetInternalVariable("slavename"))) do
+			v:FastOpenDoor(ply, 1.5, true, forceBack)
+		end
+	end
+	
+	for k, v in pairs(ents.FindByClass(door:GetClass())) do
+		if door == v:GetInternalVariable("m_hMaster") then
+			v:FastOpenDoor(ply, 1.5, true, forceBack)
+		end
+	end
+	
+	if door:GetInternalVariable("m_hMaster") and IsValid(door:GetInternalVariable("m_hMaster")) and door:GetInternalVariable("m_hMaster"):SDOIsDoor() then
+		door:GetInternalVariable("m_hMaster"):FastOpenDoor(ply, 1.5, true, forceBack)
+	end
+	
+	ply.DoorBashCD = CurTime() + 1
+	
+	door:EmitSound("physics/wood/wood_crate_impact_hard3.wav", 80, math.Rand(90, 110))
+	
+	local ragdoll = hg.Ragdoll_Create(ply)
+	if IsValid(ragdoll) then
+		ragdoll:SetVelocity(ply:GetVelocity() * 0.5 + Vector(0, 0, 100))
+		for i = 0, ragdoll:GetPhysicsObjectCount() - 1 do
+			local phys = ragdoll:GetPhysicsObjectNum(i)
+			if IsValid(phys) then
+				phys:AddVelocity(ply:GetVelocity() * 0.3)
+			end
+		end
+		hg.Fake(ply, ragdoll)
+	end
+	
+	return false
 end)
 
 hook.Add( "KeyPress", "snowballs_pickup", function( ply, key )

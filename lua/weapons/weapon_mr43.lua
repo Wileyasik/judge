@@ -1,4 +1,4 @@
-﻿SWEP.Base = "weapon_mr43_short"
+SWEP.Base = "weapon_mr43_short"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "MR-43"
@@ -8,7 +8,7 @@ SWEP.Category = "Weapons - Shotguns"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/w_shot_xm1014.mdl"
+SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_mr43.png")
 SWEP.WepSelectIcon2box = true

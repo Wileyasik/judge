@@ -1,4 +1,4 @@
-﻿--ByLAZZY
+--ByLAZZY
 SWEP.Base = "weapon_mxlr"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -9,7 +9,7 @@ SWEP.Category = "Weapons - Sniper Rifles"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/w_shotgun.mdl" -- РќРµРѕР±С…РѕРґРёРјРѕ Р·Р°РјРµРЅРёС‚СЊ WM
+SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl" -- Необходимо заменить WM
 SWEP.WorldModelFake = "models/weapons/c_svt.mdl"
 
 
@@ -51,7 +51,7 @@ SWEP.AutomaticDraw = false
 SWEP.UseCustomWorldModel = true
 SWEP.ViewPunchDiv = 115
 
--- РҐР°СЂР°РєС‚РµСЂРёСЃС‚РёРєРё
+-- Характеристики
 SWEP.Primary.ClipSize = 15
 SWEP.Primary.DefaultClip = 15
 SWEP.Primary.Automatic = true
@@ -60,7 +60,7 @@ SWEP.Primary.Damage = 55
 SWEP.Primary.Force = 55
 SWEP.Primary.Cone = 0
 SWEP.Primary.Spread = 0
--- Р—РІСѓРєРё РІС‹СЃС‚СЂРµР»Р° (SVD, С‚Р°Рє РєР°Рє Сѓ SVT РјРѕРіСѓС‚ Р±С‹С‚СЊ РїСЂРѕР±Р»РµРјС‹ СЃ РїСѓС‚СЏРјРё)
+-- Звуки выстрела (SVD, так как у SVT могут быть проблемы с путями)
 SWEP.Primary.Sound = {"weapons/darsu_eft/svt/fire/avt_outdoor_distant_loop2.wav", 85, 100, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/svt/fire/avt_outdoor_distant_loop2.wav", 65, 100, 100}
 SWEP.Primary.Wait = 0.075
@@ -96,7 +96,7 @@ SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
 SWEP.holsteredPos = Vector(4, 8, -6)
 SWEP.holsteredAng = Angle(210, 0, 180)
 
--- РЎРџРРЎРћРљ РђРќРРњРђР¦РР™
+-- СПИСОК АНИМАЦИЙ
 SWEP.AnimList = {
     ["idle"] = "idle",
     ["idle_empty"] = "idle_empty",
@@ -110,7 +110,7 @@ SWEP.AnimList = {
     ["dryfire"] = "fire_dry",
     ["dryfire_empty"] = "fire_dry_empty",
     ["cycle"] = "bolt0",
-    ["reload"] = "reload0", -- РСЃРїРѕР»СЊР·СѓРµРј reload0 РґР»СЏ РІСЃРµРіРѕ
+    ["reload"] = "reload0", -- Используем reload0 для всего
     ["reload_empty"] = "reload_empty0", 
     ["inspect"] = "look",
     ["inspect_empty"] = "look_empty",
@@ -118,7 +118,7 @@ SWEP.AnimList = {
     ["toggle_empty"] = "mod_switch_empty",
 }
 
--- РџРЈРўР¬ Рљ Р—Р’РЈРљРђРњ (AVT40/SKS)
+-- ПУТЬ К ЗВУКАМ (AVT40/SKS)
 local path = "weapons/darsu_eft/svt/"
 local pathsks = "weapons/darsu_eft/sks/"
 
@@ -187,7 +187,7 @@ function SWEP:Reload(time)
         local isEmpty = self:Clip1() <= 0
         local animName = "reload" 
         
-        -- РќР• РњР•РќРЇР•Рњ (РєР°Рє РїСЂРѕСЃРёР»)
+        -- НЕ МЕНЯЕМ (как просил)
         local animSpeed = 4
         local reloadTime = isEmpty and 5.5 or 4.1
         
@@ -196,12 +196,12 @@ function SWEP:Reload(time)
         
         local wep = self
         
-        -- 1. РЎРјРµРЅР° РјР°РіР°Р·РёРЅР°
+        -- 1. Смена магазина
         self:PlayAnim(animName, animSpeed, false, function()
             if not IsValid(wep) or not IsValid(wep:GetOwner()) then return end
             
             if isEmpty then
-                -- 2. Р‘РѕР»С‚ (Р·Р°РїСѓСЃРєР°РµРј СЃ РЅРѕСЂРјР°Р»СЊРЅРѕР№ СЃРєРѕСЂРѕСЃС‚СЊСЋ 1)
+                -- 2. Болт (запускаем с нормальной скоростью 1)
                 wep:PlayAnim("ready", 1, false, function()
                     if not IsValid(wep) then return end
                     
@@ -225,7 +225,7 @@ function SWEP:Reload(time)
                     net.Broadcast()
                 end, false, true)
                 
-                           -- Р—РІСѓРєРё Р±РѕР»С‚Р° (Р·Р°РїСѓСЃРєР°СЋС‚СЃСЏ СЃСЂР°Р·Сѓ РїРѕСЃР»Рµ РЅР°С‡Р°Р»Р° Р°РЅРёРјР°С†РёРё ready)
+                           -- Звуки болта (запускаются сразу после начала анимации ready)
                 timer.Simple(0.2, function() if IsValid(wep) then wep:EmitSound(pathsks .. "sks_slider_up.ogg") end end)
                 timer.Simple(0.6, function() if IsValid(wep) then wep:EmitSound(pathsks .. "sks_slider_down.ogg") end end)
                 
@@ -246,10 +246,10 @@ function SWEP:Reload(time)
             end
         end, false, true)
         
-           -- Р—РІСѓРєРё СЃРјРµРЅС‹ РјР°РіР°Р·РёРЅР°
+           -- Звуки смены магазина
         timer.Simple(0.5, function() if IsValid(wep) then wep:EmitSound(path .. "avt_magrelease_button_down.ogg") end end)
         timer.Simple(1.0, function() if IsValid(wep) then wep:EmitSound(path .. "avt_mag_out.ogg") end end)
-        timer.Simple(2.5, function() if IsValid(wep) then wep:EmitSound(path .. "avt_mag_in.ogg") end end) -- Р§СѓС‚СЊ СЂР°РЅСЊС€Рµ С‡РµРј 2.84
+        timer.Simple(2.5, function() if IsValid(wep) then wep:EmitSound(path .. "avt_mag_in.ogg") end end) -- Чуть раньше чем 2.84
         timer.Simple(3.2, function() if IsValid(wep) then wep:EmitSound(path .. "avt_magrelease_button_up.ogg") end end)
     end
 end

@@ -8,7 +8,7 @@ SWEP.Category = "Weapons - Grenade Launchers"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/zcity/w_hk416.mdl"
+SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_fn40gl.mdl"
 SWEP.CanCustomize = true
 SWEP.CustomizeCategory = "FN40GL"
@@ -50,7 +50,7 @@ SWEP.AnimsEvents = {
 	},
 }
 
-SWEP.ReloadTime = 3.5
+$12
 
 SWEP.weaponInvCategory = 1
 SWEP.Primary.ClipSize = 1

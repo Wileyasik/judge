@@ -8,7 +8,7 @@ SWEP.Category = "Weapons - Machine-Pistols"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/w_smg_mp5.mdl"
+SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_mp5.mdl"
 SWEP.CanCustomize = true
 SWEP.CustomizeCategory = "MP5"
@@ -158,7 +158,7 @@ SWEP.animposmul = 2
 SWEP.Primary.Sound = {"weapons/darsu_eft/mp5/fire_new/mp5sd_outdoor_close_silenced_loop1.wav", 65, 90, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/mp5/fire_new/mp5sd_outdoor_close_silenced_loop1.wav", 65, 90, 100}
 SWEP.Primary.Wait = 0.07
-SWEP.ReloadTime = 3
+$11.5
 SWEP.SetSupressor = true
 
 

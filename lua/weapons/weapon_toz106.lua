@@ -8,7 +8,7 @@ SWEP.Category = "Weapons - Shotguns"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/w_shot_m3super90.mdl"
+SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_toz106.mdl"
 SWEP.FakeAttachment = "1"
 SWEP.FakeBodyGroups = "110011111"
@@ -160,7 +160,7 @@ SWEP.Primary.Wait = 0.15
 SWEP.NumBullet = 1
 SWEP.AnimShootMul = 1
 SWEP.AnimShootHandMul = 1
-SWEP.ReloadTime = 2.5
+$11
 SWEP.ReloadSoundes = {
 	"none",
 	"none",

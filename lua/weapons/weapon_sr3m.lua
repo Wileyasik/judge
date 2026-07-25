@@ -8,7 +8,7 @@ SWEP.Category = "Weapons - Assault Rifles"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/w_rif_ak47.mdl"
+SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_sr3m.mdl"
 SWEP.CanCustomize = true
 SWEP.CustomizeCategory = "SR3M Vikhr"
@@ -45,6 +45,7 @@ SWEP.ViewPunchDiv = 70
 SWEP.DOZVUK = true
 SWEP.dwr_customIsSuppressed = true
 SWEP.Supressor = true
+SWEP.SupressorOnly = true
 SWEP.SetSupressor = true
 
 local path = "weapons/darsu_eft/sr3m/"
@@ -116,7 +117,7 @@ SWEP.Primary.Sound = {"weapons/darsu_eft/val/fire_new/vss_loop_close2.wav", 65, 
 SWEP.SupressedSound = {"weapons/darsu_eft/val/fire_new/vss_loop_close2.wav", 65, 90, 100}
 SWEP.Primary.SoundEmpty = {"weapons/darsu_eft/sr3m/sr3m_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.066
-SWEP.ReloadTime = 2.7
+$11.2
 
 SWEP.PPSMuzzleEffect = "muzzleflash_FAMAS"
 

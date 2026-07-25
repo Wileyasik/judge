@@ -1,5 +1,5 @@
-﻿-- MTsвЂ‘255 (СЂРµРІРѕР»СЊРІРµСЂРЅРѕРµ СЂСѓР¶СЊС‘, 12/70)
--- Р±Р°Р·Р°: weapon_m4super
+-- MTs‑255 (револьверное ружьё, 12/70)
+-- база: weapon_m4super
 
 SWEP.Base = "weapon_m4super"
 SWEP.Spawnable = true
@@ -11,13 +11,13 @@ SWEP.Category = "Weapons - Shotguns"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 
--- РњРћР”Р•Р›Р
+-- МОДЕЛИ
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/zcity/w_shot_m3juper90.mdl"
+SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_mts255.mdl"
 SWEP.WorldModelReal = "models/weapons/c_mts255.mdl"
 
--- РџРћР—РР¦РР
+-- ПОЗИЦИИ
 SWEP.FakePos = Vector(-14, 3.6, 6.2)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
@@ -25,7 +25,7 @@ SWEP.AttachmentPos = Vector(-8.5, 0, 0)
 SWEP.AttachmentAng = Angle(0, 0, 0)
 SWEP.ViewPunchDiv = 425
 
--- Р‘РћР”РР“Р РЈРџРџР«
+-- БОДИГРУППЫ
 SWEP.FakeBodyGroups = "011111011111"
 SWEP.FakeBodyGroupsPresets = { "011111011111" }
 
@@ -39,9 +39,9 @@ SWEP.LocalMuzzlePos = Vector(27.739, 0.09, 5.098)
 SWEP.LocalMuzzleAng = Angle(0.2, 0, 0)
 SWEP.WeaponEyeAngles = Angle(-0.7, 0.1, 0)
 
--- Р“РР›Р¬Р—Р«
+-- ГИЛЬЗЫ
 SWEP.CustomShell = "12x70"
-SWEP.ShellEject = nil -- СЂРµРІРѕР»СЊРІРµСЂ, РіРёР»СЊР·С‹ РЅРµ РІС‹Р»РµС‚Р°СЋС‚ РїСЂРё РІС‹СЃС‚СЂРµР»Рµ
+SWEP.ShellEject = nil -- револьвер, гильзы не вылетают при выстреле
 
 SWEP.weight = 4
 SWEP.ScrappersSlot = "Primary"
@@ -49,7 +49,7 @@ SWEP.weaponInvCategory = 1
 SWEP.AutomaticDraw = false
 SWEP.UseCustomWorldModel = true
 
--- РҐРђР РђРљРўР•Р РРЎРўРРљР
+-- ХАРАКТЕРИСТИКИ
 SWEP.Primary.ClipSize = 5
 SWEP.Primary.DefaultClip = 5
 SWEP.Primary.Automatic = false
@@ -63,7 +63,7 @@ SWEP.Primary.Wait = 0.4
 
 local path = "weapons/darsu_eft/mts255/"
 
--- Длительности анимаций (в секундах) — меняй тут
+-- ������������ �������� (� ��������) � ����� ���
 SWEP.AnimDurations = {
     ["fistful_start__0"]    = 1.25,
     ["sg_reload_start1__0"] = 3.25,
@@ -72,7 +72,7 @@ SWEP.AnimDurations = {
     ["sg_reload_start4__0"] = 2.35,
 }
 
--- Р—Р’РЈРљР Р’Р«РЎРўР Р•Р›Рђ
+-- ЗВУКИ ВЫСТРЕЛА
 SWEP.Primary.Sound = {path .. "mts255_outdoor_close.ogg", 90, 100, 100}
 SWEP.SupressedSound = {path .. "mts255_indoor_close.ogg", 80, 100, 100}
 
@@ -91,7 +91,7 @@ SWEP.Penetration = 5
 SWEP.GunCamPos = Vector(6, -12, -5)
 SWEP.GunCamAng = Angle(190, -5, -95)
 
--- РЎРџРРЎРћРљ Р‘РђР—РћР’Р«РҐ РђРќРРњРђР¦РР™
+-- СПИСОК БАЗОВЫХ АНИМАЦИЙ
 SWEP.AnimList = {
     ["idle"]          = "idle",
     ["draw"]          = "draw__0",
@@ -100,9 +100,9 @@ SWEP.AnimList = {
     ["fire"]          = "fire_da__0",
     ["fire_empty"]    = "fire_dry__0",
     ["dryfire"]       = "fire_dry__0",
-    ["reload"]        = "fistful_insert5", -- Р·Р°РіР»СѓС€РєР°
+    ["reload"]        = "fistful_insert5", -- заглушка
 
-    -- РѕСЃРјРѕС‚СЂ С‡РµСЂРµР· look__3 (РёРјРµРЅРЅРѕ СЌС‚Р° Р°РЅРёРјР°С†РёСЏ РјРѕРґРµР»Рё)
+    -- осмотр через look__3 (именно эта анимация модели)
     ["inspect"]       = "look__0",
     ["inspect_empty"] = "look__0",
 }
@@ -159,7 +159,7 @@ SWEP.AnimsEvents = {
 SWEP.stupidgun = true
 
 -------------------------------------------------
--- РЎР•РўР•Р’Р«Р• РџР•Р Р•РњР•РќРќР«Р•, Р‘РћР”РР“Р РЈРџРџР«
+-- СЕТЕВЫЕ ПЕРЕМЕННЫЕ, БОДИГРУППЫ
 -------------------------------------------------
 
 function SWEP:AnimHoldPost() end
@@ -220,7 +220,7 @@ function SWEP:GetAnimPos_Insert(time) return 0 end
 function SWEP:GetAnimPos_Draw(time) return 0 end
 
 -------------------------------------------------
--- РЎРўР Р•Р›Р¬Р‘Рђ
+-- СТРЕЛЬБА
 -------------------------------------------------
 
 function SWEP:PrimaryShootPost()
@@ -228,7 +228,7 @@ function SWEP:PrimaryShootPost()
 end
 
 -------------------------------------------------
--- РџР•Р Р•Р—РђР РЇР”РљРђ: РћР‘Р©РР™ Р¤РРќРђР›
+-- ПЕРЕЗАРЯДКА: ОБЩИЙ ФИНАЛ
 -------------------------------------------------
 
 local function MTS255_FinishReload(wep)
@@ -263,7 +263,7 @@ local function MTS255_FinishReload(wep)
 end
 
 -------------------------------------------------
--- РџРћР›РќРђРЇ РџР•Р Р•Р—РђР РЇР”РљРђ (fistful)
+-- ПОЛНАЯ ПЕРЕЗАРЯДКА (fistful)
 -------------------------------------------------
 
 local function MTS255_PlayFistfulChain(wep, step, targetStep)
@@ -297,7 +297,7 @@ local function MTS255_PlayFistfulChain(wep, step, targetStep)
 end
 
 -------------------------------------------------
--- Р’Р«Р‘РћР РћР§РќРђРЇ РџР•Р Р•Р—РђР РЇР”РљРђ (sg_reload)
+-- ВЫБОРОЧНАЯ ПЕРЕЗАРЯДКА (sg_reload)
 -------------------------------------------------
 
 local function MTS255_PlaySgInsertChain(wep, idx, lastIdx)
@@ -307,7 +307,7 @@ local function MTS255_PlaySgInsertChain(wep, idx, lastIdx)
     local startClip = wep.reloadStartClip or wep:Clip1()
     if toLoad <= 0 then MTS255_FinishReload(wep) return end
 
-    -- Р’СЃРµ РЅСѓР¶РЅС‹Рµ insert'С‹ РѕС‚С‹РіСЂР°Р»Рё вЂ“ РєРѕРЅРµС†
+    -- Все нужные insert'ы отыграли – конец
     if idx > lastIdx then
         local finalClip = math.min(startClip + toLoad, wep.Primary.ClipSize)
         local animEnd   = "fistful_end_r" .. math.Clamp(finalClip, 1, 5)
@@ -333,7 +333,7 @@ local function MTS255_PlaySgInsertChain(wep, idx, lastIdx)
 end
 
 -------------------------------------------------
--- Р“Р›РђР’РќРђРЇ Р¤РЈРќРљР¦РРЇ РџР•Р Р•Р—РђР РЇР”РљР
+-- ГЛАВНАЯ ФУНКЦИЯ ПЕРЕЗАРЯДКИ
 -------------------------------------------------
 
 function SWEP:Reload(time)
@@ -362,7 +362,7 @@ function SWEP:Reload(time)
         self.reloadToLoad    = toLoad
 
         if clip == 0 then
-            -- ПОЛНАЯ ПЕРЕЗАРЯДКА
+            -- ������ �����������
             local targetStep = math.min(toLoad, 5)
 
             local fistfulDur = self.AnimDurations["fistful_start__0"] or 1.25
@@ -377,7 +377,7 @@ function SWEP:Reload(time)
             end, false, true)
 
         else
-            -- ВЫБОРОЧНАЯ ПЕРЕЗАРЯДКА
+            -- ���������� �����������
             local firstIndex = clip
             local lastIndex  = math.min(clip + toLoad - 1, 4)
 
@@ -398,7 +398,7 @@ function SWEP:Reload(time)
 end
 
 -------------------------------------------------
--- Р‘Р›РћРљРР РћР’РљРђ РЎРўР Р•Р›Р¬Р‘Р« РџР Р РџР•Р Р•Р—РђР РЇР”РљР•
+-- БЛОКИРОВКА СТРЕЛЬБЫ ПРИ ПЕРЕЗАРЯДКЕ
 -------------------------------------------------
 
 function SWEP:CanPrimaryAttack()
@@ -406,9 +406,9 @@ function SWEP:CanPrimaryAttack()
 end
 
 -------------------------------------------------
--- РћРЎРњРћРўР 
--- (СЂСѓС‡РЅС‹Рµ РєСЂРёРІС‹Рµ РїРѕС‡С‚Рё РЅРµ РјРµС€Р°СЋС‚, РЅРѕ РµСЃР»Рё С…РѕС‡РµС€СЊ С‡РёСЃС‚Рѕ look__3 вЂ”
--- РјРѕР¶РЅРѕ СЃРѕРєСЂР°С‚РёС‚СЊ РґРѕ РѕРґРЅРѕРіРѕ СѓРіР»Р°)
+-- ОСМОТР
+-- (ручные кривые почти не мешают, но если хочешь чисто look__3 —
+-- можно сократить до одного угла)
 -------------------------------------------------
 
 SWEP.InspectAnimLH    = { Vector(0, 0, 0) }

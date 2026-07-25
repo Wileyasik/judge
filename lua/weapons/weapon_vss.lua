@@ -8,7 +8,7 @@ SWEP.Category = "Weapons - Sniper Rifles"
 SWEP.Slot = 2
 SWEP.SlotPos = 11
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/w_rif_ak47.mdl"
+SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_vss_val2.mdl"
 SWEP.CanCustomize = true
 SWEP.CustomizeCategory = "VSS Vintorez"
@@ -117,7 +117,7 @@ SWEP.Primary.Sound = {"weapons/darsu_eft/val/fire_new/vss_loop_close2.wav", 65, 
 SWEP.SupressedSound = {"weapons/darsu_eft/val/fire_new/vss_loop_close2.wav", 65, 90, 100}
 SWEP.Primary.SoundEmpty = {"weapons/darsu_eft/vss/vss_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.075
-SWEP.ReloadTime = 2.7
+$11.2
 
 SWEP.PPSMuzzleEffect = "muzzleflash_FAMAS"
 

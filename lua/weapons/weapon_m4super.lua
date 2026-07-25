@@ -9,7 +9,7 @@ SWEP.Category = "Weapons - Shotguns"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/w_shot_xm1014.mdl"
+SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.Spawnable = false
 SWEP.WepSelectIcon2 = Material("pwb2/vgui/weapons/m4super90.png")
 SWEP.IconOverride = "pwb2/vgui/weapons/m4super90.png"
@@ -53,7 +53,7 @@ SWEP.AnimStart_Draw = 0
 SWEP.AnimStart_Insert = 0
 SWEP.AnimInsert = 0.1
 SWEP.Penetration = 8
-SWEP.ReloadTime = 2.7
+$11.2
 SWEP.AnimInsert = 0.1
 SWEP.AnimDraw = 0.4
 SWEP.ReloadDrawTime = 0.1
