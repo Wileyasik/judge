@@ -2,7 +2,7 @@ local PANEL = {}
 local curent_panel 
 local red_select = Color(192,0,0)
 local menu_music_default_path = "sound/rem_mainmenu.mp3"
-local menu_music_appearance_path = "sound/theyouthinmyblood.mp3"
+local menu_music_appearance_path = "sound/rem_track1.mp3"
 local menu_music_flags = "noblock noplay"
 local menu_music_volume = 0.6
 local menu_music_fade_speed = 1.8
