@@ -11,7 +11,6 @@ SWEP.WorldModel = "models/criminality/metalbat.mdl"
 SWEP.WorldModelReal = "models/weapons/tfa_nmrih/v_me_bat_metal.mdl"
 SWEP.WorldModelExchange = "models/criminality/metalbat.mdl" -- visible model swapped, animations kept from WorldModelReal
 SWEP.DontChangeDropped = false
-SWEP.ViewModel = ""
 SWEP.modelscale = 1.1
 
 SWEP.basebone = 94

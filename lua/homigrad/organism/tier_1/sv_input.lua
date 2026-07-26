@@ -188,7 +188,28 @@ local sounds = {
 	Sound("player/zombie_head_explode_06.wav")
 }
 
+local goreSounds = {
+	Sound("gore/kf2_tear1.wav"),
+	Sound("gore/kf2_tear2.wav"),
+	Sound("gore/kf2_tear3.wav"),
+	Sound("gore/kf2_tear4.wav"),
+	Sound("gore/kf2_tear5.wav"),
+	Sound("gore/kf2_tear6.wav"),
+	Sound("gore/kf2_tear7.wav"),
+	Sound("gore/kf2_tear8.wav"),
+	Sound("gore/kf2_totalgib.wav"),
+}
+
 local ents_Create = ents.Create
+local childLimbs = {
+	["larmup"] = {"larm", "lhand"},
+	["rarmup"] = {"rarm", "rhand"},
+	["larm"] = {"lhand"},
+	["rarm"] = {"rhand"},
+	["llegup"] = {"lleg"},
+	["rlegup"] = {"rleg"},
+}
+
 function hg.organism.AmputateLimb(org, limb)
 	if org[limb.."amputated"] == nil then return end
 
@@ -223,11 +244,39 @@ function hg.organism.AmputateLimb(org, limb)
     end
 
     org.owner:EmitSound(sounds[math.random(#sounds)], 70, math.random(95, 105), 2)
+	org.owner:EmitSound(goreSounds[math.random(#goreSounds)], 75, math.random(90, 110), 1.5)
 	
 	local ent = hg.GetCurrentCharacter(org.owner)
 	SpawnMeatGore(ent, select(1, ent:GetBonePosition(ent:LookupBone(bone))), 4)
 
 	hook.Run("OnAmputateLimb", org, ent, limb)
+
+	if childLimbs[limb] then
+		for _, childLimb in ipairs(childLimbs[limb]) do
+			if org[childLimb.."amputated"] then
+				local childBone = limbs[childLimb]
+				local childBoneName = org.owner:GetBoneName(org.owner:LookupBone(childBone) - 1)
+				
+				local newWnds = {}
+				for i, tbl in pairs(org.arterialwounds) do
+					if tbl[7] != childBone.."artery" and tbl[4] != childBoneName then
+						table.insert(newWnds, tbl)
+					end
+				end
+				org.arterialwounds = newWnds
+				org.owner:SetNetVar("arterialwounds", newWnds)
+				
+				local newWounds = {}
+				for i, wound in pairs(org.wounds) do
+					if wound[4] != childBoneName then
+						table.insert(newWounds, wound)
+					end
+				end
+				org.wounds = newWounds
+				org.owner:SetNetVar("wounds", newWounds)
+			end
+		end
+	end
 
 	if limb == "larmup" and not org.larmamputated then hg.organism.AmputateLimb(org, "larm") end
 	if limb == "rarmup" and not org.rarmamputated then hg.organism.AmputateLimb(org, "rarm") end
@@ -445,7 +494,23 @@ function hg.ExplodeHead(ent)
 			hook.Run("OnHeadExplode", ply, ent)
 		end]]
 
-		Gib_Input(ent, ent:LookupBone("ValveBiped.Bip01_Head1"))
+		local headBone = ent:LookupBone("ValveBiped.Bip01_Head1")
+		local mat = headBone and ent:GetBoneMatrix(headBone)
+		
+		Gib_Input(ent, headBone)
+		
+		if mat then
+			local pos = mat:GetTranslation()
+			local dir = mat:GetAngles():Up() * 3
+			
+			net.Start("bloodsquirt")
+			net.WriteEntity(ent)
+			net.WriteString("ValveBiped.Bip01_Head1")
+			net.WriteMatrix(mat)
+			net.WriteVector(pos)
+			net.WriteVector(dir)
+			net.Broadcast()
+		end
 		
 		ent.organism.headamputated = true
 		ent.headexploded = true
@@ -1057,13 +1122,15 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 				"rleg",
 				"larm",
 				"rarm",
+				"lhand",
+				"rhand",
 				"llegup",
 				"rlegup",
 				"larmup",
 				"rarmup",
 			}
 
-			if should and hitgrouptolimb[hitgroup] then
+			if should and (hitgrouptolimb[hitgroup] or hg.amputeetable[bonename]) then
 				if blast then
 					for i, limb in ipairs(limbs) do
 						if !org[limb.."amputated"] and math.random(5) < 200 / lend then
@@ -1071,8 +1138,9 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 						end
 					end
 				else
-					if !org[hitgrouptolimb[hitgroup].."amputated"] then
-						hg.organism.AmputateLimb(org, hitgrouptolimb[hitgroup])
+					local limbToAmputate = hg.amputeetable[bonename] or hitgrouptolimb[hitgroup]
+					if limbToAmputate and !org[limbToAmputate.."amputated"] then
+						hg.organism.AmputateLimb(org, limbToAmputate)
 					end
 				end
 			end

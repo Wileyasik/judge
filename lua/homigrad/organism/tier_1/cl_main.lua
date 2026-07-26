@@ -1187,33 +1187,61 @@ hook.Add("Player-Ragdoll think", "organism-think-client-blood", function(ply, en
 	end
 end)
 
-local grub = Model("models/limbspartial/elbowleft.mdl")
+local grubModels = {
+	["lleg"]   = Model("models/limbspartial/thighleft.mdl"),
+	["rleg"]   = Model("models/limbspartial/thighright.mdl"),
+	["larm"]   = Model("models/limbspartial/elbowleft.mdl"),
+	["rarm"]   = Model("models/limbspartial/elbowright.mdl"),
+	["lhand"]  = Model("models/limbspartial/kneeleft.mdl"),
+	["rhand"]  = Model("models/limbspartial/kneeright.mdl"),
+	["llegup"] = Model("models/limbspartial/kneeleft.mdl"),
+	["rlegup"] = Model("models/limbspartial/kneeright.mdl"),
+	["larmup"] = Model("models/limbspartial/kneeleft.mdl"),
+	["rarmup"] = Model("models/limbspartial/kneeright.mdl"),
+	["head"]   = Model("models/limbspartial/elbowleft.mdl"),
+}
+
+local grubScale = {
+	["lleg"]   = 0.8,
+	["rleg"]   = 0.8,
+	["larm"]   = 1.0,
+	["rarm"]   = 1.2,
+	["lhand"]  = 0.8,
+	["rhand"]  = 0.7,
+	["llegup"] = 1.2,
+	["rlegup"] = 1.2,
+	["larmup"] = 1.1,
+	["rarmup"] = 1.1,
+	["head"]   = 1.0,
+}
+
+local grubPool = {}
 local vecalmostzero = Vector(0.01, 0.01, 0.01)
 
 local modelPlacements = {
 	[1] = {
-		["ValveBiped.Bip01_L_Calf"] = {Vector(15.5, 0, 0), Angle(0, 90, 0)},
-		["ValveBiped.Bip01_R_Calf"] = {Vector(15.5, 0, 0), Angle(0, 90, 0)},
-		["ValveBiped.Bip01_R_Forearm"] = {Vector(11, 0.5, 0.5), Angle(0, 90, 0)},
-		["ValveBiped.Bip01_L_Forearm"] = {Vector(11, 0.5, -0.5), Angle(0, 90, 0)},
-		["ValveBiped.Bip01_R_Hand"] = {Vector(2, 0.5, 0.5), Angle(0, 90, 0)},
-		["ValveBiped.Bip01_L_Hand"] = {Vector(2, 0.5, -0.5), Angle(0, 90, 0)},
-		["ValveBiped.Bip01_L_UpperArm"] = {Vector(5, 0.5, -0.5), Angle(0, 0, 0)},
-		["ValveBiped.Bip01_R_UpperArm"] = {Vector(12, 0.5, 0.5), Angle(0, 90, 0)},
-		["ValveBiped.Bip01_L_Thigh"] = {Vector(14, 0, 0), Angle(0, 90, 0)},
-		["ValveBiped.Bip01_R_Thigh"] = {Vector(14, 0, 0), Angle(0, 90, 0)},
+		["ValveBiped.Bip01_L_Calf"] = {Vector(19.7, -0.5, -0.2), Angle(-90, 0, 0)},
+		["ValveBiped.Bip01_R_Calf"] = {Vector(19.7, -0.5, -0.2), Angle(-90, 0, 0)},
+		["ValveBiped.Bip01_R_Forearm"] = {Vector(14, 0.2, 1), Angle(-90, 0, -0.3)},
+		["ValveBiped.Bip01_L_Forearm"] = {Vector(14, 0.2, -1), Angle(-90, 0, -0.3)},
+		["ValveBiped.Bip01_R_Hand"] = {Vector(13, 0.4, 0.1), Angle(-93, 0, 0.3)},
+		["ValveBiped.Bip01_L_Hand"] = {Vector(13, 0.3, -0.1), Angle(-93, 0, 0.3)},
+		["ValveBiped.Bip01_L_UpperArm"] = {Vector(12, -3, 0), Angle(0, 90, -90)},
+		["ValveBiped.Bip01_R_UpperArm"] = {Vector(12, -3, 0), Angle(0, 90, -90)},
+		["ValveBiped.Bip01_L_Thigh"] = {Vector(2.8, -9, -1), Angle(0, 10, -90)},
+		["ValveBiped.Bip01_R_Thigh"] = {Vector(-3, -8, -3), Angle(0, -10, -90)},
 	},
 	[0] = {
-		["ValveBiped.Bip01_L_Calf"] = {Vector(17.5, 0, 0), Angle(0, 90, 0)},
-		["ValveBiped.Bip01_R_Calf"] = {Vector(17.5, 0, 0), Angle(0, 90, 0)},
-		["ValveBiped.Bip01_R_Forearm"] = {Vector(12, 0.5, 0.5), Angle(0, 90, 0)},
-		["ValveBiped.Bip01_L_Forearm"] = {Vector(11, 0, -1), Angle(0, 90, 0)},
-		["ValveBiped.Bip01_R_Hand"] = {Vector(2, 0.5, 0.5), Angle(0, 90, 0)},
-		["ValveBiped.Bip01_L_Hand"] = {Vector(2, 0, -1), Angle(0, 90, 0)},
-		["ValveBiped.Bip01_L_UpperArm"] = {Vector(13, 0.5, -0.5), Angle(0, 90, 0)},
-		["ValveBiped.Bip01_R_UpperArm"] = {Vector(13, 0.5, 0.5), Angle(0, 90, 0)},
-		["ValveBiped.Bip01_L_Thigh"] = {Vector(16, 0, 0), Angle(0, 90, 0)},
-		["ValveBiped.Bip01_R_Thigh"] = {Vector(16, 0, 0), Angle(0, 90, 0)},
+		["ValveBiped.Bip01_L_Calf"] = {Vector(22, -0.5, 0.6), Angle(-90, 0, 0)},
+		["ValveBiped.Bip01_R_Calf"] = {Vector(22, -0.5, 0.6), Angle(-90, 0, 0)},
+		["ValveBiped.Bip01_R_Forearm"] = {Vector(15, -0.2, 1), Angle(-90, 0, -0.3)},
+		["ValveBiped.Bip01_L_Forearm"] = {Vector(15, -0.2, -1), Angle(-90, 0, -0.3)},
+		["ValveBiped.Bip01_R_Hand"] = {Vector(15.3, 0, 0.5), Angle(-93, 0, 0.3)},
+		["ValveBiped.Bip01_L_Hand"] = {Vector(15.3, 0, -0.6), Angle(-93, 0, 0.3)},
+		["ValveBiped.Bip01_L_UpperArm"] = {Vector(12, -2.5, 0), Angle(0, 90, -90)},
+		["ValveBiped.Bip01_R_UpperArm"] = {Vector(12, -2.5, 0), Angle(0, 90, -90)},
+		["ValveBiped.Bip01_L_Thigh"] = {Vector(4, -9, -1), Angle(0, 10, -90)},
+		["ValveBiped.Bip01_R_Thigh"] = {Vector(-3, -9, -1), Angle(0, -10, -90)},
 	}
 }
 
@@ -1276,7 +1304,9 @@ function hg.GoreCalc(ent, ply)
 		local bon = ent:LookupBone(nam)
 		if not bon or bon < 0 then continue end
 		local mat = ent:GetBoneMatrix(bon)
-		local mat2 = ent:GetBoneMatrix(bon - 1)
+		local parentBon = ent:GetBoneParent(bon)
+		if not parentBon or parentBon < 0 then continue end
+		local mat2 = ent:GetBoneMatrix(parentBon)
 		if not mat or not mat2 then continue end
 		mat:SetScale(vecalmostzero)
 		
@@ -1295,17 +1325,19 @@ function hg.GoreCalc(ent, ply)
 
 		local pos, ang = LocalToWorld(modelPlacements[fem][nam][1], modelPlacements[fem][nam][2], mat2:GetTranslation(), mat2:GetAngles())
 		
-		if !IsValid(headboom_mdl) then
-			headboom_mdl = ClientsideModel(grub)
-			headboom_mdl:SetNoDraw(true)
-			headboom_mdl:SetSubMaterial(0, "models/flesh")
-			headboom_mdl:SetModelScale(0.8)
+		local mdlPath = grubModels[bone] or grubModels["larm"]
+		
+		if !IsValid(grubPool[bone]) then
+			grubPool[bone] = ClientsideModel(mdlPath)
+			grubPool[bone]:SetNoDraw(true)
+			grubPool[bone]:SetModelScale(grubScale[bone] or 1.0)
 		end
 		
-		headboom_mdl:SetRenderOrigin(pos)
-		headboom_mdl:SetRenderAngles(ang)
-		headboom_mdl:SetupBones()
-		headboom_mdl:DrawModel()
+		local stub = grubPool[bone]
+		stub:SetRenderOrigin(pos)
+		stub:SetRenderAngles(ang)
+		stub:SetupBones()
+		stub:DrawModel()
 	end
 end
 

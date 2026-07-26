@@ -984,6 +984,12 @@ else
 
 			if not IsValid(model) then return end
 			
+			local boneName = wound[3]
+			local limb = hg.amputatedlimbs2 and hg.amputatedlimbs2[boneName]
+			if limb and ply.organism and ply.organism[limb.."amputated"] then
+				continue
+			end
+			
 			local matrix = ent:GetBoneMatrix(ent:LookupBone(wound[3]))
 			if not matrix then
 				model:SetNoDraw(true)

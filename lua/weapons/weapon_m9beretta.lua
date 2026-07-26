@@ -77,7 +77,7 @@ SWEP.CustomShell = "9x19"
 SWEP.EjectPos = Vector(4.5, 3, -21)
 SWEP.EjectAng = Angle(0,0,0)
 
-
+SWEP.ReloadTime = 3
 SWEP.weight = 1
 SWEP.ScrappersSlot = "Secondary"
 SWEP.weaponInvCategory = 2
