@@ -81,8 +81,10 @@ function SWEP:ModelCreated(model)
 	end
 end
 
-SWEP.FakeMagDropBone = "magazine"
+SWEP.FakeMagDropBone = 50
 SWEP.MagModel = "models/weapons/mods/mag_hk_usp_tactical.mdl"
+
+SWEP.ReloadTime = 2
 
 SWEP.HeldMagModel = "models/weapons/mods/mag_hk_usp_tactical.mdl"
 SWEP.HeldMagBone = "mod_magazine"

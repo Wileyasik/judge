@@ -26,6 +26,7 @@ SWEP.FakeVPShouldUseHand = false
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_Forearm"
 SWEP.ViewPunchDiv = 50
+SWEP.ReloadTime = 3
 
 SWEP.AnimList = {
 	["idle"] = "idle",

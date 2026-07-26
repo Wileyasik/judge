@@ -27,6 +27,7 @@ SWEP.FakeVPShouldUseHand = false
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_Forearm"
 SWEP.ViewPunchDiv = 50
+SWEP.ReloadTime = 3
 
 SWEP.AnimList = {
 	["idle"] = "base_idle",
@@ -51,8 +52,8 @@ SWEP.AnimsEvents = {
     },
 }
 
-SWEP.FakeMagDropBone = "magazine"
-SWEP.MagModel = "models/weapons/upgrades/w_magazine_makarov_8.mdl"
+SWEP.FakeMagDropBone = 50
+SWEP.MagModel = "models/weapons/mods/mag_aps_20.mdl"
 
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_apb.png")
 SWEP.IconOverride = "entities/arc9_eft_apb.png"
@@ -153,5 +154,38 @@ function SWEP:DrawPost()
 		self.shooanim = LerpFT(0.4, self.shooanim or 0, (self:Clip1() > 0 or self.reload) and 0 or 1)
 		wep:ManipulateBonePosition(54, Vector(0, 1.5 * self.shooanim, 0), false)
 	end
+end
+
+if CLIENT then
+	local vector_origin = Vector(0, 0, 0)
+	local vector_full = Vector(1, 1, 1)
+	SWEP.FakeReloadEvents = {
+		[0.10] = function(self, timeMul)
+			self:GetWM():ManipulateBoneScale(27, vector_origin)
+			self:GetWM():ManipulateBoneScale(38, vector_full)
+			self:GetWM():ManipulateBoneScale(39, vector_origin)
+			self:GetWM():ManipulateBoneScale(40, vector_origin)
+			self:GetWM():ManipulateBoneScale(41, vector_origin)
+		end,
+		[0.35] = function(self, timeMul)
+			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 0.5 * timeMul, nil, nil, function()
+				self:GetWM():ManipulateBoneScale(38, vector_full)
+				self:GetWM():ManipulateBoneScale(39, vector_full)
+			end)
+		end,
+		[0.40] = function(self, timeMul)
+			hg.CreateMag( self, Vector(50,10,10), nil, true )
+		end,
+		[0.70] = function(self, timeMul)
+			self:GetWM():ManipulateBoneScale(38, vector_origin)
+			self:GetWM():ManipulateBoneScale(39, vector_origin)
+			self:GetWM():ManipulateBoneScale(40, vector_origin)
+			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 1 * timeMul, nil, nil, function()
+				self:GetWM():ManipulateBoneScale(38, vector_origin)
+				self:GetWM():ManipulateBoneScale(39, vector_origin)
+				self:GetWM():ManipulateBoneScale(40, vector_origin)
+			end)
+		end,
+	}
 end
 
