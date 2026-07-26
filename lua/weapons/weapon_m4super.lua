@@ -52,8 +52,6 @@ SWEP.AnimShootHandMul = 10
 SWEP.AnimStart_Draw = 0
 SWEP.AnimStart_Insert = 0
 SWEP.AnimInsert = 0.1
-SWEP.Penetration = 8
-$11.2
 SWEP.AnimInsert = 0.1
 SWEP.AnimDraw = 0.4
 SWEP.ReloadDrawTime = 0.1

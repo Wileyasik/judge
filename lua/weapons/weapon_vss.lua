@@ -117,8 +117,6 @@ SWEP.Primary.Sound = {"weapons/darsu_eft/val/fire_new/vss_loop_close2.wav", 65, 
 SWEP.SupressedSound = {"weapons/darsu_eft/val/fire_new/vss_loop_close2.wav", 65, 90, 100}
 SWEP.Primary.SoundEmpty = {"weapons/darsu_eft/vss/vss_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.075
-$11.2
-
 SWEP.PPSMuzzleEffect = "muzzleflash_FAMAS"
 
 SWEP.CustomShell = "9x39"

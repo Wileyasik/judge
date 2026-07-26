@@ -50,8 +50,6 @@ SWEP.AnimsEvents = {
 	},
 }
 
-$12
-
 SWEP.weaponInvCategory = 1
 SWEP.Primary.ClipSize = 1
 SWEP.Primary.DefaultClip = 1
