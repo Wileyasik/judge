@@ -695,7 +695,7 @@ function PANEL:CreateAppearancePreview()
         if not appearance or not appearance.AAttachments then return end
         for _, attach in ipairs(appearance.AAttachments) do
             local accessoryData = hg.Accessories and hg.Accessories[attach]
-            if accessoryData then
+            if accessoryData and DrawAccesories then
                 DrawAccesories(ent, ent, attach, accessoryData, false, true)
             end
         end

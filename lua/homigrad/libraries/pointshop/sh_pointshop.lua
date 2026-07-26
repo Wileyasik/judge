@@ -55,6 +55,7 @@ if CLIENT then
 
     function plyMeta:PS_HasItem( uid )
         local pointshopVars = LocalPlayer().PS_MyItensens
+        if not pointshopVars or not pointshopVars.items then return false end
         return pointshopVars.items[ uid ]
     end
 

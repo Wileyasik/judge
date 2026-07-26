@@ -646,19 +646,17 @@ local IsValid = IsValid
 		--if drawornot then return end
 
 		DrawPlayerRagdoll(ent, self)
-		RenderAccessoriesCool(ent, self)
+		if RenderAccessoriesCool then RenderAccessoriesCool(ent, self) end
 		hook_Run("CoolPostDrawAppearance", ent, self)
 		//hg.HomigradBones(self, CurTime(), FrameTime())
 
-		if IsValid(self.OldRagdoll) then DrawAppearance(ent, self, true) end
+		if IsValid(self.OldRagdoll) then if DrawAppearance then DrawAppearance(ent, self, true) end end
 		if !hg.converging[self] then
 			ent:DrawModel()
 		else
 			DrawConversion(ent, self)
 		end
-		if IsValid(self.OldRagdoll) then
-			DrawAppearance(ent, self)
-		else
+		if DrawAppearance then
 			DrawAppearance(ent, self)
 		end
 
