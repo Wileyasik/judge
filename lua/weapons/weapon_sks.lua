@@ -155,7 +155,7 @@ SWEP.Primary.Sound = {"weapons/darsu_eft/sks/sks_fire_indoor_close.wav", 85, 90,
 SWEP.SupressedSound = {"weapons/darsu_eft/sks/sks_fire_indoor_silenced_close.wav", 65, 90, 100}
 SWEP.Primary.SoundEmpty = {"weapons/newakm/akmm_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.15
-SWEP.ReloadTime = 5.5
+SWEP.ReloadTime = 3
 
 SWEP.PPSMuzzleEffect = "muzzleflash_FAMAS"
 

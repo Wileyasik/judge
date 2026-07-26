@@ -58,7 +58,8 @@ function SWEP:AllowedInspect()
 	return true
 end
 
-SWEP.FakeMagDropBone = "glock_mag"
+SWEP.FakeMagDropBone = 50
+SWEP.MagModel = "models/weapons/mods/mag_glock21_13.mdl"
 
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_fn57.png")
 SWEP.IconOverride = "entities/arc9_eft_fn57.png"
@@ -146,5 +147,38 @@ function SWEP:DrawPost()
 		self.shooanim = LerpFT(0.4, self.shooanim or 0, (self:Clip1() > 0 or self.reload) and 0 or 1.5)
 		wep:ManipulateBonePosition(48, Vector(0, 0, -1 * self.shooanim), false)
 	end
+end
+
+if CLIENT then
+	local vector_origin = Vector(0, 0, 0)
+	local vector_full = Vector(1, 1, 1)
+	SWEP.FakeReloadEvents = {
+		[0.10] = function(self, timeMul)
+			self:GetWM():ManipulateBoneScale(27, vector_origin)
+			self:GetWM():ManipulateBoneScale(38, vector_full)
+			self:GetWM():ManipulateBoneScale(39, vector_origin)
+			self:GetWM():ManipulateBoneScale(40, vector_origin)
+			self:GetWM():ManipulateBoneScale(41, vector_origin)
+		end,
+		[0.35] = function(self, timeMul)
+			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 0.5 * timeMul, nil, nil, function()
+				self:GetWM():ManipulateBoneScale(38, vector_full)
+				self:GetWM():ManipulateBoneScale(39, vector_full)
+			end)
+		end,
+		[0.40] = function(self, timeMul)
+			hg.CreateMag( self, Vector(50,10,10), nil, true )
+		end,
+		[0.70] = function(self, timeMul)
+			self:GetWM():ManipulateBoneScale(38, vector_origin)
+			self:GetWM():ManipulateBoneScale(39, vector_origin)
+			self:GetWM():ManipulateBoneScale(40, vector_origin)
+			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 1 * timeMul, nil, nil, function()
+				self:GetWM():ManipulateBoneScale(38, vector_origin)
+				self:GetWM():ManipulateBoneScale(39, vector_origin)
+				self:GetWM():ManipulateBoneScale(40, vector_origin)
+			end)
+		end,
+	}
 end
 

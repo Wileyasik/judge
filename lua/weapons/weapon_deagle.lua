@@ -16,7 +16,7 @@ SWEP.FakePos = Vector(-23, 2.55, 6)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.AttachmentPos = Vector(0.05,-0.3,0)
 SWEP.AttachmentAng = Angle(90,0,0)
-SWEP.FakeMagDropBone = 48
+SWEP.FakeMagDropBone = 50
 
 SWEP.FakeBodyGroups = "112213121"
 SWEP.FakeBodyGroupsPresets = {
@@ -27,6 +27,7 @@ SWEP.FakeVPShouldUseHand = false
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_Forearm"
 SWEP.ViewPunchDiv = 50
+SWEP.ReloadTime = 3
 
 SWEP.AnimList = {
 	["idle"] = "idle",
@@ -59,7 +60,7 @@ function SWEP:AllowedInspect()
 	return true
 end
 
-SWEP.MagModel = "models/weapons/upgrades/w_magazine_m45_8.mdl" 
+SWEP.MagModel = "models/weapons/mods/mag_deagle_7.mdl"
 
 SWEP.lmagpos = Vector(1.5,0,0)
 SWEP.lmagang = Angle(-15,0,1)

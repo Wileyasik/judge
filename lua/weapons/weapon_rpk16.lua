@@ -52,6 +52,8 @@ SWEP.AttachmentPos = Vector(7, 0, 0)
 SWEP.AttachmentAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
 SWEP.FakeBodyGroups = "11110"
+SWEP.FakeMagDropBone = 50
+SWEP.MagModel = "models/weapons/mods/mag_ak_izhmash_rpk16_drum_545x39_95.mdl"
 SWEP.ZoomPos = Vector(0, -1.763, 6.0955)
 
 
@@ -126,6 +128,9 @@ if CLIENT then
 				self:GetWM():ManipulateBoneScale(38, vector_full)
 				self:GetWM():ManipulateBoneScale(39, vector_full)
 			end)
+		end,
+		[0.5] = function(self, timeMul)
+			hg.CreateMag( self, Vector(50,10,10), nil, true )
 		end,
 		[0.70] = function(self, timeMul)
 			self:GetWM():ManipulateBoneScale(38, vector_origin)
