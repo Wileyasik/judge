@@ -42,7 +42,8 @@ SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
 SWEP.ViewPunchDiv = 70
 
-SWEP.FakeMagDropBone = 45
+SWEP.FakeMagDropBone = 50
+SWEP.MagModel = "models/weapons/mods/mag_glock_magex_30.mdl"
 
 local path = "weapons/darsu_eft/vector"
 
@@ -67,8 +68,8 @@ SWEP.AnimsEvents = {
 SWEP.AnimList = {
 	["fire"] = "fire",
 	["idle"] = "idle",
-	["reload"] = "reload",
-	["reload_empty"] = "reload_empty",
+	["reload"] = "reload2",
+	["reload_empty"] = "reload_empty2_0",
 	["inspect"] = "look",
 }
 
@@ -108,6 +109,12 @@ if CLIENT then
 				self:GetWM():ManipulateBoneScale(44, vector_full)
 				self:GetWM():ManipulateBoneScale(45, vector_full)
 			end)
+		end,
+		[0.40] = function(self, timeMul)
+			if self:Clip1() < 1 then
+				hg.CreateMag( self, Vector(50,10,10), nil, true )
+			end
+			self:GetWM():ManipulateBoneScale(53, vector_origin)
 		end,
 		[0.50] = function(self, timeMul)
 			if self:Clip1() < 1 then

@@ -2514,6 +2514,138 @@ hg.ammotypes = {
 			tranquilizer = true,
 		}
 	},
+	[".366tkm_bpm"] = {
+		name = ".366 TKM BP-M",
+		allowed = true,
+		dmgtype = DMG_BULLET,
+		tracer = TRACER_LINE,
+		plydmg = 0,
+		npcdmg = 0,
+		force = 160,
+		maxcarry = 120,
+		minsplash = 8,
+		maxsplash = 8,
+		TracerSetings = {
+			TracerBody = Material("particle/fire"),
+			TracerTail = Material("effects/laser_tracer"),
+			TracerHeadSize = 2,
+			TracerLength = 175,
+			TracerWidth = 2,
+			TracerColor = Color(255, 237, 155),
+			TracerTPoint1 = 0.25,
+			TracerTPoint2 = 1,
+			TracerSpeed = 25000
+		},
+		BulletSettings = {
+			Damage = 60,
+			Force = 55,
+			Penetration = 8,
+			Shell = "366tkm",
+			Speed = 730,
+			Diameter = 9.58,
+			Mass = 12,
+			Icon = matRfileAmmo
+		}
+	},
+	["6.8x51fmj"] = {
+		name = "6.8x51 mm FMJ",
+		allowed = true,
+		dmgtype = DMG_BULLET,
+		tracer = TRACER_LINE,
+		plydmg = 0,
+		npcdmg = 0,
+		force = 250,
+		maxcarry = 120,
+		minsplash = 10,
+		maxsplash = 10,
+		TracerSetings = {
+			TracerBody = Material("particle/fire"),
+			TracerTail = Material("effects/laser_tracer"),
+			TracerHeadSize = 5,
+			TracerLength = 85,
+			TracerWidth = 1.5,
+			TracerColor = Color(255, 237, 155),
+			TracerTPoint1 = 0.25,
+			TracerTPoint2 = 1,
+			TracerSpeed = 25000
+		},
+		BulletSettings = {
+			Damage = 72,
+			Force = 70,
+			Penetration = 22,
+			Shell = "762x51",
+			Speed = 914,
+			Diameter = 6.8,
+			Mass = 9.5,
+			Icon = matRfileAmmo
+		}
+	},
+	[".300blk"] = {
+		name = ".300 Blackout",
+		allowed = true,
+		dmgtype = DMG_BULLET,
+		tracer = TRACER_LINE,
+		plydmg = 0,
+		npcdmg = 0,
+		force = 180,
+		maxcarry = 120,
+		minsplash = 8,
+		maxsplash = 8,
+		TracerSetings = {
+			TracerBody = Material("particle/fire"),
+			TracerTail = Material("effects/laser_tracer"),
+			TracerHeadSize = 3,
+			TracerLength = 130,
+			TracerWidth = 2.5,
+			TracerColor = Color(255, 237, 155),
+			TracerTPoint1 = 0.25,
+			TracerTPoint2 = 1,
+			TracerSpeed = 22000
+		},
+		BulletSettings = {
+			Damage = 55,
+			Force = 50,
+			Penetration = 12,
+			Shell = "762x39",
+			Speed = 720,
+			Diameter = 7.62,
+			Mass = 12.5,
+			Icon = matRfileAmmo
+		}
+	},
+	[".50bmgm33"] = {
+		name = ".50 BMG M33",
+		allowed = true,
+		dmgtype = DMG_BULLET + DMG_AIRBOAT,
+		tracer = TRACER_LINE,
+		plydmg = 0,
+		npcdmg = 0,
+		force = 400,
+		maxcarry = 120,
+		minsplash = 15,
+		maxsplash = 15,
+		TracerSetings = {
+			TracerBody = Material("particle/fire"),
+			TracerTail = Material("effects/laser_tracer"),
+			TracerHeadSize = 8,
+			TracerLength = 200,
+			TracerWidth = 4,
+			TracerColor = Color(255, 237, 155),
+			TracerTPoint1 = 0.25,
+			TracerTPoint2 = 1,
+			TracerSpeed = 35000
+		},
+		BulletSettings = {
+			Damage = 200,
+			Force = 120,
+			Penetration = 40,
+			Shell = "50cal",
+			Speed = 887,
+			Diameter = 12.7,
+			Mass = 45.9,
+			Icon = matRfileAmmo
+		}
+	},
 }
 
 local ammotypes = hg.ammotypes
@@ -2895,6 +3027,27 @@ local ammoents = {
 		Icon = "vgui/hud/bullets/low_caliber.png",
 		Material = "models/hmcd_ammobox_9",
 		Scale = 0.8,
+	},
+	[".366tkm_bpm"] = {
+		Icon = "vgui/hud/762spzcity",
+		Model = "models/items/ammo_76239.mdl",
+		Scale = 1
+	},
+	["6.8x51fmj"] = {
+		Icon = "vgui/hud/hmcd_round_556",
+		Material = "models/hmcd_ammobox_556",
+		Scale = 1
+	},
+	[".300blk"] = {
+		Icon = "vgui/hud/545zcity",
+		Material = "models/hmcd_ammobox_556",
+		Scale = 1
+	},
+	[".50bmgm33"] = {
+		Material = "models/hmcd_ammobox_792",
+		Scale = 1.6,
+		Color = Color(155, 122, 75),
+		Count = 10,
 	},
 }
 

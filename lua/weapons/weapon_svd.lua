@@ -20,8 +20,8 @@ SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.AttachmentPos = Vector(3, 0.1, 0)
 SWEP.AttachmentAng = Angle(0, 0, 0)
 
-SWEP.MagModel = "models/kali/weapons/10rd m14 magazine.mdl"
-SWEP.FakeMagDropBone = "Magazine"
+SWEP.MagModel = "models/weapons/mods/mag_svd_20_dropped.mdl"
+SWEP.FakeMagDropBone = 50
 SWEP.lmagpos = Vector(0, 0, 0)
 SWEP.lmagang = Angle(0, 0, 0)
 SWEP.lmagpos2 = Vector(0, 0.3, 0)

@@ -48,6 +48,9 @@ SWEP.Supressor = true
 SWEP.SupressorOnly = true
 SWEP.SetSupressor = true
 
+SWEP.FakeMagDropBone = 50
+SWEP.MagModel = "models/weapons/arc9/darsu_eft/mods/mag_val2_30.mdl"
+
 local path = "weapons/darsu_eft/val/"
 
 SWEP.AnimsEvents = {
@@ -98,6 +101,17 @@ SWEP.ReloadHold = nil
 SWEP.FakeVPShouldUseHand = false
 
 SWEP.HeldMagModel = "models/weapons/mods/mag_val2_30.mdl"
+
+if CLIENT then
+	SWEP.FakeReloadEvents = {
+		[0.40] = function(self, timeMul)
+			if self:Clip1() < 1 then
+				hg.CreateMag( self, Vector(50,10,10), nil, true )
+			end
+		end,
+	}
+end
+
 SWEP.HeldMagBone = "mod_magazine"
 SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
 SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
@@ -117,7 +131,7 @@ SWEP.Primary.Sound = {"weapons/darsu_eft/val/fire_new/vss_loop_close2.wav", 65, 
 SWEP.SupressedSound = {"weapons/darsu_eft/val/fire_new/vss_loop_close2.wav", 65, 90, 100}
 SWEP.Primary.SoundEmpty = {"weapons/darsu_eft/val/val_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.066
-
+SWEP.ReloadTime = 3
 
 SWEP.PPSMuzzleEffect = "muzzleflash_FAMAS"
 

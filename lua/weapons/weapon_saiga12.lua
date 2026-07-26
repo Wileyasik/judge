@@ -42,6 +42,9 @@ SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
 SWEP.ViewPunchDiv = 50
 
+SWEP.MagModel = "models/weapons/arc9/darsu_eft/mods/mag_ak_molot_556x45_45.mdl"
+SWEP.FakeMagDropBone = 50
+
 local path = "weapons/darsu_eft/saiga12/"
 
 SWEP.AnimsEvents = {
@@ -228,6 +231,37 @@ SWEP.WorldMagazineOffsetPos = Vector(0, -17.3, -0.55)
 SWEP.WorldMagazineOffsetAng = Angle(0, 0, 0)
 
 if CLIENT then
+	local vector_full = Vector(1, 1, 1)
+	SWEP.FakeReloadEvents = {
+		[0.10] = function(self, timeMul)
+			self:GetWM():ManipulateBoneScale(38, vector_full)
+			self:GetWM():ManipulateBoneScale(39, vector_origin)
+			self:GetWM():ManipulateBoneScale(40, vector_origin)
+			self:GetWM():ManipulateBoneScale(41, vector_origin)
+		end,
+		[0.35] = function(self, timeMul)
+			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 0.5 * timeMul, nil, nil, function()
+				self:GetWM():ManipulateBoneScale(38, vector_full)
+				self:GetWM():ManipulateBoneScale(39, vector_full)
+			end)
+		end,
+		[0.40] = function(self, timeMul)
+			if self:Clip1() < 1 then
+				hg.CreateMag( self, Vector(50,10,10), nil, true )
+			end
+		end,
+		[0.70] = function(self, timeMul)
+			self:GetWM():ManipulateBoneScale(38, vector_origin)
+			self:GetWM():ManipulateBoneScale(39, vector_origin)
+			self:GetWM():ManipulateBoneScale(40, vector_origin)
+			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 1 * timeMul, nil, nil, function()
+				self:GetWM():ManipulateBoneScale(38, vector_origin)
+				self:GetWM():ManipulateBoneScale(39, vector_origin)
+				self:GetWM():ManipulateBoneScale(40, vector_origin)
+			end)
+		end,
+	}
+
 	local BC_VECTOR_ZERO = Vector(0, 0, 0)
 	local BC_ANGLE_ZERO = Angle(0, 0, 0)
 

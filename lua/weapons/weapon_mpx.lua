@@ -109,11 +109,13 @@ function SWEP:ModelCreated(model)
 	end
 end
 
+SWEP.FakeMagDropBone = 50
+SWEP.MagModel = "models/weapons/mods/mag_mpx_30.mdl"
+
 if CLIENT then
 	local vector_full = Vector(1, 1, 1)
 	SWEP.FakeReloadEvents = {
 		[0.10] = function(self, timeMul)
-			self:GetWM():ManipulateBoneScale(27, vector_origin)
 			self:GetWM():ManipulateBoneScale(38, vector_full)
 			self:GetWM():ManipulateBoneScale(39, vector_origin)
 			self:GetWM():ManipulateBoneScale(40, vector_origin)
@@ -124,6 +126,11 @@ if CLIENT then
 				self:GetWM():ManipulateBoneScale(38, vector_full)
 				self:GetWM():ManipulateBoneScale(39, vector_full)
 			end)
+		end,
+		[0.40] = function(self, timeMul)
+			if self:Clip1() < 1 then
+				hg.CreateMag( self, Vector(50,10,10), nil, true )
+			end
 		end,
 		[0.70] = function(self, timeMul)
 			self:GetWM():ManipulateBoneScale(38, vector_origin)

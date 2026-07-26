@@ -17,7 +17,7 @@ SWEP.UseARC9Parts = true
 
 SWEP.ARC9Parts = {
 	magazine = {
-		model = "models/weapons/arc9/darsu_eft/mods/mag_mp5_hk_std_curved_9x19_30.mdl",
+		model = "models/weapons/mods/mag_mp5_hk_std_curved_9x19_30.mdl",
 		bonemerge = false,
 		bone = "mod_magazine",
 		pos = Vector(0, 2.8, 0),
@@ -42,7 +42,8 @@ SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
 SWEP.ViewPunchDiv = 70
 
-SWEP.FakeMagDropBone = 45
+SWEP.FakeMagDropBone = 50
+SWEP.MagModel = "models/weapons/mods/mag_mp5_hk_std_curved_9x19_30.mdl"
 
 local path = "weapons/darsu_eft/mp5/"
 
@@ -109,6 +110,12 @@ if CLIENT then
 				self:GetWM():ManipulateBoneScale(45, vector_full)
 			end)
 		end,
+		[0.40] = function(self, timeMul)
+			if self:Clip1() < 1 then
+				hg.CreateMag( self, Vector(50,10,10), nil, true )
+			end
+			self:GetWM():ManipulateBoneScale(53, vector_origin)
+		end,
 		[0.50] = function(self, timeMul)
 			if self:Clip1() < 1 then
 				self:GetWM():ManipulateBoneScale(44, vector_origin)
@@ -139,7 +146,7 @@ end
 SWEP.ReloadHold = nil
 SWEP.FakeVPShouldUseHand = false
 
-SWEP.HeldMagModel = "models/weapons/arc9/darsu_eft/mods/mag_mp5_hk_std_curved_9x19_30.mdl"
+SWEP.HeldMagModel = "models/weapons/mods/mag_mp5_hk_std_curved_9x19_30.mdl"
 SWEP.HeldMagBone = "mod_magazine"
 SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
 SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
@@ -159,7 +166,7 @@ SWEP.Primary.Sound = {"weapons/darsu_eft/mp5/fire_new/mp5sd_outdoor_close_silenc
 SWEP.SupressedSound = {"weapons/darsu_eft/mp5/fire_new/mp5sd_outdoor_close_silenced_loop1.wav", 65, 90, 100}
 SWEP.Primary.Wait = 0.07
 SWEP.SetSupressor = true
-
+SWEP.ReloadTime = 3
 
 SWEP.PPSMuzzleEffect = "muzzleflash_mp5"
 

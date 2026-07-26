@@ -1,37 +1,44 @@
 SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
-SWEP.PrintName = "Kriss Vector .45"
-SWEP.Author = "KRISS USA"
-SWEP.Instructions = "Submachine gun chambered in .45 ACP\n\nRate of fire 1200 rounds per minute"
+SWEP.PrintName = "CZ Scorpion EVO 3"
+SWEP.Author = "Česká zbrojovka"
+SWEP.Instructions = "Submachine gun chambered in 9x19 mm\n\nRate of fire 800 rounds per minute"
 SWEP.Category = "Weapons - Machine-Pistols"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
-SWEP.WorldModelFake = "models/weapons/c_vector_45.mdl"
+SWEP.WorldModelFake = "models/weapons/c_cz_scorpion.mdl"
 SWEP.CanCustomize = true
-SWEP.CustomizeCategory = "Vector"
+SWEP.CustomizeCategory = "CZ Scorpion EVO 3"
 
 SWEP.UseARC9Parts = true
 
 SWEP.ARC9Parts = {
 	magazine = {
-		model = "models/weapons/mods/mag_glock_magex_30.mdl",
+		model = "models/weapons/mods/mag_scorpion_drum.mdl",
 		bonemerge = false,
 		bone = "mod_magazine",
-		pos = Vector(0, -1.2, 0),
+		pos = Vector(0, -0.2, -2),
 		ang = Angle(0, -90, 0)
+	},
+	handguard = {
+		model = "models/weapons/mods/cz_scorpion_handguard_carbine.mdl",
+		bonemerge = false,
+		bone = "mod_handguard",
+		pos = Vector(0, 0, 0),
+		ang = Angle(0, 0, 0)
 	},
 }
 
-SWEP.FakePos = Vector(-11, 2.0, 7.5)
+SWEP.FakePos = Vector(-13, 2.0, 7)
 SWEP.FakeAng = Angle(0, 0, 0)
-SWEP.AttachmentPos = Vector(-1.5, 0, 0)
+SWEP.AttachmentPos = Vector(5.5, 0, 0)
 SWEP.AttachmentAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
-SWEP.FakeBodyGroups = "111001"
-SWEP.ZoomPos = Vector(0, -2.2637, 5.6717)
+SWEP.FakeBodyGroups = "111301000"
+SWEP.ZoomPos = Vector(0, -1.308, 5.2848)
 
 SWEP.GunCamPos = Vector(4, -15, -6)
 SWEP.GunCamAng = Angle(190, -5, -100)
@@ -40,35 +47,32 @@ SWEP.FakeEjectBrassATT = "2"
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 70
+SWEP.ViewPunchDiv = 1800
 
-SWEP.FakeMagDropBone = 50
-SWEP.MagModel = "models/weapons/mods/mag_glock_magex_30.mdl"
-
-local path = "weapons/darsu_eft/vector"
+local path = "weapons/darsu_eft/scorpion/"
 
 SWEP.AnimsEvents = {
 	["inspect"] = {
 		[0.01] = function(self) self:EmitSound("weapons/universal/uni_crawl_l_03.wav") end,
 	},
-    ["reload"] = {
-        [0.10] = function(self) self:EmitSound("weapons/darsu_eft/vector/vector_mag_out.ogg") end,
-		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/vector/vector_mag_in.ogg") end,
-
-    },
-    ["reload_empty"] = {
-        [0.10] = function(self) self:EmitSound("weapons/darsu_eft/vector/vector_magrelease_button.ogg") end,
-		[0.15] = function(self) self:EmitSound("weapons/darsu_eft/vector/vector_mag_out.ogg") end,
-		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/vector/vector_mag_in.ogg") end,
-		[0.65] = function(self) self:EmitSound("weapons/darsu_eft/vector/vector_magrelease_button.ogg") end,
-    },
+	["reload1"] = {
+		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/scorpion/ump_mag_out.ogg") end,
+		[0.50] = function(self) self:EmitSound("weapons/darsu_eft/scorpion/ump_mag_in.ogg") end,
+	},
+	["reload_empty1_0"] = {
+		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/scorpion/ump_magrelease_button.ogg") end,
+		[0.15] = function(self) self:EmitSound("weapons/darsu_eft/scorpion/ump_mag_out.ogg") end,
+		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/scorpion/ump_mag_in.ogg") end,
+		[0.65] = function(self) self:EmitSound("weapons/darsu_eft/scorpion/ump_bolt_in.ogg") end,
+		[0.75] = function(self) self:EmitSound("weapons/darsu_eft/scorpion/ump_bolt_out.ogg") end,
+	},
 }
 
 SWEP.AnimList = {
 	["fire"] = "fire",
 	["idle"] = "idle",
-	["reload"] = "reload2",
-	["reload_empty"] = "reload_empty2_0",
+	["reload"] = "reload1",
+	["reload_empty"] = "reload_empty1_0",
 	["inspect"] = "look",
 }
 
@@ -92,52 +96,38 @@ function SWEP:ModelCreated(model)
 	end
 end
 
+SWEP.FakeMagDropBone = 50
+SWEP.MagModel = "models/weapons/mods/mag_scorpion_drum.mdl"
+
 if CLIENT then
 	local vector_full = Vector(1, 1, 1)
 	SWEP.FakeReloadEvents = {
-		[0.15] = function(self, timeMul)
-			self:GetWM():ManipulateBoneScale(53, vector_origin)
-			self:GetWM():ManipulateBoneScale(44, vector_full)
-			self:GetWM():ManipulateBoneScale(45, vector_origin)
-			self:GetWM():ManipulateBoneScale(46, vector_origin)
-			self:GetWM():ManipulateBoneScale(47, vector_origin)
+		[0.10] = function(self, timeMul)
+			self:GetWM():ManipulateBoneScale(38, vector_full)
+			self:GetWM():ManipulateBoneScale(39, vector_origin)
+			self:GetWM():ManipulateBoneScale(40, vector_origin)
+			self:GetWM():ManipulateBoneScale(41, vector_origin)
 		end,
-		[0.25] = function(self, timeMul)
+		[0.35] = function(self, timeMul)
 			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 0.5 * timeMul, nil, nil, function()
-				self:GetWM():ManipulateBoneScale(53, vector_full)
-				self:GetWM():ManipulateBoneScale(44, vector_full)
-				self:GetWM():ManipulateBoneScale(45, vector_full)
+				self:GetWM():ManipulateBoneScale(38, vector_full)
+				self:GetWM():ManipulateBoneScale(39, vector_full)
 			end)
 		end,
 		[0.40] = function(self, timeMul)
 			if self:Clip1() < 1 then
 				hg.CreateMag( self, Vector(50,10,10), nil, true )
 			end
-			self:GetWM():ManipulateBoneScale(53, vector_origin)
 		end,
-		[0.50] = function(self, timeMul)
-			if self:Clip1() < 1 then
-				self:GetWM():ManipulateBoneScale(44, vector_origin)
-				self:GetWM():ManipulateBoneScale(45, vector_origin)
-				self:GetWM():ManipulateBoneScale(46, vector_origin)
-			end
-		end,
-		[0.65] = function(self, timeMul)
-			if self:Clip1() > 0 then
-				self:GetWM():ManipulateBoneScale(44, vector_origin)
-				self:GetWM():ManipulateBoneScale(45, vector_origin)
-				self:GetWM():ManipulateBoneScale(46, vector_origin)
-				self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 1 * timeMul, nil, nil, function()
-					self:GetWM():ManipulateBoneScale(44, vector_origin)
-					self:GetWM():ManipulateBoneScale(45, vector_origin)
-					self:GetWM():ManipulateBoneScale(46, vector_origin)
-				end)
-			end
-		end,
-		[0.85] = function(self, timeMul)
-			self:GetWM():ManipulateBoneScale(44, vector_origin)
-			self:GetWM():ManipulateBoneScale(45, vector_origin)
-			self:GetWM():ManipulateBoneScale(46, vector_origin)
+		[0.70] = function(self, timeMul)
+			self:GetWM():ManipulateBoneScale(38, vector_origin)
+			self:GetWM():ManipulateBoneScale(39, vector_origin)
+			self:GetWM():ManipulateBoneScale(40, vector_origin)
+			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 1 * timeMul, nil, nil, function()
+				self:GetWM():ManipulateBoneScale(38, vector_origin)
+				self:GetWM():ManipulateBoneScale(39, vector_origin)
+				self:GetWM():ManipulateBoneScale(40, vector_origin)
+			end)
 		end,
 	}
 end
@@ -145,82 +135,86 @@ end
 SWEP.ReloadHold = nil
 SWEP.FakeVPShouldUseHand = false
 
-SWEP.HeldMagModel = "models/weapons/mods/mag_glock_magex_30.mdl"
+SWEP.HeldMagModel = "models/weapons/mods/mag_scorpion_drum.mdl"
 SWEP.HeldMagBone = "mod_magazine"
 SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
 SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
 
+SWEP.HeldHandguardModel = "models/weapons/mods/cz_scorpion_handguard_carbine.mdl"
+SWEP.HeldHandguardBone = "mod_handguard"
+SWEP.HeldHandguardOffsetPos = Vector(0, 0, 0)
+SWEP.HeldHandguardOffsetAng = Angle(0, 0, 0)
+
 SWEP.weaponInvCategory = 1
 SWEP.CustomEjectAngle = Angle(0, 0, 90)
-SWEP.Primary.ClipSize = 33
-SWEP.Primary.DefaultClip = 33
+SWEP.Primary.ClipSize = 30
+SWEP.Primary.DefaultClip = 30
 SWEP.Primary.Automatic = true
-SWEP.Primary.Ammo = ".45 ACP"
+SWEP.Primary.Ammo = "9x19 mm Parabellum"
 SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 28
+SWEP.Primary.Damage = 20
 SWEP.Primary.Spread = 0
-SWEP.Primary.Force = 25
+SWEP.Primary.Force = 18
 SWEP.animposmul = 2
-SWEP.Primary.Sound = {"weapons/darsu_eft/vector/fire_new/vector_9mm_outdoor_close2.wav", 65, 90, 100}
-SWEP.SupressedSound = {"weapons/darsu_eft/vector/fire_new/vector_9mm_outdoor_silenced_close3.wav", 65, 90, 100}
-SWEP.Primary.Wait = 0.06
+SWEP.Primary.Sound = {"weapons/darsu_eft/scorpion/fire_new/cz_scorpion_outdoors_close_loop1.wav", 85, 120, 130}
+SWEP.SupressedSound = {"weapons/darsu_eft/scorpion/fire_new/cz_scorpion_outdoors_close_silenced_loop1.wav", 75, 90, 100}
+SWEP.Primary.Wait = 0.075
 SWEP.ReloadTime = 3
 
-
-SWEP.PPSMuzzleEffect = "muzzleflash_FAMAS"
+SWEP.PPSMuzzleEffect = "muzzleflash_smg"
 
 SWEP.CustomShell = "9x19"
 SWEP.ShellEject = "EjectBrass_9mm"
 
-SWEP.LocalMuzzlePos = Vector(14.2, -2.3, 3.4)
+SWEP.LocalMuzzlePos = Vector(16.4, -1.31, 3.38)
 SWEP.LocalMuzzleAng = Angle(0, 0, 0)
 SWEP.WeaponEyeAngles = Angle(0, 0, 0)
 
 SWEP.HoldType = "rpg"
 
-SWEP.WepSelectIcon2 = Material("entities/arc9_eft_vector45.png")
-SWEP.IconOverride = "entities/arc9_eft_vector45.png"
+SWEP.WepSelectIcon2 = Material("entities/arc9_wtt_scorpion.png")
+SWEP.IconOverride = "entities/arc9_wtt_scorpion.png"
 
 SWEP.weight = 2.8
 SWEP.ScrappersSlot = "Primary"
 
-SWEP.StartAtt = {"holo14"}
+SWEP.StartAtt = {}
 SWEP.availableAttachments = {
 	barrel = {
 		[1] = {"supressor2", Vector(0, 0, 0), {}},
 		[2] = {"supressor1", Vector(0, 0, 0), {}},
-		[3] = {"supressor15", Vector(1, 0, 0), {}},
-		["mount"] = Vector(-0.8, -0, 0.),
+		["mount"] = Vector(-0.5, -0, 0),
 		["mountAngle"] = Angle(0, 0, 90),
 	},
 	sight = {
 		["mountType"] = {"picatinny"},
-		["mount"] = Vector(-11, 2.2, 0.09)
+		["mount"] = Vector(-12, 1.9, 0.09),
 	},
 }
 
 SWEP.RHandPos = Vector(0, -1, 0)
-SWEP.LHandPos = Vector(7, -2, -2)
-SWEP.Penetration = 8
+SWEP.LHandPos = Vector(6, -1, 0)
+SWEP.Penetration = 7
 SWEP.Spray = {}
 for i = 1, 30 do
 	SWEP.Spray[i] = Angle(-0.0, 0, 0) * 1
 end
 
-SWEP.Ergonomics = 1.05
-SWEP.WorldPos = Vector(4, -0.8, -0.5)
+SWEP.Ergonomics = 1.2
+SWEP.WorldPos = Vector(3, -1.0, -1)
 SWEP.WorldAng = Angle(0, 0, 0)
 SWEP.UseCustomWorldModel = true
 SWEP.attPos = Vector(1, 0, 0)
 SWEP.attAng = Angle(-0.02, 0, 0)
-SWEP.lengthSub = 25
+SWEP.lengthSub = 20
 SWEP.handsAng = Angle(7, 2, 0)
+SWEP.DistSound = "weapons/darsu_eft/scorpion/scorpion_dist.wav"
 
 -- tpik hand positions
 SWEP.RHPos = Vector(3, -7, 3.5)
 SWEP.RHAng = Angle(0, -8, 90)
-SWEP.LHPos = Vector(11, 1.6, -3)
-SWEP.LHAng = Angle(-110, -180, 5)
+SWEP.LHPos = Vector(10, 1, -2.5)
+SWEP.LHAng = Angle(-90, -180, 0)
 
 SWEP.ShootAnimMul = 2
 
@@ -265,6 +259,26 @@ function SWEP:DrawPost()
 	self.HeldMagCSModel:SetAngles(lang)
 	self.HeldMagCSModel:SetupBones()
 	self.HeldMagCSModel:DrawModel()
+
+	if not IsValid(self.HeldHandguardCSModel) then
+		self.HeldHandguardCSModel = ClientsideModel(self.HeldHandguardModel, RENDERGROUP_BOTH)
+		if IsValid(self.HeldHandguardCSModel) then self.HeldHandguardCSModel:SetNoDraw(true) end
+	end
+	if IsValid(self.HeldHandguardCSModel) then
+		local boneID = wm:LookupBone(self.HeldHandguardBone)
+		if boneID then
+			local boneMatrix = wm:GetBoneMatrix(boneID)
+			if boneMatrix then
+				local lpos, lang = LocalToWorld(self.HeldHandguardOffsetPos, self.HeldHandguardOffsetAng, boneMatrix:GetTranslation(), boneMatrix:GetAngles())
+				self.HeldHandguardCSModel:SetRenderOrigin(lpos)
+				self.HeldHandguardCSModel:SetRenderAngles(lang)
+				self.HeldHandguardCSModel:SetPos(lpos)
+				self.HeldHandguardCSModel:SetAngles(lang)
+				self.HeldHandguardCSModel:SetupBones()
+				self.HeldHandguardCSModel:DrawModel()
+			end
+		end
+	end
 end
 
 
@@ -483,9 +497,8 @@ if CLIENT then
 
 	function SWEP:OnRemove()
 		self:BC_RemoveDroppedModels()
-		if IsValid(self.HeldMagCSModel) then
-			self.HeldMagCSModel:Remove()
-		end
+		if IsValid(self.HeldMagCSModel) then self.HeldMagCSModel:Remove() end
+		if IsValid(self.HeldHandguardCSModel) then self.HeldHandguardCSModel:Remove() end
 	end
 end
 
@@ -493,10 +506,12 @@ end
 -- FIRE ANIMATION
 --========================================================
 
-SWEP.FireAnimTime = 0.06
-SWEP.FireAnimCandidates = {"fire", "fire1"}
+SWEP.FireAnimTime = 0.15
+SWEP.FireAnimCandidates = {"fire"}
 
 function SWEP:PrimaryShootPost()
+	self.drawBullet = true
+
 	if not CLIENT then return end
 	if self.reload then return end
 	if not self:ShouldUseFakeModel() then return end

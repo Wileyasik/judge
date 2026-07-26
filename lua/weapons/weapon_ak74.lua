@@ -71,6 +71,9 @@ SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
 SWEP.ViewPunchDiv = 70
 
+SWEP.FakeMagDropBone = 50
+SWEP.MagModel = "models/weapons/arc9/darsu_eft/mods/mag_ak74_izhmash_6l23_545x39_30.mdl"
+
 local path = "weapons/darsu_eft/ak/"
 
 SWEP.AnimsEvents = {
@@ -134,6 +137,13 @@ if CLIENT then
 				self:GetWM():ManipulateBoneScale(39, vector_full)
 			end)
 		end,
+		[0.40] = function(self, timeMul)
+			if self:Clip1() < 1 then
+				hg.CreateMag( self, Vector(50,10,10), nil, true )
+			end
+			self:GetWM():ManipulateBoneScale(57, vector_origin)
+			self:GetWM():ManipulateBoneScale(58, vector_origin)
+		end,
 		[0.70] = function(self, timeMul)
 			self:GetWM():ManipulateBoneScale(38, vector_origin)
 			self:GetWM():ManipulateBoneScale(39, vector_origin)
@@ -190,6 +200,7 @@ SWEP.Primary.Sound = {"weapons/darsu_eft/ak/fire_new/ak74_outdoor_close_loop_1.w
 SWEP.SupressedSound = {"weapons/darsu_eft/ak/fire_new/ak74_loop_outdoor_close_silenced_4.wav", 65, 90, 100}
 SWEP.Primary.SoundEmpty = {"weapons/newakm/akmm_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.085
+SWEP.ReloadTime = 3
 
 SWEP.PPSMuzzleEffect = "muzzleflash_FAMAS"
 

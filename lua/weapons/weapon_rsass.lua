@@ -131,6 +131,42 @@ SWEP.HeldMagBone = "mod_magazine"
 SWEP.HeldMagOffsetPos = Vector(0, -0.8, -1.5)
 SWEP.HeldMagOffsetAng = Angle(0, 90, 0)
 
+SWEP.FakeMagDropBone = 50
+SWEP.MagModel = "models/weapons/arc9/darsu_eft/mods/mag_ar10_lancer_l7_awm_762x51_25.mdl"
+
+if CLIENT then
+	local vector_full = Vector(1, 1, 1)
+	SWEP.FakeReloadEvents = {
+		[0.10] = function(self, timeMul)
+			self:GetWM():ManipulateBoneScale(38, vector_full)
+			self:GetWM():ManipulateBoneScale(39, vector_origin)
+			self:GetWM():ManipulateBoneScale(40, vector_origin)
+			self:GetWM():ManipulateBoneScale(41, vector_origin)
+		end,
+		[0.35] = function(self, timeMul)
+			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 0.5 * timeMul, nil, nil, function()
+				self:GetWM():ManipulateBoneScale(38, vector_full)
+				self:GetWM():ManipulateBoneScale(39, vector_full)
+			end)
+		end,
+		[0.40] = function(self, timeMul)
+			if self:Clip1() < 1 then
+				hg.CreateMag( self, Vector(50,10,10), nil, true )
+			end
+		end,
+		[0.70] = function(self, timeMul)
+			self:GetWM():ManipulateBoneScale(38, vector_origin)
+			self:GetWM():ManipulateBoneScale(39, vector_origin)
+			self:GetWM():ManipulateBoneScale(40, vector_origin)
+			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 1 * timeMul, nil, nil, function()
+				self:GetWM():ManipulateBoneScale(38, vector_origin)
+				self:GetWM():ManipulateBoneScale(39, vector_origin)
+				self:GetWM():ManipulateBoneScale(40, vector_origin)
+			end)
+		end,
+	}
+end
+
 SWEP.HeldGripModel = "models/weapons/mods/pistolgrip_ar15_hk_grip_v2.mdl"
 SWEP.HeldGripBone = "weapon"
 SWEP.HeldGripOffsetPos = Vector(0, -13.5, -2)

@@ -38,7 +38,8 @@ SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_UpperArm"
 SWEP.ViewPunchDiv = 20
 
 SWEP.FakeVPShouldUseHand = false
-SWEP.FakeMagDropBone = 14
+SWEP.FakeMagDropBone = 50
+SWEP.MagModel = "models/weapons/mods/p90mag_tr.mdl"
 
 SWEP.AnimList = {
 	["idle"] = "idle",
