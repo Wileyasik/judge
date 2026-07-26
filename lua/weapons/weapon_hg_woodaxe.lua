@@ -7,9 +7,9 @@ SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.Damage = 25
 SWEP.Damage = 25
-SWEP.HoldType = "melee"
+SWEP.HoldType = "slam"
 
-SWEP.SuicidePos = Vector(28, 6, -31)
+SWEP.SuicidePos = Vector(32, 1, -30)
 SWEP.SuicideAng = Angle(-70, -180, 90)
 SWEP.SuicideCutVec = Vector(3, -6, 3)
 SWEP.SuicideCutAng = Angle(10, 0, 0)

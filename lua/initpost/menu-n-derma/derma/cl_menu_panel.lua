@@ -308,6 +308,10 @@ local function CleanupPreviewAccessories(ent)
         end
         ent.modelAccess[k] = nil
     end
+    if IsValid(ent._bandageGlovesPreview) then
+        ent._bandageGlovesPreview:Remove()
+        ent._bandageGlovesPreview = nil
+    end
 end
 
 function PANEL:GetPreviewAppearance()
@@ -692,13 +696,50 @@ function PANEL:CreateAppearancePreview()
 
     function preview:PostDrawModel(ent)
         local appearance = self.AppearanceTable
-        if not appearance or not appearance.AAttachments then return end
-        for _, attach in ipairs(appearance.AAttachments) do
-            local accessoryData = hg.Accessories and hg.Accessories[attach]
-            if accessoryData and DrawAccesories then
-                DrawAccesories(ent, ent, attach, accessoryData, false, true)
+        if not appearance then return end
+
+        if appearance.AAttachments then
+            for _, attach in ipairs(appearance.AAttachments) do
+                local accessoryData = hg.Accessories and hg.Accessories[attach]
+                if accessoryData and DrawAccesories then
+                    DrawAccesories(ent, ent, attach, accessoryData, false, true)
+                end
             end
         end
+
+        local handsVal = appearance.ABodygroups and appearance.ABodygroups["HANDS"]
+        if handsVal then
+            local modelData = hg.Appearance.PlayerModels[1][appearance.AModel] or hg.Appearance.PlayerModels[2][appearance.AModel]
+            local sexID = modelData and modelData.sex and 2 or 1
+            local bgData = hg.Appearance.Bodygroups["HANDS"] and hg.Appearance.Bodygroups["HANDS"][sexID] and hg.Appearance.Bodygroups["HANDS"][sexID][handsVal]
+            if bgData and bgData.bandageMdl then
+                if not IsValid(ent._bandageGlovesPreview) or ent._bandageGlovesMdl ~= bgData.bandageMdl then
+                    if IsValid(ent._bandageGlovesPreview) then ent._bandageGlovesPreview:Remove() end
+                    ent._bandageGlovesPreview = ClientsideModel(bgData.bandageMdl)
+                    ent._bandageGlovesMdl = bgData.bandageMdl
+                    local bgModel = ent._bandageGlovesPreview
+                    bgModel:SetNoDraw(true)
+                    bgModel:SetParent(ent)
+                    bgModel:AddEffects(EF_BONEMERGE)
+                    local bgNames = {[6]="HandLeft",[9]="HandRight"}
+                    for _, name in pairs(bgNames) do
+                        local bgI = bgModel:FindBodygroupByName(name)
+                        if not bgI or bgI < 0 then bgI = bgModel:FindBodygroupByName(name .. "-f") end
+                        if bgI and bgI >= 0 then bgModel:SetBodygroup(bgI, 1) end
+                    end
+                end
+                local clr = appearance.AColor
+                if clr then render.SetColorModulation((clr.r or 255)/255, (clr.g or 255)/255, (clr.b or 255)/255) end
+                ent._bandageGlovesPreview:SetupBones()
+                ent._bandageGlovesPreview:DrawModel()
+                if clr then render.SetColorModulation(1,1,1) end
+            else
+                if IsValid(ent._bandageGlovesPreview) then ent._bandageGlovesPreview:Remove() ent._bandageGlovesPreview = nil end
+            end
+        else
+            if IsValid(ent._bandageGlovesPreview) then ent._bandageGlovesPreview:Remove() ent._bandageGlovesPreview = nil end
+        end
+
         ent:SetupBones()
     end
 

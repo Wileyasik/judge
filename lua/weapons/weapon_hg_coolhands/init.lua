@@ -684,17 +684,17 @@ function SWEP:Think()
 		end
 
 		//if (self:GetNextDown() < Time) or owner:KeyDown(IN_SPEED) then
-		if owner:KeyDown(IN_SPEED) and (owner.PlayerClassName != "furry" or owner:KeyDown(IN_WALK)) then
-			self:SetNextDown(Time + 1)
-			self:SetFists(false)
-			self:SetBlocking(false)
-		end
+		//if owner:KeyDown(IN_SPEED) and (owner.PlayerClassName != "furry" or owner:KeyDown(IN_WALK)) then
+		//	self:SetNextDown(Time + 1)
+		//	self:SetFists(false)
+		//	self:SetBlocking(false)
+		//end
 	else
 		HoldType = "normal"
 	end
 
 	if IsValid(self.CarryEnt) or self.CarryEnt then HoldType = "normal" end
-	if owner:KeyDown(IN_SPEED) and (owner.PlayerClassName != "furry" or owner:KeyDown(IN_WALK)) then HoldType = "normal" end
+	//if owner:KeyDown(IN_SPEED) and (owner.PlayerClassName != "furry" or owner:KeyDown(IN_WALK)) then HoldType = "normal" end
 	if SERVER then self:SetHoldType(HoldType) end
 end
 

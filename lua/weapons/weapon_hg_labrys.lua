@@ -13,7 +13,7 @@ SWEP.WorldModelExchange = "models/weapons/w_melee_labris.mdl"
 SWEP.ViewModel = ""
 SWEP.modelscale = 1.2
 
-SWEP.SuicidePos = Vector(0, -1, -26)
+SWEP.SuicidePos = Vector(5, 13, -35)
 SWEP.SuicideAng = Angle(-70, 50, -30)
 SWEP.SuicideCutVec = Vector(-2, 4, -3)
 SWEP.SuicideCutAng = Angle(10, 0, 0)

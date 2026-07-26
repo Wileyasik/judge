@@ -54,6 +54,86 @@ local IsValid, math_Clamp = IsValid, math.Clamp
 	local vector_small = Vector(0.01, 0.01, 0.01)
 	local angfuck = Angle()
 	local hg_no_camera_in_cars = CreateConVar("hg_no_camera_in_cars","0",FCVAR_ARCHIVE + FCVAR_REPLICATED, "disables camera in cars", 0, 1)
+
+	local bandageBGNames = {
+		[0] = "belly",
+		[1] = "groin",
+		[2] = "belly",
+		[3] = "Chest",
+		[4] = "HandUpLeft",
+		[5] = "HandDownLeft",
+		[6] = "HandLeft",
+		[7] = "HandUpRight",
+		[8] = "HandDownRight",
+		[9] = "HandRight",
+		[10] = "LegUpLeft",
+		[11] = "LegDownLeft",
+		[12] = "LegUpRught",
+		[13] = "LegDownRught",
+	}
+
+	local bandageHandsOnly = "00000010010000"
+
+	function hg.RenderBandageGloves(ent, ply)
+		local mdl = ply:GetNWString("BandageGlovesMdl", "")
+		if mdl == "" then
+			if IsValid(ent.bandageGlovesModel) then
+				ent.bandageGlovesModel:Remove()
+				ent.bandageGlovesModel = nil
+			end
+			return
+		end
+
+		if not IsValid(ent.bandageGlovesModel) or ent.bandageGlovesModel:GetModel() ~= mdl then
+			if IsValid(ent.bandageGlovesModel) then ent.bandageGlovesModel:Remove() end
+			ent.bandageGlovesModel = ClientsideModel(mdl, RENDERGROUP_BOTH)
+			local model = ent.bandageGlovesModel
+			ent:CallOnRemove("removebandagegloves", function()
+				if IsValid(model) then
+					model:Remove()
+				end
+			end)
+		end
+
+		local model = ent.bandageGlovesModel
+		model:SetNoDraw(true)
+		model:SetPos(ent:GetPos() + vector_up * 1)
+		model:SetParent(ent)
+		model:AddEffects(EF_BONEMERGE)
+
+		if not model.BandageBGsApplied then
+			for i = 0, 13 do
+				local charVal = string.byte(bandageHandsOnly, i + 1) - 48
+				if charVal > 0 then
+					local bgName = bandageBGNames[i]
+					if bgName then
+						local bgIdx = model:FindBodygroupByName(bgName)
+						if bgIdx and bgIdx >= 0 then
+							model:SetBodygroup(bgIdx, charVal)
+						else
+							bgIdx = model:FindBodygroupByName(bgName .. "-f")
+							if bgIdx and bgIdx >= 0 then
+								model:SetBodygroup(bgIdx, charVal)
+							end
+						end
+					end
+				end
+			end
+			model.BandageBGsApplied = true
+		end
+
+		local clr = ply.CurAppearance and ply.CurAppearance.AColor
+		if clr then
+			render.SetColorModulation((clr.r or 255) / 255, (clr.g or 255) / 255, (clr.b or 255) / 255)
+		end
+
+		model:DrawModel()
+
+		if clr then
+			render.SetColorModulation(1, 1, 1)
+		end
+	end
+
 	function DrawPlayerRagdoll(ent, ply) --// actually not only ragdoll render but player too
 		if ply.prevragdoll_index != nil and ply.prevragdoll_index != ply.ragdoll_index and ply.ragdoll_index == 0 then
 			//print(ply.ragdoll_index, ply.prevragdoll_index, Entity(ply.ragdoll_index))
@@ -98,6 +178,8 @@ local IsValid, math_Clamp = IsValid, math.Clamp
 		end
 
 		hg.RenderBandages(ent, ply)
+
+		hg.RenderBandageGloves(ent, ply)
 
 		hg.RenderTourniquets(ent, ply)
 

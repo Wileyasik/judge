@@ -2637,6 +2637,7 @@ hg.Accessories = {
         vpos = Vector(0,0,69),
         name = "Hood v2"
     },
+
 }
 
 

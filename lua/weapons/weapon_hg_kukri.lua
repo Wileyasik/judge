@@ -6,13 +6,13 @@ SWEP.Category = "Weapons - Melee"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 
-SWEP.WorldModel = "models/weaponsw_melee_kukri.mdl"
+SWEP.WorldModel = "models/weapons/w_knife_t.mdl"
 SWEP.WorldModelReal = "models/weapons/tfa_nmrih/v_me_machete.mdl"
 SWEP.WorldModelExchange = "models/weapons/w_melee_kukri.mdl"
 SWEP.ViewModel = ""
 SWEP.modelscale = 1.1
 
-SWEP.SuicidePos = Vector(20, 1, -27)
+SWEP.SuicidePos = Vector(25, 1, -31.2)
 SWEP.SuicideAng = Angle(-90, -180, 90)
 SWEP.SuicideCutVec = Vector(3, -6, 0)
 SWEP.SuicideCutAng = Angle(10, 0, 0)
@@ -20,13 +20,13 @@ SWEP.SuicideTime = 0.5
 SWEP.SuicideSound = "weapons/knife/knife_hit1.wav"
 SWEP.CanSuicide = true
 SWEP.SuicideNoLH = true
-SWEP.SuicidePunchAng = Angle(5, -15, 0)
+SWEP.SuicidePunchAng = Angle(0, -15, 0)
 
 SWEP.bloodID = 3
 
 SWEP.NoHolster = true
 
-SWEP.HoldType = "melee"
+SWEP.HoldType = "slam"
 
 SWEP.DamageType = DMG_SLASH
 
@@ -129,7 +129,7 @@ SWEP.AnimList = {
 }
 
 if CLIENT then
-	SWEP.WepSelectIcon = Material("entities/arc9_eft_melee_kukris.png")
+	SWEP.WepSelectIcon = Material("entities/arc9_eft_melee_kukri.png")
 	SWEP.IconOverride = "entities/arc9_eft_melee_kukri.png"
 	SWEP.BounceWeaponIcon = false
 end

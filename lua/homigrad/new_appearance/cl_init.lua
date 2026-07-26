@@ -7,7 +7,7 @@ hg.Appearance.SelectedAppearance = ConVarExists("hg_appearance_selected") and Ge
 hg.Appearance.ForcedRandom = ConVarExists("hg_appearance_force_random") and GetConVar("hg_appearance_force_random") or CreateClientConVar("hg_appearance_force_random","0",true,false,"forced appearance random",0,1)
 
 local saveDir = "judge/appearances/"
-local searchDirs = { "ZCity/appearances/", "judge/appearances/" }
+local searchDirs = { "judge/appearances/", "ZCity/appearances/" }
 
 function hg.Appearance.CreateAppearanceFile(strFile_name, tblAppearance)
 	file.CreateDir(saveDir)

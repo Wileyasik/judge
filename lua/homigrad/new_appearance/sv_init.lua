@@ -147,6 +147,20 @@ local function ForceApplyAppearance(ply, tbl, noModelChange)
         end
     end
 
+    -- Bandage gloves: detect and set NW vars
+    local handsVal = tbl.ABodygroups and tbl.ABodygroups["HANDS"]
+    if handsVal then
+        local sexID = tMdl and tMdl.sex and 2 or 1
+        local bgData = hg.Appearance.Bodygroups["HANDS"][sexID] and hg.Appearance.Bodygroups["HANDS"][sexID][handsVal]
+        if bgData and bgData.bandageMdl then
+            ply:SetNWString("BandageGlovesMdl", bgData.bandageMdl)
+        else
+            ply:SetNWString("BandageGlovesMdl", "")
+        end
+    else
+        ply:SetNWString("BandageGlovesMdl", "")
+    end
+
     ply:SetNetVar("Accessories", tbl.AAttachments)
     ply:SetNetVar("AccessoryColors", tbl.AAttachmentColors)
 
@@ -253,6 +267,7 @@ function ApplyAppearanceRagdoll(ent, ply)
     ent:SetNWString("PlayerName", ply:GetNWString("PlayerName", Appearance.AName))
     ent:SetNetVar("Accessories", ply:GetNetVar("Accessories",""))
     ent:SetNetVar("AccessoryColors", ply:GetNetVar("AccessoryColors", Appearance.AAttachmentColors or {}))
+    ent:SetNWString("BandageGlovesMdl", ply:GetNWString("BandageGlovesMdl", ""))
 
     local tMdl = APmodule.PlayerModels[1][ent:GetModel()] or APmodule.PlayerModels[2][ent:GetModel()] or ent:GetModel()
     if istable(tMdl) then

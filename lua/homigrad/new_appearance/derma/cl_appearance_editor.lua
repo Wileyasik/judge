@@ -206,15 +206,43 @@ local function ApplyAppearanceToModel(ent, modelData, tbl, oKey, oMat, oBgKey, o
         local bge = hg.Appearance.Bodygroups[bgk] and hg.Appearance.Bodygroups[bgk][sexID] and hg.Appearance.Bodygroups[bgk][sexID][bgv]
         if bge then
             local bgs2 = istable(bge) and bge[1] or nil
-            if bgs2 then
+            if bgs2 and not bge.bandageMdl then
                 local mBGs = ent:GetBodyGroups()
                 for bI,bD in ipairs(mBGs) do for sI=0,#bD.submodels do if bD.submodels[sI]==bgs2 then ent:SetBodygroup(bI-1,sI) break end end end
             end
         end
     end
+    ent._bandageGlovesColor = tbl.AColor
     if oBgKey and oBgID then
-        local mBGs = ent:GetBodyGroups()
-        for bI,bD in ipairs(mBGs) do for sI=0,#bD.submodels do if bD.submodels[sI]==oBgID then ent:SetBodygroup(bI-1,sI) break end end end
+        local handsVal = tbl.ABodygroups and tbl.ABodygroups[oBgKey]
+        local bge = hg.Appearance.Bodygroups[oBgKey] and hg.Appearance.Bodygroups[oBgKey][sexID] and hg.Appearance.Bodygroups[oBgKey][sexID][handsVal]
+        if bge and bge.bandageMdl then
+            if not IsValid(ent._bandageGlovesPreview) or ent._bandageGlovesMdl ~= bge.bandageMdl then
+                if IsValid(ent._bandageGlovesPreview) then ent._bandageGlovesPreview:Remove() end
+                ent._bandageGlovesPreview = ClientsideModel(bge.bandageMdl)
+                ent._bandageGlovesMdl = bge.bandageMdl
+                local bgModel = ent._bandageGlovesPreview
+                bgModel:SetNoDraw(true)
+                bgModel:SetParent(ent)
+                bgModel:AddEffects(EF_BONEMERGE)
+                local bgNames = {[6]="HandLeft",[9]="HandRight"}
+                for idx, name in pairs(bgNames) do
+                    local bgI = bgModel:FindBodygroupByName(name)
+                    if not bgI or bgI < 0 then bgI = bgModel:FindBodygroupByName(name .. "-f") end
+                    if bgI and bgI >= 0 then bgModel:SetBodygroup(bgI, 1) end
+                end
+            end
+            ent._bandageGlovesShouldDraw = true
+        else
+            if not bge or not bge.bandageMdl then
+                local mBGs = ent:GetBodyGroups()
+                for bI,bD in ipairs(mBGs) do for sI=0,#bD.submodels do if bD.submodels[sI]==oBgID then ent:SetBodygroup(bI-1,sI) break end end end
+            end
+            ent._bandageGlovesShouldDraw = false
+            if IsValid(ent._bandageGlovesPreview) then ent._bandageGlovesPreview:Remove() ent._bandageGlovesPreview = nil end
+        end
+    else
+        ent._bandageGlovesShouldDraw = false
     end
 end
 
@@ -236,7 +264,15 @@ local function CreateThumb(row, section, modelData, fnExtra)
     icon:SetDirectionalLight(BOX_BACK, Color(90,90,90))
     icon:SetDirectionalLight(BOX_BOTTOM, Color(60,60,60))
     function icon:PreDrawModel(ent) end
-    function icon:PostDrawModel(ent) end
+    function icon:PostDrawModel(ent)
+        if ent._bandageGlovesShouldDraw and IsValid(ent._bandageGlovesPreview) then
+            local clr = ent._bandageGlovesColor
+            if clr then render.SetColorModulation((clr.r or 255)/255, (clr.g or 255)/255, (clr.b or 255)/255) end
+            ent._bandageGlovesPreview:SetupBones()
+            ent._bandageGlovesPreview:DrawModel()
+            if clr then render.SetColorModulation(1,1,1) end
+        end
+    end
     function icon:LayoutEntity(ent)
         ent:SetAngles(Angle(0, row.SpinAngle or 20, 0))
         ent:SetSequence(ent:LookupSequence("mp_storage_1h_medium"))
@@ -963,6 +999,7 @@ function PANEL:PostInit()
                 local loaded = LoadPreset(pn)
                 if loaded then
                     UpdateAppearance(loaded)
+                    savedSnapshot = BuildComparable(main.AppearanceTable)
                     surface.PlaySound(SND.ok)
                     notification.AddLegacy("Preset '"..pn.."' loaded!", NOTIFY_GENERIC, 3)
                 else

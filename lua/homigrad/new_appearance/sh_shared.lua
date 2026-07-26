@@ -420,6 +420,22 @@ hg.Appearance.Bodygroups = hg.Appearance.Bodygroups or {
 	gloves2 = { [1] = {}, [2] = {} },
 }
 
+-- Bandage Gloves (separate model, bonemerged via NW)
+hg.Appearance.Bodygroups["HANDS"][1]["Bandage Gloves"] = {
+	"bandage_gloves_m",
+	false,
+	ID = "Bandage_Gloves_M",
+	bgIndex = 0,
+	bandageMdl = "models/distac/newbandage.mdl"
+}
+hg.Appearance.Bodygroups["HANDS"][2]["Bandage Gloves"] = {
+	"bandage_gloves_f",
+	false,
+	ID = "Bandage_Gloves_F",
+	bgIndex = 0,
+	bandageMdl = "models/distac/newbandage_f.mdl"
+}
+
 local function AppAddBodygroup(strBodyGroup, strName, strStringID, bFemale, bPointShop, bDonateOnly, fCost, psModel, psBodygroups, psSubmats, psStrNameOveride)
 	local pointShopID = "Standard_BodyGroups_" .. (psStrNameOveride or strName)
 	hg.Appearance.Bodygroups[strBodyGroup] = hg.Appearance.Bodygroups[strBodyGroup] or {}
