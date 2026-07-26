@@ -212,7 +212,6 @@ SWEP.SupressedSound = {"weapons/darsu_eft/usp/H_shot.wav", 95, 95, 105}
 SWEP.Primary.SoundEmpty = {"weapons/darsu_eft/usp/usp_fire_dry.ogg", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Force = 22
 SWEP.Primary.Wait = PISTOLS_WAIT
-$12.5
 SWEP.SupressorOnly = true
 
 SWEP.DeploySnd = {"homigrad/weapons/draw_pistol.mp3", 55, 100, 110}

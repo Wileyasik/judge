@@ -190,7 +190,6 @@ SWEP.Primary.Sound = {"weapons/darsu_eft/ak/fire_new/ak74_outdoor_close_loop_1.w
 SWEP.SupressedSound = {"weapons/darsu_eft/ak/fire_new/ak74_loop_outdoor_close_silenced_4.wav", 65, 90, 100}
 SWEP.Primary.SoundEmpty = {"weapons/newakm/akmm_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.085
-$13
 
 SWEP.PPSMuzzleEffect = "muzzleflash_FAMAS"
 

@@ -158,7 +158,6 @@ SWEP.animposmul = 2
 SWEP.Primary.Sound = {"weapons/darsu_eft/mp5/fire_new/mp5sd_outdoor_close_silenced_loop1.wav", 65, 90, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/mp5/fire_new/mp5sd_outdoor_close_silenced_loop1.wav", 65, 90, 100}
 SWEP.Primary.Wait = 0.07
-$11.5
 SWEP.SetSupressor = true
 
 

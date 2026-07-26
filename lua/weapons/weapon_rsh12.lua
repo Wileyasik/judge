@@ -109,7 +109,6 @@ SWEP.SupressedSound = false
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/makarov/handling/makarov_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Force = 35
 SWEP.Primary.Wait = 0.3
-$12
 
 SWEP.DeploySnd = {"homigrad/weapons/draw_pistol.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/holster_pistol.mp3", 55, 100, 110}

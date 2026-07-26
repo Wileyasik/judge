@@ -186,7 +186,6 @@ SWEP.Primary.Sound = {"weapons/darsu_eft/sr25/sr25_fire_outdoor_close.wav", 85, 
 SWEP.SupressedSound = {"weapons/darsu_eft/sr25/sr25_fire_outdoor_silenced_close.wav", 65, 90, 100}
 SWEP.Primary.SoundEmpty = {"weapons/mk18/mk18_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.2
-$11.2
 
 SWEP.PPSMuzzleEffect = "muzzleflash_SR25"
 

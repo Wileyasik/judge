@@ -83,7 +83,6 @@ SWEP.Primary.Sound = {"weapons/darsu_eft/mp443/grach_fire_outdoor_close.wav", 75
 SWEP.Primary.SoundEmpty = {"weapons/darsu_eft/p226/p226_fire_silenced_indoor_distant.ogg", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Force = 20
 SWEP.Primary.Wait = PISTOLS_WAIT
-$13.5
 
 SWEP.DeploySnd = {"homigrad/weapons/draw_pistol.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/holster_pistol.mp3", 55, 100, 110}

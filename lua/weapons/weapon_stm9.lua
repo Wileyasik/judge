@@ -187,7 +187,6 @@ SWEP.animposmul = 2
 SWEP.Primary.Sound = {"weapons/darsu_eft/mcxmpx/fire_new/mpx_outdoor_close_loop1.wav", 85, 120, 130}
 SWEP.SupressedSound = {"weapons/darsu_eft/mcxmpx/fire_new/mpx_outdoor_close_silenced_loop1.wav", 75, 90, 100}
 SWEP.Primary.Wait = 0.08
-$13
 
 SWEP.PPSMuzzleEffect = "muzzleflash_FAMAS"
 
