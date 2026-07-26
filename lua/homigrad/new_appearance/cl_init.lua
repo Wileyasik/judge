@@ -21,9 +21,17 @@ function hg.Appearance.LoadAppearanceFile(strFile_name)
 
 		if not hg.Appearance.AppearanceValidater(tblAppearance) then continue end
 
+        if tblAppearance.AAttachments then
+            local norm = {"none","none","none","none","none","none"}
+            for k,v in pairs(tblAppearance.AAttachments) do
+                local idx = tonumber(k)
+                if idx and idx >= 1 and idx <= 6 then norm[idx] = v end
+            end
+            tblAppearance.AAttachments = norm
+        end
+
 		return tblAppearance
 	end
-
 	return false, "file is not found [data/zcity/appearances/ or data/judge/appearances/]"
 end
 

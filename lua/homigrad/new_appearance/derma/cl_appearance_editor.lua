@@ -805,7 +805,16 @@ function PANEL:PostInit()
 
     local function UpdateAppearance(tbl)
         main.AppearanceTable = table.Copy(tbl or main.AppearanceTable or {})
-        main.AppearanceTable.AAttachments = main.AppearanceTable.AAttachments or {"none","none","none","none","none","none"}
+        
+        if main.AppearanceTable.AAttachments then
+            local norm = {"none","none","none","none","none","none"}
+            for k,v in pairs(main.AppearanceTable.AAttachments) do
+                local idx = tonumber(k)
+                if idx and idx >= 1 and idx <= 6 then norm[idx] = v end
+            end
+            main.AppearanceTable.AAttachments = norm
+        end
+        
         main.AppearanceTable.AClothes = main.AppearanceTable.AClothes or {}
         main.AppearanceTable.ABodygroups = main.AppearanceTable.ABodygroups or {}
         main.AppearanceTable.AColor = NormalizeColor(main.AppearanceTable.AColor)
@@ -1044,7 +1053,8 @@ function PANEL:PostInit()
             end)
             for k,v in SortedPairs(hg.Accessories or {}) do
                 if not placements[v.placement] then continue end
-                if not lply:PS_HasItem(k) and v.bPointShop and not hg.Appearance.GetAccessToAll(lply) then continue end
+                local hasItem = lply.PS_HasItem and lply:PS_HasItem(k)
+                if not hasItem and v.bPointShop and not hg.Appearance.GetAccessToAll(lply) then continue end
                 UI.ModelRow(scroll, string.NiceName(v.name or k), v, function() return GetAttachmentValue(slotID)==k end, function()
                     main.AppearanceTable.AAttachments[slotID] = k
                     main:SyncSharedPreview()
@@ -1407,7 +1417,8 @@ function PANEL:PostInit()
         if not modelData then return end
         OpenSelector("Gloves", "Gloves", "Select gloves", function(scroll)
             for k,v in SortedPairs((hg.Appearance.Bodygroups["HANDS"] and hg.Appearance.Bodygroups["HANDS"][modelData.sex and 2 or 1]) or {}) do
-                if not lply:PS_HasItem(v["ID"]) and v[2] and not hg.Appearance.GetAccessToAll(lply) then continue end
+                local hasItem = lply.PS_HasItem and lply:PS_HasItem(v["ID"])
+                if not hasItem and v[2] and not hg.Appearance.GetAccessToAll(lply) then continue end
                 local bgID = istable(v) and v[1] or nil
                 UI.BodygroupRow(scroll, k, "HANDS", bgID, main, function() return (main.AppearanceTable.ABodygroups and main.AppearanceTable.ABodygroups["HANDS"])==k end, function()
                     main.AppearanceTable.ABodygroups = main.AppearanceTable.ABodygroups or {}

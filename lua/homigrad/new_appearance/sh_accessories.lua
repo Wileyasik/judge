@@ -14,16 +14,6 @@ hg.Accessories = {
         placement = "face",
     },
     
-    ["pluv mask"] = {
-    model = "models/props/pluvmask.mdl",
-    bone = "ValveBiped.Bip01_Head1",
-    malepos = {Vector(-6,-1.8,0),Angle(180,-80,-90), 1},
-    fempos = {Vector(-6,-1.8,0),Angle(180,-80,-90), 1},
-    skin = 0,
-    norender = true,
-    placement = "head",
-   },
-
    ["black hood with mask"] = {
         model = "models/balaclava_hood/balaclava_hood.mdl",
         bone = "ValveBiped.Bip01_Head1",
@@ -37,21 +27,11 @@ hg.Accessories = {
     ["meowl"] = {
     model = "models/catowl/catowl.mdl",
     bone = "ValveBiped.Bip01_Head1",
-    malepos = {Vector(10,0,0),Angle(0,-80,-90), 1},
-    fempos = {Vector(-6,-1.8,0),Angle(180,-80,-90), 1},
+    malepos = {Vector(14,0,0),Angle(0,-80,-90), 1},
+    fempos = {Vector(13,0,0),Angle(0,-80,-90), 1},
     skin = 0,
     norender = true,
     placement = "head",
-   },
-    
-  ["long ass glasses"] = {
-    model = "models/props/bigglass.mdl",
-    bone = "ValveBiped.Bip01_Head1",
-    malepos = {Vector(5,-13.5,0),Angle(180,-80,-90), 0.5},
-    fempos = {Vector(5,-13.5,0),Angle(180,-80,-90), 0.5},
-    skin = 0,
-    norender = true,
-    placement = "face",
    },
     
     ["bugeye sunglasses"] = {
@@ -1096,248 +1076,8 @@ hg.Accessories = {
         model = "models/robberybag/robberybag.mdl",
         bone = "ValveBiped.Bip01_Spine4",
         malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-8,3,0),Angle(0,80,90),0.9},
+        fempos = {Vector(-20,5,-0.1),Angle(0,80,90),0.9},
         skin = 0,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag0"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 0,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag1"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 1,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag2"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 2,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag3"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 3,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag4"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 4,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag5"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 5,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag6"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 6,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag7"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 7,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag8"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 8,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag9"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 9,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag10"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 10,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag11"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 11,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag12"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 12,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag13"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 13,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag14"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 14,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag15"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 15,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag16"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 16,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag17"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 17,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag18"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 18,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag19"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 19,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag20"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 20,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag21"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 21,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag22"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 22,
-        norender = false,
-        placement = "spine2",
-    },
-
-    ["dufflebag23"] = {
-        model = "models/sportbag4/sportbag4.mdl",
-        bone = "ValveBiped.Bip01_Spine4",
-        malepos = {Vector(-17.5,12,2),Angle(0,60,95),1},
-        fempos = {Vector(-19,6,0),Angle(0,80,90),0.9},
-        skin = 23,
         norender = false,
         placement = "spine2",
     },
@@ -2580,45 +2320,6 @@ hg.Accessories = {
         bPointShop = true,
         price = 1500,
         name = "Colorable Baseball Cap"
-    },
-    ["fedora_colorable"] = {
-        model = "models/griggs/fedora_colorable.mdl",
-        bone = "ValveBiped.Bip01_Head1",
-        malepos = {Vector(5.5, -0.2, 0), Angle(90, -80, -90), 1},
-        fempos = {Vector(4.5, -0.2, 0), Angle(90, -75, -90), 1},
-        skin = 0,
-        norender = true,
-        placement = "head",
-        bSetColor = true,
-        bPointShop = true,
-        price = 1500,
-        name = "Colorable Fedora"
-    },
-    ["fedora_line_colorable"] = {
-        model = "models/griggs/fedora_colorable.mdl",
-        bone = "ValveBiped.Bip01_Head1",
-        malepos = {Vector(5.5, -0.2, 0), Angle(90, -80, -90), 1},
-        fempos = {Vector(4.5, -0.2, 0), Angle(90, -75, -90), 1},
-        skin = 1,
-        norender = true,
-        placement = "head",
-        bSetColor = true,
-        bPointShop = true,
-        price = 1500,
-        name = "Colorable Fedora (Line)"
-    },
-    ["fedora_black_line_colorable"] = {
-        model = "models/griggs/fedora_colorable.mdl",
-        bone = "ValveBiped.Bip01_Head1",
-        malepos = {Vector(5.5, -0.2, 0), Angle(90, -80, -90), 1},
-        fempos = {Vector(4.5, -0.2, 0), Angle(90, -75, -90), 1},
-        skin = 2,
-        norender = true,
-        placement = "head",
-        bSetColor = true,
-        bPointShop = true,
-        price = 1500,
-        name = "Colorable Black Fedora (Line)"
     },
     ["earmuffs_colorable"] = {
         model = "models/griggs/headphones_colorable.mdl",

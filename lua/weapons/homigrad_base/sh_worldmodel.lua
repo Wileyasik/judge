@@ -313,7 +313,7 @@ local function DrawWorldModel(self, force)
 	
 	local localdraw = (self:IsLocal2() and (owner:GetActiveWeapon() == self)) and not force
 	
-	if not owner:IsNPC() then self:DrawPost() end
+	// DrawPost moved after worldModel:DrawModel()
 	//self.worldModel:SetRenderOrigin(self:GetPos())
 	//self.worldModel:SetPos(self:GetPos())
 	
@@ -438,6 +438,8 @@ local function DrawWorldModel(self, force)
 		--hg.StartCaptureRender()
 		self.worldModel:SetupBones()
 		self.worldModel:DrawModel()
+
+		if not owner:IsNPC() then self:DrawPost() end
 		
 		if self.GetDebug and LocalPlayer():IsSuperAdmin() and self:ShouldUseFakeModel() and IsValid(self:GetWM()) then
 			self:DrawModel()
@@ -864,7 +866,8 @@ function hg.RenderWeapons(ent, owner)
 		if ent.NotSeen then return end
 	
 		for i, wep in pairs(inv["Weapons"]) do
-			if not IsEntity(wep) or not IsValid(wep) or not wep.ishgweapon then continue end
+			if isbool(wep) then continue end
+			if not IsValid(wep) or not wep.ishgweapon then continue end
 			wep:SetOwner(ent)
 			DrawWorldModel(wep)
 		end
