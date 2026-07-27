@@ -117,10 +117,7 @@ SWEP.hitsoundextra = {
 }
 
 SWEP.swingsoundextra = {
-    {"bat/baseball_swing_1st_layer_01.wav", 60, {85, 95}},
-    {"bat/baseball_swing_1st_layer_02.wav", 60, {85, 95}},
-    {"bat/baseball_swing_1st_layer_03.wav", 60, {85, 95}},
-    {"bat/baseball_swing_1st_layer_04.wav", 60, {85, 95}},
+    {"weapons/darsu_eft/melee/scythe_whoosh_04.ogg", 90, {95, 105}},
 }
 
 SWEP.AnimList = {
@@ -142,8 +139,8 @@ SWEP.TwoHanded = false
 
 SWEP.AttackHit = "snd_jack_hmcd_knifehit.wav"
 SWEP.Attack2Hit = "snd_jack_hmcd_knifehit.wav"
-SWEP.AttackHitFlesh = "weapons/knife/knife_hit1.wav"
-SWEP.Attack2HitFlesh = "physics/flesh/flesh_impact_hard1.wav"
+SWEP.AttackHitFlesh = "weapons/darsu_eft/melee/body3.ogg"
+SWEP.Attack2HitFlesh = "weapons/darsu_eft/melee/body4.ogg"
 SWEP.DeploySnd = "physics/metal/metal_grenade_impact_soft2.wav"
 
 SWEP.AttackPos = Vector(0,0,0)
