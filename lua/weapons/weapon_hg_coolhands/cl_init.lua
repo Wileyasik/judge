@@ -413,7 +413,7 @@ function SWEP:SetHandPos(noset)
                 self.modell:SetNoDraw(true)
         end
 
-	if ply:GetNetVar("handcuffed",false) then
+	if ply:GetNetVar("handcuffed",false) or ply:GetNetVar("ducttaped_hands",false) then
 		hg.handcuffedhands(ply)
 
 		return

@@ -1,179 +1,341 @@
 if SERVER then AddCSLuaFile() end
-SWEP.Base = "weapon_bandage_sh"
+SWEP.Base = "weapon_tpik_base"
 SWEP.PrintName = "Fury-13"
 SWEP.Instructions = "Fury-13 (Not to be confused with \"Furry-13\", an unrelated pathowogen virus strain) is an incredibly potent stimulator drug. Instead of \"modifying\" how your organism works, this drug aims to provide additional resources instead, making you stronger than ever before. Side effects may include permanent brain damage. Do not use on infected person."
 SWEP.Category = "ZCity Medicine"
 SWEP.Spawnable = true
-SWEP.Primary.Wait = 1
-SWEP.Primary.Next = 0
-SWEP.HoldType = "normal"
-SWEP.ViewModel = ""
-SWEP.WorldModel = "models/bloocobalt/l4d/items/w_eq_adrenaline.mdl"
+SWEP.AdminOnly = true
+
+SWEP.WorldModel = "models/cof/weapons/syringe/w_syringe.mdl"
+SWEP.WorldModelReal = "models/cof/weapons/syringe/v_syringe.mdl"
+SWEP.WorldModelExchange = false
+
 if CLIENT then
 	SWEP.WepSelectIcon = Material("entities/zcity/fury13.png")
 	SWEP.IconOverride = "entities/zcity/fury13.png"
 	SWEP.BounceWeaponIcon = false
 end
-SWEP.AdminOnly = true
-SWEP.AutoSwitchTo = false
-SWEP.AutoSwitchFrom = false
+
 SWEP.Slot = 5
 SWEP.SlotPos = 1
 SWEP.WorkWithFake = true
-SWEP.offsetVec = Vector(3, -2.5, -1)
-SWEP.offsetAng = Angle(-30, 20, -90)
-SWEP.ModelScale = 0.65
-SWEP.Color = Color(255, 170, 80)
+
+SWEP.Primary.ClipSize = -1
+SWEP.Primary.DefaultClip = -1
+SWEP.Primary.Ammo = "none"
+
+SWEP.Secondary.ClipSize = -1
+SWEP.Secondary.DefaultClip = -1
+SWEP.Secondary.Ammo = "none"
+
+SWEP.setlh = true
+SWEP.setrh = true
+
+SWEP.healingOther = false
+
+function SWEP:SetupDataTables()
+	self:NetworkVar("Bool", 0, "HealingOther")
+end
+
+SWEP.HoldPos = Vector(2, -1.5, -2)
+SWEP.HoldAng = Angle(0, 0, 0)
+
+SWEP.offsetVec = Vector(0, 0, 0)
+SWEP.offsetAng = Angle(0, 0, 0)
+
+SWEP.lpos = Vector(0, 0, 0)
+SWEP.lang = Angle(0, 0, 0)
+
+SWEP.handPosOffset = Vector(0, 0, 0)
+SWEP.handAngOffset = Angle(0, 0, 0)
+
 SWEP.modeNames = {
 	[1] = "fury-13"
 }
 
-function SWEP:InitializeAdd()
-	self:SetHold(self.HoldType)
+SWEP.UseSpeed = 3
+SWEP.CallbackTimeAdjust = 0.5
 
+SWEP.AnimList = {
+	["deploy"] = { "deploy", 0.5, false },
+	["use"] = { "use", 3, false, false, function(self)
+		if CLIENT then return end
+		if self:GetHealingOther() and IsValid(self.healbuddy) then
+			self:Heal(self.healbuddy)
+		else
+			self:Heal(self:GetOwner())
+		end
+	end },
+	["idle"] = { "idle", 5, true }
+}
+
+SWEP.TimedSoundsSelf = {
+	{"weapons/universal/uni_crawl_l_02.wav", 0.3},
+	{"snd_jack_hmcd_needleprick.wav", 0.8},
+	{"cof/weapons/syringe/syringe_insert.wav", 1.0},
+	{"cof/weapons/syringe/syringe_inject.wav", 1.8},
+}
+
+SWEP.TimedSoundsOther = {
+	{"cof/weapons/syringe/syringe_insert.wav", 0.5},
+	{"cof/weapons/syringe/syringe_inject.wav", 1.2},
+}
+
+SWEP.modeValuesdef = {
+	[1] = 1,
+}
+
+SWEP.showstats = false
+SWEP.FallSnd = ""
+
+SWEP.HoldType = "slam"
+
+local hg_healanims = ConVarExists("hg_healanims") and GetConVar("hg_healanims") or CreateConVar("hg_healanims", 0, FCVAR_REPLICATED + FCVAR_ARCHIVE, "Toggle heal/food animations", 0, 1)
+
+function SWEP:CanPrimaryAttack()
+	return true
+end
+
+function SWEP:InitAdd()
 	self.modeValues = {
 		[1] = 1
 	}
 end
 
-SWEP.modeValuesdef = {
-	[1] = 1
-}
+function SWEP:Deploy()
+	if self.DeploySounds and #self.DeploySounds > 0 then
+		self.DeploySnd = self.DeploySounds[math.random(#self.DeploySounds)]
+	end
+	local snd = self.DeploySnd
+	self.DeploySnd = ""
+	local base = weapons.GetStored(self.Base)
+	if base and base.Deploy then
+		local ret = base.Deploy(self)
+		if SERVER and snd and snd ~= "" and not self._deploySndPlayed and self:GetOwner() and not self:GetOwner().noSound then
+			self._deploySndPlayed = true
+			self:GetOwner():EmitSound(snd, 65, math.random(95, 105))
+		end
+		return ret
+	end
+	return true
+end
 
-SWEP.DeploySnd = ""
-SWEP.HolsterSnd = ""
+function SWEP:Holster()
+	self._deploySndPlayed = false
+	self:SetHealingOther(false)
+	self.setlh = true
+	self._animStarted = false
+	self.reverseanim = false
 
-SWEP.showstats = false
-
-local hg_healanims = ConVarExists("hg_healanims") and GetConVar("hg_healanims") or CreateConVar("hg_healanims", 0, FCVAR_REPLICATED + FCVAR_ARCHIVE, "Toggle heal/food animations", 0, 1)
+	if self.healing then
+		self.healing = false
+		self.callback = nil
+		hook.Remove("Think", "AnimCallback" .. self:EntIndex())
+		self._wasInUse = false
+	end
+	return true
+end
 
 function SWEP:Think()
-	self:SetBodyGroups("11")
-	if not self:GetOwner():KeyDown(IN_ATTACK) and hg_healanims:GetBool() then
-		self:SetHolding(math.max(self:GetHolding() - 4, 0))
-	end
-end
+	if hg.SWEPEditor_Apply then hg.SWEPEditor_Apply(self) end
 
-function SWEP:Animation()
-	local hold = self:GetHolding()
-    self:BoneSet("r_upperarm", vector_origin, Angle(0, -hold + (100 * (hold / 100)), 0))
-    self:BoneSet("r_forearm", vector_origin, Angle(-hold / 6, -hold * 2, -15))
-end
+	local curTime = CurTime()
+	local anim = self.anim
 
-local combines = {
-    "npc_combine_s",
-    "npc_metropolice",
-    "npc_helicopter",
-    "npc_combinegunship",
-    "npc_combine",
-    "npc_stalker",
-    "npc_hunter",
-    "npc_strider",
-    "npc_turret_floor",
-	"npc_combine_camera",
-    "npc_manhack",
-    "npc_cscanner",
-    "npc_clawscanner"
-}
+	local inUse = anim == "use" and self.animtime and self.animtime > curTime
 
-local rebels = {
-    "npc_barney",
-    "npc_citizen",
-    "npc_dog",
-    "npc_eli",
-    "npc_kleiner",
-    "npc_magnusson",
-    "npc_monk",
-    "npc_mossman",
-    "npc_odessa",
-    "npc_rollermine_hacked",
-    "npc_turret_floor_resistance",
-    "npc_vortigaunt",
-    "npc_alyx"
-}
+	if not IsFirstTimePredicted() then return end
 
-local zombies = {
-    "npc_fastzombie",
-    "npc_fastzombie_torso",
-    "npc_headcrab",
-    "npc_headcrab_black",
-    "npc_headcrab_fast",
-    "npc_poisonzombie",
-    "npc_zombie",
-    "npc_zombie_torso",
-    "npc_zombine"
-}
+	if inUse ~= self._wasInUse then
+		self._wasInUse = inUse
+		if inUse then
+			self._timedApplied = {}
+			self._soundIdx = 1
 
-function SWEP:NPCHeal(npc, mul, snd)
-	if not npc then npc = self:GetOwner() end
+			self.TimedSounds = self:GetHealingOther() and self.TimedSoundsOther or self.TimedSoundsSelf
+			self._timedSndCache = nil
 
-	if npc:IsNPC() then
-		self:SetHold("melee")
-		if not mul then mul = 0.3 end
-		npc:SetHealth(math.Clamp(npc:Health() + (npc:GetMaxHealth() * 1 * mul), 0, npc:GetMaxHealth() * math.Clamp(2 * mul, 2, 100)))
-		npc:EmitSound(snd or "snd_jack_hmcd_needleprick.wav", 80, math.random(95, 105))
-		npc:SetPlaybackRate(2)
-		npc:SetKeyValue("m_flPlaybackSpeed", 2)
-
-		if SERVER then --// kill everyone
-			local index = npc:EntIndex()
-			npc:SetSquad("fury13" .. index)
-
-			for k, v in ipairs(ents.FindByClass("npc_*")) do
-				if table.HasValue(rebels, v:GetClass()) or table.HasValue(combines, v:GetClass()) or table.HasValue(zombies, v:GetClass()) then
-					v:AddEntityRelationship(npc, D_HT, 99)
-					npc:AddEntityRelationship(v, D_HT, 99)
-				end
-			end
-
-			for k, v in player.Iterator() do
-				npc:AddEntityRelationship(v, D_HT, 99)
-			end
-
-			hook.Add("OnEntityCreated", "relation_shipdo" .. index, function(ent)
-				if not IsValid(npc) or not npc:Alive() then
-					hook.Remove("OnEntityCreated", "relation_shipdo" .. index)
-
-					return
-				end
-
-				if ent:IsNPC() then
-					if table.HasValue(rebels, ent:GetClass()) or table.HasValue(combines, ent:GetClass()) or table.HasValue(zombies, ent:GetClass()) then
-						ent:AddEntityRelationship(npc, D_HT, 99)
-						npc:AddEntityRelationship(ent, D_HT, 99)
+			if self.TimedSounds and #self.TimedSounds > 0 then
+				local sorted = {}
+				for i, data in ipairs(self.TimedSounds) do
+					if data[1] ~= "" then
+						sorted[#sorted + 1] = {data[1], data[2]}
 					end
 				end
-			end)
+				table.sort(sorted, function(a, b) return a[2] < b[2] end)
+				self._timedSndCache = sorted
+				self._timedSndCount = #sorted
+			end
+		end
+	end
 
-			self:Remove()
+	if inUse and self.animtime and self.animspeed then
+		local elapsed = self.animspeed - (self.animtime - curTime)
+
+		if self._timedSndCache then
+			local idx = self._soundIdx or 1
+			local cache = self._timedSndCache
+			local count = self._timedSndCount
+			while idx <= count and elapsed >= cache[idx][2] do
+				local data = cache[idx]
+				idx = idx + 1
+				if CLIENT then
+					local owner = self:GetOwner()
+					if IsValid(owner) then
+						owner:EmitSound(data[1], 60, math.random(95, 105), 1, CHAN_STATIC)
+					end
+				end
+			end
+			self._soundIdx = idx
+		end
+	end
+
+	local owner = self:GetOwner()
+	if not IsValid(owner) then return end
+
+	if not self.healing and anim == "deploy" and self.animtime and self.animtime <= curTime then
+		if SERVER then
+			self:PlayAnim("idle")
+		end
+	end
+
+	if self.healing and not self._animStarted then
+		local buttonHeld = owner:KeyDown(IN_ATTACK) or owner:KeyDown(IN_ATTACK2)
+		if buttonHeld and self.modeValues[1] > 0 then
+			self._animStarted = true
+			if SERVER then
+				self:PlayAnim("use", self.UseSpeed, false, nil, false)
+			end
+		elseif not buttonHeld then
+			self.healing = false
+			self:SetHealingOther(false)
+			self.setlh = true
+		end
+	end
+
+	if self.healing and not owner:KeyDown(IN_ATTACK) and not owner:KeyDown(IN_ATTACK2) then
+		self.healing = false
+		self:SetHealingOther(false)
+		self.setlh = true
+		self._animStarted = false
+		self.callback = nil
+		hook.Remove("Think", "AnimCallback" .. self:EntIndex())
+		if SERVER then
+			if self.modeValues[1] > 0 then
+				self.reverseanim = true
+			else
+				self:PlayAnim("idle")
+			end
+		end
+		if CLIENT then
+			if self.modeValues[1] > 0 then
+				self.reverseanim = true
+			end
+		end
+	end
+
+	if self.reverseanim and self.animtime and self.animtime <= curTime then
+		self.reverseanim = false
+		if SERVER then
+			self:PlayAnim("idle")
 		end
 	end
 end
 
-function SWEP:OwnerChanged()
-	local owner = self:GetOwner()
-	if IsValid(owner) and owner:IsNPC() then
-		self:SpawnGarbage()
-		self:NPCHeal(owner, 100, "snd_jack_hmcd_needleprick.wav")
+function SWEP:SetHandPos(noset)
+	if self:GetHealingOther() then
+		self.setlh = false
+	else
+		self.setlh = true
+	end
+
+	return self.BaseClass.SetHandPos(self, noset)
+end
+
+function SWEP:PostSetHandPos()
+	local ply = self:GetOwner()
+	if not IsValid(ply) then return end
+
+	local ent = hg.GetCurrentCharacter(ply)
+	if not IsValid(ent) then return end
+
+	local rhBone = ent:LookupBone("ValveBiped.Bip01_R_Hand")
+	if rhBone then
+		local mat = ent:GetBoneMatrix(rhBone)
+		if mat then
+			local pos = mat:GetTranslation() + self.handPosOffset
+			local ang = mat:GetAngles()
+			ang.p = ang.p + self.handAngOffset.p
+			ang.y = ang.y + self.handAngOffset.y
+			ang.r = ang.r + self.handAngOffset.r
+			mat:SetTranslation(pos)
+			mat:SetAngles(ang)
+			ent:SetBoneMatrix(rhBone, mat)
+		end
+	end
+
+	if not self.lhandik then return end
+
+	local lhBone = ent:LookupBone("ValveBiped.Bip01_L_Hand")
+	if lhBone then
+		local mat = ent:GetBoneMatrix(lhBone)
+		if mat then
+			local pos = mat:GetTranslation()
+			local offset = self.handPosOffset
+			pos.x = pos.x - offset.x
+			pos.y = pos.y - offset.y
+			pos.z = pos.z + offset.z
+			local ang = mat:GetAngles()
+			ang.p = ang.p - self.handAngOffset.p
+			ang.y = ang.y - self.handAngOffset.y
+			ang.r = ang.r + self.handAngOffset.r
+			mat:SetTranslation(pos)
+			mat:SetAngles(ang)
+			ent:SetBoneMatrix(lhBone, mat)
+		end
 	end
 end
 
 if SERVER then
-	function SWEP:Heal(ent, mode)
-		if ent:IsNPC() then
-			self:SpawnGarbage(nil, nil, nil, self.Color, "2211")
-			self:NPCHeal(ent, 100, "snd_jack_hmcd_needleprick.wav")
-		end
+	function SWEP:PrimaryAttack()
+		if self.healing then return end
+		local owner = self:GetOwner()
+		if not IsValid(owner) then return end
+		if self.modeValues[1] <= 0 then return end
 
+		self:SetHealingOther(false)
+		self.setlh = true
+		self.healing = true
+	end
+
+	function SWEP:SecondaryAttack()
+		if self.healing then return end
+		local owner = self:GetOwner()
+		if not IsValid(owner) then return end
+		if self.modeValues[1] <= 0 then return end
+
+		local tr = hg.eyeTrace(owner)
+		if not tr then return end
+
+		local ent = tr.Entity
+		if not IsValid(ent) then return end
+
+		local chr = hg.GetCurrentCharacter(ent)
+		if chr == hg.GetCurrentCharacter(owner) then return end
+		if not (ent:IsPlayer() or ent:IsNPC() or hg.RagdollOwner(ent)) then return end
+
+		self.healbuddy = ent
+		self:SetHealingOther(true)
+		self.setlh = false
+		self.healing = true
+	end
+
+	function SWEP:Heal(ent)
 		local org = ent.organism
 		if not org then return end
 
 		local owner = self:GetOwner()
-		if ent == hg.GetCurrentCharacter(owner) and hg_healanims:GetBool() then
-			self:SetHolding(math.min(self:GetHolding() + 4, 100))
-
-			if self:GetHolding() < 100 then return end
-		end
+		if not IsValid(owner) then return end
 
 		local entOwner = IsValid(owner.FakeRagdoll) and owner.FakeRagdoll or owner
 		entOwner:EmitSound("snd_jack_hmcd_needleprick.wav", 80, math.random(75, 90))
@@ -191,18 +353,22 @@ if SERVER then
 			org.internalBleed = org.internalBleed + 10
 		end
 
-		self.modeValues[1] = 0
-
 		if self.poisoned2 then
 			org.poison4 = CurTime()
-
 			self.poisoned2 = nil
 		end
 
+		self.healing = false
+		self:SetHealingOther(false)
+		self.setlh = true
+
+		self.modeValues[1] = 0
+
 		if self.modeValues[1] == 0 then
-			owner:SelectWeapon("weapon_hands_sh")
-			self:SpawnGarbage(nil, nil, nil, self.Color, "2211")
-			self:Remove()
+			owner:DropWeapon(self)
+			owner:SelectWeapon("weapon_hg_coolhands")
 		end
+
+		return true
 	end
 end

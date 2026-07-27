@@ -307,6 +307,191 @@ function hgCheckDuctTapeObjects(ent1)
 end
 
 if SERVER then
+	local TAPE_LIMB_DISTANCE = 30
+	local TAPE_LIMB_COST = 25
+	local TAPE_LIMB_STRENGTH = 10
+
+	local function LimbDistance(ragdoll, defaultBone1, defaultBone2)
+		local p1 = ragdoll:GetPhysicsObjectNum(hg.realPhysNum(ragdoll, defaultBone1))
+		local p2 = ragdoll:GetPhysicsObjectNum(hg.realPhysNum(ragdoll, defaultBone2))
+		if not IsValid(p1) or not IsValid(p2) then return math.huge end
+		return p1:GetPos():Distance(p2:GetPos())
+	end
+
+	local function TapeLimbEffects(self, tr, Owner, text)
+		self.TapeAmount = self.TapeAmount - TAPE_LIMB_COST
+		self:SetTapeAmount(self.TapeAmount)
+		sound.Play("snd_jack_hmcd_ducttape.wav", tr.HitPos, 65, math.random(80, 120))
+		Owner:SetAnimation(PLAYER_ATTACK1)
+		Owner:ViewPunch(Angle(3, 0, 0))
+		Owner:ChatPrint(text)
+		timer.Simple(.1, function() if IsValid(self) and self.TapeAmount <= 0 then self:Remove() end end)
+		self:SetHolding(25)
+	end
+
+	function TapePlayerHands(ragdoll)
+		local physLH = ragdoll:GetPhysicsObjectNum(hg.realPhysNum(ragdoll, 5))
+		local physRH = ragdoll:GetPhysicsObjectNum(hg.realPhysNum(ragdoll, 7))
+
+		if not IsValid(physLH) or not IsValid(physRH) then return false end
+
+		local body = ragdoll:GetPhysicsObjectNum(0)
+		if IsValid(body) then
+			physLH:SetPos(body:GetPos())
+			physRH:SetPos(body:GetPos())
+		end
+
+		local weld = constraint.Weld(ragdoll, ragdoll, hg.realPhysNum(ragdoll, 7), hg.realPhysNum(ragdoll, 5), 0, true, false)
+		ragdoll.ductTapeHands = weld
+		ragdoll.ducttaped_hands = true
+		ragdoll.ducttapeHandsStr = TAPE_LIMB_STRENGTH
+		ragdoll:SetNetVar("ducttaped_hands", true)
+
+		ragdoll.ducttaped_limbs = ragdoll.ducttaped_limbs or {}
+		ragdoll.ducttaped_limbs["ValveBiped.Bip01_L_Hand"] = true
+		ragdoll.ducttaped_limbs["ValveBiped.Bip01_R_Hand"] = true
+		ragdoll:SetNetVar("ducttaped_limbs", ragdoll.ducttaped_limbs)
+
+		local ply = hg.RagdollOwner(ragdoll)
+		if IsValid(ply) then
+			ply.ducttaped_hands = true
+			ply:SetNetVar("ducttaped_hands", true)
+			ply.ducttaped_limbs = ply.ducttaped_limbs or {}
+			ply.ducttaped_limbs["ValveBiped.Bip01_L_Hand"] = true
+			ply.ducttaped_limbs["ValveBiped.Bip01_R_Hand"] = true
+			ply:SetNetVar("ducttaped_limbs", ply.ducttaped_limbs)
+		end
+
+		ragdoll:EmitSound("snd_jack_hmcd_ducttape.wav", 70, math.random(80, 120))
+		return true
+	end
+
+	function TapePlayerLegs(ragdoll)
+		local physLF = ragdoll:GetPhysicsObjectNum(hg.realPhysNum(ragdoll, 13))
+		local physRF = ragdoll:GetPhysicsObjectNum(hg.realPhysNum(ragdoll, 14))
+
+		if not IsValid(physLF) or not IsValid(physRF) then return false end
+
+		local body = ragdoll:GetPhysicsObjectNum(0)
+		if IsValid(body) then
+			physLF:SetPos(body:GetPos())
+			physRF:SetPos(body:GetPos())
+		end
+
+		local weld = constraint.Weld(ragdoll, ragdoll, hg.realPhysNum(ragdoll, 13), hg.realPhysNum(ragdoll, 14), 0, true, false)
+		ragdoll.ductTapeLegs = weld
+		ragdoll.ducttaped_legs = true
+		ragdoll.ducttapeLegsStr = TAPE_LIMB_STRENGTH
+		ragdoll:SetNetVar("ducttaped_legs", true)
+
+		ragdoll.ducttaped_limbs = ragdoll.ducttaped_limbs or {}
+		ragdoll.ducttaped_limbs["ValveBiped.Bip01_L_Foot"] = true
+		ragdoll.ducttaped_limbs["ValveBiped.Bip01_R_Foot"] = true
+		ragdoll:SetNetVar("ducttaped_limbs", ragdoll.ducttaped_limbs)
+
+		local ply = hg.RagdollOwner(ragdoll)
+		if IsValid(ply) then
+			ply.ducttaped_legs = true
+			ply:SetNetVar("ducttaped_legs", true)
+			ply.ducttaped_limbs = ply.ducttaped_limbs or {}
+			ply.ducttaped_limbs["ValveBiped.Bip01_L_Foot"] = true
+			ply.ducttaped_limbs["ValveBiped.Bip01_R_Foot"] = true
+			ply:SetNetVar("ducttaped_limbs", ply.ducttaped_limbs)
+		end
+
+		ragdoll:EmitSound("snd_jack_hmcd_ducttape.wav", 70, math.random(80, 120))
+		return true
+	end
+
+	function RemoveLimbTape(ragdoll, side)
+		local ply = hg.RagdollOwner(ragdoll)
+		if side == "hands" then
+			if IsValid(ragdoll.ductTapeHands) then ragdoll.ductTapeHands:Remove() end
+			ragdoll.ductTapeHands = nil
+			ragdoll.ducttaped_hands = false
+			ragdoll.ducttapeHandsStr = nil
+			ragdoll:SetNetVar("ducttaped_hands", false)
+			if ragdoll.ducttaped_limbs then
+				ragdoll.ducttaped_limbs["ValveBiped.Bip01_L_Hand"] = nil
+				ragdoll.ducttaped_limbs["ValveBiped.Bip01_R_Hand"] = nil
+				ragdoll:SetNetVar("ducttaped_limbs", ragdoll.ducttaped_limbs)
+			end
+			if IsValid(ply) then
+				ply.ducttaped_hands = false
+				ply:SetNetVar("ducttaped_hands", false)
+				if ply.ducttaped_limbs then
+					ply.ducttaped_limbs["ValveBiped.Bip01_L_Hand"] = nil
+					ply.ducttaped_limbs["ValveBiped.Bip01_R_Hand"] = nil
+					ply:SetNetVar("ducttaped_limbs", ply.ducttaped_limbs)
+				end
+			end
+		elseif side == "legs" then
+			if IsValid(ragdoll.ductTapeLegs) then ragdoll.ductTapeLegs:Remove() end
+			ragdoll.ductTapeLegs = nil
+			ragdoll.ducttaped_legs = false
+			ragdoll.ducttapeLegsStr = nil
+			ragdoll:SetNetVar("ducttaped_legs", false)
+			if ragdoll.ducttaped_limbs then
+				ragdoll.ducttaped_limbs["ValveBiped.Bip01_L_Foot"] = nil
+				ragdoll.ducttaped_limbs["ValveBiped.Bip01_R_Foot"] = nil
+				ragdoll:SetNetVar("ducttaped_limbs", ragdoll.ducttaped_limbs)
+			end
+			if IsValid(ply) then
+				ply.ducttaped_legs = false
+				ply:SetNetVar("ducttaped_legs", false)
+				if ply.ducttaped_limbs then
+					ply.ducttaped_limbs["ValveBiped.Bip01_L_Foot"] = nil
+					ply.ducttaped_limbs["ValveBiped.Bip01_R_Foot"] = nil
+					ply:SetNetVar("ducttaped_limbs", ply.ducttaped_limbs)
+				end
+			end
+		end
+	end
+
+	function SWEP:TapeRagdollLimb(tr)
+		local Owner = self:GetOwner()
+		local ent = tr.Entity
+		if not IsValid(ent) or not ent:IsRagdoll() then return false end
+		local rply = hg.RagdollOwner(ent)
+		if not IsValid(rply) or rply == Owner or not rply:Alive() then return false end
+
+		local hitPos = tr.HitPos
+
+		if not ent.ducttaped_hands and not ent.handcuffed then
+			local physLH = ent:GetPhysicsObjectNum(hg.realPhysNum(ent, 5))
+			local physRH = ent:GetPhysicsObjectNum(hg.realPhysNum(ent, 7))
+			if IsValid(physLH) and IsValid(physRH) then
+				local handMid = (physLH:GetPos() + physRH:GetPos()) / 2
+				local handDist = LimbDistance(ent, 5, 7)
+				if handDist < TAPE_LIMB_DISTANCE and hitPos:DistToSqr(handMid) < 2500 then
+					if TapePlayerHands(ent) then
+						TapeLimbEffects(self, tr, Owner, "Hands taped.")
+						return true
+					end
+				end
+			end
+		end
+
+		if not ent.ducttaped_legs then
+			local physLF = ent:GetPhysicsObjectNum(hg.realPhysNum(ent, 13))
+			local physRF = ent:GetPhysicsObjectNum(hg.realPhysNum(ent, 14))
+			if IsValid(physLF) and IsValid(physRF) then
+				local legMid = (physLF:GetPos() + physRF:GetPos()) / 2
+				local legDist = LimbDistance(ent, 13, 14)
+				if legDist < TAPE_LIMB_DISTANCE and hitPos:DistToSqr(legMid) < 2500 then
+					if TapePlayerLegs(ent) then
+						TapeLimbEffects(self, tr, Owner, "Legs taped.")
+						return true
+					end
+				end
+			end
+		end
+
+		return false
+	end
+end
+
+if SERVER then
 	hook.Add("Should Fake Up", "DuctTaped", function(ply)
 		if ply and IsValid(ply.FakeRagdoll) then
 			local dtape = ply.FakeRagdoll.DuctTape
@@ -582,8 +767,14 @@ function SWEP:PrimaryAttack()
 
 	if SERVER then
 		if not self.TapeAmount then self.TapeAmount = 100 end
-		local Go, TrOne, TrTwo = self:FindObjects()
 		self:SetHolding(math.Clamp(self:GetHolding() + 1, 25, 100))
+
+		if self:GetHolding() >= 100 then
+			local tr = hg.eyeTrace(Owner)
+			if self:TapeRagdollLimb(tr) then return end
+		end
+
+		local Go, TrOne, TrTwo = self:FindObjects()
 		if Go then
 			if self:GetHolding() < 100 then return end
 			local DoorSealed = false
@@ -711,6 +902,8 @@ if CLIENT then
 		["ValveBiped.Bip01_L_Calf"] = "LegDownLeft",
 		["ValveBiped.Bip01_R_Thigh"] = "LegUpRught",
 		["ValveBiped.Bip01_R_Calf"] = "LegDownRught",
+		["ValveBiped.Bip01_L_Foot"] = "LegDownLeft",
+		["ValveBiped.Bip01_R_Foot"] = "LegDownRught",
 	}
 	local DuctBodyGroupsFemale = {
 		["ValveBiped.Bip01_Pelvis"] = "belly-f",
@@ -727,6 +920,8 @@ if CLIENT then
 		["ValveBiped.Bip01_L_Calf"] = "LegDownLeft-f",
 		["ValveBiped.Bip01_R_Thigh"] = "LegUpRught-f",
 		["ValveBiped.Bip01_R_Calf"] = "LegDownRught-f",
+		["ValveBiped.Bip01_L_Foot"] = "LegDownLeft-f",
+		["ValveBiped.Bip01_R_Foot"] = "LegDownRught-f",
 	}
 
 	local function remove_ducttapes(ent)
@@ -793,6 +988,57 @@ if CLIENT then
 	hook.Add("CoolPostDrawAppearance", "ducttape_render", function(ent, ply)
 		if IsValid(ent) then hg.RenderDuctTape(ent, ply) end
 	end)
+
+	hook.Add("radialOptions", "ducttape_struggle", function()
+		local ply = LocalPlayer()
+		if not IsValid(ply.FakeRagdoll) then return end
+		if not ply:GetNetVar("ducttaped_hands", false) and not ply:GetNetVar("ducttaped_legs", false) then return end
+
+		hg.radialOptions[#hg.radialOptions + 1] = {function()
+			net.Start("hg_ducttape_struggle")
+			net.SendToServer()
+		end, "Struggle to remove tape"}
+	end)
+
+	hook.Add("radialOptions", "ducttape_cut", function()
+		local ply = LocalPlayer()
+		if IsValid(ply.FakeRagdoll) then return end
+
+		local wep = ply:GetActiveWeapon()
+		if not IsValid(wep) then return end
+
+		local isSharp = wep.DamageType and bit.band(wep.DamageType, DMG_SLASH) == DMG_SLASH
+		if not isSharp then return end
+
+		local ent = nil
+		local tr = util.TraceLine({
+			start = ply:EyePos(),
+			endpos = ply:EyePos() + ply:GetAimVector() * 150,
+			filter = ply,
+			mask = MASK_ALL,
+		})
+		if tr.Hit and IsValid(tr.Entity) and tr.Entity:IsRagdoll() then
+			ent = tr.Entity
+		end
+
+		if not IsValid(ent) then
+			for _, e in ipairs(ents.FindInSphere(ply:EyePos(), 150)) do
+				if e:IsRagdoll() and (e:GetNetVar("ducttaped_hands", false) or e:GetNetVar("ducttaped_legs", false)) then
+					ent = e
+					break
+				end
+			end
+		end
+
+		if not IsValid(ent) or not ent:IsRagdoll() then return end
+
+		if ent:GetNetVar("ducttaped_hands", false) or ent:GetNetVar("ducttaped_legs", false) then
+			hg.radialOptions[#hg.radialOptions + 1] = {function()
+				net.Start("hg_ducttape_cut")
+				net.SendToServer()
+			end, "Cut tape"}
+		end
+	end)
 end
 
 if SERVER then
@@ -801,12 +1047,46 @@ if SERVER then
 		ragdoll.ducttaped_limbs = table.Copy(ply.ducttaped_limbs or {})
 		ply:SetNetVar("ducttaped_limbs", ply.ducttaped_limbs or {})
 		ragdoll:SetNetVar("ducttaped_limbs", ragdoll.ducttaped_limbs)
+
+		if ply.ducttaped_hands then
+			ragdoll.ducttaped_hands = true
+			ragdoll.ducttapeHandsStr = ply.ducttapeHandsStr or 10
+			ragdoll:SetNetVar("ducttaped_hands", true)
+			local body = ragdoll:GetPhysicsObjectNum(0)
+			local physLH = ragdoll:GetPhysicsObjectNum(hg.realPhysNum(ragdoll, 5))
+			local physRH = ragdoll:GetPhysicsObjectNum(hg.realPhysNum(ragdoll, 7))
+			if IsValid(body) and IsValid(physLH) and IsValid(physRH) then
+				physLH:SetPos(body:GetPos())
+				physRH:SetPos(body:GetPos())
+			end
+			ragdoll.ductTapeHands = constraint.Weld(ragdoll, ragdoll, hg.realPhysNum(ragdoll, 7), hg.realPhysNum(ragdoll, 5), 0, true, false)
+		end
+
+		if ply.ducttaped_legs then
+			ragdoll.ducttaped_legs = true
+			ragdoll.ducttapeLegsStr = ply.ducttapeLegsStr or 10
+			ragdoll:SetNetVar("ducttaped_legs", true)
+			local body = ragdoll:GetPhysicsObjectNum(0)
+			local physLF = ragdoll:GetPhysicsObjectNum(hg.realPhysNum(ragdoll, 13))
+			local physRF = ragdoll:GetPhysicsObjectNum(hg.realPhysNum(ragdoll, 14))
+			if IsValid(body) and IsValid(physLF) and IsValid(physRF) then
+				physLF:SetPos(body:GetPos())
+				physRF:SetPos(body:GetPos())
+			end
+			ragdoll.ductTapeLegs = constraint.Weld(ragdoll, ragdoll, hg.realPhysNum(ragdoll, 13), hg.realPhysNum(ragdoll, 14), 0, true, false)
+		end
 	end)
 
 	hook.Add("Player Spawn", "remove-ducttapes", function(ply)
 		if OverrideSpawn then return end
 		ply:SetNetVar("ducttaped_limbs", {})
 		ply.ducttaped_limbs = {}
+		ply.ducttaped_hands = false
+		ply.ducttaped_legs = false
+		ply.ducttapeHandsStr = nil
+		ply.ducttapeLegsStr = nil
+		ply:SetNetVar("ducttaped_hands", false)
+		ply:SetNetVar("ducttaped_legs", false)
 	end)
 
 	hook.Add("Player_Death", "remove-ducttapes-huy", function(ply)
@@ -816,5 +1096,145 @@ if SERVER then
 		end
 		ply:SetNetVar("ducttaped_limbs", {})
 		ply.ducttaped_limbs = {}
+		ply.ducttaped_hands = false
+		ply.ducttaped_legs = false
+		ply:SetNetVar("ducttaped_hands", false)
+		ply:SetNetVar("ducttaped_legs", false)
+	end)
+
+	hook.Add("Should Fake Up", "DuctTapeLegsBlock", function(ply)
+		if not IsValid(ply) or not IsValid(ply.FakeRagdoll) then return end
+		local ragdoll = ply.FakeRagdoll
+
+		if ragdoll.ducttaped_legs then
+			ply.fakecd = CurTime() + 1
+			return false
+		end
+	end)
+
+	hook.Add("PlayerCanPickupWeapon", "DuctTapeHandsBlockPickup", function(ply, ent)
+		if ply.ducttaped_hands and IsValid(ent) then
+			local class = ent:GetClass()
+			local handsClass = hg.GetHandsWeaponClass and hg.GetHandsWeaponClass(ply) or "weapon_hg_coolhands"
+			if class ~= "weapon_hands_sh" and class ~= handsClass then
+				return false
+			end
+		end
+	end)
+
+	hook.Add("PlayerUse", "DuctTapeHandsBlockUse", function(ply, ent)
+		if ply.ducttaped_hands then
+			return false
+		end
+	end)
+
+	util.AddNetworkString("hg_ducttape_struggle")
+	util.AddNetworkString("hg_ducttape_cut")
+
+	net.Receive("hg_ducttape_struggle", function(len, ply)
+		if not IsValid(ply) or not ply:Alive() then return end
+		if not IsValid(ply.FakeRagdoll) then return end
+
+		local ragdoll = ply.FakeRagdoll
+
+		if ragdoll.ducttaped_legs and ragdoll.ducttapeLegsStr and ragdoll.ducttapeLegsStr > 0 then
+			ragdoll.ducttapeLegsStr = ragdoll.ducttapeLegsStr - 2
+			ragdoll:EmitSound("tape_friction" .. math.random(3) .. ".mp3", 65)
+
+			if ragdoll.ducttapeLegsStr <= 0 then
+				RemoveLimbTape(ragdoll, "legs")
+				ragdoll:PhysWake()
+				ply:ChatPrint("Legs freed!")
+			end
+		end
+
+		if ragdoll.ducttaped_hands and ragdoll.ducttapeHandsStr and ragdoll.ducttapeHandsStr > 0 then
+			ragdoll.ducttapeHandsStr = ragdoll.ducttapeHandsStr - 2
+			ragdoll:EmitSound("tape_friction" .. math.random(3) .. ".mp3", 65)
+
+			if ragdoll.ducttapeHandsStr <= 0 then
+				RemoveLimbTape(ragdoll, "hands")
+				ragdoll:PhysWake()
+				ply:ChatPrint("Hands freed!")
+			end
+		end
+	end)
+
+	net.Receive("hg_ducttape_cut", function(len, ply)
+		if not IsValid(ply) or not ply:Alive() then return end
+		if IsValid(ply.FakeRagdoll) then return end
+
+		local wep = ply:GetActiveWeapon()
+		if not IsValid(wep) then return end
+
+		local isSharp = wep.DamageType and bit.band(wep.DamageType, DMG_SLASH) == DMG_SLASH
+		if not isSharp then return end
+
+		local tr = util.TraceLine({
+			start = ply:EyePos(),
+			endpos = ply:EyePos() + ply:GetAimVector() * 150,
+			filter = ply,
+		})
+		if not tr.Hit or not IsValid(tr.Entity) then
+			tr = util.TraceLine({
+				start = ply:EyePos(),
+				endpos = ply:EyePos() + ply:GetAimVector() * 150,
+				filter = ply,
+				mask = MASK_ALL,
+			})
+		end
+		if not tr.Hit or not IsValid(tr.Entity) then return end
+
+		local ent = tr.Entity
+		if not ent:IsRagdoll() then return end
+
+		if ent.ducttaped_hands then
+			RemoveLimbTape(ent, "hands")
+			ent:EmitSound("physics/cardboard/cardboard_box_break" .. math.random(1, 3) .. ".wav", 65)
+			ply:ChatPrint("Cut hand tape.")
+		elseif ent.ducttaped_legs then
+			RemoveLimbTape(ent, "legs")
+			ent:EmitSound("physics/cardboard/cardboard_box_break" .. math.random(1, 3) .. ".wav", 65)
+			ply:ChatPrint("Cut leg tape.")
+		end
+	end)
+
+	concommand.Add("cuttape", function(ply)
+		if not IsValid(ply) or not ply:Alive() then return end
+		if IsValid(ply.FakeRagdoll) then return end
+
+		local wep = ply:GetActiveWeapon()
+		if not IsValid(wep) then return end
+
+		local isSharp = wep.DamageType and bit.band(wep.DamageType, DMG_SLASH) == DMG_SLASH
+		if not isSharp then
+			ply:ChatPrint("You need a sharp weapon to cut tape.")
+			return
+		end
+
+		local tr = util.TraceLine({
+			start = ply:EyePos(),
+			endpos = ply:EyePos() + ply:GetAimVector() * 150,
+			filter = ply,
+			mask = MASK_ALL,
+		})
+
+		if not tr.Hit or not IsValid(tr.Entity) or not tr.Entity:IsRagdoll() then
+			ply:ChatPrint("Look at a ragdoll with tape.")
+			return
+		end
+
+		local ent = tr.Entity
+		if ent.ducttaped_hands then
+			RemoveLimbTape(ent, "hands")
+			ent:EmitSound("physics/cardboard/cardboard_box_break" .. math.random(1, 3) .. ".wav", 65)
+			ply:ChatPrint("Cut hand tape.")
+		elseif ent.ducttaped_legs then
+			RemoveLimbTape(ent, "legs")
+			ent:EmitSound("physics/cardboard/cardboard_box_break" .. math.random(1, 3) .. ".wav", 65)
+			ply:ChatPrint("Cut leg tape.")
+		else
+			ply:ChatPrint("This ragdoll has no tape.")
+		end
 	end)
 end

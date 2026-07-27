@@ -625,3 +625,62 @@ function SWEP:CreateFake(ragdoll)
 
 	ent:SetNoDraw(true)
 end
+
+local function PhysCallback(ent, data)
+	if data.DeltaTime < 0.2 then return end
+	ent:EmitSound(Sound(ent.FallSnd))
+end
+
+function SWEP:SpawnGarbage(mdl_custom, skin_custom, snd_custom, clr_custom, bgs_custom)
+	if CLIENT then return end
+
+	local owner = self:GetOwner()
+	if not IsValid(owner) then return end
+
+	local boneid
+	if owner:IsPlayer() then
+		local chr = hg.GetCurrentCharacter(owner)
+		boneid = chr:LookupBone(((owner.organism and owner.organism.rarmamputated) or (owner.zmanipstart ~= nil and owner.zmanipseq == "interact" and not owner.organism.larmamputated)) and "ValveBiped.Bip01_L_Hand" or "ValveBiped.Bip01_R_Hand")
+	else
+		boneid = owner:LookupBone("ValveBiped.Bip01_R_Hand") or 1
+	end
+
+	if not boneid then return end
+	local matrix = owner:GetBoneMatrix(boneid)
+	if not matrix then return end
+
+	local ent = ents.Create("prop_physics")
+	ent:SetModel(Model((mdl_custom and mdl_custom ~= "" and mdl_custom ~= nil and isstring(mdl_custom)) and mdl_custom or self.WorldModel))
+
+	if skin_custom and skin_custom ~= nil and isnumber(skin_custom) then
+		ent:SetSkin(skin_custom or 0)
+	end
+
+	ent:SetPos(matrix:GetTranslation())
+	ent:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+	ent:SetAngles(AngleRand(-180, 180))
+	ent:Activate()
+	ent:Spawn()
+	ent:SetOwner(owner)
+	ent.FallSnd = Sound((snd_custom and snd_custom ~= nil) and snd_custom or self.FallSnd or "")
+
+	if clr_custom and clr_custom ~= nil and IsColor(clr_custom) then
+		ent:SetColor(clr_custom)
+	else
+		ent:SetColor(Color(200, 200, 200))
+	end
+
+	if bgs_custom and bgs_custom ~= nil and isstring(bgs_custom) then
+		ent:SetBodyGroups(bgs_custom)
+	end
+
+	local phys = ent:GetPhysicsObject()
+	if IsValid(phys) then
+		phys:SetVelocity(self:GetVelocity() + (owner:GetAimVector() * 200) + VectorRand(-50, 50))
+		phys:AddAngleVelocity(VectorRand(-100, 100))
+	end
+
+	ent:AddCallback("PhysicsCollide", PhysCallback)
+
+	SafeRemoveEntityDelayed(ent, 60)
+end

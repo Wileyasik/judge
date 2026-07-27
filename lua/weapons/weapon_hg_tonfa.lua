@@ -6,7 +6,7 @@ SWEP.Category = "Weapons - Melee"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 
-SWEP.WorldModel = "models/weapons/tacint_melee/w_tonfa.mdl"
+SWEP.WorldModel = "models/cof/weapons/nightstick/w_nightstick.mdl"
 SWEP.WorldModelReal = "models/cof/weapons/nightstick/v_nightstick.mdl"
 SWEP.ViewModel = ""
 
@@ -113,3 +113,6 @@ SWEP.AttackTimeLength = 0.155
 SWEP.AttackRads = 85
 
 SWEP.SwingAng = -90
+
+function SWEP:SecondaryAttack(override)
+end
