@@ -6,15 +6,14 @@ SWEP.Category = "Weapons - Melee"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 
-SWEP.WorldModel = "models/weapons/w_jjife_t.mdl"
-SWEP.WorldModelReal = "models/weapons/tfa_nmrih/v_me_hatchet.mdl"
-SWEP.WorldModelExchange = "models/weapons/tacint_melee/w_tonfa.mdl"
+SWEP.WorldModel = "models/weapons/tacint_melee/w_tonfa.mdl"
+SWEP.WorldModelReal = "models/cof/weapons/nightstick/v_nightstick.mdl"
 SWEP.ViewModel = ""
 
 SWEP.HoldType = "melee"
 SWEP.weight = 0.6
 
-SWEP.HoldPos = Vector(-12,0,0)
+SWEP.HoldPos = Vector(-5,0,0)
 SWEP.HoldAng = Angle(0,0,0)
 
 SWEP.AttackTime = 0.3
@@ -66,7 +65,6 @@ SWEP.swingsoundextra = {
 
 SWEP.DamageType = DMG_CLUB
 SWEP.DamagePrimary = 18
-SWEP.DamageSecondary = 13
 
 SWEP.PenetrationPrimary = 3
 SWEP.PenetrationSecondary = 3
@@ -79,7 +77,7 @@ SWEP.PenetrationSizeSecondary = 2
 SWEP.StaminaPrimary = 12
 SWEP.StaminaSecondary = 8
 
-SWEP.AttackLen1 = 43
+SWEP.AttackLen1 = 50
 SWEP.AttackLen2 = 30
 
 SWEP.BlockTier = 2
@@ -87,12 +85,11 @@ SWEP.BlockMaterial = "none"
 SWEP.BlockSound = {"Plastic_Box.ImpactHard", 68, {95, 102}}
 
 SWEP.AnimList = {
-    ["idle"] = "Idle",
-    ["deploy"] = "Draw",
-    ["attack"] = "Attack_Quick",
+    ["idle"] = "idle1",
+    ["deploy"] = "draw",
+    ["attack"] = "attack1",
     ["attack2"] = "Shove",
 }
-
 
 if CLIENT then
 	SWEP.WepSelectIcon = Material("vgui/wep_zac_hmcd_policebaton")
@@ -127,17 +124,13 @@ function SWEP:CanPrimaryAttack()
 end
 ]]
 
-function SWEP:CanSecondaryAttack()
-    return false
-end
-
 function SWEP:CustomBlockAnim(addPosLerp, addAngLerp)
-    addPosLerp.z = addPosLerp.z + (self:GetBlocking() and -14 or 0)
-    addPosLerp.x = addPosLerp.x + (self:GetBlocking() and 13.4 or 0)
-    addPosLerp.y = addPosLerp.y + (self:GetBlocking() and -28 or 0)
-    addAngLerp.r = addAngLerp.r + (self:GetBlocking() and -85 or 0)
-    addAngLerp.y = addAngLerp.y + (self:GetBlocking() and 105 or 0)
-    addAngLerp.x = addAngLerp.x + (self:GetBlocking() and -15 or 0)
+    addPosLerp.z = addPosLerp.z + (self:GetBlocking() and 6 or 0)
+    addPosLerp.x = addPosLerp.x + (self:GetBlocking() and -1 or 0)
+    addPosLerp.y = addPosLerp.y + (self:GetBlocking() and 6 or 0)
+    addAngLerp.r = addAngLerp.r + (self:GetBlocking() and 0 or 0)
+    addAngLerp.y = addAngLerp.y + (self:GetBlocking() and 0 or 0)
+    addAngLerp.x = addAngLerp.x + (self:GetBlocking() and 0 or 0)
     
     return true
 end
