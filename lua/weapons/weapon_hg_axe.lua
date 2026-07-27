@@ -246,7 +246,7 @@ function SWEP:ChargeAttackAdd(ent, trace)
     if not org or org.superfighter then return end
 
     -- Head hit: a chance to explode the head outright.
-    if self:IsHeadHit(ent, trace) then
+    if trace and trace.HitGroup == HITGROUP_HEAD then
         if not org.headamputated and not ent.headexploded and math.Rand(0, 1) <= (self.ChargeHeadExplodeChance or 0.35) then
             hg.ExplodeHead(ent)
         end

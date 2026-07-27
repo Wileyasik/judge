@@ -211,12 +211,18 @@ function PLAYER:LegAttack()
     self:EmitSound("player/clothes_generic_foley_0" .. math.random(1,5) .. ".wav",65)
 
     local org = self.organism
-    org.stamina.subadd = org.stamina.subadd + (anim == "curbstomp_base" and 12 or 20) / (org.superfighter and 2 or 1)
+    local staminaCost = (anim == "curbstomp_base" and 12 or 20) / (org.superfighter and 2 or 1)
+    local painPenalty = math.Clamp(org.pain / 80, 0, 1)
+    staminaCost = staminaCost * (1 + painPenalty * 0.5)
+    org.stamina.subadd = org.stamina.subadd + staminaCost
+
     local speedmul = (2 - (org.stamina[1] / org.stamina.max))
+    speedmul = speedmul * (1 + painPenalty * 0.4)
     local speed = 1.5 * speedmul
     local animstopAdjust = 0.3 * speedmul
     local isCurbstomp = anim == "curbstomp_base"
     local dmg = isCurbstomp and 22 or 10 * (2 - speedmul)
+    dmg = dmg * (1 - painPenalty * 0.6)
     dmg = dmg * (self:IsBerserk() and org.berserk * 5 or 1)
     dmg = dmg * (org.legstrength or 1)
     dmg = dmg * (isCurbstomp and CURBSTOMP_DAMAGE_MUL or LEG_KICK_DAMAGE_MUL)
@@ -357,13 +363,22 @@ function PLAYER:LegAttack()
 
                     if ent:IsPlayer() then
                         local fakeChance = isCurbstomp and CURBSTOMP_FAKE_CHANCE or LEG_KICK_FAKE_CHANCE
+                        fakeChance = fakeChance * (1 - painPenalty * 0.5)
+                        fakeChance = fakeChance * math.Clamp(org.stamina[1] / org.stamina.max, 0.3, 1)
                         if math.Rand(0, 1) <= fakeChance then
                             timer.Simple(0,function()
                                 hg.Fake(ent)
                             end)
                         end
 
-                        ent:SetVelocity(normal * playerPush)
+                        local wallTr = util.TraceLine({
+                            start = ent:GetPos() + Vector(0, 0, ent:OBBMaxs().z * 0.5),
+                            endpos = ent:GetPos() + Vector(0, 0, ent:OBBMaxs().z * 0.5) + normal * 32,
+                            filter = {ent, hg.GetCurrentCharacter(self), self}
+                        })
+                        if not wallTr.Hit then
+                            ent:SetVelocity(normal * playerPush)
+                        end
                     end
 
                     if isCurbstomp then

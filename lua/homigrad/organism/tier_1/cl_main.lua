@@ -1196,8 +1196,8 @@ local grubModels = {
 	["rhand"]  = Model("models/limbspartial/kneeright.mdl"),
 	["llegup"] = Model("models/limbspartial/kneeleft.mdl"),
 	["rlegup"] = Model("models/limbspartial/kneeright.mdl"),
-	["larmup"] = Model("models/limbspartial/kneeleft.mdl"),
-	["rarmup"] = Model("models/limbspartial/kneeright.mdl"),
+	["larmup"] = Model("models/limbspartial/shoulderpartial1.mdl"),
+	["rarmup"] = Model("models/limbspartial/shoulderpartial2.mdl"),
 	["head"]   = Model("models/limbspartial/elbowleft.mdl"),
 }
 
@@ -1210,8 +1210,8 @@ local grubScale = {
 	["rhand"]  = 0.7,
 	["llegup"] = 1.2,
 	["rlegup"] = 1.2,
-	["larmup"] = 1.1,
-	["rarmup"] = 1.1,
+	["larmup"] = 1,
+	["rarmup"] = 1,
 	["head"]   = 1.0,
 }
 
@@ -1226,8 +1226,8 @@ local modelPlacements = {
 		["ValveBiped.Bip01_L_Forearm"] = {Vector(14, 0.2, -1), Angle(-90, 0, -0.3)},
 		["ValveBiped.Bip01_R_Hand"] = {Vector(13, 0.4, 0.1), Angle(-93, 0, 0.3)},
 		["ValveBiped.Bip01_L_Hand"] = {Vector(13, 0.3, -0.1), Angle(-93, 0, 0.3)},
-		["ValveBiped.Bip01_L_UpperArm"] = {Vector(12, -3, 0), Angle(0, 90, -90)},
-		["ValveBiped.Bip01_R_UpperArm"] = {Vector(12, -3, 0), Angle(0, 90, -90)},
+		["ValveBiped.Bip01_L_UpperArm"] = {Vector(6.6, -8.5, 0), Angle(-90, -70, -10)},
+		["ValveBiped.Bip01_R_UpperArm"] = {Vector(7.6, -8, 0), Angle(90, 120, 10)},
 		["ValveBiped.Bip01_L_Thigh"] = {Vector(2.8, -9, -1), Angle(0, 10, -90)},
 		["ValveBiped.Bip01_R_Thigh"] = {Vector(-3, -8, -3), Angle(0, -10, -90)},
 	},
@@ -1238,8 +1238,8 @@ local modelPlacements = {
 		["ValveBiped.Bip01_L_Forearm"] = {Vector(15, -0.2, -1), Angle(-90, 0, -0.3)},
 		["ValveBiped.Bip01_R_Hand"] = {Vector(15.3, 0, 0.5), Angle(-93, 0, 0.3)},
 		["ValveBiped.Bip01_L_Hand"] = {Vector(15.3, 0, -0.6), Angle(-93, 0, 0.3)},
-		["ValveBiped.Bip01_L_UpperArm"] = {Vector(12, -2.5, 0), Angle(0, 90, -90)},
-		["ValveBiped.Bip01_R_UpperArm"] = {Vector(12, -2.5, 0), Angle(0, 90, -90)},
+		["ValveBiped.Bip01_L_UpperArm"] = {Vector(6.6, -6, 1), Angle(-90, -70, -10)},
+		["ValveBiped.Bip01_R_UpperArm"] = {Vector(7.3, -6, -1), Angle(90, 120, 10)},
 		["ValveBiped.Bip01_L_Thigh"] = {Vector(4, -9, -1), Angle(0, 10, -90)},
 		["ValveBiped.Bip01_R_Thigh"] = {Vector(-3, -9, -1), Angle(0, -10, -90)},
 	}
