@@ -2614,6 +2614,7 @@ hg.ammotypes = {
 		}
 	},
 	[".50bmgslap"] = {
+		name = ".50 BMG Slap",
 		allowed = true,
 		dmgtype = DMG_BULLET + DMG_AIRBOAT,
 		tracer = TRACER_LINE,
