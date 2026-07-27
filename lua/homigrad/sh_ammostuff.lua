@@ -2613,36 +2613,35 @@ hg.ammotypes = {
 			Icon = matRfileAmmo
 		}
 	},
-	[".50bmgm33"] = {
-		name = ".50 BMG M33",
+	[".50bmgslap"] = {
 		allowed = true,
 		dmgtype = DMG_BULLET + DMG_AIRBOAT,
 		tracer = TRACER_LINE,
 		plydmg = 0,
 		npcdmg = 0,
-		force = 400,
-		maxcarry = 120,
-		minsplash = 15,
-		maxsplash = 15,
+		force = 500,
+		maxcarry = 60,
+		minsplash = 20,
+		maxsplash = 20,
 		TracerSetings = {
 			TracerBody = Material("particle/fire"),
 			TracerTail = Material("effects/laser_tracer"),
-			TracerHeadSize = 8,
-			TracerLength = 200,
-			TracerWidth = 4,
-			TracerColor = Color(255, 237, 155),
+			TracerHeadSize = 10,
+			TracerLength = 250,
+			TracerWidth = 5,
+			TracerColor = Color(255, 200, 100),
 			TracerTPoint1 = 0.25,
 			TracerTPoint2 = 1,
-			TracerSpeed = 35000
+			TracerSpeed = 40000
 		},
 		BulletSettings = {
-			Damage = 200,
-			Force = 120,
-			Penetration = 40,
+			Damage = 350,
+			Force = 200,
+			Penetration = 80,
 			Shell = "50cal",
-			Speed = 887,
+			Speed = 1100,
 			Diameter = 12.7,
-			Mass = 45.9,
+			Mass = 50,
 			Icon = matRfileAmmo
 		}
 	},
@@ -3043,11 +3042,11 @@ local ammoents = {
 		Material = "models/hmcd_ammobox_556",
 		Scale = 1
 	},
-	[".50bmgm33"] = {
+	[".50bmgslap"] = {
 		Material = "models/hmcd_ammobox_792",
 		Scale = 1.6,
-		Color = Color(155, 122, 75),
-		Count = 10,
+		Color = Color(255, 80, 40),
+		Count = 5,
 	},
 }
 

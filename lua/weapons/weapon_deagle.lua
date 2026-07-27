@@ -18,10 +18,7 @@ SWEP.AttachmentPos = Vector(0.05,-0.3,0)
 SWEP.AttachmentAng = Angle(90,0,0)
 SWEP.FakeMagDropBone = 50
 
-SWEP.FakeBodyGroups = "112213121"
-SWEP.FakeBodyGroupsPresets = {
-	"112213121",
-}
+SWEP.FakeBodyGroups = "112213111"
 
 SWEP.FakeVPShouldUseHand = false
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
@@ -81,7 +78,7 @@ if CLIENT then
 				end)
 			end
 		end,
-		[0.33] = function( self, timeMul ) 
+		[0.30] = function( self, timeMul ) 
 			self:GetWM():ManipulateBoneScale(48, vector_origin)
 			for i = 49, 55 do
 				self:GetWM():ManipulateBoneScale(i, vector_origin)

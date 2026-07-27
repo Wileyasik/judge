@@ -92,7 +92,7 @@ SWEP.ViewPunchDiv = 115
 SWEP.Primary.ClipSize = 5
 SWEP.Primary.DefaultClip = 5
 SWEP.Primary.Automatic = false
-SWEP.Primary.Ammo = ".50 BMG M33" 
+SWEP.Primary.Ammo = ".50 BMG Slap"
 SWEP.Primary.Damage = 180
 SWEP.Primary.Force = 60
 SWEP.Primary.Cone = 0
@@ -199,6 +199,32 @@ SWEP.FakeEjectBrassATT = "2"
 
 function SWEP:PrimaryShootPost()
     self.drawBullet = true
+
+    local owner = self:GetOwner()
+    if not IsValid(owner) then return end
+
+    if math.random() <= 0.15 then
+        if CLIENT then return end
+
+        local pos = owner:GetShootPos()
+        local wepClass = self:GetClass()
+
+        util.BlastDamage(self, owner, pos, 200, 80)
+
+        hg.ExplosionEffect(pos, 200, 80)
+
+        local effect = EffectData()
+        effect:SetOrigin(pos)
+        effect:SetScale(1)
+        effect:SetNormal(owner:EyeAngles():Forward())
+        util.Effect("Explosion", effect)
+
+        timer.Simple(0.1, function()
+            if IsValid(owner) and owner:HasWeapon(wepClass) then
+                owner:StripWeapon(wepClass)
+            end
+        end)
+    end
 end
 
 function SWEP:Reload(time)
