@@ -6,9 +6,9 @@ SWEP.Category = "Weapons - Melee"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 
-SWEP.WorldModel = "models/weapons/arc9/darsu_eft/w_melee_rebel_axe.mdl"
+SWEP.WorldModel = "models/weapons/w_melee_rebel_axe.mdl"
 SWEP.WorldModelReal = "models/weapons/tfa_nmrih/v_me_machete.mdl"
-SWEP.WorldModelExchange = "models/weapons/arc9/darsu_eft/w_melee_rebel_axe.mdl"
+SWEP.WorldModelExchange = "models/weapons/w_melee_rebel_axe.mdl"
 SWEP.ViewModel = ""
 SWEP.modelscale = 1.1
 

@@ -7,9 +7,9 @@ SWEP.Category = "Weapons - Melee"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 
-SWEP.WorldModel = "models/weapons/arc9/darsu_eft/w_melee_scythe.mdl"
+SWEP.WorldModel = "models/weapons/w_melee_scythe.mdl"
 SWEP.WorldModelReal = "models/weapons/ravaged/anim_axe_fire.mdl"
-SWEP.WorldModelExchange = "models/weapons/arc9/darsu_eft/w_melee_scythe.mdl"
+SWEP.WorldModelExchange = "models/weapons/w_melee_scythe.mdl"
 SWEP.ViewModel = ""
 SWEP.modelscale = 1.2
 

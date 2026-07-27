@@ -6,9 +6,9 @@ SWEP.Category = "Weapons - Melee"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 
-SWEP.WorldModel = "models/weapons/arc9/darsu_eft/w_melee_mpl40.mdl"
+SWEP.WorldModel = "models/weapons/w_melee_mpl40.mdl"
 SWEP.WorldModelReal = "models/weapons/tfa_nmrih/v_me_pipe_lead.mdl"
-SWEP.WorldModelExchange = "models/weapons/arc9/darsu_eft/w_melee_mpl40.mdl"
+SWEP.WorldModelExchange = "models/weapons/w_melee_mpl40.mdl"
 SWEP.ViewModel = ""
 SWEP.modelscale = 1.15
 
