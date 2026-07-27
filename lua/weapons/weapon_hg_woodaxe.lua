@@ -82,10 +82,9 @@ SWEP.hitsoundextra = {
 }
 
 SWEP.swingsoundextra = {
-    {"bat/baseball_swing_1st_layer_01.wav", 60, {85, 95}},
-    {"bat/baseball_swing_1st_layer_02.wav", 60, {85, 95}},
-    {"bat/baseball_swing_1st_layer_03.wav", 60, {85, 95}},
-    {"bat/baseball_swing_1st_layer_04.wav", 60, {85, 95}},
+    {"weapons/darsu_eft/melee/taran_swing_01.ogg", 90, {95, 105}},
+    {"weapons/darsu_eft/melee/taran_swing_02.ogg", 90, {95, 105}},
+    {"weapons/darsu_eft/melee/taran_swing_03.ogg", 90, {95, 105}},
 }
 
 SWEP.BlockTier = 2
