@@ -133,7 +133,7 @@ SWEP.Primary.SoundEmpty = {"weapons/darsu_eft/val/val_empty.wav", 75, 100, 105, 
 SWEP.Primary.Wait = 0.066
 SWEP.ReloadTime = 3
 
-SWEP.PPSMuzzleEffect = "muzzleflash_FAMAS"
+SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1"
 
 SWEP.CustomShell = "9x39"
 SWEP.ShellEject = "EjectBrass_9x39"

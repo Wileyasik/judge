@@ -141,7 +141,7 @@ SWEP.Primary.Wait = 0.300
 SWEP.ReloadTime = 3.5
 
 
-SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1" -- shared in sh_effects.lua
+SWEP.PPSMuzzleEffect = "pcf_jack_mf_mshotgun" -- shared in sh_effects.lua
 
 SWEP.LocalMuzzlePos = Vector(27.985,-2,-1)
 SWEP.LocalMuzzleAng = Angle(-0.2,0,0)

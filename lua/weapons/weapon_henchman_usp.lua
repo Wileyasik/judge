@@ -215,6 +215,7 @@ SWEP.Primary.SoundEmpty = {"weapons/darsu_eft/usp/usp_fire_dry.ogg", 75, 100, 10
 SWEP.Primary.Force = 22
 SWEP.Primary.Wait = PISTOLS_WAIT
 SWEP.SupressorOnly = true
+SWEP.PPSMuzzleEffect = "pcf_jack_mf_suppressed"
 
 SWEP.DeploySnd = {"homigrad/weapons/draw_pistol.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/holster_pistol.mp3", 55, 100, 110}

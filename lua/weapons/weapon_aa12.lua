@@ -95,7 +95,7 @@ SWEP.Primary.SoundEmpty = {"sound/weapons/darsu_eft/aa12_outdoor_close_loop1.wav
 SWEP.Primary.Wait = 0.300
 SWEP.ReloadTime = 6.5
 
-SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1"
+SWEP.PPSMuzzleEffect = "pcf_jack_mf_mshotgun"
 
 SWEP.LocalMuzzlePos = Vector(18,-3.28,1.82)
 SWEP.LocalMuzzleAng = Angle(0,0,0)

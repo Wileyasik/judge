@@ -168,7 +168,7 @@ SWEP.Primary.Wait = 0.07
 SWEP.ReloadTime = 3
 
 
-SWEP.PPSMuzzleEffect = "muzzleflash_FAMAS"
+SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1"
 
 SWEP.CustomShell = "9x19"
 SWEP.ShellEject = "EjectBrass_9mm"

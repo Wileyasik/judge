@@ -38,6 +38,7 @@ SWEP.IconOverride = "entities/arc9_eft_m3super90.png"
 SWEP.LocalMuzzlePos = Vector(31, -0.7, 4.35)
 SWEP.LocalMuzzleAng = Angle(0.0, -0.0, 0)
 SWEP.WeaponEyeAngles = Angle(-0.7, 0.1, 0)
+SWEP.PPSMuzzleEffect = "pcf_jack_mf_mshotgun"
 
 SWEP.CustomShell = "12x70"
 SWEP.weight = 4

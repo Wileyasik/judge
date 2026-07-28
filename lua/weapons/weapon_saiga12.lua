@@ -114,7 +114,7 @@ SWEP.AnimShootMul = 3
 SWEP.AnimShootHandMul = 10
 SWEP.ReloadTime = 3
 
-SWEP.PPSMuzzleEffect = "muzzleflash_m3"
+SWEP.PPSMuzzleEffect = "pcf_jack_mf_mshotgun"
 
 SWEP.DeploySnd = {"homigrad/weapons/draw_hmg.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/hmg_holster.mp3", 55, 100, 110}

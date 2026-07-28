@@ -90,6 +90,7 @@ SWEP.availableAttachments = {
 SWEP.LocalMuzzlePos = Vector(27.531,0.388,1.044)
 SWEP.LocalMuzzleAng = Angle(0.2,0,0)
 SWEP.WeaponEyeAngles = Angle(0,0,0)
+SWEP.PPSMuzzleEffect = "pcf_jack_mf_mshotgun"
 
 SWEP.Ergonomics = 0.9
 SWEP.AnimShootMul = 3

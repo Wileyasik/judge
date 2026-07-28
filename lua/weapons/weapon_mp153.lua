@@ -39,6 +39,7 @@ SWEP.IconOverride = "entities/arc9_eft_mr153.png"
 SWEP.LocalMuzzlePos = Vector(32.2, -0.66, 4.45)
 SWEP.LocalMuzzleAng = Angle(0, -0.0, 0)
 SWEP.WeaponEyeAngles = Angle(-0.7, 0.1, 0)
+SWEP.PPSMuzzleEffect = "pcf_jack_mf_mshotgun"
 
 SWEP.CustomShell = "12x70"
 SWEP.ReloadSound = "weapons/remington_870/870_shell_in_1.wav"

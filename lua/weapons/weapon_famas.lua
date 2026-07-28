@@ -144,7 +144,7 @@ SWEP.availableAttachments = {
 SWEP.ReloadTime = 2.5
 
 
-SWEP.PPSMuzzleEffect = "muzzleflash_FAMAS" -- shared in sh_effects.lua
+SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1" -- shared in sh_effects.lua
 
 SWEP.HoldType = "rpg"
 SWEP.ZoomPos = Vector(-3, -1.46, 4.0211)

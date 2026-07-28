@@ -216,7 +216,7 @@ SWEP.Primary.SoundEmpty = {"weapons/mk18/mk18_empty.wav", 75, 100, 105, CHAN_WEA
 SWEP.Primary.Wait = 0.1
 SWEP.ReloadTime = 3
 
-SWEP.PPSMuzzleEffect = "muzzleflash_FAMAS"
+SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1"
 
 SWEP.CustomShell = "556"
 SWEP.ShellEject = "EjectBrass_556"

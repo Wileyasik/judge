@@ -149,7 +149,7 @@ SWEP.LocalMuzzlePos = Vector(20,-0.022,2.758)
 SWEP.LocalMuzzleAng = Angle(0,0,0)
 SWEP.WeaponEyeAngles = Angle(0,0,0)
 
-SWEP.PPSMuzzleEffect = "muzzleflash_svd" -- shared in sh_effects.lu
+SWEP.PPSMuzzleEffect = "pcf_jack_mf_mshotgun" -- shared in sh_effects.lu
 
 SWEP.ShockMultiplier = 2
 
