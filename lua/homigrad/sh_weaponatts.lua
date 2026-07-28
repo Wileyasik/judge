@@ -842,6 +842,178 @@ hg.attachments.sight = {
 		transformFunction = function(self,model,vecadd,ang) -- in transformfunction
 		end,
 	},
+	["optic14"] = {
+		"sight",
+		"models/weapons/mods/scope_elcan_specter.mdl",
+		Angle(0, 0, -90),
+		offset = Vector(0, -0.25, -0.04),
+		offsetView = Vector(-1.65, 0, 7),
+		{},
+		mountType = "picatinny",
+		scopemat = Material("decals/scope.png"),
+		mat = Material("effects/arc9/rt"),
+		perekrestie = Material("vgui/arc9_eft_shared/reticles/scope_all_elcan_specter_dr_marks.png"),
+		localScopePos = Vector(7, 0, 1.65),
+		scope_blackout = 1200,
+		rot = 0,
+		FOVMin = 16,
+		FOVMax = 26,
+		FOVScoped = 40,
+		blackoutsize = 4500,
+		sizeperekrestie = 4500,
+		perekrestieSize = false,
+		PhysModel = "models/hunter/plates/plate025.mdl",
+		PhysPos = Vector(1, 0, 0),
+		PhysAng = Angle(0, 90, 0),
+
+		drawFunction = function(self,model)
+			if not model.submated then
+				model:SetSubMaterial(1,"effects/arc9/rt")
+				model.submated = true
+			end
+		end,
+
+		sightFunction = function(self)
+			self:DoRT()
+		end,
+
+		transformFunction = function(self,model,vecadd,ang)
+		end,
+		valid = true,
+	},
+	["optic15"] = {
+		"sight",
+		"models/weapons/arc9/darsu_eft/mods/optic_reapir.mdl",
+		Angle(0, 0, -90),
+		offset = Vector(-0, 0, -0.04),
+		offsetView = Vector(-1.65, 0, 7),
+		{},
+		mountType = "picatinny",
+		scopemat = Material("decals/scope.png"),
+		mat = Material("effects/arc9/rt"),
+		perekrestie = Material("vgui/arc9_eft_shared/reticles/reap_ir_reticle.png"),
+		localScopePos = Vector(7, 0, 1.65),
+		scope_blackout = 1200,
+		rot = 0,
+		FOVMin = 10,
+		FOVMax = 10,
+		FOVScoped = 40,
+		blackoutsize = 3900,
+		sizeperekrestie = 1500,
+		perekrestieSize = false,
+		thermal = true,
+		mount = "models/weapons/mods/mount_reapir.mdl",
+		mountVec = Vector(-0.15, 0, 0),
+		mountAng = Angle(0, 0, 0),
+		PhysModel = "models/hunter/plates/plate025.mdl",
+		PhysPos = Vector(1, 0, 0),
+		PhysAng = Angle(0, 90, 0),
+
+		drawFunction = function(self,model)
+			if not model.submated then
+				model:SetSubMaterial(1,"effects/arc9/rt")
+				model.submated = true
+			end
+		end,
+
+		sightFunction = function(self)
+			self:DoRT()
+		end,
+
+		transformFunction = function(self,model,vecadd,ang)
+		end,
+		valid = true,
+	},
+	["holo18"] = {
+		"sight",
+		"models/weapons/mods/scope_elcan_specter_hco.mdl",
+		Angle(0, 0, -90),
+		offset = Vector(0, 0, -0.02),
+		offsetView = Vector(-1.75, 0, 8),
+		{},
+		mountType = "picatinny",
+		holotex = "models/weapons/arc9_eft_shared/atts/optic/transparent_glass",
+
+		holo = Material("vgui/arc9_eft_shared/reticles/new/scope_all_elcan_specter_hco_lod0_mark.png"),
+		holo_size = CLIENT and ScreenScale(0.45) or 1,
+		PhysModel = "models/hunter/plates/plate025.mdl",
+		PhysPos = Vector(0, 0, 0),
+		PhysAng = Angle(0, 90, 0),
+		valid = true,
+	},
+	["holo19"] = {
+		"sight",
+		"models/weapons/mods/scope_all_vortex_razor_amg_uh-1.mdl",
+		Angle(0, 0, -90),
+		offset = Vector(-1, 0, 0.01),
+		offsetView = Vector(-1.75, 0, 8),
+		{},
+		mountType = "picatinny",
+		holotex = "models/weapons/arc9_eft_shared/atts/optic/transparent_glass",
+
+		holo = Material("vgui/arc9_eft_shared/reticles/new/scope_all_vortex_razor_amg_uh-1_marks.png"),
+		holo_size = CLIENT and ScreenScale(0.35) or 1,
+		PhysModel = "models/hunter/plates/plate025.mdl",
+		PhysPos = Vector(0, 0, 0),
+		PhysAng = Angle(0, 90, 0),
+		valid = true,
+	},
+	["holo_boss"] = {
+		"sight",
+		"models/weapons/mods/scope_wilcox_boss.mdl",
+		Angle(0, 0, -90),
+		offset = Vector(0, 0, -0.02),
+		offsetView = Vector(-1.8, 0, 9),
+		{},
+		mountType = "picatinny",
+		holotex = "models/weapons/arc9_eft_shared/atts/optic/transparent_glass",
+
+		holo = Material("vgui/arc9_eft_shared/reticles/new/scope_all_wilcox_boss_xe_hp_mark_001.png"),
+		holo_size = CLIENT and ScreenScale(0.4) or 1,
+		PhysModel = "models/hunter/plates/plate025.mdl",
+		PhysPos = Vector(0, 0, 0),
+		PhysAng = Angle(0, 90, 0),
+		valid = true,
+	},
+	["optic16"] = {
+		"sight",
+		"models/weapons/mods/scope_monstrum_compact_prism.mdl",
+		Angle(0, 0, -90),
+		offset = Vector(0, 0, -0.02),
+		offsetView = Vector(-1.5, 0, 9),
+		{},
+		mountType = "picatinny",
+		scopemat = Material("decals/scope.png"),
+		mat = Material("effects/arc9/rt"),
+		perekrestie = Material("vgui/arc9_eft_shared/reticles/scope_all_monstrum_compact_prism_scope_2x32_mark_0.png"),
+		localScopePos = Vector(7, 0, 1.45),
+		scope_blackout = 1200,
+		rot = 0,
+		FOVMin = 10,
+		FOVMax = 10,
+		FOVScoped = 40,
+		blackoutsize = 4500,
+		sizeperekrestie = 3000,
+		perekrestieSize = false,
+		PhysModel = "models/hunter/plates/plate025.mdl",
+		PhysPos = Vector(1, 0, 0),
+		PhysAng = Angle(0, 90, 0),
+
+		drawFunction = function(self,model)
+			if not model.submated then
+				model:SetSubMaterial(1, "effects/arc9/rt")
+				model.submated = true
+			end
+		end,
+
+		sightFunction = function(self)
+			self:DoRT()
+		end,
+
+		transformFunction = function(self,model,vecadd,ang)
+		end,
+		valid = true,
+	},
 	["ironsight1"] = {
 		"sight",
 		"models/weapons/arc9_eft_shared/atts/ironsight/eft_rearsight_mbus.mdl",
@@ -924,6 +1096,9 @@ function hg.attachmentFunc(self, attachmentData)
 	self.FOVScoped = attachmentData.FOVScoped or self.FOVScoped
 	self.blackoutsize = attachmentData.blackoutsize or self.blackoutsize
 	self.sizeperekrestie = attachmentData.sizeperekrestie or self.sizeperekrestie
+	if attachmentData.thermal ~= nil then
+		self.thermal = attachmentData.thermal
+	end
 end
 
 hg.attachments.mount = {
@@ -1457,6 +1632,10 @@ local attNames = {
 	["holo1"] = "EOTech 552",
 	["holo2"] = "KOBRA ЭКП-8-18",
 	["holo17"] = "Aimpoint COMP M2",
+	["holo18"] = "Elcan Specter HCO",
+	["holo19"] = "Vortex Razor AMG UH-1",
+	["holo_boss"] = "Wilcox Boss",
+	["optic16"] = "Monstrum Compact Prism",
 	["optic2"] = "Fullfield TAC 30",
 	["optic3"] = "Валдай ПС-320 1x/6x",
 	["optic4"] = "ПСО-1",
@@ -1493,6 +1672,8 @@ local attNames = {
 	["optic9"] = "Trijicon \"ACOG TA01NSN 4x32\"",
 	["optic12"] = "Sight for kar98k",
 	["optic13"] = "PAG-17 optical sight",
+	["optic14"] = "Elcan SpecterDR 1x/4x",
+	["optic15"] = "REAP-IR thermal scope",
 	["holo15"] = "SIG Sauer \"ROMEO4\"",
 	["holo16"] = "Trijicon \"RMR\"",
 	["grip_ak74"] = "Standart Handle AK-74",
@@ -1527,6 +1708,10 @@ local attachmentsIcons = {
 	["holo1"] = "vgui/icons/sights_eotech",
 	["holo2"] = "vgui/icons/sights_kobra",
 	["holo17"] = "entities/eft_attachments/scopes/compm4.png",
+	["holo18"] = "entities/eft_attachments/scopes/elcan.png",
+	["holo19"] = "entities/eft_attachments/scopes/uh1.png",
+	["holo_boss"] = "entities/eft_attachments/scopes/boss.png",
+	["optic16"] = "entities/eft_attachments/scopes/monstrum.png",
 	["optic2"] = "entities/eft_attachments/scopes/30mmtac30.png",
 	["optic3"] = "entities/eft_attachments/scopes/ps320.png",
 	["optic4"] = "entities/eft_attachments/scopes/s_pso1m2.png",
@@ -1559,6 +1744,8 @@ local attachmentsIcons = {
 	["optic11"] = "entities/eft_attachments/scopes/s_pso1m2.png",
 	["optic12"] = "entities/eft_attachments/scopes/30mmvudu.png",
 	["optic13"] = "entities/ent_jack_gmod_ezarmor_pvs14nvm.png",
+	["optic14"] = "entities/eft_attachments/scopes/elcan.png",
+	["optic15"] = "entities/eft_attachments/scopes/reapir.png",
 	["holo15"] = "entities/eft_attachments/scopes/romeo4.png",
 	["holo16"] = "entities/eft_attachments/scopes/rmr.png",
 	["laser4"] = "vgui/icons/laser_long",

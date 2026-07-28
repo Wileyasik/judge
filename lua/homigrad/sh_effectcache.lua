@@ -32,7 +32,8 @@ local toPrecache = {
     "muzzleflash_MINIMI",
     "muzzleflash_svd",
     "new_ar2_muzzle",
-    "NMRIH_EXTINGUISHER"
+    "NMRIH_EXTINGUISHER",
+    "btm_muzzleflash"
 }
 
 for k, v in ipairs(toPrecache) do

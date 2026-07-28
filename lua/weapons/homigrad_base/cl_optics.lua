@@ -2,6 +2,19 @@ AddCSLuaFile()
 --
 local delta = 0
 local color_red = Color(255, 0, 0)
+local thermalWhiteMat = CreateMaterial("cl_optics_thermal_white", "VertexLitGeneric", {
+	["$basetexture"] = "vgui/white",
+	["$model"] = 1,
+	["$vertexcolor"] = 1,
+	["$vertexalpha"] = 1
+})
+
+local thermalCopyMat = CreateMaterial("cl_optics_thermal_copy", "UnlitGeneric", {
+	["$basetexture"] = "thermal_rt",
+	["$ignorez"] = 1,
+	["$vertexcolor"] = 1,
+	["$nocull"] = 1
+})
 
 hook.Add("HG.InputMouseApply", "ChangeZoom", function(tbl)
 	local ply = LocalPlayer()
@@ -36,6 +49,14 @@ local rtmat = GetRenderTargetEx("huy-glass22",
 	RT_SIZE_NO_CHANGE,
 	MATERIAL_RT_DEPTH_SHARED,
 	bit.bor(2, 256),
+	0,
+	IMAGE_FORMAT_BGR888
+)
+local thermalRT = GetRenderTargetEx("thermal_rt",
+	rtsize, rtsize,
+	RT_SIZE_NO_CHANGE,
+	MATERIAL_RT_DEPTH_SHARED,
+	1,
 	0,
 	IMAGE_FORMAT_BGR888
 )
@@ -226,6 +247,55 @@ function SWEP:DoRT()
 		
 		if dist > 2048 then
 			render.Clear(0, 0, 0, 255)
+		end
+
+		if self.thermal then
+			render.PushRenderTarget(thermalRT, 0, 0, rtsize, rtsize)
+			render.Clear(1, 1, 1, 255)
+			render.RenderView(rt)
+			render.PopRenderTarget()
+
+			cam.Start2D()
+				surface.SetDrawColor(0, 0, 0, 255)
+				surface.DrawRect(0, 0, rtsize, rtsize)
+
+				surface.SetDrawColor(50, 50, 50, 255)
+				surface.SetMaterial(thermalCopyMat)
+				surface.DrawTexturedRect(0, 0, rtsize, rtsize)
+			cam.End2D()
+			cam.Start3D()
+				render.SuppressEngineLighting(true)
+				render.MaterialOverride(thermalWhiteMat)
+				render.OverrideDepthEnable(true, false)
+
+				for _, v in ipairs(player.GetAll()) do
+					if v:IsPlayer() and v ~= owner then
+						v:DrawModel()
+						local ragdoll = v:GetRagdollEntity()
+						if IsValid(ragdoll) then
+							ragdoll:DrawModel()
+						end
+					end
+				end
+
+				for _, ent in ipairs(ents.GetAll()) do
+					if IsValid(ent) then
+						if ent:IsRagdoll() then
+							ent:DrawModel()
+						elseif ent:IsNPC() then
+							ent:DrawModel()
+						end
+					end
+				end
+
+				if IsValid(owner.FakeRagdoll) then
+					owner.FakeRagdoll:DrawModel()
+				end
+
+				render.OverrideDepthEnable(false, true)
+				render.MaterialOverride(nil)
+				render.SuppressEngineLighting(false)
+			cam.End3D()
 		end
 
 		render.PushFilterMin(TEXFILTER.ANISOTROPIC)
