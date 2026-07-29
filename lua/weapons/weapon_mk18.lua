@@ -199,6 +199,7 @@ SWEP.ScrappersSlot = "Primary"
 
 SWEP.DistSound = "weapons/mk18/mk18_dist.wav"
 
+SWEP.StartAtt = {"optic21"}
 SWEP.availableAttachments = {
 	barrel = {
         [1] = {"supressor11", Vector(0, 0, 0), {}},

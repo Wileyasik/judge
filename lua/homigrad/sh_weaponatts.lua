@@ -26,15 +26,19 @@ hg.attachments.sight = {
 	},
 	["holo2"] = {
 		"sight",
-		"models/weapons/tfa_ins2/upgrades/phy_optic_kobra.mdl",
+		"models/weapons/mods/scope_all_aksion_ekp_8_18.mdl",
 		Angle(0, 0, -90),
 		offset = Vector(-1, 0, -0.02),
-		offsetView = Vector(-1.3, -0.03, 9),
+		offsetView = Vector(-1.7, -0.03, 8),
 		{},
 		mountType = "picatinny",
-		holotex = "models/weapons/tfa_ins2/optics/kobra_lense",
-		holo = Material("vgui/arc9_eft_shared/reticles/new/scope_all_aksion_ekp_8_18_marks_03a"),
+		holotex = "models/weapons/arc9_eft_shared/atts/optic/transparent_glass",
+
+		holo = Material("vgui/arc9_eft_shared/reticles/scope_all_ekb_okp7_true_marks.png"),
 		holo_size = CLIENT and ScreenScale(0.35) or 1, --size of the holo
+		PhysModel = "models/hunter/plates/plate025.mdl",
+		PhysPos = Vector(1, 0, 0),
+		PhysAng = Angle(0, 90, 0),
 		valid = true,
 	},
 	["holo3"] = {
@@ -1081,6 +1085,157 @@ hg.attachments.sight = {
 		end,
 		valid = true,
 	},
+	["optic19"] = {
+		"sight",
+		"models/weapons/mods/scope_nightforce_atacr.mdl",
+		Angle(0, 0, -90),
+		offset = Vector(0, 1.3, -0.04),
+		offsetView = Vector(-0, 0, 12),
+		{},
+		mountType = "picatinny",
+		scopemat = Material("decals/scope.png"),
+		mat = Material("effects/arc9/rt"),
+		perekrestie = Material("vgui/arc9_eft_shared/reticles/scope_34mm_nightforce_atacr_7_35x56_marks.png"),
+		localScopePos = Vector(0, 0, 0),
+		scope_blackout = 1200,
+		rot = 0,
+		FOVMin = 4,
+		FOVMax = 22,
+		FOVScoped = 55,
+		blackoutsize = 4500,
+		sizeperekrestie = 4500,
+		perekrestieSize = false,
+		mount = "models/weapons/mods/mount_all_jp_enterprises_ftsm.mdl",
+		mountVec = Vector(-1, 0, -1.4),
+		mountAng = Angle(0, 0, 0),
+		PhysModel = "models/hunter/plates/plate025.mdl",
+		PhysPos = Vector(1, 0, 0),
+		PhysAng = Angle(0, 90, 0),
+
+		drawFunction = function(self,model) -- in swep:drawattachment
+			model:SetSubMaterial(3,"hg/scope_lens")
+		end,
+
+		sightFunction = function(self)
+			self:DoRT()
+		end,
+
+		transformFunction = function(self, model, vecadd, ang)
+		end,
+		valid = true,
+	},
+	["optic21"] = {
+		"sight",
+		"models/weapons/mods/scope_sb_pm_ii_1_8x24.mdl",
+		Angle(0, 0, -90),
+		offset = Vector(3, 1.3, -0.04),
+		offsetView = Vector(-0, 0, 15),
+		{},
+		mountType = "picatinny",
+		scopemat = Material("decals/scope.png"),
+		mat = Material("effects/arc9/rt"),
+		perekrestie = Material("vgui/arc9_eft_shared/reticles/adjustable/pm_ii_1-8x24_mark_q.png"),
+		localScopePos = Vector(12, 0, 0),
+		scope_blackout = 1200,
+		rot = 0,
+		FOVMin = 4,
+		FOVMax = 22,
+		FOVScoped = 40,
+		blackoutsize = 3600,
+		sizeperekrestie = 5500,
+		perekrestieSize = false,
+		mount = "models/weapons/mods/mount_all_jp_enterprises_ftsm.mdl",
+		mountVec = Vector(-2.3, 0, -1.4),
+		mountAng = Angle(0, 0, 0),
+		PhysModel = "models/hunter/plates/plate025.mdl",
+		PhysPos = Vector(1, 0, 0),
+		PhysAng = Angle(0, 90, 0),
+
+		drawFunction = function(self,model) -- in swep:drawattachment
+			model:SetSubMaterial(2,"hg/scope_lens")
+		end,
+
+		sightFunction = function(self)
+			self:DoRT()
+		end,
+
+		transformFunction = function(self, model, vecadd, ang)
+		end,
+		valid = true,
+	},
+	["holo21"] = {
+		"sight",
+		"models/weapons/mods/scope_trijicon_sro.mdl",
+		Angle(0, 0, -90),
+		offset = Vector(-3.1, -0.3, -0.05),
+		offsetView = Vector(-0.8, 0, 8),
+		{},
+		mountType = "picatinny",
+		holotex = "models/weapons/arc9_eft_shared/atts/optic/transparent_glass",
+		holo = Material("vgui/arc9_eft_shared/reticles/new/scope_base_sig_romeo_4_mark.png"),
+		holo_size = CLIENT and ScreenScale(0.8) or 1,
+		PhysModel = "models/hunter/plates/plate025.mdl",
+		PhysPos = Vector(0, 0, 0),
+		PhysAng = Angle(0, 90, 0),
+		valid = true,
+	},
+	["holo22"] = {
+		"sight",
+		"models/weapons/mods/scope_swampfox_justice.mdl",
+		Angle(0, 0, -90),
+			offset = Vector(-3.1, -0.25, -0.05),	
+		offsetView = Vector(-0.7, 0, 8),
+		{},
+		mountType = "picatinny",
+		holotex = "models/weapons/arc9_eft_shared/atts/optic/transparent_glass",
+		holo = Material("vgui/arc9_eft_shared/reticles/new/scope_base_trijicon_rmr_mark.png"),
+		holo_size = CLIENT and ScreenScale(0.4) or 1,
+		PhysModel = "models/hunter/plates/plate025.mdl",
+		PhysPos = Vector(0, 0, 0),
+		PhysAng = Angle(0, 90, 0),
+		valid = true,
+	},
+	["optic22"] = {
+		"sight",
+		"models/weapons/mods/scope_vulcan_mg35x.mdl",
+		Angle(0, 0, -90),
+		offset = Vector(-1, 0.4, -0.08),
+		offsetView = Vector(-1.6, 0, 10),
+		{},
+		mountType = "picatinny",
+		scopemat = Material("decals/scope.png"),
+		mat = Material("effects/arc9/rt"),
+		perekrestie = Material("vgui/arc9_eft_shared/reticles/scope_base_armasight_vulcan_gen3_bravo_mg_35x_marks.png"),
+		localScopePos = Vector(7, 0, 1.6),
+		scope_blackout = 1200,
+		rot = 0,
+		FOVMin = 15,
+		FOVMax = 15,
+		FOVScoped = 40,
+		blackoutsize = 4500,
+		sizeperekrestie = 3000,
+		perekrestieSize = true,
+		stableReticle = true,
+		nightvision = true,
+		mount = "models/weapons/mods/mount_zeus_pro.mdl",
+		mountVec = Vector(0.7, 0, -0.3),
+		mountAng = Angle(0, 0, 0),
+		PhysModel = "models/hunter/plates/plate025.mdl",
+		PhysPos = Vector(1, 0, 0),
+		PhysAng = Angle(0, 90, 0),
+
+		drawFunction = function(self,model)
+			model:SetSubMaterial(2,"hg/scope_lens")
+		end,
+
+		sightFunction = function(self)
+			self:DoRT()
+		end,
+
+		transformFunction = function(self, model, vecadd, ang)
+		end,
+		valid = true,
+	},
 	["ironsight1"] = {
 		"sight",
 		"models/weapons/arc9_eft_shared/atts/ironsight/eft_rearsight_mbus.mdl",
@@ -1166,6 +1321,7 @@ function hg.attachmentFunc(self, attachmentData)
 	if attachmentData.thermal ~= nil then
 		self.thermal = attachmentData.thermal
 	end
+	self.nightvision = attachmentData.nightvision or false
 end
 
 hg.attachments.mount = {
@@ -1681,6 +1837,7 @@ for placement, tbl in pairs(hg.attachments) do
 end
 
 local attNames = {
+	-- Suppressors
 	["supressor1"] = "KAC AAC Illusion 9 9x19",
 	["supressor2"] = "SIG SRD-9 9x19",
 	["supressor3"] = "Спектехника ТГПА 5.45x39",
@@ -1690,38 +1847,18 @@ local attNames = {
 	["supressor7"] = "ПБС-1 Точмаш 7.62x39",
 	["supressor8"] = "Hexagon ДТКП 7.62x39",
 	["supressor9"] = "SIG SRD762-QD 7.62x51",
-	["supressor16"] = "KAC QDC/PRS 7.62x51",
 	["supressor11"] = "Hekate DT .338 Lapua",
 	["supressor12"] = "Hexagon 12K 12/70",
 	["supressor13"] = "SilencerCo Salvo 12G 12/70",
 	["supressor14"] = "Homemade Suppressor",
 	["supressor15"] = "SilencerCo Hybrid 46 Multi",
+	["supressor16"] = "KAC QDC/PRS 7.62x51",
+
+	-- Holographic sights
 	["holo1"] = "EOTech 552",
 	["holo2"] = "KOBRA ЭКП-8-18",
-	["holo17"] = "Aimpoint COMP M2",
-	["holo18"] = "Elcan Specter HCO",
-	["holo19"] = "Vortex Razor AMG UH-1",
-	["holo_boss"] = "Wilcox Boss",
-	["optic16"] = "Monstrum Compact Prism",
-	["optic2"] = "Fullfield TAC 30",
-	["optic3"] = "Валдай ПС-320 1x/6x",
-	["optic4"] = "ПСО-1",
-	["optic5"] = "Vortex Razor HD Gen.2 1-6x24",
-	["optic11"] = "ПСО-1М2",
-	["laser1"] = "TBL Blue Laser",
-	["laser2"] = "Klesch Laser + Flashlight",
-	["grip1"] = "RK-2",
 	["holo3"] = "ROMEO8T",
 	["holo4"] = "Walther \"MRS\"",
-	["optic6"] = "Leupold Mark 4 LR 6.5-20x50",
-	["laser3"] = "Olight \"Baldr Pro\"",
-	["laser4"] = "TAC ANPEQ2",
-	["optic7"] = "SIG Sauer \"BRAVO4 4X30\"",
-	["optic8"] = "Leupold \"Mark 4 HAMR 4x24mm DeltaPoint\"",
-	["mag1"] = "Rounded mag Glock18 32 Bullets",
-	["grip2"] = "ASh-12 Vertical Grip",
-	["grip3"] = "Magpul AFG Tactical Grip",
-	["grip_akdong"] = "AK-74 Dong Grip",
 	["holo5"] = "\"ОКП-7\"",
 	["holo5fur"] = "\"ОКП-7\" Furry",
 	["holo6"] = "\"ОКП-7\" Dovetail",
@@ -1732,25 +1869,63 @@ local attNames = {
 	["holo11"] = "Trijicon\"SRS-02\"",
 	["holo12"] = "Valday PK-120",
 	["holo13"] = "Valday Krechet",
-	["ironsight1"] = "MBUS backiron and foreiron",
-	["ironsight2"] = "M4A1 Iron Sights",
-	["ironsight3"] = "M4A1 Foreiron",
 	["holo14"] = "EOTech \"XPS3-0\"",
+	["holo15"] = "SIG Sauer \"ROMEO4\"",
+	["holo16"] = "Trijicon \"RMR\"",
+	["holo17"] = "Aimpoint COMP M2",
+	["holo18"] = "Elcan Specter HCO",
+	["holo19"] = "Vortex Razor AMG UH-1",
+	["holo21"] = "Trijicon SRO",
+	["holo22"] = "Swampfox Justice",
+	["holo_boss"] = "Wilcox Boss",
+
+	-- Optical sights
+	["optic2"] = "Fullfield TAC 30",
+	["optic3"] = "Валдай ПС-320 1x/6x",
+	["optic4"] = "ПСО-1",
+	["optic5"] = "Vortex Razor HD Gen.2 1-6x24",
+	["optic6"] = "Leupold Mark 4 LR 6.5-20x50",
+	["optic7"] = "SIG Sauer \"BRAVO4 4X30\"",
+	["optic8"] = "Leupold \"Mark 4 HAMR 4x24mm DeltaPoint\"",
 	["optic9"] = "Trijicon \"ACOG TA01NSN 4x32\"",
+	["optic11"] = "ПСО-1М2",
 	["optic12"] = "Sight for kar98k",
 	["optic13"] = "PAG-17 optical sight",
 	["optic14"] = "Elcan SpecterDR 1x/4x",
 	["optic15"] = "REAP-IR thermal scope",
+	["optic16"] = "Monstrum Compact Prism",
 	["optic17"] = "Armasight Zeus Pro 640 2-16x50 Thermal",
 	["optic18"] = "SIG Sauer ECHO1 1-2x Thermal Reflex Sight",
-	["holo15"] = "SIG Sauer \"ROMEO4\"",
-	["holo16"] = "Trijicon \"RMR\"",
+	["optic19"] = "Nightforce ATACR 7-35x56",
+	["optic21"] = "Schmidt & Bender PM II 1-8x24",
+	["optic22"] = "Armasight Vulcan MG35x NV",
+
+	-- Iron sights
+	["ironsight1"] = "MBUS backiron and foreiron",
+	["ironsight2"] = "M4A1 Iron Sights",
+	["ironsight3"] = "M4A1 Foreiron",
+
+	-- Lasers
+	["laser1"] = "TBL Blue Laser",
+	["laser2"] = "Klesch Laser + Flashlight",
+	["laser3"] = "Olight \"Baldr Pro\"",
+	["laser4"] = "TAC ANPEQ2",
+	["laser5"] = "AccuBow Laser",
+
+	-- Grips
+	["grip1"] = "RK-2",
+	["grip2"] = "ASh-12 Vertical Grip",
+	["grip3"] = "Magpul AFG Tactical Grip",
 	["grip_ak74"] = "Standart Handle AK-74",
 	["grip1_ak74"] = "Grip Handle AK-74",
-	["laser5"] = "AccuBow Laser",
+	["grip_akdong"] = "AK-74 Dong Grip",
+
+	-- Magazines
+	["mag1"] = "Rounded mag Glock18 32 Bullets",
 }
 
 local attachmentsIcons = {
+	-- Suppressors
 	-- 9x19
 	["supressor1"] = "entities/eft_attachments/muzzles/illusion.png",
 	["supressor2"] = "entities/eft_attachments/muzzles/srd9.png",
@@ -1774,28 +1949,12 @@ local attachmentsIcons = {
 	-- other
 	["supressor14"] = "scrappers/homemadesuppressor.png",
 	["supressor15"] = "entities/eft_attachments/muzzles/hybridslinecer.png",
+
+	-- Holographic sights
 	["holo1"] = "vgui/icons/sights_eotech",
-	["holo2"] = "vgui/icons/sights_kobra",
-	["holo17"] = "entities/eft_attachments/scopes/compm4.png",
-	["holo18"] = "entities/eft_attachments/scopes/elcan.png",
-	["holo19"] = "entities/uh1.png",
-	["holo_boss"] = "entities/boss.png",
-	["optic16"] = "entities/compact.png",
-	["optic2"] = "entities/eft_attachments/scopes/30mmtac30.png",
-	["optic3"] = "entities/eft_attachments/scopes/ps320.png",
-	["optic4"] = "entities/eft_attachments/scopes/s_pso1m2.png",
-	["optic5"] = "entities/eft_attachments/scopes/30mmrazor.png",
-	["laser1"] = "entities/eft_attachments/tactical/tbl.png",
-	["laser2"] = "entities/eft_attachments/tactical/k2iks.png",
-	["grip1"] = "entities/eft_attachments/foregrips/rk2.png",
+	["holo2"] = "entities/kobra.png",
 	["holo3"] = "entities/eft_attachments/scopes/romeo8t.png",
 	["holo4"] = "entities/eft_attachments/scopes/mrs.png",
-	["optic6"] = "entities/eft_attachments/scopes/30mmmark4.png",
-	["laser3"] = "entities/eft_attachments/tactical/baldr.png",
-	["optic7"] = "entities/eft_attachments/scopes/bravo4.png",
-	["optic8"] = "entities/eft_attachments/scopes/hamr.png",
-	["grip2"] = "entities/eft_attachments/foregrips/ash12.png",
-	["grip_akdong"] = "entities/ak74hg.png",
 	["holo5"] = "entities/eft_attachments/scopes/okp7.png",
 	["holo5fur"] = "entities/eft_attachments/scopes/okp7.png",
 	["holo6"] = "entities/eft_attachments/scopes/s_okp.png",
@@ -1806,19 +1965,54 @@ local attachmentsIcons = {
 	["holo11"] = "entities/eft_attachments/scopes/srs02.png",
 	["holo12"] = "entities/eft_attachments/scopes/pk120.png",
 	["holo13"] = "entities/eft_attachments/scopes/krechet.png",
-	["ironsight1"] = "entities/eft_attachments/ironsights/mbus.png",
-	["mag1"] = "entities/eft_attachments/mags/eft_mag_drum545.png",
 	["holo14"] = "entities/eft_attachments/scopes/xps3.png",
+	["holo15"] = "entities/eft_attachments/scopes/romeo4.png",
+	["holo16"] = "entities/eft_attachments/scopes/rmr.png",
+	["holo17"] = "entities/eft_attachments/scopes/compm4.png",
+	["holo18"] = "entities/hco.png",
+	["holo19"] = "entities/uh1.png",
+	["holo21"] = "entities/SRO.png",
+	["holo22"] = "entities/Justice.png",
+	["holo_boss"] = "entities/boss.png",
+
+	-- Optical sights
+	["optic2"] = "entities/eft_attachments/scopes/30mmtac30.png",
+	["optic3"] = "entities/eft_attachments/scopes/ps320.png",
+	["optic4"] = "entities/eft_attachments/scopes/s_pso1m2.png",
+	["optic5"] = "entities/eft_attachments/scopes/30mmrazor.png",
+	["optic6"] = "entities/eft_attachments/scopes/30mmmark4.png",
+	["optic7"] = "entities/eft_attachments/scopes/bravo4.png",
+	["optic8"] = "entities/eft_attachments/scopes/hamr.png",
 	["optic9"] = "entities/eft_attachments/scopes/ta01nsn.png",
 	["optic11"] = "entities/eft_attachments/scopes/s_pso1m2.png",
 	["optic12"] = "entities/eft_attachments/scopes/30mmvudu.png",
 	["optic13"] = "entities/ent_jack_gmod_ezarmor_pvs14nvm.png",
 	["optic14"] = "entities/spectrdrtan.png",
 	["optic15"] = "entities/reapir.png",
-	["holo15"] = "entities/eft_attachments/scopes/romeo4.png",
-	["holo16"] = "entities/eft_attachments/scopes/rmr.png",
+	["optic16"] = "entities/utg.png",
+	["optic17"] = "entities/zeus.png",
+	["optic18"] = "entities/echo.png",
+	["optic19"] = "entities/30mmmarch.png",
+	["optic21"] = "entities/34mmpmii312x50.png",
+	["optic22"] = "entities/vulcan.png",
+
+	-- Iron sights
+	["ironsight1"] = "entities/eft_attachments/ironsights/mbus.png",
+
+	-- Lasers
+	["laser1"] = "entities/eft_attachments/tactical/tbl.png",
+	["laser2"] = "entities/eft_attachments/tactical/k2iks.png",
+	["laser3"] = "entities/eft_attachments/tactical/baldr.png",
 	["laser4"] = "vgui/icons/laser_long",
 	["laser5"] = "entities/laser.png",
+
+	-- Grips
+	["grip1"] = "entities/eft_attachments/foregrips/rk2.png",
+	["grip2"] = "entities/eft_attachments/foregrips/ash12.png",
+	["grip_akdong"] = "entities/ak74hg.png",
+
+	-- Magazines
+	["mag1"] = "entities/eft_attachments/mags/eft_mag_drum545.png",
 }
 
 local attCategoryNames = {

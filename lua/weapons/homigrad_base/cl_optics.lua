@@ -124,6 +124,23 @@ local thermalSourceMat = CreateMaterial("hg_scope_thermal_source_v2", "UnlitGene
 local thermalSensorMat = CreateMaterial("hg_scope_thermal_sensor_mat_v2", "UnlitGeneric", {
 	["$basetexture"] = thermalSensorRT:GetName()
 })
+local nightVisionRT = GetRenderTargetEx("hg_scope_nightvision", rtsize, rtsize,
+	RT_SIZE_NO_CHANGE,
+	MATERIAL_RT_DEPTH_NONE,
+	bit.bor(2, 256),
+	0,
+	IMAGE_FORMAT_BGR888
+)
+local nightVisionSourceMat = CreateMaterial("hg_scope_nightvision_source_v1", "UnlitGeneric", {
+	["$basetexture"] = rtmat:GetName(),
+	["$vertexcolor"] = 1,
+	["$vertexalpha"] = 1,
+	["$translucent"] = 1
+})
+local nightVisionMat = CreateMaterial("hg_scope_nightvision_mat_v1", "UnlitGeneric", {
+	["$basetexture"] = nightVisionRT:GetName()
+})
+local nightVisionLight
 
 local function PixelateThermalView(size)
 	render.PushRenderTarget(thermalSensorRT, 0, 0, thermalSensorSize, thermalSensorSize)
@@ -144,6 +161,46 @@ local function PixelateThermalView(size)
 		render.PopFilterMin()
 		render.PopFilterMag()
 	cam.End2D()
+end
+
+local function DrawNightVisionView(size)
+	render.PushRenderTarget(nightVisionRT, 0, 0, size, size)
+		render.Clear(0, 0, 0, 255)
+		cam.Start2D()
+			surface.SetDrawColor(55, 255, 55, 255)
+			surface.SetMaterial(nightVisionSourceMat)
+			surface.DrawTexturedRect(0, 0, size, size)
+		cam.End2D()
+	render.PopRenderTarget()
+
+	cam.Start2D()
+		surface.SetDrawColor(255, 255, 255, 255)
+		surface.SetMaterial(nightVisionMat)
+		surface.DrawTexturedRect(0, 0, size, size)
+	cam.End2D()
+end
+
+local function UpdateNightVisionLight(owner, view)
+	if not IsValid(nightVisionLight) then
+		nightVisionLight = ProjectedTexture()
+		nightVisionLight:SetTexture("effects/flashlight001")
+		nightVisionLight:SetEnableShadows(false)
+		nightVisionLight:SetConstantAttenuation(0.1)
+		nightVisionLight:SetFarZ(5000)
+	end
+
+	nightVisionLight:SetPos(owner:EyePos())
+	nightVisionLight:SetAngles(view.angles)
+	nightVisionLight:SetFOV(math.Clamp(view.fov + 20, 30, 120))
+	nightVisionLight:SetBrightness(1.5)
+	nightVisionLight:Update()
+end
+
+local function DisableNightVisionLight()
+	if not IsValid(nightVisionLight) then return end
+
+	nightVisionLight:SetBrightness(0)
+	nightVisionLight:Update()
 end
 local mat = Material("huy-glass")
 local mat2 = Material("huy-glass")
@@ -221,6 +278,7 @@ function SWEP:DoRT()
 	local optic
 	local sight, foundatt = self:HasAttachment("sight", "optic")
 	local thermal = foundatt and foundatt.thermal
+	local nightvision = foundatt and foundatt.nightvision
 	local digitalThermal = thermal and sight and (sight[1] == "optic17" or sight[1] == "optic18")
 	
 	if foundatt and self.modelAtt and IsValid(self.modelAtt.sight) then
@@ -319,8 +377,15 @@ function SWEP:DoRT()
 		if thermal then
 			RENDERING_THERMAL_SCOPE = true
 		end
+		if nightvision then
+			UpdateNightVisionLight(owner, rt)
+		end
 
 		render.RenderView(rt)
+
+		if nightvision then
+			DisableNightVisionLight()
+		end
 
 		if thermal then
 			RENDERING_THERMAL_SCOPE = false
@@ -363,6 +428,8 @@ function SWEP:DoRT()
 				DrawColorModify(thermalMonochrome)
 			cam.End2D()
 			PixelateThermalView(rtsize)
+		elseif nightvision then
+			DrawNightVisionView(rtsize)
 		end
 
 		local scopeFilter = thermal and TEXFILTER.POINT or TEXFILTER.ANISOTROPIC
