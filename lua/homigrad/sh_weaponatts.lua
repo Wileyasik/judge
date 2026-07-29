@@ -1007,11 +1007,9 @@ hg.attachments.sight = {
 		"sight",
 		"models/weapons/mods/scope_armasight_zeus_pro.mdl",
 		Angle(0, 0, -90),
-		offset = Vector(0, -0.25, -0),
+		offset = Vector(-1, -0.25, -0),
 		offsetView = Vector(-2, 0, 010),
-		{
-			[2] = "hg/thermal_scope_screen_v2"
-		},
+		{},
 		mountType = "picatinny",
 		scopemat = Material("decals/scope.png"),
 		mat = Material("effects/arc9/rt"),
@@ -1027,11 +1025,20 @@ hg.attachments.sight = {
 		perekrestieSize = true,
 		thermal = true,
 		mount = "models/weapons/mods/mount_reapir.mdl",
-		mountVec = Vector(-0, 0, 0),
+		mountVec = Vector(-1.5, 0, 0),
 		mountAng = Angle(0, 0, 0),
 		PhysModel = "models/hunter/plates/plate025.mdl",
 		PhysPos = Vector(1, 0, 0),
 		PhysAng = Angle(0, 90, 0),
+
+		drawFunction = function(self,model) -- in swep:drawattachment
+			model:SetSubMaterial(3,"hg/scope_lens")
+			if not model.printedLensMaterials then
+				print("=== optic17 lens materials ===")
+				for index, material in ipairs(model:GetMaterials()) do print(index, material) end
+				model.printedLensMaterials = true
+			end
+		end,
 
 		sightFunction = function(self)
 			self:DoRT()
@@ -1046,9 +1053,7 @@ hg.attachments.sight = {
 		Angle(0, 0, -90),
 		offset = Vector(0, -0.25, -0.05),
 		offsetView = Vector(-2, 0, 10),
-		{
-			[1] = "hg/thermal_scope_screen_v2"
-		},
+		{},
 		mountType = "picatinny",
 		scopemat = Material("decals/scope.png"),
 		mat = Material("effects/arc9/rt"),
@@ -1066,6 +1071,15 @@ hg.attachments.sight = {
 		PhysModel = "models/hunter/plates/plate025.mdl",
 		PhysPos = Vector(1, 0, 0),
 		PhysAng = Angle(0, 90, 0),
+
+		drawFunction = function(self,model) -- in swep:drawattachment
+			model:SetSubMaterial(3,"hg/scope_lens")
+			if not model.printedLensMaterials then
+				print("=== optic18 lens materials ===")
+				for index, material in ipairs(model:GetMaterials()) do print(index, material) end
+				model.printedLensMaterials = true
+			end
+		end,
 
 		sightFunction = function(self)
 			self:DoRT()
