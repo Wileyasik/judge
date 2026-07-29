@@ -9,13 +9,6 @@ local thermalWhiteMat = CreateMaterial("cl_optics_thermal_white", "VertexLitGene
 	["$vertexalpha"] = 1
 })
 
-local thermalCopyMat = CreateMaterial("cl_optics_thermal_copy", "UnlitGeneric", {
-	["$basetexture"] = "thermal_rt",
-	["$ignorez"] = 1,
-	["$vertexcolor"] = 1,
-	["$nocull"] = 1
-})
-
 hook.Add("HG.InputMouseApply", "ChangeZoom", function(tbl)
 	local ply = LocalPlayer()
 
@@ -49,14 +42,6 @@ local rtmat = GetRenderTargetEx("huy-glass22",
 	RT_SIZE_NO_CHANGE,
 	MATERIAL_RT_DEPTH_SHARED,
 	bit.bor(2, 256),
-	0,
-	IMAGE_FORMAT_BGR888
-)
-local thermalRT = GetRenderTargetEx("thermal_rt",
-	rtsize, rtsize,
-	RT_SIZE_NO_CHANGE,
-	MATERIAL_RT_DEPTH_SHARED,
-	1,
 	0,
 	IMAGE_FORMAT_BGR888
 )
@@ -250,18 +235,9 @@ function SWEP:DoRT()
 		end
 
 		if self.thermal then
-			render.PushRenderTarget(thermalRT, 0, 0, rtsize, rtsize)
-			render.Clear(1, 1, 1, 255)
-			render.RenderView(rt)
-			render.PopRenderTarget()
-
 			cam.Start2D()
 				surface.SetDrawColor(0, 0, 0, 255)
 				surface.DrawRect(0, 0, rtsize, rtsize)
-
-				surface.SetDrawColor(50, 50, 50, 255)
-				surface.SetMaterial(thermalCopyMat)
-				surface.DrawTexturedRect(0, 0, rtsize, rtsize)
 			cam.End2D()
 			cam.Start3D()
 				render.SuppressEngineLighting(true)

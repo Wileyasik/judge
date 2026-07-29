@@ -866,11 +866,7 @@ hg.attachments.sight = {
 		PhysPos = Vector(1, 0, 0),
 		PhysAng = Angle(0, 90, 0),
 
-		drawFunction = function(self,model)
-			if not model.submated then
-				model:SetSubMaterial(1,"effects/arc9/rt")
-				model.submated = true
-			end
+		drawFunction = function(self,model) -- in swep:drawattachment
 		end,
 
 		sightFunction = function(self)
@@ -883,9 +879,9 @@ hg.attachments.sight = {
 	},
 	["optic15"] = {
 		"sight",
-		"models/weapons/arc9/darsu_eft/mods/optic_reapir.mdl",
+		"models/weapons/mods/optic_reapir.mdl",
 		Angle(0, 0, -90),
-		offset = Vector(-0, 0, -0.04),
+		offset = Vector(0, -0.25, -0.04),
 		offsetView = Vector(-1.65, 0, 7),
 		{},
 		mountType = "picatinny",
@@ -903,24 +899,20 @@ hg.attachments.sight = {
 		perekrestieSize = false,
 		thermal = true,
 		mount = "models/weapons/mods/mount_reapir.mdl",
-		mountVec = Vector(-0.15, 0, 0),
+		mountVec = Vector(-1.5, 0, -1),
 		mountAng = Angle(0, 0, 0),
 		PhysModel = "models/hunter/plates/plate025.mdl",
 		PhysPos = Vector(1, 0, 0),
 		PhysAng = Angle(0, 90, 0),
 
-		drawFunction = function(self,model)
-			if not model.submated then
-				model:SetSubMaterial(1,"effects/arc9/rt")
-				model.submated = true
-			end
+		drawFunction = function(self,model) -- in swep:drawattachment
 		end,
 
 		sightFunction = function(self)
 			self:DoRT()
 		end,
 
-		transformFunction = function(self,model,vecadd,ang)
+		transformFunction = function(self,model,vecadd,ang) -- in transformfunction
 		end,
 		valid = true,
 	},
@@ -977,7 +969,7 @@ hg.attachments.sight = {
 	},
 	["optic16"] = {
 		"sight",
-		"models/weapons/mods/scope_monstrum_compact_prism.mdl",
+		"models/weapons/arc9/darsu_eft/mods/scope_monstrum_compact_prism.mdl",
 		Angle(0, 0, -90),
 		offset = Vector(0, 0, -0.02),
 		offsetView = Vector(-1.5, 0, 9),
@@ -985,7 +977,7 @@ hg.attachments.sight = {
 		mountType = "picatinny",
 		scopemat = Material("decals/scope.png"),
 		mat = Material("effects/arc9/rt"),
-		perekrestie = Material("vgui/arc9_eft_shared/reticles/scope_all_monstrum_compact_prism_scope_2x32_mark_0.png"),
+		perekrestie = Material("vgui/arc9_eft_shared/reticles/scope_all_monstrum_compact_prism_scope_2x32_mark_1.png"),
 		localScopePos = Vector(7, 0, 1.45),
 		scope_blackout = 1200,
 		rot = 0,
@@ -999,11 +991,7 @@ hg.attachments.sight = {
 		PhysPos = Vector(1, 0, 0),
 		PhysAng = Angle(0, 90, 0),
 
-		drawFunction = function(self,model)
-			if not model.submated then
-				model:SetSubMaterial(1, "effects/arc9/rt")
-				model.submated = true
-			end
+		drawFunction = function(self,model) -- in swep:drawattachment
 		end,
 
 		sightFunction = function(self)
@@ -1709,9 +1697,9 @@ local attachmentsIcons = {
 	["holo2"] = "vgui/icons/sights_kobra",
 	["holo17"] = "entities/eft_attachments/scopes/compm4.png",
 	["holo18"] = "entities/eft_attachments/scopes/elcan.png",
-	["holo19"] = "entities/eft_attachments/scopes/uh1.png",
-	["holo_boss"] = "entities/eft_attachments/scopes/boss.png",
-	["optic16"] = "entities/eft_attachments/scopes/monstrum.png",
+	["holo19"] = "entities/uh1.png",
+	["holo_boss"] = "entities/boss.png",
+	["optic16"] = "entities/compact.png",
 	["optic2"] = "entities/eft_attachments/scopes/30mmtac30.png",
 	["optic3"] = "entities/eft_attachments/scopes/ps320.png",
 	["optic4"] = "entities/eft_attachments/scopes/s_pso1m2.png",
@@ -1744,8 +1732,8 @@ local attachmentsIcons = {
 	["optic11"] = "entities/eft_attachments/scopes/s_pso1m2.png",
 	["optic12"] = "entities/eft_attachments/scopes/30mmvudu.png",
 	["optic13"] = "entities/ent_jack_gmod_ezarmor_pvs14nvm.png",
-	["optic14"] = "entities/eft_attachments/scopes/elcan.png",
-	["optic15"] = "entities/eft_attachments/scopes/reapir.png",
+	["optic14"] = "entities/spectrdrtan.png",
+	["optic15"] = "entities/reapir.png",
 	["holo15"] = "entities/eft_attachments/scopes/romeo4.png",
 	["holo16"] = "entities/eft_attachments/scopes/rmr.png",
 	["laser4"] = "vgui/icons/laser_long",
