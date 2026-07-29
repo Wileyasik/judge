@@ -1081,7 +1081,6 @@ hg.attachments.sight = {
 		sightFunction = function(self)
 			self:DoRT()
 		end,
-
 		transformFunction = function(self, model, vecadd, ang)
 		end,
 		valid = true,
@@ -1151,16 +1150,96 @@ hg.attachments.sight = {
 		PhysModel = "models/hunter/plates/plate025.mdl",
 		PhysPos = Vector(1, 0, 0),
 		PhysAng = Angle(0, 90, 0),
+		holo = Material("vgui/arc9_eft_shared/reticles/new/scope_base_sig_romeo_4_mark.png"),
+		holo_size = CLIENT and ScreenScale(0.8) or 1,
+		holomodel = "models/weapons/mods/scope_trijicon_sro.mdl",
+		addholovec = Vector(0.9, 0, 1),
+		addholoang = Angle(0, 0, 0),
+		addholoview = 1.8,
 
 		drawFunction = function(self,model) -- in swep:drawattachment
 			model:SetSubMaterial(2,"hg/scope_lens")
+			if not IsValid(self) then return end
+
+			local inf = hg.attachments.sight["optic21"]
+			self.modelAtt["addholo"] = IsValid(self.modelAtt["addholo"]) and self.modelAtt["addholo"] or ClientsideModel(inf.holomodel)
+			local addholo = self.modelAtt["addholo"]
+			if not IsValid(addholo) then return end
+
+			addholo:DrawModel()
+			addholo:SetNoDraw(model:GetNoDraw())
+
+			local model2 = addholo.model
+			if not IsValid(model2) then
+				model2 = ClientsideModel(inf.holomodel)
+				if not IsValid(model2) then return end
+
+				model2:SetNoDraw(true)
+				addholo.model = model2
+				self.holomodels = self.holomodels or {}
+				self.holomodels[model2] = true
+
+				model:CallOnRemove("removeoptic21holo", function()
+					self.holomodels = self.holomodels or {}
+					self.holomodels[model2] = nil
+					if IsValid(model2) then model2:Remove() end
+				end)
+			end
+
+			if not addholo.submat then
+				addholo:SetSubMaterial(0,"")
+				addholo:SetSubMaterial(1,"null")
+				model2:SetSubMaterial(0,"null")
+				model2:SetSubMaterial(1,"white")
+				addholo.submat = true
+			end
 		end,
 
 		sightFunction = function(self)
 			self:DoRT()
 		end,
 
+		viewFunction = function(self, model, pos)
+			if self:KeyDown(IN_ATTACK2) then
+				local owner = self:GetOwner()
+				local switchKey = IsValid(owner.FakeRagdoll) and self:KeyDown(IN_JUMP) or self:KeyDown(IN_USE)
+				if switchKey then
+					if not self.keypr then
+						self.viewmode1 = not self.viewmode1
+						self.keypr = true
+						self:EmitSound("universal/uni_lean_" .. (self.viewmode1 and "in" or "out") .. "_0" .. math.random(4) .. ".wav", 35, math.random(95, 105))
+					end
+				else
+					self.keypr = false
+				end
+			end
+
+			local inf = hg.attachments.sight["optic21"]
+			self.upview = Lerp(FrameTime() * (self.viewmode1 and 12 or 4), self.upview or 0, self.viewmode1 and inf.addholoview or 0)
+
+			return pos + model:GetAngles():Up() * self.upview
+		end,
+
 		transformFunction = function(self, model, vecadd, ang)
+			if not IsValid(self) then return end
+
+			local inf = hg.attachments.sight["optic21"]
+			self.modelAtt["addholo"] = IsValid(self.modelAtt["addholo"]) and self.modelAtt["addholo"] or ClientsideModel(inf.holomodel)
+			local addholo = self.modelAtt["addholo"]
+			if not IsValid(addholo) then return end
+
+			local pos, holoang = LocalToWorld(inf.addholovec, inf.addholoang, vecadd, ang)
+			addholo:SetRenderOrigin(pos)
+			addholo:SetRenderAngles(holoang)
+			addholo:SetModelScale(1.2)
+			addholo:SetupBones()
+
+			if IsValid(addholo.model) then
+				addholo.model:SetRenderOrigin(pos)
+				addholo.model:SetRenderAngles(holoang)
+				addholo.model:SetModelScale(1.2)
+				addholo.model:SetupBones()
+			end
 		end,
 		valid = true,
 	},

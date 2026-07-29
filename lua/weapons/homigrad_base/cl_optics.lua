@@ -320,17 +320,6 @@ local hg_show_hitposmuzzle = ConVarExists("hg_show_hitposmuzzle") and GetConVar(
 
 local angaddhuy = Angle(0,0,0)
 local scrw, scrh = ScrW(), ScrH() --retarded
-local function ProjectWeaponDirection(direction, viewAngles, viewFOV, size)
-	local forward = direction:Dot(viewAngles:Forward())
-	if forward <= 0.001 then return size / 2, size / 2 end
-
-	local focalLength = size / (2 * math.tan(math.rad(viewFOV) / 2))
-	local x = size / 2 + direction:Dot(viewAngles:Right()) / forward * focalLength
-	local y = size / 2 - direction:Dot(viewAngles:Up()) / forward * focalLength
-
-	return x, y
-end
-
 function SWEP:DoRT()
 	LOW_RENDER = nil
 	
@@ -351,6 +340,7 @@ function SWEP:DoRT()
 	local nightvision = foundatt and foundatt.nightvision
 	local thermalSensor = thermal and sight and thermalSensors[sight[1]]
 	local thermalUpdate = thermalSensor and RealTime() >= thermalSensor.nextUpdate
+	local stabilizedScope = foundatt and foundatt.stableReticle
 	local digitalThermal = thermal and sight and (sight[1] == "optic17" or sight[1] == "optic18")
 
 	if thermalUpdate then
@@ -413,9 +403,9 @@ function SWEP:DoRT()
 		dopostprocess = false
 	}
 
-	if digitalThermal then
+	if stabilizedScope then
 		rt.origin = view.origin
-		rt.angles = view.angles
+		rt.angles = ang
 		rt.fov = math.max(self.ZoomFOV, 0.5)
 	end
 	--debugoverlay.Axis(rt.origin,rt.angles,5,1)
@@ -529,7 +519,8 @@ function SWEP:DoRT()
 			local stableReticle = foundatt and foundatt.stableReticle
 			local reticleX, reticleY
 			if stableReticle then
-				reticleX, reticleY = ProjectWeaponDirection(ang:Forward(), rt.angles, rt.fov, rtsize)
+				reticleX = rtsize / 2
+				reticleY = rtsize / 2
 			else
 				reticleX = x / (scrw / ScrW())
 				reticleY = y / (scrh / ScrH())
