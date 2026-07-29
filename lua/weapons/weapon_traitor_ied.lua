@@ -34,7 +34,6 @@ SWEP.ViewModel = ""
 SWEP.WorldModel = "models/saraphines/insurgency explosives/ied/insurgency_ied.mdl"
 SWEP.WorldModelReal = "models/weapons/v_ied_ins.mdl"
 SWEP.WorldModelExchange = false
-SWEP.FakeScale = 1
 SWEP.setlh = true
 SWEP.setrh = true
 SWEP.HoldPos = Vector(2, 0.2, -1.5)
@@ -78,6 +77,11 @@ SWEP.AnimsEvents = {
 		end,
 		[0.85] = function(self)
 			self:EmitSound("weapons/c4/handling/c4_plant_place.wav", 65)
+		end
+	},
+	["det_detonate"] = {
+		[0.05] = function(self)
+			self:EmitSound("weapons/ied/handling/ied_trigger_ins.wav", 65)
 		end
 	}
 }
@@ -756,7 +760,6 @@ if SERVER then
 
 		if (self.nextattackhuy or 0) <= CurTime() and (self.Planted or self.HaveTheBomb or self.PlantedOnSelf) and not self.KABOOM and not self:GetDialing() then
 			self:PlayAnim("det_detonate")
-			self:EmitSound("weapons/ied/handling/ied_trigger_ins.wav", 65)
 			if self.PlantedOnSelf then
 				StartIEDDetonation(self, self:GetOwner())
 			else

@@ -119,10 +119,11 @@ if CLIENT then
 
 		local WorldModel = self.worldModel
 
+		self.worldModel:SetModelScale(self.modelscale2)
+
         local ent = IsValid(owner.FakeRagdoll) and owner.FakeRagdoll or owner
 
         if (IsValid(owner)) and (ent == owner or hg.KeyDown(owner,IN_USE) or (owner:GetNetVar("lastFake",0) > CurTime())) then
-			self.worldModel:SetModelScale(self.FakeScale or self.modelscale2)
             local timing = 0
             if not self.cycling then
                 timing = (1 - math.Clamp((self.animtime - CurTime()) / self.animspeed,0,1))
@@ -162,7 +163,6 @@ if CLIENT then
 			WorldModel:SetRenderOrigin(pos)
 			WorldModel:SetRenderAngles(ang)
         else
-			self.worldModel:SetModelScale(self.modelscale2)
             if WorldModel:GetModel() ~= self.WorldModel then WorldModel:SetModel(self.WorldModel); WorldModel:SetSkin(self.WMSkin or 0) end
 			
             WorldModel:SetRenderOrigin(self:GetPos())
