@@ -2217,7 +2217,9 @@ function SWEP:SetHandPos(noset)
 			--ent:SetBoneMatrix(lh, lhmat)
 			
 			local hold = self.hold_type or (self:IsPistolHoldType() and "pistol_hold2" or "ak_hold")
-			hold = self.attachments.grip and #self.attachments.grip ~= 0 and hg.attachments.grip[self.attachments.grip[1]].hold or hold
+			if (not self.reload or self.reload - CurTime() <= 0.1) and self.attachments.grip and #self.attachments.grip ~= 0 then
+				hold = hg.attachments.grip[self.attachments.grip[1]].hold
+			end
 			
 			hg.set_hold(ent, hold)
 		end
@@ -2281,7 +2283,7 @@ function SWEP:SetHandPos(noset)
 	end
 
 	if self:HasAttachment("grip") and hg.CanUseLeftHand(ply) and self.lhandik then
-		local huy = (not self.reload or self.reload - 1 < CurTime()) and not ply.suiciding
+		local huy = (not self.reload or self.reload - CurTime() <= 0.3) and not ply.suiciding
 
 		local model = self:GetAttachmentModel("grip")
 		
@@ -2303,7 +2305,9 @@ function SWEP:SetHandPos(noset)
 
 			if self.lerphand < 0.1  then
 				local hold = self.hold_type or (self:IsPistolHoldType() and "pistol_hold2" or "ak_hold")
-				hold = self.attachments.grip and #self.attachments.grip ~= 0 and hg.attachments.grip[self.attachments.grip[1]].hold or hold
+				if (not self.reload or self.reload - CurTime() <= 0.3) and self.attachments.grip and #self.attachments.grip ~= 0 then
+					hold = hg.attachments.grip[self.attachments.grip[1]].hold
+				end
 
 				hg.set_hold(ent, hold)
 			end
