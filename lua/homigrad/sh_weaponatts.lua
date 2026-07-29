@@ -1144,6 +1144,7 @@ hg.attachments.sight = {
 		blackoutsize = 3600,
 		sizeperekrestie = 5500,
 		perekrestieSize = false,
+		stableReticle = true,
 		mount = "models/weapons/mods/mount_all_jp_enterprises_ftsm.mdl",
 		mountVec = Vector(-2.3, 0, -1.4),
 		mountAng = Angle(0, 0, 0),
