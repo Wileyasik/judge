@@ -867,15 +867,15 @@ hg.attachments.sight = {
 		PhysAng = Angle(0, 90, 0),
 
 		drawFunction = function(self,model) -- in swep:drawattachment
+			model:SetSubMaterial(2,"hg/scope_lens")
 		end,
 
 		sightFunction = function(self)
 			self:DoRT()
 		end,
 
-		transformFunction = function(self,model,vecadd,ang)
+		transformFunction = function(self,model,vecadd,ang) -- in transformfunction
 		end,
-		valid = true,
 	},
 	["optic15"] = {
 		"sight",
@@ -899,13 +899,14 @@ hg.attachments.sight = {
 		perekrestieSize = false,
 		thermal = true,
 		mount = "models/weapons/mods/mount_reapir.mdl",
-		mountVec = Vector(-1.5, 0, -1),
+		mountVec = Vector(-0, 0, 0),
 		mountAng = Angle(0, 0, 0),
 		PhysModel = "models/hunter/plates/plate025.mdl",
 		PhysPos = Vector(1, 0, 0),
 		PhysAng = Angle(0, 90, 0),
 
 		drawFunction = function(self,model) -- in swep:drawattachment
+			model:SetSubMaterial(2,"hg/scope_lens")
 		end,
 
 		sightFunction = function(self)
@@ -914,7 +915,6 @@ hg.attachments.sight = {
 
 		transformFunction = function(self,model,vecadd,ang) -- in transformfunction
 		end,
-		valid = true,
 	},
 	["holo18"] = {
 		"sight",
@@ -969,7 +969,7 @@ hg.attachments.sight = {
 	},
 	["optic16"] = {
 		"sight",
-		"models/weapons/arc9/darsu_eft/mods/scope_monstrum_compact_prism.mdl",
+		"models/weapons/mods/scope_monstrum_compact_prism.mdl",
 		Angle(0, 0, -90),
 		offset = Vector(0, 0, -0.02),
 		offsetView = Vector(-1.5, 0, 9),
@@ -992,15 +992,15 @@ hg.attachments.sight = {
 		PhysAng = Angle(0, 90, 0),
 
 		drawFunction = function(self,model) -- in swep:drawattachment
+			model:SetSubMaterial(2,"hg/scope_lens")
 		end,
 
 		sightFunction = function(self)
 			self:DoRT()
 		end,
 
-		transformFunction = function(self,model,vecadd,ang)
+		transformFunction = function(self,model,vecadd,ang) -- in transformfunction
 		end,
-		valid = true,
 	},
 	["ironsight1"] = {
 		"sight",
