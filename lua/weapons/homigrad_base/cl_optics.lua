@@ -25,13 +25,25 @@ local thermalMonochrome = {
 	["$pp_colour_mulg"] = 0,
 	["$pp_colour_mulb"] = 0
 }
-local function DrawThermalTargets(owner, view)
+local function GetCorpseHeat(ent)
+	local deathTime = ent:GetNWFloat("hgThermalDeathTime", ent:GetCreationTime())
+	local age = math.max(CurTime() - deathTime, 0)
+
+	return 1 - math.Clamp(age / 300, 0, 1)
+end
+
+local function DrawThermalTargets(owner, view, palette)
 	local drawn = {}
 	local function drawTarget(ent, heat)
 		if not IsValid(ent) or ent == owner or ent:IsDormant() or ent:GetNoDraw() or drawn[ent] then return end
 
 		drawn[ent] = true
-		render.SetColorModulation(heat, heat, heat)
+		if palette == "blue_red" then
+			local cold = 1 - heat
+			render.SetColorModulation(heat, cold * 0.03, cold * 0.28)
+		else
+			render.SetColorModulation(heat, heat, heat)
+		end
 		ent:DrawModel()
 	end
 
@@ -48,7 +60,7 @@ local function DrawThermalTargets(owner, view)
 			local fakeRagdoll = IsValid(ply.FakeRagdoll) and ply.FakeRagdoll or ply:GetNWEntity("FakeRagdoll")
 
 			if IsValid(fakeRagdoll) then
-				drawTarget(fakeRagdoll, 1)
+				drawTarget(fakeRagdoll, ply:Alive() and 1 or GetCorpseHeat(fakeRagdoll))
 			elseif ply:Alive() then
 				drawTarget(ply, 1)
 			end
@@ -56,10 +68,7 @@ local function DrawThermalTargets(owner, view)
 
 		for _, ent in ipairs(ents.GetAll()) do
 			if ent:IsRagdoll() then
-				local deathTime = ent:GetNWFloat("hgThermalDeathTime", ent:GetCreationTime())
-				local age = math.max(CurTime() - deathTime, 0)
-				local residualHeat = Lerp(math.Clamp(age / 300, 0, 1), 0.9, 0.08)
-				drawTarget(ent, residualHeat)
+				drawTarget(ent, GetCorpseHeat(ent))
 			elseif ent:IsNPC() or ent:IsNextBot() then
 				drawTarget(ent, 0.95)
 			end
@@ -100,8 +109,8 @@ function IsAiming(ply)
 	return IsValid(wep) and ishgweapon(wep) and hg.KeyDown(ply, IN_ATTACK2) and wep.attachments and wep:HasAttachment("sight","optic")
 end
 
-local rtsize = 512
-local rtmat = GetRenderTargetEx("huy-glass22",
+local rtsize = 640
+local rtmat = GetRenderTargetEx("huy-glass22_640",
 	rtsize, rtsize,
 	RT_SIZE_NO_CHANGE,
 	MATERIAL_RT_DEPTH_SHARED,
@@ -109,46 +118,113 @@ local rtmat = GetRenderTargetEx("huy-glass22",
 	0,
 	IMAGE_FORMAT_BGR888
 )
-local thermalSensorSize = 128
-local thermalSensorRT = GetRenderTargetEx("hg_scope_thermal_sensor",
-	thermalSensorSize, thermalSensorSize,
-	RT_SIZE_NO_CHANGE,
-	MATERIAL_RT_DEPTH_NONE,
-	bit.bor(2, 256),
-	0,
-	IMAGE_FORMAT_BGR888
-)
 local thermalSourceMat = CreateMaterial("hg_scope_thermal_source_v2", "UnlitGeneric", {
-	["$basetexture"] = rtmat:GetName()
+	["$basetexture"] = rtmat:GetName(),
+	["$vertexcolor"] = 1,
+	["$vertexalpha"] = 1
 })
-local thermalSensorMat = CreateMaterial("hg_scope_thermal_sensor_mat_v2", "UnlitGeneric", {
-	["$basetexture"] = thermalSensorRT:GetName()
-})
-local nightVisionRT = GetRenderTargetEx("hg_scope_nightvision", rtsize, rtsize,
+local function CreateThermalSensor(name, width, height, refreshRate)
+	local target = GetRenderTargetEx("hg_scope_thermal_" .. name,
+		width, height,
+		RT_SIZE_NO_CHANGE,
+		MATERIAL_RT_DEPTH_NONE,
+		bit.bor(2, 256),
+		0,
+		IMAGE_FORMAT_BGR888
+	)
+	return {
+		width = width,
+		height = height,
+		interval = refreshRate and 1 / refreshRate or 0,
+		nextUpdate = 0,
+		target = target,
+		material = CreateMaterial("hg_scope_thermal_mat_" .. name, "UnlitGeneric", {
+			["$basetexture"] = target:GetName()
+		})
+	}
+end
+
+local thermalSensors = {
+	optic15 = CreateThermalSensor("optic15_640x480_60hz", 640, 480, 60),
+	optic17 = CreateThermalSensor("optic17_640x512_30hz", 640, 512, 30),
+	optic18 = CreateThermalSensor("optic18_206x156", 206, 156)
+}
+local nightVisionWidth = 160
+local nightVisionHeight = 120
+local nightVisionRT = GetRenderTargetEx("hg_scope_nightvision_160x120", nightVisionWidth, nightVisionHeight,
 	RT_SIZE_NO_CHANGE,
 	MATERIAL_RT_DEPTH_NONE,
 	bit.bor(2, 256),
 	0,
 	IMAGE_FORMAT_BGR888
 )
-local nightVisionSourceMat = CreateMaterial("hg_scope_nightvision_source_v1", "UnlitGeneric", {
+local nightVisionSourceMat = CreateMaterial("hg_scope_nightvision_source_v2", "UnlitGeneric", {
+	["$basetexture"] = rtmat:GetName(),
+	["$vertexcolor"] = 1,
+	["$vertexalpha"] = 1
+})
+local nightVisionBloomMat = CreateMaterial("hg_scope_nightvision_bloom_v1", "UnlitGeneric", {
 	["$basetexture"] = rtmat:GetName(),
 	["$vertexcolor"] = 1,
 	["$vertexalpha"] = 1,
-	["$translucent"] = 1
+	["$additive"] = 1
 })
-local nightVisionMat = CreateMaterial("hg_scope_nightvision_mat_v1", "UnlitGeneric", {
+local nightVisionMat = CreateMaterial("hg_scope_nightvision_mat_160x120", "UnlitGeneric", {
 	["$basetexture"] = nightVisionRT:GetName()
 })
 local nightVisionLight
 
-local function PixelateThermalView(size)
-	render.PushRenderTarget(thermalSensorRT, 0, 0, thermalSensorSize, thermalSensorSize)
-		render.Clear(0, 0, 0, 255)
+local function DrawThermalSensor(size, sensor, update)
+	if update then
+		render.PushRenderTarget(sensor.target, 0, 0, sensor.width, sensor.height)
+			render.Clear(0, 0, 0, 255)
+			cam.Start2D()
+				surface.SetDrawColor(255, 255, 255, 255)
+				surface.SetMaterial(thermalSourceMat)
+				surface.DrawTexturedRect(0, 0, sensor.width, sensor.height)
+			cam.End2D()
+		render.PopRenderTarget()
+	end
+
+	cam.Start2D()
+		render.PushFilterMin(TEXFILTER.POINT)
+		render.PushFilterMag(TEXFILTER.POINT)
+		surface.SetDrawColor(255, 255, 255, 255)
+		surface.SetMaterial(sensor.material)
+		surface.DrawTexturedRect(0, 0, size, size)
+		render.PopFilterMin()
+		render.PopFilterMag()
+	cam.End2D()
+end
+
+-- Existing SWEP instances can retain the old DoRT function after a Lua refresh.
+function PixelateThermalView(size)
+	local wep = RENDERING_SCOPE
+	local sight = IsValid(wep) and wep:HasAttachment("sight", "optic")
+	local sensor = sight and thermalSensors[sight[1]]
+	if not sensor then return end
+
+	DrawThermalSensor(size, sensor, true)
+end
+
+local function DrawNightVisionView(size)
+	render.PushRenderTarget(nightVisionRT, 0, 0, nightVisionWidth, nightVisionHeight)
+		render.Clear(0, 7, 0, 255)
 		cam.Start2D()
-			surface.SetDrawColor(255, 255, 255, 255)
-			surface.SetMaterial(thermalSourceMat)
-			surface.DrawTexturedRect(0, 0, thermalSensorSize, thermalSensorSize)
+			render.PushFilterMin(TEXFILTER.POINT)
+			render.PushFilterMag(TEXFILTER.POINT)
+			surface.SetDrawColor(75, 255, 90, 255)
+			surface.SetMaterial(nightVisionSourceMat)
+			surface.DrawTexturedRect(0, 0, nightVisionWidth, nightVisionHeight)
+
+			-- Image intensifiers bloom around bright objects and the IR illuminator.
+			surface.SetDrawColor(35, 165, 42, 225)
+			surface.SetMaterial(nightVisionBloomMat)
+			surface.DrawTexturedRect(0, 0, nightVisionWidth, nightVisionHeight)
+
+			render.PopFilterMin()
+			render.PopFilterMag()
+
 		cam.End2D()
 	render.PopRenderTarget()
 
@@ -156,27 +232,10 @@ local function PixelateThermalView(size)
 		render.PushFilterMin(TEXFILTER.POINT)
 		render.PushFilterMag(TEXFILTER.POINT)
 		surface.SetDrawColor(255, 255, 255, 255)
-		surface.SetMaterial(thermalSensorMat)
+		surface.SetMaterial(nightVisionMat)
 		surface.DrawTexturedRect(0, 0, size, size)
 		render.PopFilterMin()
 		render.PopFilterMag()
-	cam.End2D()
-end
-
-local function DrawNightVisionView(size)
-	render.PushRenderTarget(nightVisionRT, 0, 0, size, size)
-		render.Clear(0, 0, 0, 255)
-		cam.Start2D()
-			surface.SetDrawColor(55, 255, 55, 255)
-			surface.SetMaterial(nightVisionSourceMat)
-			surface.DrawTexturedRect(0, 0, size, size)
-		cam.End2D()
-	render.PopRenderTarget()
-
-	cam.Start2D()
-		surface.SetDrawColor(255, 255, 255, 255)
-		surface.SetMaterial(nightVisionMat)
-		surface.DrawTexturedRect(0, 0, size, size)
 	cam.End2D()
 end
 
@@ -192,7 +251,7 @@ local function UpdateNightVisionLight(owner, view)
 	nightVisionLight:SetPos(owner:EyePos())
 	nightVisionLight:SetAngles(view.angles)
 	nightVisionLight:SetFOV(math.Clamp(view.fov + 20, 30, 120))
-	nightVisionLight:SetBrightness(1.5)
+	nightVisionLight:SetBrightness(1.8)
 	nightVisionLight:Update()
 end
 
@@ -261,6 +320,17 @@ local hg_show_hitposmuzzle = ConVarExists("hg_show_hitposmuzzle") and GetConVar(
 
 local angaddhuy = Angle(0,0,0)
 local scrw, scrh = ScrW(), ScrH() --retarded
+local function ProjectWeaponDirection(direction, viewAngles, viewFOV, size)
+	local forward = direction:Dot(viewAngles:Forward())
+	if forward <= 0.001 then return size / 2, size / 2 end
+
+	local focalLength = size / (2 * math.tan(math.rad(viewFOV) / 2))
+	local x = size / 2 + direction:Dot(viewAngles:Right()) / forward * focalLength
+	local y = size / 2 - direction:Dot(viewAngles:Up()) / forward * focalLength
+
+	return x, y
+end
+
 function SWEP:DoRT()
 	LOW_RENDER = nil
 	
@@ -279,7 +349,13 @@ function SWEP:DoRT()
 	local sight, foundatt = self:HasAttachment("sight", "optic")
 	local thermal = foundatt and foundatt.thermal
 	local nightvision = foundatt and foundatt.nightvision
+	local thermalSensor = thermal and sight and thermalSensors[sight[1]]
+	local thermalUpdate = thermalSensor and RealTime() >= thermalSensor.nextUpdate
 	local digitalThermal = thermal and sight and (sight[1] == "optic17" or sight[1] == "optic18")
+
+	if thermalUpdate then
+		thermalSensor.nextUpdate = RealTime() + thermalSensor.interval
+	end
 	
 	if foundatt and self.modelAtt and IsValid(self.modelAtt.sight) then
 		pos = self.modelAtt.sight:GetPos()
@@ -333,7 +409,8 @@ function SWEP:DoRT()
 		fov = math.max(self.ZoomFOV,0.5) / dist * 12,
 		znear = 1,
 		zfar = zfar,
-		bloomtone = false
+		bloomtone = false,
+		dopostprocess = false
 	}
 
 	if digitalThermal then
@@ -374,21 +451,16 @@ function SWEP:DoRT()
     		--render.UpdateFullScreenDepthTexture()
 		end
 		
-		if thermal then
-			RENDERING_THERMAL_SCOPE = true
-		end
 		if nightvision then
 			UpdateNightVisionLight(owner, rt)
 		end
 
-		render.RenderView(rt)
+		if not thermal then
+			render.RenderView(rt)
+		end
 
 		if nightvision then
 			DisableNightVisionLight()
-		end
-
-		if thermal then
-			RENDERING_THERMAL_SCOPE = false
 		end
 
 		cam.Start3D()
@@ -419,20 +491,32 @@ function SWEP:DoRT()
 		end
 
 		if thermal then
-			cam.Start2D()
-				DrawColorModify(thermalColorModify)
-			cam.End2D()
-			DrawThermalTargets(owner, rt)
-			cam.Start2D()
-				-- Model decals and wound overlays are rendered after the model material.
-				DrawColorModify(thermalMonochrome)
-			cam.End2D()
-			PixelateThermalView(rtsize)
+			if thermalUpdate then
+				render.Clear(0, 0, 0, 255)
+				RENDERING_THERMAL_SCOPE = true
+				render.RenderView(rt)
+				RENDERING_THERMAL_SCOPE = false
+				cam.Start2D()
+					DrawColorModify(thermalColorModify)
+					if foundatt.thermalPalette == "blue_red" then
+						surface.SetDrawColor(0, 8, 70, 235)
+						surface.DrawRect(0, 0, rtsize, rtsize)
+					end
+				cam.End2D()
+				DrawThermalTargets(owner, rt, foundatt.thermalPalette)
+				if foundatt.thermalPalette ~= "blue_red" then
+					cam.Start2D()
+						-- Model decals and wound overlays are rendered after the model material.
+						DrawColorModify(thermalMonochrome)
+					cam.End2D()
+				end
+			end
+			DrawThermalSensor(rtsize, thermalSensor, thermalUpdate)
 		elseif nightvision then
 			DrawNightVisionView(rtsize)
 		end
 
-		local scopeFilter = thermal and TEXFILTER.POINT or TEXFILTER.ANISOTROPIC
+		local scopeFilter = (thermal or nightvision) and TEXFILTER.POINT or TEXFILTER.ANISOTROPIC
 		render.PushFilterMin(scopeFilter)
 		render.PushFilterMag(scopeFilter)
 		cam.Start2D()
@@ -442,8 +526,14 @@ function SWEP:DoRT()
 			local blackout = self.blackoutsize * 0.75
 			surface.SetDrawColor(255, 255, 255, 255)
 			surface.SetMaterial(self.perekrestie)
-			local reticleY = self.stableReticle and rtsize / 2 or y / (scrh / ScrH())
-			local reticleX = self.stableReticle and rtsize / 2 or x / (scrw / ScrW())
+			local stableReticle = foundatt and foundatt.stableReticle
+			local reticleX, reticleY
+			if stableReticle then
+				reticleX, reticleY = ProjectWeaponDirection(ang:Forward(), rt.angles, rt.fov, rtsize)
+			else
+				reticleX = x / (scrw / ScrW())
+				reticleY = y / (scrh / ScrH())
+			end
 			surface.DrawTexturedRectRotatedHuy(0, 0, (self.sizeperekrestie * rtsize / 512) / ((self.perekrestieSize and 4 ) or self.ZoomFOV / 3), (self.sizeperekrestie * rtsize / 512) / ((self.perekrestieSize and 4 ) or self.ZoomFOV / 3), 0, reticleY, reticleX, self.rot)
 
 			surface.SetDrawColor(100, 100, 100)
