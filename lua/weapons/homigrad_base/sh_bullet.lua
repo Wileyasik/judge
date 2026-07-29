@@ -169,6 +169,11 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 	if not bullet then return end
 	bullet.limit_ricochet = bullet.limit_ricochet or 0
 	bullet.penetrated = bullet.penetrated or 0
+	bullet.Penetration = bullet.Penetration or 5
+	bullet.Diameter = bullet.Diameter or 7.62
+	bullet.TissueDamage = bullet.TissueDamage or math.Clamp(bullet.Diameter / 7.62, 0.65, 1.5)
+	bullet.TemporaryCavity = bullet.TemporaryCavity or 0.5
+	bullet.EnergyRetention = bullet.EnergyRetention or 0.85
 	if bullet.penetrated > 6 then return end
 	if bullet.limit_ricochet > 6 then return end
 	if tr.Entity.organism then return end
@@ -181,7 +186,7 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 	-- all the way through
 	--print(ApproachAngle > MaxRicAngle * 0.7  )
 	if ApproachAngle > MaxRicAngle * 1 or tr.Entity:IsVehicle() then
-		local Pen = (bullet.Penetration or 5) * 3 or dmg
+		local Pen = bullet.Penetration * 3
 		local MaxDist, SearchPos, SearchDist, Penetrated = math.min(Pen / hardness * 0.4, 100), hitPos, 5, false
 		
 		local hit
@@ -246,6 +251,10 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 				Filter = filter,
 				Penetration = bullet.Penetration,
 				Diameter = bullet.Diameter,
+				TissueDamage = bullet.TissueDamage,
+				TemporaryCavity = bullet.TemporaryCavity,
+				BulletFragmentation = bullet.BulletFragmentation,
+				EnergyRetention = bullet.EnergyRetention,
 				penetrated = bullet.penetrated + 1,
 				dmgtype = bullet.dmgtype or DMG_BULLET,
 				NpcShoot = bullet.NpcShoot,
@@ -352,6 +361,10 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 			Filter = {},
 			Penetration = bullet.Penetration,
 			Diameter = bullet.Diameter,
+			TissueDamage = bullet.TissueDamage,
+			TemporaryCavity = bullet.TemporaryCavity,
+			BulletFragmentation = bullet.BulletFragmentation,
+			EnergyRetention = bullet.EnergyRetention,
 			penetrated = bullet.penetrated + 1,
 			dmgtype = bullet.dmgtype or DMG_BULLET,
 			limit_ricochet = bullet.limit_ricochet + 1,
@@ -819,10 +832,32 @@ function SWEP:FireBullet()
     bullet.Damage = ammotype.Damage or primary.Damage or 25
 	bullet.Damage = bullet.Damage * (self.Supressor and 0.9 or 1) * (self.DamageMultiplier or 1)
 
-	bullet.Spread = (ammotype.Spread or self.Primary.Spread or 0) * 3
+	local baseSpread = (ammotype.Spread or self.Primary.Spread or 0) * 3
+	local accuracyMul = 1
+	if isply then
+		if isnumber(baseSpread) then baseSpread = math.max(baseSpread, 0.00075) end
+		local speed = owner:GetVelocity():Length2D()
+		accuracyMul = accuracyMul * (1 + math.Clamp(speed / 220, 0, 1) * 0.9)
+		accuracyMul = accuracyMul * (owner:Crouching() and 0.75 or 1)
+		accuracyMul = accuracyMul * (self:IsZoom() and 0.72 or 1)
+		accuracyMul = accuracyMul * (owner:OnGround() and 1 or 2.25)
+		accuracyMul = accuracyMul * (self:IsResting() and 0.45 or 1)
+		local organism = owner.organism
+		if organism then
+			accuracyMul = accuracyMul * (1 + ((organism.larm or 0) + (organism.rarm or 0)) * 0.65)
+		end
+		local readiness = self.weaponReadiness or 1
+		local stability = self.weaponStability or 0
+		accuracyMul = accuracyMul * Lerp(readiness, 2.2, 1)
+		accuracyMul = accuracyMul * Lerp(stability, 1, 0.82)
+	end
+	bullet.Spread = baseSpread * accuracyMul
 	bullet.Num = 1
 	
 	bullet.AmmoType = primary.Ammo
+	bullet.Speed = ammotype.Speed or 0
+	self.nearMissShotSequence = (self.nearMissShotSequence or 0) + 1
+	bullet.NearMissShotID = tostring(self:EntIndex()) .. ":" .. tostring(self.nearMissShotSequence)
 	bullet.TracerName = self.Tracer or "nil"
     bullet.IgnoreEntity = nil
     bullet.Callback = bulletHit
@@ -841,7 +876,6 @@ function SWEP:FireBullet()
 		end
 	end
 
-    bullet.Speed = ammotype.Speed
 	bullet.Distance = ammotype.Distance or 56756
 	bullet.Filter = filter
 
@@ -877,6 +911,9 @@ function SWEP:FireBullet()
 
 	local penetration = (ammotype.Penetration or (-(-self.Penetration))) * (self.PenetrationMultiplier or 1)
 	local diameter = ammotype.Diameter or 1
+	local tissueDamage = ammotype.TissueDamage or math.Clamp(diameter / 7.62, 0.65, 1.5)
+	local temporaryCavity = ammotype.TemporaryCavity or math.Clamp((ammotype.Speed or 350) / 700, 0.35, 1.6)
+	local energyRetention = ammotype.EnergyRetention or math.Clamp(0.72 + penetration / 100, 0.75, 0.95)
 
     for i = 1, numbullet do
 		local shot = numbullet == 1 and bullet or table_Copy(bullet)
@@ -884,6 +921,10 @@ function SWEP:FireBullet()
 		shot.MaxPenLen = 100
 		shot.Penetration = penetration
 		shot.Diameter = diameter
+		shot.TissueDamage = tissueDamage
+		shot.TemporaryCavity = temporaryCavity
+		shot.BulletFragmentation = ammotype.BulletFragmentation or false
+		shot.EnergyRetention = energyRetention
 
 		if SERVER and owner.suiciding and willsuicidereal then
 			local dmginfo = DamageInfo()

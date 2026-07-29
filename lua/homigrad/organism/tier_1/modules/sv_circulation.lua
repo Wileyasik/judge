@@ -172,6 +172,9 @@ module[1] = function(org)
 	org.bleedStart = 0
 	org.wounds = {}
 	org.arterialwounds = {}
+	org.bleedSources = {}
+	org.internalBleedSources = {}
+	org.nextBleedSourceID = 0
 	org.holdWound = nil
 	org.holdWoundArterial = nil
 	org.wantToVomit = 0
@@ -182,6 +185,28 @@ module[1] = function(org)
 	end
 	org.hemotransfusionshock = 0
 	org.survivalchance = 1
+end
+
+function hg.organism.AddBleedSource(org, kind, rate, organ, bone, wound)
+	if not org or rate <= 0 then return end
+	org.bleedSources = org.bleedSources or {}
+	org.internalBleedSources = org.internalBleedSources or {}
+	org.nextBleedSourceID = (org.nextBleedSourceID or 0) + 1
+
+	local source = {
+		id = org.nextBleedSourceID,
+		kind = kind,
+		rate = rate,
+		organ = organ,
+		bone = bone,
+		created = CurTime(),
+		wound = wound
+	}
+	org.bleedSources[source.id] = source
+	if kind == "internal" then org.internalBleedSources[source.id] = source end
+	if wound then wound[8] = source.id end
+
+	return source
 end
 local internalbleed_phrases = {
 	"That's... that's blood I just vomited...",
@@ -440,7 +465,13 @@ module[2] = function(owner, org, mulTime)
 					hg.organism.BloodDroplet2(owner, org, wound, ent:GetVelocity() + VectorRand(-15, 15), false)
 					wound[1] = max(wound[1] - coagulate, 0)
 				end
-				if wound[1] == 0 then table.remove(org.wounds, i) owner:SetNetVar("wounds",org.wounds) end
+				local source = org.bleedSources and org.bleedSources[wound[8]]
+				if source then source.rate = wound[1] end
+				if wound[1] == 0 then
+					if source then org.bleedSources[source.id] = nil end
+					table.remove(org.wounds, i)
+					owner:SetNetVar("wounds",org.wounds)
+				end
 		end
 	end
 	if org.heart == 1 then
@@ -471,6 +502,8 @@ module[2] = function(owner, org, mulTime)
 				hg.organism.BloodDroplet2(owner, org, wound, owner:GetVelocity() + VectorRand(-10, 10) + dir, true)
 			end
 			if wound[1] == 0 then
+				local source = org.bleedSources and org.bleedSources[wound[8]]
+				if source then org.bleedSources[source.id] = nil end
 				table.remove(org.arterialwounds, i)
 				owner:SetNetVar("arterialwounds", org.arterialwounds)
 				org[wound[7]] = 0
@@ -481,6 +514,20 @@ module[2] = function(owner, org, mulTime)
 	if org.blood < (2400 / (adrenaline / 3 + 1)) * ((math.cos(CurTime()/2) + 1) / 2 * 0.1 + 1) then org.needotrub = true end
 	local bleed = org.internalBleed / 14
 	org.internalBleed = math.Approach(org.internalBleed, 0, org.internalBleedHeal > 0 and mulTime / 2 or mulTime / 55)
+	local internalSourceTotal = 0
+	for _, source in pairs(org.internalBleedSources or {}) do
+		internalSourceTotal = internalSourceTotal + source.rate
+	end
+	if internalSourceTotal > 0 then
+		local sourceMul = math.Clamp(org.internalBleed / internalSourceTotal, 0, 1)
+		for id, source in pairs(org.internalBleedSources) do
+			source.rate = source.rate * sourceMul
+			if source.rate <= 0.001 then
+				org.internalBleedSources[id] = nil
+				org.bleedSources[id] = nil
+			end
+		end
+	end
 	coagulatespeed = coagulatespeed + mulTime
 	org.internalBleedHeal = math.Approach(org.internalBleedHeal, 0, mulTime / 2)
 	if bleed > 0 then org.blood = max(org.blood - bleed * mulTime * 10 * org.pulse / 70, 1) end

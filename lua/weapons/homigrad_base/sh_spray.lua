@@ -18,7 +18,7 @@ end
 SWEP.SprayRand = {Angle(0, 0, 0), Angle(0, 0, 0)}
 SWEP.addSprayMul = 1
 
-SWEP.RecoilMul = 0.8
+SWEP.RecoilMul = 0.7
 
 local cos, sin, math_max, math_min = math.cos, math.sin, math.max, math.min
 function SWEP:GetPrimaryMul()
@@ -69,7 +69,8 @@ function SWEP:PrimarySpread()
 		--mul = mul * (hg.IsOnGround(hg.GetCurrentCharacter(owner)) and 1 or 5)
 		mul = mul * (self:IsResting() and 0.1 or 1)
 
-		local angRand = AngleRand(0.03, 0.05)
+		local firstShotMul = sprayI == 1 and 0.45 or sprayI == 2 and 0.7 or 1
+		local angRand = AngleRand(0.03, 0.05) * firstShotMul
 		angRand[1] = -math.abs(angRand[1])
 		angRand[2] = (math.random(2) == 1 and 1 or -1) * angRand[2]
 		angRand[3] = 0
@@ -124,7 +125,7 @@ function SWEP:PrimarySpread()
 		sprayAng:RotateAroundAxis(angle_zero:Forward(), eyeang.roll)
 		sprayAng.roll = 0
 
-		owner:SetEyeAngles(eyeang + sprayAng * 3 * (organism.recoilmul or 1) * (owner.posture == 1 and not self:IsZoom() and 0.1 or 1) * 0.25)
+		owner:SetEyeAngles(eyeang + sprayAng * 2 * (organism.recoilmul or 1) * (owner.posture == 1 and not self:IsZoom() and 0.1 or 1) * 0.25)
 		
 		local rnd1, rnd2 = math.Rand(1,2), math.Rand(-1,1)
 		ViewPunch2(Angle(2 * rnd1,2 * rnd2,0) * mul * 0.5)
@@ -185,7 +186,7 @@ function SWEP:ApplyEyeSpray(value)
 end
 
 function SWEP:Step_Spray(time,dtime)
-	if self.Primary.Next + 0.3 < time then self.SprayI = 0 end
+	if self.Primary.Next + 0.22 < time then self.SprayI = 0 end
 	
 	if SERVER then return end
 

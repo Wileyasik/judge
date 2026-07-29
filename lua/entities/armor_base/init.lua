@@ -83,6 +83,7 @@ end
 		ply.armors_broken_mul = ply.armors_broken_mul or {}
 		ply.armors_health = ply.armors_health or {}
 		ply.armors_durability = ply.armors_durability or {}
+		ply.armors_regions = ply.armors_regions or {}
 		ply.armors_broken[equipment] = self.broken or self:GetNWBool("ArmorBroken", false) or nil
 		ply.armors_broken_mul[equipment] = self.brokenProtectionMul or nil
 		ply.armors_shots[equipment] = ply.armors_broken[equipment] and nil or self.shotsLeft or hg.GetArmorBreakShotCount(equipment)
@@ -90,6 +91,7 @@ end
 		local placement = hg.GetArmorPlacement(equipment)
 		local armorData = placement and hg.armor[placement] and hg.armor[placement][equipment]
 		ply.armors_durability[equipment] = self.armorDurability or (armorData and armorData.durability) or 450
+		ply.armors_regions[equipment] = table.Copy(self.armorRegions or {})
 	end
 
 	function ENT:ReciveData(ply,equipment)
@@ -103,6 +105,7 @@ end
 		self.brokenProtectionMul = ply.armors_broken_mul and ply.armors_broken_mul[equipment] or self.brokenProtectionMul
 		self.armorHealth = ply.armors_health and ply.armors_health[equipment]
 		self.armorDurability = ply.armors_durability and ply.armors_durability[equipment]
+		self.armorRegions = ply.armors_regions and table.Copy(ply.armors_regions[equipment] or {})
 		if ply.armors_broken and ply.armors_broken[equipment] then
 			hg.SetArmorBrokenEntity(self)
 			self.shotsLeft = nil
@@ -115,6 +118,7 @@ hook.Add("ItemsTransfered","TransferMats",function(ply, ragdoll)
 	ragdoll.armors_shots = ragdoll.armors_shots or {}
 	ragdoll.armors_health = ply.armors_health
 	ragdoll.armors_durability = ply.armors_durability
+	ragdoll.armors_regions = ply.armors_regions
 	ragdoll.armors_broken = ply.armors_broken
 	ragdoll.armors_broken_mul = ply.armors_broken_mul
 	for k,v in pairs(armors) do
@@ -140,6 +144,7 @@ hook.Add("ItemsTransfered","TransferMats",function(ply, ragdoll)
 		fakeRag.armors_shots = ragdoll.armors_shots
 		fakeRag.armors_health = ragdoll.armors_health
 		fakeRag.armors_durability = ragdoll.armors_durability
+		fakeRag.armors_regions = ragdoll.armors_regions
 		fakeRag.armors_broken = ragdoll.armors_broken
 		fakeRag.armors_broken_mul = ragdoll.armors_broken_mul
 		fakeRag:SetNetVar("Armor", ragdoll:GetNetVar("Armor", {}))

@@ -13,7 +13,7 @@ local math_ceil = math.ceil
 local stepDiv = 1
 local tracePos = Vector(0, 0, 0)
 
-function hg.organism.Trace(pos, dir, size, maxpen, boxs, center, endDis, organs, ricochetable, funcInput, ...)
+function hg.organism.Trace(pos, dir, size, maxpen, boxs, center, endDis, organs, ricochetable, funcInput, impact, ...)
 	local endDisSqr = endDis * endDis
 	tracePos:Set(pos)
 
@@ -63,11 +63,42 @@ function hg.organism.Trace(pos, dir, size, maxpen, boxs, center, endDis, organs,
 
 			local box = boxs[iHit]
 
-			local dirSub = funcInput(box, tracePos, false, ...)
+			local dirSub
+			if impact and impact.ballisticVersion then
+				impact.layerIndex = impact.layerIndex + 1
+				impact.entryPos = Vector(tracePos[1], tracePos[2], tracePos[3])
+				impact.hitPos = Vector(hit[1], hit[2], hit[3])
+				impact.normal = normal
+				impact.penetrationBefore = distance
+				impact.energyBefore = impact.energy
+				dirSub = funcInput(box, tracePos, false, impact, ...)
+			else
+				dirSub = funcInput(box, tracePos, false, impact, ...)
+			end
 
-			if dirSub then
+			if istable(dirSub) then
+				local penetrationCost = math.max(dirSub.penetrationCost or 0, 0)
+				local energyCost = math.Clamp(dirSub.energyCost or 0, 0, impact.energy)
+				distance = math.max(distance - penetrationCost, 0)
+				impact.energy = math.max(impact.energy - energyCost, 0)
+				impact.penetrationAfter = distance
+				impact.energyAfter = impact.energy
+				impact.depositedEnergy = energyCost
+				if dirSub.stopped then
+					impact.stopped = true
+					impact.armorStopped = dirSub.armorStopped or false
+				end
+				passMax = math.min(passMax, passing + distance)
+				if dirSub.stopped or distance <= 0 or impact.energy <= 0 then passMax = passing end
+			elseif dirSub then
 				distance = distance - dirSub * distance
 				passMax = math.min(passMax, passing + distance)
+				if impact and impact.ballisticVersion then
+					impact.energy = impact.energy * math.Clamp(1 - dirSub, 0, 1)
+					impact.penetrationAfter = distance
+					impact.energyAfter = impact.energy
+					impact.depositedEnergy = impact.energyBefore - impact.energy
+				end
 			end
 
 			if not inBody then

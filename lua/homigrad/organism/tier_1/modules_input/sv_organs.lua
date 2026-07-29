@@ -17,6 +17,12 @@ local function damageOrgan(org, dmg, dmgInfo, key)
 end
 
 local input_list = hg.organism.input_list
+local function addInternalBleed(org, amount, organ)
+	if amount <= 0 then return end
+	org.internalBleed = org.internalBleed + amount
+	if hg.organism.AddBleedSource then hg.organism.AddBleedSource(org, "internal", amount, organ) end
+end
+
 input_list.heart = function(org, bone, dmg, dmgInfo)
 	local oldDmg = org.heart
 
@@ -25,7 +31,7 @@ input_list.heart = function(org, bone, dmg, dmgInfo)
 	hg.AddHarmToAttacker(dmgInfo, (org.heart - oldDmg) * 10, "Heart damage harm")
 	
 	org.shock = org.shock + dmg * 20
-	org.internalBleed = org.internalBleed + (org.heart - oldDmg) * 10
+	addInternalBleed(org, (org.heart - oldDmg) * 10, "heart")
 
 	return result
 end
@@ -51,7 +57,7 @@ input_list.liver = function(org, bone, dmg, dmgInfo)
 		end)
 	end
 
-	org.internalBleed = org.internalBleed + harmed * 4
+	addInternalBleed(org, harmed * 4, "liver")
 	
 	dmgInfo:ScaleDamage(0.8)
 
@@ -65,7 +71,7 @@ input_list.stomach = function(org, bone, dmg, dmgInfo)
 
 	hg.AddHarmToAttacker(dmgInfo, (org.stomach - oldDmg) * 2, "Stomach damage harm")
 	
-	org.internalBleed = org.internalBleed + (org.stomach - oldDmg) * 2
+	addInternalBleed(org, (org.stomach - oldDmg) * 2, "stomach")
 	return result
 end
 
@@ -76,7 +82,7 @@ input_list.intestines = function(org, bone, dmg, dmgInfo)
 
 	hg.AddHarmToAttacker(dmgInfo, (org.intestines - oldDmg) * 2, "Intestines damage harm")
 
-	org.internalBleed = org.internalBleed + (org.intestines - oldDmg) * 2
+	addInternalBleed(org, (org.intestines - oldDmg) * 2, "intestines")
 	return result
 end
 
@@ -288,7 +294,9 @@ local function hitArtery(artery, org, dmg, dmgInfo, boneindex, dir, hit)
 
 	local bonea = owner:LookupBone(boneindex)
 	local localPos, localAng, dir2 = getlocalshit(owner, bonea, dmgInfo, dir, hit)
-	table.insert(org.arterialwounds, {arterySize[artery], localPos, localAng, boneindex, CurTime(), dir2 * 100, artery})
+	local wound = {arterySize[artery], localPos, localAng, boneindex, CurTime(), dir2 * 100, artery}
+	table.insert(org.arterialwounds, wound)
+	if hg.organism.AddBleedSource then hg.organism.AddBleedSource(org, "arterial", arterySize[artery], artery, boneindex, wound) end
 	owner:SetNetVar("arterialwounds", org.arterialwounds)
 	--if IsValid(owner:GetNWEntity("RagdollDeath")) then owner:GetNWEntity("RagdollDeath"):SetNetVar("wounds",org.arterialwounds) end
 	return 0
@@ -351,7 +359,7 @@ input_list.lungsL = function(org, bone, dmg, dmgInfo)
 	org.lungsL[1] = math.min(org.lungsL[1] + dmg / 4, 1)
 	if (dmgInfo:IsDamageType(DMG_BULLET+DMG_SLASH+DMG_BUCKSHOT)) or (math.random(3) == 1) then org.lungsL[2] = math.min(org.lungsL[2] + dmg * 1, 1) end
 
-	org.internalBleed = org.internalBleed + (org.lungsL[1] - oldval) * 2
+	addInternalBleed(org, (org.lungsL[1] - oldval) * 2, "lungsL")
 	
 	dmgInfo:ScaleDamage(0.8)
 
@@ -366,7 +374,7 @@ input_list.lungsR = function(org, bone, dmg, dmgInfo)
 	org.lungsR[1] = math.min(org.lungsR[1] + dmg / 4, 1)
 	if (dmgInfo:IsDamageType(DMG_BULLET+DMG_SLASH+DMG_BUCKSHOT)) or (math.random(3) == 1) then org.lungsR[2] = math.min(org.lungsR[2] + dmg * 1, 1) end
 
-	org.internalBleed = org.internalBleed + (org.lungsR[1] - oldval) * 2
+	addInternalBleed(org, (org.lungsR[1] - oldval) * 2, "lungsR")
 
 	dmgInfo:ScaleDamage(0.8)
 

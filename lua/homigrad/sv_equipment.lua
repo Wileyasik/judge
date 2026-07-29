@@ -26,7 +26,30 @@ local ARMOR_WEAR_STAGES = 3
 
 -- Global armor toughness: armor takes this fraction of damage to its HP / durability,
 -- so it lasts a bit longer before breaking. Lower = tougher armor.
-local ARMOR_DAMAGE_TAKEN_MUL = 0.7
+local ARMOR_DAMAGE_TAKEN_MUL = 0.5
+
+local function DamageArmorRegion(owner, armor, placement, armorData, hitPos, rawDmg, character)
+	owner.armors_regions = owner.armors_regions or {}
+	owner.armors_regions[armor] = owner.armors_regions[armor] or {}
+
+	character = IsValid(character) and character or owner
+	local localPos = WorldToLocal(hitPos, angle_zero, character:GetPos(), character:GetAngles())
+	local region
+	if placement == "torso" then
+		region = localPos.x >= 0 and "front" or "back"
+		if math.abs(localPos.y) > 7 then region = localPos.y >= 0 and "left" or "right" end
+	else
+		region = localPos.x >= 0 and "front" or "back"
+		if math.abs(localPos.y) > 3 then region = localPos.y >= 0 and "left" or "right" end
+	end
+
+	local maxDurability = (armorData and armorData.regionDurability) or (placement == "torso" and 100 or 70)
+	local durability = owner.armors_regions[armor][region] or maxDurability
+	durability = math.max(durability - rawDmg * (armorData and armorData.regionDamageMul or ARMOR_DAMAGE_TAKEN_MUL), 0)
+	owner.armors_regions[armor][region] = durability
+
+	return region, durability / maxDurability
+end
 
 local function getArmorShotRange(equipment)
 	local placement = hg.GetArmorPlacement(equipment)
@@ -230,6 +253,8 @@ syncLinkedArmor = function(ent)
 	owner.armors = table.Copy(ent.armors or owner.armors or {})
 	owner.armors_shots = table.Copy(ent.armors_shots or owner.armors_shots or {})
 	owner.armors_health = table.Copy(ent.armors_health or owner.armors_health or {})
+	owner.armors_durability = table.Copy(ent.armors_durability or owner.armors_durability or {})
+	owner.armors_regions = table.Copy(ent.armors_regions or owner.armors_regions or {})
 	owner.armors_broken = table.Copy(ent.armors_broken or owner.armors_broken or {})
 	owner.armors_broken_mul = table.Copy(ent.armors_broken_mul or owner.armors_broken_mul or {})
 	owner:SyncArmor()
@@ -407,6 +432,8 @@ function hg.AddArmor(ply, equipment, ent)
 	end
 
     ply.armors[placement] = equipment
+	ply.armors_regions = ply.armors_regions or {}
+	if not ent then ply.armors_regions[equipment] = nil end
     ply:SetNWFloat("ArmorWear" .. equipment, 0)
     ply.armors_wear_stage = ply.armors_wear_stage or {}
     ply.armors_wear_stage[equipment] = 0
@@ -437,6 +464,7 @@ function hg.DropArmorForce(ent, equipment, pos, ang, vel, brokenMul)
 		equipmentEnt.shotsLeft = ent.armors_shots and ent.armors_shots[equipment] or nil
 		equipmentEnt.armorHealth = ent.armors_health and ent.armors_health[equipment]
 		equipmentEnt.armorDurability = ent.armors_durability and ent.armors_durability[equipment]
+		equipmentEnt.armorRegions = ent.armors_regions and table.Copy(ent.armors_regions[equipment] or {})
 		if brokenMul or ent.armors_broken and ent.armors_broken[equipment] then
 			equipmentEnt.brokenProtectionMul = brokenMul or ent.armors_broken_mul and ent.armors_broken_mul[equipment]
 			hg.SetArmorBrokenEntity(equipmentEnt)
@@ -583,7 +611,7 @@ local function DamageArmor(org, placement, armor, dmgInfo, rawDmg)
 		PlayArmorWearStageSound(owner, armor, placement)
 
 		local breakThreshold = armorData.breakThreshold or DEFAULT_HELMET_BREAK_THRESHOLD
-		if currentDurability <= 0 or rawDmg >= breakThreshold then
+		if currentDurability <= 0 or rawDmg >= breakThreshold * 1.5 then
 			hg.BreakArmor(owner, armor, dmgInfo and dmgInfo:GetDamagePosition(), dmgInfo)
 			return true
 		end
@@ -635,7 +663,7 @@ local function ApplyArmorShrapnel(org, dmgInfo, dmg, bone, boneindex)
 	end
 end
 
-local function protec(org, bone, dmg, dmgInfo, placement, armor, scale, scaleprot, punch, boneindex, dir, hit, ricochet)
+local function protec(org, bone, dmg, dmgInfo, placement, armor, scale, scaleprot, punch, boneindex, dir, hit, ricochet, impact)
 	if not force and org.owner.armors[placement] ~= armor then return 0 end
 	force = nil
 	
@@ -654,6 +682,12 @@ local function protec(org, bone, dmg, dmgInfo, placement, armor, scale, scalepro
 	local inf = dmgInfo:GetInflictor()
 	local pen = (IsValid(inf) and inf.bullet and inf.bullet.Penetration or 0)
 	if isBullet then pen = math.min(pen, baseProt * 0.6) end
+	local regionWear = 1
+	if isBullet and impact and impact.ballisticVersion and armorData then
+		local hitPos = impact.hitPos or dmgInfo:GetDamagePosition()
+		local _, regionHealth = DamageArmorRegion(org.owner, armor, placement, armorData, hitPos, impact.rawDamage, impact.entity)
+		regionWear = math.Clamp(0.35 + regionHealth * 0.65, 0.35, 1)
+	end
 
 	local prot = baseProt - pen
 	prot = math.max(prot, 0)
@@ -714,6 +748,9 @@ local function protec(org, bone, dmg, dmgInfo, placement, armor, scale, scalepro
 			dmgInfo:SetDamageForce(dmgInfo:GetDamageForce() * 0.4)
 			org.lastArmorMitigation = 1
 			org.lastHeadArmorMitigation = 1
+			if impact and impact.ballisticVersion then
+				return {penetrationCost = impact.penetrationBefore, energyCost = impact.energyBefore, stopped = true, armorStopped = true}
+			end
 			return 1
 		end
 
@@ -805,6 +842,32 @@ local function protec(org, bone, dmg, dmgInfo, placement, armor, scale, scalepro
 	if placement == "head" then org.lastHeadArmorMitigation = dmgScale end
 
 	dmgInfo:ScaleDamage(dmgScale)
+
+	if isBullet and impact and impact.ballisticVersion then
+		local shotDir = (isvector(dir) and dir:GetNormalized()) or dmgInfo:GetDamageForce():GetNormalized()
+		local normal = impact.normal
+		local incidence = isvector(normal) and math.abs(shotDir:Dot(normal)) or 1
+		local angleMul = math.Clamp(1 / math.max(incidence, 0.4), 1, 2.5)
+		local resistance = ballisticProt * regionWear * (org.owner.armors_broken_mul[armor] or 1) * angleMul
+		local stopped = impact.penetrationBefore <= resistance
+		local penetrationCost = math.min(resistance, impact.penetrationBefore)
+		local absorbedFraction = math.Clamp(penetrationCost / math.max(impact.initialPenetration, 1), 0, 1)
+		local energyCost = math.min(impact.energyBefore, impact.initialEnergy * absorbedFraction)
+		local bluntTransfer = armorData.bluntTransfer or (placement == "head" and 0.22 or 0.14)
+		local bluntDamage = energyCost * bluntTransfer
+
+		org.shock = (org.shock or 0) + bluntDamage * 0.8
+		org.painadd = (org.painadd or 0) + bluntDamage
+		org.hurt = (org.hurt or 0) + bluntDamage / 35
+		dmgInfo:SetDamage(bluntDamage)
+
+		return {
+			penetrationCost = penetrationCost,
+			energyCost = energyCost,
+			stopped = stopped,
+			armorStopped = stopped
+		}
+	end
 
 	-- Penetration consumed by this armor layer. A broken plate carrier no longer
 	-- stops the bullet, so let it pass straight through to the body — otherwise the

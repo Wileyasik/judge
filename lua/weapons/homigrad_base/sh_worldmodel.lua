@@ -53,6 +53,71 @@ SWEP.lerpaddcloseanim = 0
 SWEP.closeanimdis = 40
 SWEP.WepAngOffset = Angle(0,0,0)
 SWEP.weaponAngLerp = Angle(0,0,0)
+SWEP.WeaponInertiaScale = 1
+
+function SWEP:GetWeaponInertiaFactor()
+	local mass = math.max((self.weight or 1) + (self.addweight or 0), 0.25)
+	local length = self.InertiaLength or (self.LocalMuzzlePos and math.abs(self.LocalMuzzlePos[1])) or 15
+	return math.Clamp(mass * (math.Clamp(length, 8, 45) / 20) ^ 2, 0.3, 8) * (self.WeaponInertiaScale or 1)
+end
+
+function SWEP:GetInertialAimAngle(target, dtime)
+	if self.WeaponInertiaScale == 0 or self:IsSprinting() then
+		self.inertialAim = Angle(target[1], target[2], target[3])
+		self.inertialAimVelocity = Angle(0, 0, 0)
+		return target
+	end
+
+	local factor = self:GetWeaponInertiaFactor()
+	local dt = math.Clamp(dtime, 0, 0.05)
+	local control = (self.Ergonomics or 1) / math.sqrt(factor)
+	local stiffness = math.Clamp(42 * control, 12, 70)
+	local damping = math.Clamp(7.5 * control, 3.8, 10)
+	if self:IsZoom() then stiffness = stiffness * 1.45 damping = damping * 1.2 end
+	if self:IsResting() then stiffness = stiffness * 3 damping = damping * 2.2 end
+
+	self.inertialAim = self.inertialAim or Angle(target[1], target[2], target[3])
+	self.inertialAimVelocity = self.inertialAimVelocity or Angle(0, 0, 0)
+	for axis = 1, 2 do
+		local error = math.AngleDifference(target[axis], self.inertialAim[axis])
+		self.inertialAimVelocity[axis] = self.inertialAimVelocity[axis] + (error * stiffness - self.inertialAimVelocity[axis] * damping) * dt
+		self.inertialAim[axis] = self.inertialAim[axis] + self.inertialAimVelocity[axis] * dt
+	end
+
+	local maxLag = math.Clamp(1.5 + factor * 0.85, 2, 10)
+	if self:IsZoom() then maxLag = maxLag * 0.55 end
+	if self:IsResting() then maxLag = maxLag * 0.1 end
+	self.inertialAim[1] = target[1] + math.Clamp(math.AngleDifference(self.inertialAim[1], target[1]), -maxLag * 0.7, maxLag * 0.7)
+	self.inertialAim[2] = target[2] + math.Clamp(math.AngleDifference(self.inertialAim[2], target[2]), -maxLag, maxLag)
+	self.inertialAim[3] = target[3]
+
+	return Angle(self.inertialAim[1], self.inertialAim[2], self.inertialAim[3])
+end
+
+function SWEP:UpdateWeaponReadiness(owner, dtime)
+	local dt = math.Clamp(dtime, 0, 0.05)
+	local sprinting = self:IsSprinting()
+	local deploying = isnumber(self.deploy) and self.deploy > CurTime()
+	local lowered = sprinting or deploying
+	local factor = self:GetWeaponInertiaFactor()
+	local raiseRate = math.Clamp((self.Ergonomics or 1) * 4 / math.sqrt(factor), 1.6, 8)
+
+	self.weaponReadiness = math.Approach(self.weaponReadiness or (lowered and 0 or 1), lowered and 0 or 1, dt * raiseRate)
+	local velocity = self.inertialAimVelocity or angle_zero
+	local angularSpeed = math.abs(velocity[1]) + math.abs(velocity[2])
+	local stable = not lowered and self.weaponReadiness > 0.98 and owner:GetVelocity():Length2D() < 25 and angularSpeed < 5
+	self.weaponStability = math.Approach(self.weaponStability or 0, stable and 1 or 0, dt * (stable and 2.8 or 6))
+
+	if lowered then
+		self.weaponReadyState = "LOW"
+	elseif self.weaponReadiness < 0.98 then
+		self.weaponReadyState = "RAISING"
+	elseif self.weaponStability < 0.98 then
+		self.weaponReadyState = "READY"
+	else
+		self.weaponReadyState = "STABLE"
+	end
+end
 
 local tickInterval = engine.TickInterval -- gde
 local hook_Run = hook.Run
@@ -69,6 +134,7 @@ function SWEP:ChangeGunPos(dtime)
 	local inuse = self:InUse()
 	
 	local should = true and not (fakeRagdoll and not (inuse))
+	self:UpdateWeaponReadiness(ply, dtime)
 
 	self.lerped_positioning = Lerp(hg.lerpFrameTime2(0.1, dtime), self.lerped_positioning or 0, should and 1 or 0.3)
 	self.lerped_angle = Lerp(hg.lerpFrameTime2(0.1, dtime), self.lerped_angle or 0, should and 1 or (hg.KeyDown(owner, IN_ATTACK2) and 1 or 0))
@@ -171,7 +237,9 @@ function SWEP:PosAngChanges(ply, desiredPos, desiredAng, bNoAdditional, closeani
 	local tr = hg.eyeTrace(ply, 60, ent)
 	if not tr then return end
 	local pos = tr.StartPos - tr.Normal:Angle():Up() * 1
-	local wepang = ply:GetAimVector():Angle()
+	local aimTarget = ply:GetAimVector():Angle()
+	self:GetInertialAimAngle(aimTarget, dtime)
+	local wepang = aimTarget
 
 	wepang:Normalize()
 
@@ -650,11 +718,51 @@ function SWEP:WorldModel_Transform(bNoApply, bNoAdditional, model)
 
 		self.desiredPos, self.desiredAng = newPos, newAng
 		self.handPos, self.handAng = desiredPos, desiredAng
-		
-		model:SetRenderOrigin(newPos)
-		model:SetRenderAngles(newAng)
-		model:SetPos(newPos)
-		model:SetAngles(newAng)
+
+		local renderPos, renderAng = newPos, newAng
+		if CLIENT and not bNoAdditional then
+			local velocity = self.inertialAimVelocity or angle_zero
+			local readiness = self.weaponReadiness or 1
+			local flex = self:IsResting() and 0 or math.Clamp(self:GetWeaponInertiaFactor() / 5, 0.15, 1)
+			local visualLag = Angle(
+				math.Clamp(velocity[1] * -0.045 * flex, -4, 4),
+				math.Clamp(velocity[2] * -0.055 * flex, -5, 5),
+				math.Clamp(velocity[2] * 0.018 * flex, -2, 2)
+			)
+			local muzzleLocal = self.LocalMuzzlePos or vector_origin
+			local muzzlePos = LocalToWorld(muzzleLocal, self.LocalMuzzleAng or angle_zero, newPos, newAng)
+			local laggedAng = newAng + visualLag
+			local laggedMuzzle = LocalToWorld(muzzleLocal, self.LocalMuzzleAng or angle_zero, newPos, laggedAng)
+			renderPos = newPos + muzzlePos - laggedMuzzle
+			renderPos:Add(newAng:Forward() * -4.5 * (1 - readiness))
+			renderPos:Add(newAng:Up() * -3 * (1 - readiness))
+			renderAng = laggedAng
+		end
+
+			if CLIENT and not bNoAdditional and owner:OnGround() and not self:IsResting() and not self:KeyDown(IN_SPEED) then
+				local move = math.Clamp(owner:GetVelocity():Length2D() / math.max(owner:GetRunSpeed(), 1), 0, 1.35)
+				if move > 0.02 then
+					local phase = CurTime() * (6.4 + move * 1.8) + owner:EntIndex() * 0.61803398875
+					local inertia = math.Clamp(self:GetWeaponInertiaFactor() / 5, 0.2, 1)
+					local jellyPos = Vector(
+						math.sin(phase * 0.5) * 0.18,
+						math.sin(phase) * 0.35,
+						math.cos(phase * 2) * 0.22
+					) * move * inertia
+					local jellyAng = Angle(
+						math.sin(phase) * 0.8,
+						math.cos(phase * 0.5) * 0.65,
+						math.sin(phase * 2) * 1.2
+					) * move * inertia
+					renderPos, renderAng = LocalToWorld(jellyPos, jellyAng, renderPos, renderAng)
+				end
+			end
+
+			self.visualDesiredPos, self.visualDesiredAng = renderPos, renderAng
+			model:SetRenderOrigin(renderPos)
+		model:SetRenderAngles(renderAng)
+		model:SetPos(renderPos)
+		model:SetAngles(renderAng)
 		self:DrawShadow(true)
 	else
 		local pos, ang = self:GetPos(), self:GetAngles()

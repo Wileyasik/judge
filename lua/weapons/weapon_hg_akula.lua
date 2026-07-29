@@ -36,9 +36,10 @@ SWEP.CanSuicide = true
 SWEP.SuicideNoLH = true
 SWEP.SuicidePunchAng = Angle(5, -15, 0)
 
-SWEP.BreakBoneMul = 0.25
+SWEP.BreakBoneMul = 0.20
 SWEP.AttackPos = Vector(0,0,0)
 SWEP.AttackingPos = Vector(0,0,0)
+SWEP.AttackLen1 = 40
 
 SWEP.weaponPos = Vector(0.7,-0,0.2)
 SWEP.weaponAng = Angle(80,130,-140)
@@ -116,8 +117,26 @@ function SWEP:CustomBlockAnim(addPosLerp, addAngLerp)
     return false
 end
 
+function SWEP:CanBlock()
+    return false
+end
+
+function SWEP:SendMeleeHitStop() end
+function SWEP:SendMeleeSoftHitStop() end
+
+SWEP.HitStopWorldSpeedMul = 0
+SWEP.HitStopWorldPause = 0
+SWEP.HitStopWorldStop = 0
+SWEP.HitStopSoftSpeedMul = 0
+SWEP.HitStopSoftPause = 0
+SWEP.HitStopSoftStop = 0
+SWEP.HitStopWorldResumeMul = 0
+SWEP.HitStopSoftResumeMul = 0
+
 function SWEP:CanSecondaryAttack()
-    return self.allowsec and true or false
+    if not self.allowsec then return false end
+    self.Attack2HitFlesh = "knife/NEWRapierSlash"..math.random(1, 6)..".wav"
+    return true
 end
 
 SWEP.AttackTimeLength = 0.15
@@ -132,9 +151,19 @@ SWEP.SwingAng2 = 0
 SWEP.MultiDmg1 = false
 SWEP.MultiDmg2 = true
 
-SWEP.AttackSwing = "weapons/darsu_eft/melee/scythe_whoosh_04.ogg" 
-SWEP.AttackHit = "snd_jack_hmcd_knifehit.wav"
+SWEP.hitsoundextra = {
+    {"knife/KnifeStabIn-1.wav", 55, {105, 115}},
+    {"knife/KnifeStabIn-2.wav", 55, {105, 115}},
+    {"knife/KnifeStabIn-3.wav", 55, {105, 115}},
+}
+
+SWEP.swingsoundextra = {
+    {"knife/knife_bayonet_swing1.ogg", 30, {80, 90}},
+    {"knife/knife_bayonet_swing2.ogg", 30, {80, 90}},
+}
+
+SWEP.AttackHit = "weapons/knife/knife_hitwall1.wav"
 SWEP.Attack2Hit = "snd_jack_hmcd_knifehit.wav"
-SWEP.AttackHitFlesh = "snd_jack_hmcd_knifehit.wav"
+SWEP.AttackHitFlesh = "knife/knifestabin-3.wav"
 SWEP.Attack2HitFlesh = "snd_jack_hmcd_knifehit.wav"
 SWEP.DeploySnd = "weapons/darsu_eft/knife_bayonet_equip.ogg"

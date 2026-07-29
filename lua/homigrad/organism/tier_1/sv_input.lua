@@ -20,7 +20,22 @@ local player_head_gib_threshold = 175
 local ragdoll_fall_skull_damage_mul = 1.2
 local ragdoll_fall_jaw_damage_mul = 0.45
 local ragdoll_fall_skull_break_blood_mul = 1.15
-local function Trace_Bullet(box, hit, ricochet, org, organs, dmg, dmgInfo, dir)
+local rifle_penetration_threshold = 11
+local rifle_low_penetration_threshold = 9.5
+local rifle_low_penetration_damage_threshold = 55
+local function Trace_Bullet(box, hit, ricochet, impact, org, organs, dmg, dmgInfo, dir, isRifleBullet)
+	if impact.ballisticVersion then
+		local energyFraction = math.Clamp(impact.energyBefore / impact.initialEnergy, 0, 1)
+		local organDamageMul = impact.tissueDamage * (1 + impact.temporaryCavity * 0.35)
+		local fragmentation = impact.fragmentation
+		if istable(fragmentation) and not impact.fragmented and energyFraction >= (fragmentation.energyThreshold or 0.65) and math.Rand(0, 1) <= (fragmentation.chance or 0) then
+			impact.fragmented = true
+			impact.fragmentationEnergy = math.Clamp(fragmentation.energyFraction or 0.2, 0, 0.6)
+			organDamageMul = organDamageMul * (1 + (fragmentation.damageMul or 0.5))
+		end
+		dmgInfo:SetDamageType(impact.rawDamageType)
+		dmgInfo:SetDamage(impact.rawDamage * energyFraction * organDamageMul)
+	end
 	dmg = dmgInfo:GetDamage() / 25
 	local organ = box[6] and organs[box[6]][box[7]]
 	if not organ then return 0 end
@@ -39,7 +54,27 @@ local function Trace_Bullet(box, hit, ricochet, org, organs, dmg, dmgInfo, dir)
 	dmg = hook_info.dmg
 	
 	if func and !hook_info.restricted then
-		return func(org, bone, dmg, dmgInfo, box[6], dir, hit, ricochet)
+		local resistance = func(org, bone, dmg, dmgInfo, box[6], dir, hit, ricochet, impact)
+
+		if isRifleBullet and name == "skull" then resistance = 0 end
+		if isRifleBullet and string.StartWith(name, "brain") then
+			org.brain = 1
+			org.alive = false
+		end
+
+		if istable(resistance) or not impact.ballisticVersion then return resistance end
+
+		local penetrationCost = math.max((resistance or 0) * impact.penetrationBefore, 0)
+		local layerCost = bone > 0 and math.max(bone * 2, 0.35) or 0.2
+		local energyCost = impact.energyBefore * math.Clamp(layerCost / math.max(impact.initialPenetration, 1), 0.01, 0.45)
+		if impact.fragmented then
+			energyCost = math.min(impact.energyBefore, energyCost + impact.initialEnergy * impact.fragmentationEnergy)
+			impact.fragmented = nil
+		end
+		return {
+			penetrationCost = penetrationCost + layerCost,
+			energyCost = energyCost
+		}
 	else
 		return 0
 	end
@@ -324,7 +359,9 @@ function hg.organism.AddWound(ent, tr, bone, dmgInfo, dmgPos, dmgBlood, inputHol
 
 			local localPos, localAng = WorldToLocal(dmgPos + ((i == 1 and 1 or -1) * tr.HitNormal), (i == 1 and -1 or 1) * tr.Normal:Angle(), bonePos, boneAng)
 			if #org.wounds < 30 then
-				table.insert(org.wounds,{dmgBlood / 2, localPos, localAng, ent:GetBoneName(bone), CurTime()})
+				local wound = {dmgBlood / 2, localPos, localAng, ent:GetBoneName(bone), CurTime()}
+				table.insert(org.wounds, wound)
+				if hg.organism.AddBleedSource then hg.organism.AddBleedSource(org, "external", dmgBlood / 2, nil, wound[4], wound) end
 			else
 				if org.wounds[1] then org.wounds[1][1] = org.wounds[1][1] + dmgBlood / 2 end
 			end
@@ -352,7 +389,9 @@ function hg.organism.AddWoundManual(ent,dmgBlood,localPos,localAng,bone,time)
 	if isnumber(bone) then bone = ent:GetBoneName(bone) end
 
 	if #org.wounds < 30 then
-		table.insert(org.wounds,{dmgBlood / 2, localPos, localAng, bone, time})
+		local wound = {dmgBlood / 2, localPos, localAng, bone, time}
+		table.insert(org.wounds, wound)
+		if hg.organism.AddBleedSource then hg.organism.AddBleedSource(org, "external", dmgBlood / 2, nil, bone, wound) end
 	else
 		if org.wounds[1] then org.wounds[1][1] = org.wounds[1][1] + dmgBlood / 2 end
 	end
@@ -695,6 +734,8 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 			if istable(owner.armors) and next(owner.armors) then
 				ent.armors = table.Copy(owner.armors)
 				ent.armors_health = table.Copy(owner.armors_health or {})
+				ent.armors_durability = table.Copy(owner.armors_durability or {})
+				ent.armors_regions = table.Copy(owner.armors_regions or {})
 				ent.armors_broken = table.Copy(owner.armors_broken or {})
 				ent.armors_broken_mul = table.Copy(owner.armors_broken_mul or {})
 				ent.armors_shots = table.Copy(owner.armors_shots or {})
@@ -734,12 +775,37 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	end
 	
 	local dmg_before = dmgInfo:GetDamage()
+	local bulletDamage = (bullet ~= nil and bullet.Damage) or dmg_before
+	local isRifleBullet = dmgInfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT) and
+		(pen >= rifle_penetration_threshold or
+		(pen >= rifle_low_penetration_threshold and bulletDamage >= rifle_low_penetration_damage_threshold))
+	local isBallistic = dmgInfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT)
+	local impact = {
+		ballisticVersion = isBallistic and 1 or nil,
+		entity = ent,
+		bullet = bullet,
+		rawDamage = dmg_before,
+		rawDamageType = dmgInfo:GetDamageType(),
+		initialEnergy = math.max(dmg_before, 0.01),
+		energy = math.max(dmg_before, 0.01),
+		initialPenetration = math.max(pen, 0.01),
+		tissueDamage = (bullet ~= nil and bullet.TissueDamage) or 1,
+		temporaryCavity = (bullet ~= nil and bullet.TemporaryCavity) or 0.5,
+		fragmentation = bullet ~= nil and bullet.BulletFragmentation,
+		energyRetention = (bullet ~= nil and bullet.EnergyRetention) or 0.85,
+		layerIndex = 0
+	}
 
 	org.lastArmorMitigation = 1
 
 	local lastPos, hitBoxs, inputHole, outputHole, outputDir, distance, tracePoses = nil,{},{},{},{},nil,nil
 	if dmgInfo:IsDamageType(DMG_BULLET+DMG_BUCKSHOT+DMG_SLASH+DMG_CLUB+DMG_GENERIC) then
-		lastPos, hitBoxs, inputHole, outputHole, outputDir, distance, tracePoses = hg.organism.Trace(dmgPos, dir, size, maxpen, boxs, pos, sphere, organs, dmgInfo:IsDamageType(DMG_BULLET+DMG_BUCKSHOT), Trace_Bullet, ent.organism, organs, dmg / 25, dmgInfo, dir)
+		lastPos, hitBoxs, inputHole, outputHole, outputDir, distance, tracePoses = hg.organism.Trace(dmgPos, dir, size, maxpen, boxs, pos, sphere, organs, dmgInfo:IsDamageType(DMG_BULLET+DMG_BUCKSHOT), Trace_Bullet, impact, ent.organism, organs, dmg / 25, dmgInfo, dir, isRifleBullet)
+		if isBallistic then dmgInfo:SetDamageType(impact.rawDamageType) end
+		if impact.armorStopped then
+			inputHole = {}
+			outputHole = {}
+		end
 	elseif dmgInfo:IsDamageType(DMG_BLAST) then
 		local organs = hg.organism.GetHitBoxOrgans(ent:GetModel(), ent)
 		local boxs, pos, sphere = hg.organism.ShootMatrix(ent, organs)
@@ -804,7 +870,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 			end*/
 			
 			if bullet and true then
-				local mul = distance / pen
+				local mul = math.Clamp(impact.energy / impact.initialEnergy, 0, 1) * impact.energyRetention
 				bullet.Src = outputHole[#outputHole]
 				bullet.Dir = dir:GetNormalized()//outputDir:GetNormalized()
 				bullet.Force = bullet.Force * mul
@@ -819,7 +885,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 				bullet.limit_ricochet = bullet.limit_ricochet or 0
 				bullet.penetrated = bullet.penetrated + 1
 				bullet.limit_ricochet = bullet.limit_ricochet + 1
-				bullet.Penetration = distance
+				bullet.Penetration = distance * impact.energyRetention
 				inf:FireLuaBullets(bullet, true)
 
 				local tr = util.QuickTrace(outputHole[#outputHole], -outputDir:GetNormalized() * 10, ent)
@@ -932,6 +998,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 
 	--print(dmg_before, 2)
 	local dmgBlood, dmgHurt, instaPain, immobilization = hg.organism.DamageTypeAffliction(dmg_before / 12, dmgInfo, ent, org)
+	if impact.armorStopped then dmgBlood = 0 end
 
 	local armMit = org.lastArmorMitigation or 1
 	dmgBlood = dmgBlood * armMit

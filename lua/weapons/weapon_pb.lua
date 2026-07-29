@@ -23,6 +23,7 @@ SWEP.FakeAttachment = "1"
 SWEP.FakeEjectBrassATT = "2"
 SWEP.MagIndex = nil
 SWEP.SetSupressor = true
+SWEP.SupressorOnly = true
 
 SWEP.FakeVPShouldUseHand = false
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"

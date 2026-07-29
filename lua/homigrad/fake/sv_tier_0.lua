@@ -448,6 +448,7 @@ hook.Add("DoPlayerDeath", "Fake", function(ply)
 	ply:SetNWEntity("RagdollDeath", ragdoll)
 	ragdoll:SetNetVar("wounds", ply:GetNetVar("wounds"))
 	ragdoll:SetNetVar("arterialwounds", ply:GetNetVar("arterialwounds"))
+	ragdoll:SetNWFloat("hgThermalDeathTime", CurTime())
 	ply.RagdollDeath = ragdoll
 end)
 

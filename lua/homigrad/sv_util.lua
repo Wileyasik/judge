@@ -449,24 +449,26 @@ hook.Add( "ScalePlayerDamage", "FlinchPlayersOnHit", function(ply, grp)
 	if IsValid(ply) and ply:Alive() then
 		--could maybe return end,
 		--but would that override other Scale hooks? -- no.
-		local group = nil
-		local hitpos = {}
-		hitpos = {
-			[HITGROUP_HEAD] = ACT_FLINCH_HEAD, --1
-			[HITGROUP_CHEST] = ACT_FLINCH_STOMACH, --2
-			[HITGROUP_STOMACH] = ACT_FLINCH_STOMACH, --3
-			[HITGROUP_LEFTARM] = ply:GetSequenceActivity(ply:LookupSequence("flinch_shoulder_l")), --4
-			[HITGROUP_RIGHTARM] = ply:GetSequenceActivity(ply:LookupSequence("flinch_shoulder_r")), --5
-			[HITGROUP_LEFTLEG] = ply:GetSequenceActivity(ply:LookupSequence("flinch_01")), --6
-			[HITGROUP_RIGHTLEG] =  ply:GetSequenceActivity(ply:LookupSequence("flinch_02")) --7
-		}
-		if hitpos[grp] == nil then
-			group = ACT_FLINCH_PHYSICS
-		elseif hitpos[grp] then
-			group = hitpos[grp]
-		else
-			group = ACT_FLINCH_PHYSICS
+		local function sequenceActivity(name, fallback)
+			local sequence = ply:LookupSequence(name)
+			if sequence and sequence >= 0 then
+				local activity = ply:GetSequenceActivity(sequence)
+				if activity and activity >= 0 then return activity end
+			end
+			return fallback
 		end
+
+		local variants = {
+			[HITGROUP_HEAD] = {ACT_FLINCH_HEAD, ACT_FLINCH_PHYSICS},
+			[HITGROUP_CHEST] = {ACT_FLINCH_CHEST, ACT_FLINCH_STOMACH, ACT_FLINCH_PHYSICS},
+			[HITGROUP_STOMACH] = {ACT_FLINCH_STOMACH, ACT_FLINCH_CHEST, ACT_FLINCH_PHYSICS},
+			[HITGROUP_LEFTARM] = {sequenceActivity("flinch_shoulder_l", ACT_FLINCH_LEFTARM), ACT_FLINCH_LEFTARM, ACT_FLINCH_PHYSICS},
+			[HITGROUP_RIGHTARM] = {sequenceActivity("flinch_shoulder_r", ACT_FLINCH_RIGHTARM), ACT_FLINCH_RIGHTARM, ACT_FLINCH_PHYSICS},
+			[HITGROUP_LEFTLEG] = {sequenceActivity("flinch_01", ACT_FLINCH_LEFTLEG), ACT_FLINCH_LEFTLEG, ACT_FLINCH_PHYSICS},
+			[HITGROUP_RIGHTLEG] = {sequenceActivity("flinch_02", ACT_FLINCH_RIGHTLEG), ACT_FLINCH_RIGHTLEG, ACT_FLINCH_PHYSICS}
+		}
+		local choices = variants[grp] or {ACT_FLINCH_PHYSICS, ACT_FLINCH_STOMACH}
+		local group = choices[math.random(#choices)] or ACT_FLINCH_PHYSICS
 
 		net.Start( "DoPlayerFlinch" )
 			net.WriteInt( group, 32 )
@@ -477,6 +479,7 @@ end )
 
 
 util.AddNetworkString("add_supression")
+util.AddNetworkString("hg_bullet_nearmiss")
 
 local function IsLookingAt(ply, targetVec)
 	if !IsValid(ply) or !ply:IsPlayer() then return true end
@@ -484,45 +487,73 @@ local function IsLookingAt(ply, targetVec)
 	return ply:GetAimVector():Dot(diff) / diff:Length() >= 0.8
 end
 
-hook.Add("PostEntityFireBullets","bulletsuppression",function(ent,bullet)
-	local tr = bullet.Trace
-	local dmg = bullet.Damage
-	if ent == Entity(0) then return end
-	if !IsValid(ent) then return end
+local nearMissShots = {}
+function hg.ProcessBulletNearMiss(data)
+	local startPos, endPos = data.StartPos, data.EndPos
+	local shooter = data.Shooter
+	if not isvector(startPos) or not isvector(endPos) or not IsValid(shooter) then return end
+	if not shooter:IsPlayer() and IsValid(shooter:GetOwner()) then shooter = shooter:GetOwner() end
+	if not shooter:IsPlayer() then return end
+	if (data.Speed or 0) <= 340 or startPos:DistToSqr(endPos) < 256 then return end
+
+	local hitPlayer = data.HitEntity
+	if IsValid(hitPlayer) and not hitPlayer:IsPlayer() then hitPlayer = hg.RagdollOwner(hitPlayer) end
+	local shotPlayers = data.NearMissPlayers
+	if not shotPlayers and data.ShotID then
+		shotPlayers = nearMissShots[data.ShotID] or {}
+		nearMissShots[data.ShotID] = shotPlayers
+	end
+
 	for i,ply in player.Iterator() do--five pebbles
-		if (IsValid(ent:GetOwner()) and ply == ent:GetOwner()) or ent == ply then continue end
+		if ply == shooter or ply == hitPlayer or shotPlayers and shotPlayers[ply] then continue end
 		if !ply:Alive() then continue end
-		local dist,pos = util.DistanceToLine(tr.StartPos,tr.HitPos,ply:EyePos())
+		local dist,pos = util.DistanceToLine(startPos, endPos, ply:EyePos())
 		local org = ply.organism
 		if not org then continue end
 		local eyePos = ply:EyePos()
+		if dist > 120 then continue end
 
 		local isVisible = !util.TraceLine({
 			start = pos,
 			endpos = eyePos,
-			filter = {ent, ply, hg.GetCurrentCharacter(ply), ent:GetOwner()},
+			filter = {data.Inflictor, ply, hg.GetCurrentCharacter(ply), shooter, hg.GetCurrentCharacter(shooter)},
 			mask = MASK_SHOT
 		}).Hit
 
 		if !isVisible then continue end
 
-		local shooterdist = tr.StartPos:Distance(eyePos)
-
-		if dist > 120 then continue end
-
-		if shooterdist < 200 and !IsLookingAt(ent:GetOwner(),eyePos) then continue end
-
-		if ent:GetOwner():IsPlayer() then
-			hg.DynaMusic:AddPanic(ent:GetOwner(),0.5)
-		end
-
 		if !org.otrub then
-			--print(1 * dmg / math.max(dist / 2,10) / 1)
-			ply:AddNaturalAdrenaline(0.05 * dmg / math.max(dist / 2,10) / 1)
-			org.fearadd = org.fearadd + 0.2
-			hg.organism.AddPanicAttack(org, math.Clamp(0.0008 * dmg / math.max(dist / 10, 8), 0.0004, 0.0065), true)
+			local strength = math.Clamp((1 - dist / 120) * (data.Damage or 25) / 45, 0.08, 1)
+			ply:AddNaturalAdrenaline(0.035 * strength)
+			org.fearadd = org.fearadd + 0.12 * strength
+			hg.organism.AddPanicAttack(org, 0.0004 + strength * 0.0025, true)
+			net.Start("hg_bullet_nearmiss")
+				net.WriteVector(pos)
+				net.WriteFloat(strength)
+			net.Send(ply)
+			if shotPlayers then shotPlayers[ply] = true end
 		end
 	end
+end
+
+hook.Add("PostEntityFireBullets","bulletsuppression",function(ent,bullet)
+	if ent == Entity(0) or !IsValid(ent) then return end
+	local tr = bullet.Trace
+	local shooter = IsValid(bullet.Attacker) and bullet.Attacker or ent:GetOwner()
+	hg.ProcessBulletNearMiss({
+		StartPos = tr.StartPos,
+		EndPos = tr.HitPos,
+		Shooter = shooter,
+		Inflictor = ent,
+		HitEntity = tr.Entity,
+		Speed = bullet.Speed,
+		Damage = bullet.Damage,
+		ShotID = bullet.NearMissShotID
+	})
+end)
+
+timer.Create("hg_nearmiss_cleanup", 1, 0, function()
+	nearMissShots = {}
 end)
 
 --//

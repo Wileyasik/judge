@@ -259,6 +259,7 @@ players : 1 humans, 0 bots (20 max)
 		local anguse = Angle(0,0,0)
 		s_suppression = s_suppression or 0
 		hook.Add("PostEntityFireBullets","bulletsuppression2",function(ent,bullet)
+			if bullet.NearMissShotID then return end
 			if not lply:Alive() then return end
 			if not IsValid(lply) or not lply:IsPlayer() then return end
 			if !lply:Alive() or !lply.organism or lply.organism.otrub then return end
@@ -348,6 +349,26 @@ players : 1 humans, 0 bots (20 max)
 		function Suppress(force)
 			SIB_suppress.Force = math.Clamp(SIB_suppress.Force + force / 1, 0, 10)
 		end
+
+		net.Receive("hg_bullet_nearmiss", function()
+			if not IsValid(lply) or not lply:Alive() or not lply.organism or lply.organism.otrub then return end
+			local pos = net.ReadVector()
+			local strength = net.ReadFloat()
+			local eyePos = lply:EyePos()
+			local direction = (eyePos - pos):GetNormalized()
+			local side = direction:Dot(lply:EyeAngles():Right())
+			local vertical = direction:Dot(lply:EyeAngles():Up())
+			local soundIndex = math.random(1, 9)
+			local soundName = strength > 0.6 and "cracks/heavy/heav_crack_0" or strength > 0.3 and "cracks/medium/med_crack_0" or "cracks/light/light_crack_0"
+
+			EmitSound(soundName .. soundIndex .. ".ogg", pos, 0, CHAN_WEAPON, 1, 140)
+			Suppress(0.8 + strength * 3.2)
+			if hg_suppression_viewpunch and hg_suppression_viewpunch:GetBool() then
+				local punch = Angle(vertical * -0.35, side * -0.45, 0) * strength
+				ViewPunch(punch)
+				ViewPunch2(punch / -2)
+			end
+		end)
 
 		local pain_mat = Material("sprites/mat_jack_hmcd_narrow")
 

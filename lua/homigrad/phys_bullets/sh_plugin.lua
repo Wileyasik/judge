@@ -439,6 +439,19 @@ PLUGIN.Bullet_StandartMask = MASK_SHOT
 			end
 			
 			trace_hit = trace.Hit
+			if SERVER and hg.ProcessBulletNearMiss then
+				self.NearMissPlayers = self.NearMissPlayers or {}
+				hg.ProcessBulletNearMiss({
+					StartPos = hull_trace.start,
+					EndPos = trace.HitPos,
+					Shooter = self.Shooter or self.Attacker,
+					Inflictor = self.Inflictor,
+					HitEntity = trace.Entity,
+					Speed = len_before / 52.5,
+					Damage = self.Damage,
+					NearMissPlayers = self.NearMissPlayers
+				})
+			end
 			
 			if(self.PenetratingMaterial)then
 				if(!trace.AllSolid)then

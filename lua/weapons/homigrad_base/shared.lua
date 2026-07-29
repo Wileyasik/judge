@@ -484,6 +484,7 @@ function SWEP:Shoot(override)
 	local owner = self:GetOwner()
 	if owner:IsNPC() then self.drawBullet = true end
 
+	if !override and IsValid(owner) and owner:IsPlayer() and self:IsSprinting() then return false end
 	if !override and !self:CanPrimaryAttack() then return false end
 	if !override and !self:CanUse(true) then return false end
 	if CLIENT and owner != LocalPlayer() and !override then return false end

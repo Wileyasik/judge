@@ -755,6 +755,8 @@ function ENTITY:FireLuaBullets(tInfo)
 			data.Force = tInfo.Force
 			data.Attacker = tInfo.Attacker
 			data.TracerName = tInfo.TracerName
+			data.Speed = tInfo.Speed
+			data.NearMissShotID = tInfo.NearMissShotID
 			
 			if (hook.Run("PostEntityFireBullets", self, data) == false) then
 				return

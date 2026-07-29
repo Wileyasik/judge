@@ -2,12 +2,77 @@ AddCSLuaFile()
 --
 local delta = 0
 local color_red = Color(255, 0, 0)
-local thermalWhiteMat = CreateMaterial("cl_optics_thermal_white", "VertexLitGeneric", {
-	["$basetexture"] = "vgui/white",
-	["$model"] = 1,
-	["$vertexcolor"] = 1,
-	["$vertexalpha"] = 1
-})
+local thermalWhiteMat = Material("models/debug/debugwhite")
+local thermalColorModify = {
+	["$pp_colour_addr"] = 0,
+	["$pp_colour_addg"] = 0,
+	["$pp_colour_addb"] = 0,
+	["$pp_colour_brightness"] = -0.55,
+	["$pp_colour_contrast"] = 1.05,
+	["$pp_colour_colour"] = 0,
+	["$pp_colour_mulr"] = 0,
+	["$pp_colour_mulg"] = 0,
+	["$pp_colour_mulb"] = 0
+}
+local thermalMonochrome = {
+	["$pp_colour_addr"] = 0,
+	["$pp_colour_addg"] = 0,
+	["$pp_colour_addb"] = 0,
+	["$pp_colour_brightness"] = 0,
+	["$pp_colour_contrast"] = 1,
+	["$pp_colour_colour"] = 0,
+	["$pp_colour_mulr"] = 0,
+	["$pp_colour_mulg"] = 0,
+	["$pp_colour_mulb"] = 0
+}
+
+local function DrawThermalTargets(owner, view)
+	local drawn = {}
+	local function drawTarget(ent, heat)
+		if not IsValid(ent) or ent == owner or ent:IsDormant() or ent:GetNoDraw() or drawn[ent] then return end
+
+		drawn[ent] = true
+		render.SetColorModulation(heat, heat, heat)
+		ent:DrawModel()
+	end
+
+	cam.Start3D(view.origin, view.angles, view.fov, view.x, view.y, view.w, view.h, view.znear, view.zfar)
+		render.SuppressEngineLighting(true)
+		render.MaterialOverride(thermalWhiteMat)
+		render.SetBlend(1)
+		render.ResetModelLighting(0.32, 0.32, 0.32)
+		render.SetModelLighting(0, 0.7, 0.7, 0.7)
+		render.SetModelLighting(1, 0.45, 0.45, 0.45)
+		render.SetModelLighting(4, 0.85, 0.85, 0.85)
+
+		for _, ply in ipairs(player.GetAll()) do
+			local fakeRagdoll = IsValid(ply.FakeRagdoll) and ply.FakeRagdoll or ply:GetNWEntity("FakeRagdoll")
+
+			if IsValid(fakeRagdoll) then
+				drawTarget(fakeRagdoll, 1)
+			elseif ply:Alive() then
+				drawTarget(ply, 1)
+			end
+		end
+
+		for _, ent in ipairs(ents.GetAll()) do
+			if ent:IsRagdoll() then
+				local deathTime = ent:GetNWFloat("hgThermalDeathTime", ent:GetCreationTime())
+				local age = math.max(CurTime() - deathTime, 0)
+				local residualHeat = Lerp(math.Clamp(age / 300, 0, 1), 0.9, 0.08)
+				drawTarget(ent, residualHeat)
+			elseif ent:IsNPC() or ent:IsNextBot() then
+				drawTarget(ent, 0.95)
+			end
+		end
+
+		render.SetColorModulation(1, 1, 1)
+		render.MaterialOverride(nil)
+
+		render.SuppressEngineLighting(false)
+		render.ResetModelLighting(1, 1, 1)
+	cam.End3D()
+end
 
 hook.Add("HG.InputMouseApply", "ChangeZoom", function(tbl)
 	local ply = LocalPlayer()
@@ -45,6 +110,42 @@ local rtmat = GetRenderTargetEx("huy-glass22",
 	0,
 	IMAGE_FORMAT_BGR888
 )
+local thermalSensorSize = 128
+local thermalSensorRT = GetRenderTargetEx("hg_scope_thermal_sensor",
+	thermalSensorSize, thermalSensorSize,
+	RT_SIZE_NO_CHANGE,
+	MATERIAL_RT_DEPTH_NONE,
+	bit.bor(2, 256),
+	0,
+	IMAGE_FORMAT_BGR888
+)
+local thermalSourceMat = CreateMaterial("hg_scope_thermal_source_v2", "UnlitGeneric", {
+	["$basetexture"] = rtmat:GetName()
+})
+local thermalSensorMat = CreateMaterial("hg_scope_thermal_sensor_mat_v2", "UnlitGeneric", {
+	["$basetexture"] = thermalSensorRT:GetName()
+})
+
+local function PixelateThermalView(size)
+	render.PushRenderTarget(thermalSensorRT, 0, 0, thermalSensorSize, thermalSensorSize)
+		render.Clear(0, 0, 0, 255)
+		cam.Start2D()
+			surface.SetDrawColor(255, 255, 255, 255)
+			surface.SetMaterial(thermalSourceMat)
+			surface.DrawTexturedRect(0, 0, thermalSensorSize, thermalSensorSize)
+		cam.End2D()
+	render.PopRenderTarget()
+
+	cam.Start2D()
+		render.PushFilterMin(TEXFILTER.POINT)
+		render.PushFilterMag(TEXFILTER.POINT)
+		surface.SetDrawColor(255, 255, 255, 255)
+		surface.SetMaterial(thermalSensorMat)
+		surface.DrawTexturedRect(0, 0, size, size)
+		render.PopFilterMin()
+		render.PopFilterMag()
+	cam.End2D()
+end
 local mat = Material("huy-glass")
 local mat2 = Material("huy-glass")
 SWEP.scopemat = Material("decals/scope.png")
@@ -120,6 +221,7 @@ function SWEP:DoRT()
 	
 	local optic
 	local sight, foundatt = self:HasAttachment("sight", "optic")
+	local thermal = foundatt and foundatt.thermal
 	
 	if foundatt and self.modelAtt and IsValid(self.modelAtt.sight) then
 		pos = self.modelAtt.sight:GetPos()
@@ -205,7 +307,15 @@ function SWEP:DoRT()
     		--render.UpdateFullScreenDepthTexture()
 		end
 		
+		if thermal then
+			RENDERING_THERMAL_SCOPE = true
+		end
+
 		render.RenderView(rt)
+
+		if thermal then
+			RENDERING_THERMAL_SCOPE = false
+		end
 
 		cam.Start3D()
 			local aimWay = (ang:Forward()) * 10000000000
@@ -234,48 +344,21 @@ function SWEP:DoRT()
 			render.Clear(0, 0, 0, 255)
 		end
 
-		if self.thermal then
+		if thermal then
 			cam.Start2D()
-				surface.SetDrawColor(0, 0, 0, 255)
-				surface.DrawRect(0, 0, rtsize, rtsize)
+				DrawColorModify(thermalColorModify)
 			cam.End2D()
-			cam.Start3D()
-				render.SuppressEngineLighting(true)
-				render.MaterialOverride(thermalWhiteMat)
-				render.OverrideDepthEnable(true, false)
-
-				for _, v in ipairs(player.GetAll()) do
-					if v:IsPlayer() and v ~= owner then
-						v:DrawModel()
-						local ragdoll = v:GetRagdollEntity()
-						if IsValid(ragdoll) then
-							ragdoll:DrawModel()
-						end
-					end
-				end
-
-				for _, ent in ipairs(ents.GetAll()) do
-					if IsValid(ent) then
-						if ent:IsRagdoll() then
-							ent:DrawModel()
-						elseif ent:IsNPC() then
-							ent:DrawModel()
-						end
-					end
-				end
-
-				if IsValid(owner.FakeRagdoll) then
-					owner.FakeRagdoll:DrawModel()
-				end
-
-				render.OverrideDepthEnable(false, true)
-				render.MaterialOverride(nil)
-				render.SuppressEngineLighting(false)
-			cam.End3D()
+			DrawThermalTargets(owner, rt)
+			cam.Start2D()
+				-- Model decals and wound overlays are rendered after the model material.
+				DrawColorModify(thermalMonochrome)
+			cam.End2D()
+			PixelateThermalView(rtsize)
 		end
 
-		render.PushFilterMin(TEXFILTER.ANISOTROPIC)
-		render.PushFilterMag(TEXFILTER.ANISOTROPIC)
+		local scopeFilter = thermal and TEXFILTER.POINT or TEXFILTER.ANISOTROPIC
+		render.PushFilterMin(scopeFilter)
+		render.PushFilterMag(scopeFilter)
 		cam.Start2D()
 			if hg_show_hitposmuzzle:GetBool() then
 				draw.RoundedBox(0, hitPos.x / (scrw / ScrW()) - 2, hitPos.y / (scrh / ScrH()) - 2, 4, 4, color_red)
