@@ -25,7 +25,6 @@ local thermalMonochrome = {
 	["$pp_colour_mulg"] = 0,
 	["$pp_colour_mulb"] = 0
 }
-
 local function DrawThermalTargets(owner, view)
 	local drawn = {}
 	local function drawTarget(ent, heat)
@@ -222,6 +221,7 @@ function SWEP:DoRT()
 	local optic
 	local sight, foundatt = self:HasAttachment("sight", "optic")
 	local thermal = foundatt and foundatt.thermal
+	local digitalThermal = thermal and sight and (sight[1] == "optic17" or sight[1] == "optic18")
 	
 	if foundatt and self.modelAtt and IsValid(self.modelAtt.sight) then
 		pos = self.modelAtt.sight:GetPos()
@@ -277,6 +277,12 @@ function SWEP:DoRT()
 		zfar = zfar,
 		bloomtone = false
 	}
+
+	if digitalThermal then
+		rt.origin = view.origin
+		rt.angles = view.angles
+		rt.fov = math.max(self.ZoomFOV, 0.5)
+	end
 	--debugoverlay.Axis(rt.origin,rt.angles,5,1)
 	--render.RenderView(rt)
 
@@ -294,7 +300,10 @@ function SWEP:DoRT()
 	diffa[1] = diffa[1] * ScrW() * 2
 	diffa[2] = diffa[2] * ScrH() * 2
 
-	if diffa:LengthSqr() < 10000.0 * (rtsize / 512) / (self.scope_blackout / 400) then
+	local eyeReliefLimit = 10000.0 * (rtsize / 512) / (self.scope_blackout / 400)
+	local insideEyeRelief = digitalThermal or diffa:LengthSqr() < eyeReliefLimit
+
+	if insideEyeRelief then
 		if hg_optimise_scopes:GetInt() >= 2 then
 			--LOW_RENDER = true
 			--render.UpdateScreenEffectTexture()

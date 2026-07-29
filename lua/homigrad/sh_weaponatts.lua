@@ -1,4 +1,5 @@
 hg.attachments = {}
+
 hg.attachments.sight = {
 	["empty"] = {"sight", "", Angle(0, 0, 0), {}},
 	["holo0"] = {
@@ -1002,6 +1003,78 @@ hg.attachments.sight = {
 		transformFunction = function(self,model,vecadd,ang) -- in transformfunction
 		end,
 	},
+	["optic17"] = {
+		"sight",
+		"models/weapons/mods/scope_armasight_zeus_pro.mdl",
+		Angle(0, 0, -90),
+		offset = Vector(0, -0.25, -0),
+		offsetView = Vector(-2, 0, 010),
+		{
+			[2] = "hg/thermal_scope_screen_v2"
+		},
+		mountType = "picatinny",
+		scopemat = Material("decals/scope.png"),
+		mat = Material("effects/arc9/rt"),
+		perekrestie = Material("vgui/arc9_eft_shared/reticles/scope_base_armasight_zeus_pro_640_2_16x50_30hz_lod0_mark_00.png"),
+		localScopePos = Vector(5, -0.04, 2),
+		scope_blackout = 1200,
+		rot = 0,
+		FOVMin = 10,
+		FOVMax = 22,
+		FOVScoped = 40,
+		blackoutsize = 4000,
+		sizeperekrestie = 4000,
+		perekrestieSize = true,
+		thermal = true,
+		mount = "models/weapons/mods/mount_reapir.mdl",
+		mountVec = Vector(-0, 0, 0),
+		mountAng = Angle(0, 0, 0),
+		PhysModel = "models/hunter/plates/plate025.mdl",
+		PhysPos = Vector(1, 0, 0),
+		PhysAng = Angle(0, 90, 0),
+
+		sightFunction = function(self)
+			self:DoRT()
+		end,
+
+		transformFunction = function(self,model,vecadd,ang) -- in transformfunction
+		end,
+	},
+	["optic18"] = {
+		"sight",
+		"models/weapons/mods/scope_sig_sauer_echo1.mdl",
+		Angle(0, 0, -90),
+		offset = Vector(0, -0.25, -0.05),
+		offsetView = Vector(-2, 0, 10),
+		{
+			[1] = "hg/thermal_scope_screen_v2"
+		},
+		mountType = "picatinny",
+		scopemat = Material("decals/scope.png"),
+		mat = Material("effects/arc9/rt"),
+		perekrestie = Material("vgui/arc9_eft_shared/reticles/scope_all_sig_sauer_echo1_thermal_reflex_sight_1_2x_30hz_lod0_mark_00.png"),
+		localScopePos = Vector(20, -0.5, 1.65),
+		scope_blackout = 1200,
+		rot = 0,
+		FOVMin = 20,
+		FOVMax = 20,
+		FOVScoped = 40,
+		blackoutsize = 4500,
+		sizeperekrestie = 4000,
+		perekrestieSize = false,
+		thermal = true,
+		PhysModel = "models/hunter/plates/plate025.mdl",
+		PhysPos = Vector(1, 0, 0),
+		PhysAng = Angle(0, 90, 0),
+
+		sightFunction = function(self)
+			self:DoRT()
+		end,
+
+		transformFunction = function(self, model, vecadd, ang)
+		end,
+		valid = true,
+	},
 	["ironsight1"] = {
 		"sight",
 		"models/weapons/arc9_eft_shared/atts/ironsight/eft_rearsight_mbus.mdl",
@@ -1662,6 +1735,8 @@ local attNames = {
 	["optic13"] = "PAG-17 optical sight",
 	["optic14"] = "Elcan SpecterDR 1x/4x",
 	["optic15"] = "REAP-IR thermal scope",
+	["optic17"] = "Armasight Zeus Pro 640 2-16x50 Thermal",
+	["optic18"] = "SIG Sauer ECHO1 1-2x Thermal Reflex Sight",
 	["holo15"] = "SIG Sauer \"ROMEO4\"",
 	["holo16"] = "Trijicon \"RMR\"",
 	["grip_ak74"] = "Standart Handle AK-74",
