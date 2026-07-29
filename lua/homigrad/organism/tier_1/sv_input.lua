@@ -17,12 +17,40 @@ local head_otrub_consciousness_cap = 0.04
 local instant_pain_shock_scale = 0.75
 local player_limb_gib_threshold = 160
 local player_head_gib_threshold = 175
+local player_buckshot_head_gib_threshold = 112
 local ragdoll_fall_skull_damage_mul = 1.2
 local ragdoll_fall_jaw_damage_mul = 0.45
 local ragdoll_fall_skull_break_blood_mul = 1.15
 local rifle_penetration_threshold = 11
 local rifle_low_penetration_threshold = 9.5
 local rifle_low_penetration_damage_threshold = 55
+local function ApplyFatalOrganismDamage(org, dmgInfo)
+	local owner = org and org.owner
+	if not IsValid(owner) or org.fatalDamageQueued then return end
+	org.fatalDamageQueued = true
+	org.alive = false
+
+	local attacker = IsValid(dmgInfo:GetAttacker()) and dmgInfo:GetAttacker() or game.GetWorld()
+	local inflictor = IsValid(dmgInfo:GetInflictor()) and dmgInfo:GetInflictor() or attacker
+	timer.Simple(0, function()
+		if not IsValid(owner) then return end
+		if owner:IsPlayer() then
+			if owner:Alive() then owner:Kill() end
+			return
+		end
+		if owner:IsNPC() or owner:IsNextBot() then
+			local fatal = DamageInfo()
+			fatal:SetDamage(math.max(owner:Health(), 1) + 10000)
+			fatal:SetDamageType(DMG_GENERIC)
+			fatal:SetAttacker(attacker)
+			fatal:SetInflictor(inflictor)
+			owner.hgFatalOrganismDamage = true
+			owner:TakeDamageInfo(fatal)
+			owner.hgFatalOrganismDamage = nil
+		end
+	end)
+end
+
 local function Trace_Bullet(box, hit, ricochet, impact, org, organs, dmg, dmgInfo, dir, isRifleBullet)
 	if impact.ballisticVersion then
 		local energyFraction = math.Clamp(impact.energyBefore / impact.initialEnergy, 0, 1)
@@ -60,6 +88,7 @@ local function Trace_Bullet(box, hit, ricochet, impact, org, organs, dmg, dmgInf
 		if isRifleBullet and string.StartWith(name, "brain") then
 			org.brain = 1
 			org.alive = false
+			ApplyFatalOrganismDamage(org, dmgInfo)
 		end
 
 		if istable(resistance) or not impact.ballisticVersion then return resistance end
@@ -524,7 +553,10 @@ function hg.ExplodeHead(ent)
 
 	local ply = ent:IsRagdoll() and hg.RagdollOwner(ent) or ent
 	if ply:IsPlayer() and ply:Alive() then ply:Kill() end
-	if ent:IsNPC() and ent.organism then ent.organism.shock = 100 end
+	if ent:IsNPC() and ent.organism then
+		ent.organism.shock = 100
+		ent.organism.alive = false
+	end
 
 	timer.Simple(0, function()
 		local ent = ent:IsRagdoll() and ent or ent:GetNWEntity("RagdollDeath")
@@ -564,6 +596,7 @@ local hg_bloodimpacts = ConVarExists("hg_bloodimpacts") and GetConVar("hg_bloodi
 local net, math, hg, IsValid = net, math, hg, IsValid
 local takeRagdollDamage
 hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
+	if ent.hgFatalOrganismDamage then return end
 	if dmgInfo:IsDamageType(DMG_DISSOLVE) then return end
 
 	local attacker = dmgInfo:GetAttacker()
@@ -797,6 +830,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	}
 
 	org.lastArmorMitigation = 1
+	org.lastHeadArmorMitigation = 1
 
 	local lastPos, hitBoxs, inputHole, outputHole, outputDir, distance, tracePoses = nil,{},{},{},{},nil,nil
 	if dmgInfo:IsDamageType(DMG_BULLET+DMG_BUCKSHOT+DMG_SLASH+DMG_CLUB+DMG_GENERIC) then
@@ -1150,9 +1184,11 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 
 	local lend = math.max(0.1, (ent:GetPos() - dmgInfo:GetDamagePosition()):Length())
 	local headMit = (hitgroup == HITGROUP_HEAD) and (org.lastHeadArmorMitigation or 1) or 1
+	local isBuckshot = dmgInfo:IsDamageType(DMG_BUCKSHOT)
 	local damageStack = (dmg_before * headMit) / (dmgInfo:IsDamageType(DMG_BULLET) and RagdollDamageBoneMul[hitgroup] or 1)
 	--print(damageStack, 3)
-	damageStack = damageStack * (dmgInfo:IsDamageType(DMG_BLAST) and 200 / lend or 1) * (!dmgInfo:IsDamageType(DMG_CLUB+DMG_SLASH+DMG_BULLET+DMG_BLAST+DMG_SNIPER) and 0 or 1) * (ent:IsNPC() and 3 or 1)
+	damageStack = damageStack * (dmgInfo:IsDamageType(DMG_BLAST) and 200 / lend or 1) * (!dmgInfo:IsDamageType(DMG_CLUB+DMG_SLASH+DMG_BULLET+DMG_BUCKSHOT+DMG_BLAST+DMG_SNIPER) and 0 or 1) * (ent:IsNPC() and 3 or 1)
+	if impact.armorStopped then damageStack = 0 end
 	--damageStack = damageStack * (bullet and bullet.AmmoType and hg.ammotypeshuy[bullet.AmmoType] and hg.ammotypeshuy[bullet.AmmoType].BulletSettings and hg.ammotypeshuy[bullet.AmmoType].BulletSettings.Mass or 1) / 8
 	
 	org.dmgstack = org.dmgstack or {}
@@ -1165,7 +1201,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	local mat = ent:GetBoneMatrix(ent:TranslatePhysBoneToBone(bone))
 	local hitgroup_max = 100
 	if org.isPly then
-		hitgroup_max = hitgroup == HITGROUP_HEAD and player_head_gib_threshold or hitgrouptolimb[hitgroup] and player_limb_gib_threshold or hitgroup_max
+		hitgroup_max = hitgroup == HITGROUP_HEAD and (isBuckshot and player_buckshot_head_gib_threshold or player_head_gib_threshold) or hitgrouptolimb[hitgroup] and player_limb_gib_threshold or hitgroup_max
 	end
 	local instant = org.dmgstack[hitgroup][1] > hitgroup_max
 	--print(damageStack, org.dmgstack[hitgroup][1], org.dmgstack[hitgroup][3])
@@ -1219,7 +1255,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 				return
 			end
 
-			if IsValid(ply) and ply:Alive() then
+			if IsValid(ply) and ply:Alive() and not (should and hitgroup == HITGROUP_HEAD) then
 				org.dmgstack[hitgroup][1] = nil
 				org.dmgstack[hitgroup][2] = nil
 

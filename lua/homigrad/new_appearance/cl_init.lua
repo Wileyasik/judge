@@ -3,51 +3,46 @@ hg.Accessories = hg.Accessories or {}
 
 -- File manager
 
-hg.Appearance.SelectedAppearance = ConVarExists("hg_appearance_selected") and GetConVar("hg_appearance_selected") or CreateClientConVar("hg_appearance_selected","main",true,false,"name of selected appearance json file")
+hg.Appearance.SelectedAppearance = ConVarExists("hg_appearance_selected") and GetConVar("hg_appearance_selected") or CreateClientConVar("hg_appearance_selected","appearance",true,false,"the singleton appearance profile")
 hg.Appearance.ForcedRandom = ConVarExists("hg_appearance_force_random") and GetConVar("hg_appearance_force_random") or CreateClientConVar("hg_appearance_force_random","0",true,false,"forced appearance random",0,1)
 
-local saveDir = "judge/appearances/"
-local searchDirs = { "judge/appearances/", "ZCity/appearances/" }
+local appearanceFile = "judge/appearance.json"
+local legacyAppearanceFile = "judge/appearances/main.json"
+
+local function EnsureAppearanceFile()
+	if file.Exists(appearanceFile, "DATA") then return end
+	if file.Exists(legacyAppearanceFile, "DATA") then
+		file.CreateDir("judge")
+		file.Write(appearanceFile, file.Read(legacyAppearanceFile, "DATA"))
+	end
+end
 
 function hg.Appearance.CreateAppearanceFile(strFile_name, tblAppearance)
-	file.CreateDir(saveDir)
-	file.Write(saveDir .. strFile_name .. ".json", util.TableToJSON(tblAppearance, true) )
+	file.CreateDir("judge")
+	file.Write(appearanceFile, util.TableToJSON(tblAppearance, true))
 end
 
 function hg.Appearance.LoadAppearanceFile(strFile_name)
-	for _, dir in ipairs(searchDirs) do
-		if not file.Exists(dir .. strFile_name .. ".json", "DATA") then continue end
-		local tblAppearance = util.JSONToTable(file.Read(dir .. strFile_name .. ".json"))
+	EnsureAppearanceFile()
+	if not file.Exists(appearanceFile, "DATA") then return false, "file is not found [data/judge/appearance.json]" end
+	local tblAppearance = util.JSONToTable(file.Read(appearanceFile, "DATA"))
+	if not hg.Appearance.AppearanceValidater(tblAppearance) then return false, "data/judge/appearance.json is invalid" end
 
-		if not hg.Appearance.AppearanceValidater(tblAppearance) then continue end
-
-        if tblAppearance.AAttachments then
-            local norm = {"none","none","none","none","none","none"}
-            for k,v in pairs(tblAppearance.AAttachments) do
-                local idx = tonumber(k)
-                if idx and idx >= 1 and idx <= 6 then norm[idx] = v end
-            end
-            tblAppearance.AAttachments = norm
-        end
-
-		return tblAppearance
+	if tblAppearance.AAttachments then
+		local norm = {"none","none","none","none","none","none"}
+		for k,v in pairs(tblAppearance.AAttachments) do
+			local idx = tonumber(k)
+			if idx and idx >= 1 and idx <= 6 then norm[idx] = v end
+		end
+		tblAppearance.AAttachments = norm
 	end
-	return false, "file is not found [data/zcity/appearances/ or data/judge/appearances/]"
+
+	return tblAppearance
 end
 
 function hg.Appearance.GetAppearanceList()
-	local files = {}
-	for _, dir in ipairs(searchDirs) do
-		file.CreateDir(dir)
-		local found = file.Find(dir .. "*.json", "DATA")
-		for _, f in ipairs(found or {}) do
-			local name = string.StripExtension(f)
-			if not table.HasValue(files, name) then
-				table.insert(files, name)
-			end
-		end
-	end
-	return files
+	EnsureAppearanceFile()
+	return {"appearance"}
 end
 
 -- Send from client...

@@ -35,9 +35,9 @@ local CFG = {
     previewFov = 15,
     previewCamPos = Vector(118,0,60),
     previewLookAng = Angle(11,180,0),
-    previewShiftX = 180,
-    previewShiftY = 140,
-    previewSelectorShiftX = 165,
+    previewShiftY = 60,
+    previewSelectorShiftX = 180,
+    sidebarWidth = 304,
     nameWidth = 320,
     selectorWidth = 340,
     headerH = 52,
@@ -53,8 +53,8 @@ local CFG = {
     unsavedFadeOut = 0.1,
     unsavedRise = 8,
     rowH = 60,
-    textBtnH = 34,
-    actBtnH = 30,
+    textBtnH = 31,
+    actBtnH = 32,
     selectorRowH = 30,
 }
 
@@ -549,64 +549,80 @@ local function PaintRowBg(self, w, h, isActive, isHovered)
     end
 end
 
-function UI.TextButton(parent, title, fnClick, fnActive)
-    local btn = vgui.Create("DLabel", parent)
-    btn:SetText(string.rep("#", #title))
-    btn:SetMouseInputEnabled(true)
-    btn:SizeToContents()
-    btn:SetFont("ZCity_Menu_Settings_Small")
+function UI.TextButton(parent, title, fnClick, fnActive, freeLayout)
+    local btn = vgui.Create("DButton", parent)
+    btn:SetText("")
     btn:SetTall(MU(CFG.textBtnH))
-    btn:Dock(TOP)
-    btn:DockMargin(MU(10), MU(1), MU(10), 0)
-    btn.OpenTime = CurTime()
-    btn.StartDelay = 0
-    btn.LineLerp = 0
+    if not freeLayout then
+        btn:Dock(TOP)
+        btn:DockMargin(MU(8), MU(1), MU(8), MU(1))
+    end
+    btn:SetCursor("hand")
+    btn.Title = title
     btn.HoverLerp = 0
     function btn:DoClick() if fnClick then fnClick() end end
     function btn:Think()
         local hov = self:IsHovered()
-        local act = fnActive and fnActive() or false
+        self.IsActive = fnActive and fnActive() or false
         self.HoverLerp = LerpFT(0.2, self.HoverLerp or 0, hov and 1 or 0)
-        self.LineLerp = LerpFT(0.2, self.LineLerp or 0, (hov or act) and 1 or 0)
-        local elapsed = CurTime() - self.OpenTime - self.StartDelay
-        if elapsed < 0 then if self:GetText() ~= "" then self:SetText("") end return end
-        local chars = math.floor(elapsed * 15)
-        local target = act and ("[ "..title.." ]") or title
-        local len = #target
-        if chars > len then chars = len end
-        local ntxt = ""
-        for i=1,len do if i<=chars then ntxt=ntxt..target:sub(i,i) else ntxt=ntxt.."#" end end
-        if self:GetText() ~= ntxt then surface.PlaySound(SND.tap) self:SetText(ntxt) self:SizeToContents() end
     end
     function btn:Paint(w,h)
         local hov = self:IsHovered()
-        local tc = CLR.text
-        if hov then tc = Color(235,225,210,255) end
-        if self.IsActive then tc = CLR.accent end
+        local bg = self.IsActive and Color(58,58,58,235) or Color(31,31,31,205)
+        if hov then bg = Color(48,48,48,235) end
+        draw.RoundedBox(3, 0, 0, w, h, bg)
+        surface.SetDrawColor(CLR.panelBorder.r, CLR.panelBorder.g, CLR.panelBorder.b, self.IsActive and 145 or 45)
+        surface.DrawOutlinedRect(0,0,w,h,1)
         if self.IsActive then
-            surface.SetDrawColor(CLR.accent.r,CLR.accent.g,CLR.accent.b,160)
-            surface.DrawRect(0, MU(3), MU(2), h - MU(6))
+            surface.SetDrawColor(CLR.accent.r,CLR.accent.g,CLR.accent.b,210)
+            surface.DrawRect(0,0,MU(3),h)
         end
-        surface.SetFont(self:GetFont())
-        local tw,th = surface.GetTextSize(self:GetText())
-        local sc = 1 + (self.HoverLerp or 0) * 0.01
-        local m = Matrix()
-        m:Translate(Vector(0, h*(1-sc)*0.5, 0))
-        m:Scale(Vector(sc,sc,1))
-        cam.PushModelMatrix(m)
-        if hov or self.IsActive then
-            draw.SimpleTextOutlined(self:GetText(), self:GetFont(), 0, h/2, tc, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER, 1, Color(0,0,0,200))
-        else
-            draw.SimpleText(self:GetText(), self:GetFont(), 0, h/2, tc, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-        end
-        if self.LineLerp and self.LineLerp > 0.01 then
-            surface.SetDrawColor(CLR.accent.r,CLR.accent.g,CLR.accent.b, 140*self.LineLerp)
-            surface.DrawRect(0, h/2+th/2, tw*self.LineLerp, 1)
-        end
-        cam.PopModelMatrix()
-        return true
+        local tc = self.IsActive and CLR.white or (hov and CLR.text or Color(188,188,188))
+        draw.SimpleText(self.Title, "ZCity_Menu_Settings_Tiny", MU(10), h*0.5, tc, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        local dot = self.IsActive and CLR.accent or (hov and Color(175,175,175) or Color(85,85,85))
+        draw.RoundedBox(2, w-MU(12), h*0.5-MU(2), MU(4), MU(4), dot)
     end
     return btn
+end
+
+function UI.SectionLabel(parent, title)
+    local bar = vgui.Create("DPanel", parent)
+    bar:Dock(TOP)
+    bar:DockMargin(MU(10), MU(7), MU(10), MU(2))
+    bar:SetTall(MU(17))
+    bar.Title = string.upper(title)
+    bar.Paint = function(this,w,h)
+        draw.SimpleText(this.Title, "ZCity_Menu_Settings_Tiny", 0, h*0.5, Color(132,132,132), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        surface.SetFont("ZCity_Menu_Settings_Tiny")
+        local tw = surface.GetTextSize(this.Title)
+        surface.SetDrawColor(255,255,255,24)
+        surface.DrawLine(tw+MU(7), math.floor(h*0.5), w, math.floor(h*0.5))
+    end
+    return bar
+end
+
+function UI.ButtonGrid(parent, entries)
+    local gap = MU(3)
+    local grid = vgui.Create("DPanel", parent)
+    grid:Dock(TOP)
+    grid:DockMargin(MU(8), 0, MU(8), MU(2))
+    grid:SetTall(math.ceil(#entries / 2) * (MU(CFG.textBtnH) + gap) - gap)
+    grid.Paint = function() end
+    grid.Buttons = {}
+    for _,entry in ipairs(entries) do
+        grid.Buttons[#grid.Buttons + 1] = UI.TextButton(grid, entry[1], entry[2], entry[3], true)
+    end
+    function grid:PerformLayout(w,h)
+        local buttonW = math.floor((w-gap)/2)
+        local buttonH = MU(CFG.textBtnH)
+        for i,button in ipairs(self.Buttons) do
+            local col = (i-1)%2
+            local row = math.floor((i-1)/2)
+            button:SetPos(col*(buttonW+gap), row*(buttonH+gap))
+            button:SetSize(col==0 and buttonW or w-buttonW-gap, buttonH)
+        end
+    end
+    return grid
 end
 
 function UI.SelectorRow(parent, title, fnActive, fnClick, tooltip)
@@ -796,17 +812,16 @@ function UI.ActionButton(parent, title, fnClick, fnActive)
     function btn:DoClick() if self.ClickFunc then self.ClickFunc() end end
     function btn:Paint(w,h)
         local act = self.ActiveFunc and self.ActiveFunc() or false
-        local bg = act and CLR.panelAct or CLR.panelBg
+        local bg = self.Primary and Color(205,205,205,245) or (act and CLR.panelAct or Color(27,27,27,230))
         if self:IsHovered() then bg = CLR.panelHi end
-        surface.SetDrawColor(bg)
-        surface.DrawRect(0,0,w,h)
+        draw.RoundedBox(3,0,0,w,h,bg)
         surface.SetDrawColor(CLR.panelBorder.r, CLR.panelBorder.g, CLR.panelBorder.b, act and 140 or 60)
         surface.DrawOutlinedRect(0,0,w,h,1)
         if act then
             surface.SetDrawColor(CLR.accent.r, CLR.accent.g, CLR.accent.b, 180)
             surface.DrawRect(0,0,MU(2),h)
         end
-        local tc = act and CLR.accent or CLR.text
+        local tc = self.Primary and (self:IsHovered() and CLR.white or Color(18,18,18)) or (act and CLR.accent or CLR.text)
         draw.SimpleText(self.Title, "ZCity_Menu_Settings_Tiny", w*0.5, h*0.5, tc, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     end
     return btn
@@ -1484,7 +1499,7 @@ function PANEL:PostInit()
         end)
     end
 
-    local sidebarW = math.floor(sizeX / 3.6)
+    local sidebarW = math.Clamp(MU(CFG.sidebarWidth), MU(260), math.floor(sizeX * 0.28))
     local sidebar = vgui.Create("DScrollPanel", self)
     sidebar:SetSize(sidebarW, sizeY)
     local sbar = sidebar:GetVBar()
@@ -1502,7 +1517,7 @@ function PANEL:PostInit()
         this:SetPos(math.Round(nx), y)
     end
     sidebar.Paint = function(this,w,h)
-        draw.RoundedBox(0,0,0,w,h,Color(16,16,16,220))
+        draw.RoundedBox(0,0,0,w,h,Color(14,14,14,242))
         surface.SetDrawColor(CLR.accent.r,CLR.accent.g,CLR.accent.b,50)
         surface.DrawRect(w-1,0,1,h)
     end
@@ -1536,6 +1551,14 @@ function PANEL:PostInit()
         if self:GetText() ~= ntxt then surface.PlaySound(SND.tap) self:SetText(ntxt) self:SizeToContents() end
     end
 
+    local sidebarSubtitle = vgui.Create("DLabel", sidebarHeader)
+    sidebarSubtitle:SetPos(sidebarW-MU(12), MU(18))
+    sidebarSubtitle:SetFont("ZCity_Menu_Settings_Tiny")
+    sidebarSubtitle:SetTextColor(CLR.dim)
+    sidebarSubtitle:SetText("EDITOR / 01")
+    sidebarSubtitle:SizeToContents()
+    sidebarSubtitle:SetX(sidebarW-sidebarSubtitle:GetWide()-MU(12))
+
     local mainPanel = vgui.Create("DPanel", self)
     mainPanel:SetSize(sizeX-sidebarW, sizeY)
     mainPanel:SetPos(sizeX, 0)
@@ -1548,7 +1571,7 @@ function PANEL:PostInit()
         this:SetPos(math.Round(nx), y)
     end
     mainPanel.Paint = function() end
-    self.AppearancePreviewX = sidebarW + MU(CFG.previewShiftX)
+    self.AppearancePreviewX = sidebarW + math.floor((mainPanel:GetWide() - MU(CFG.selectorWidth)) * 0.5) - MU(170)
     self.AppearancePreviewY = MU(CFG.previewShiftY)
     self:SyncSharedPreview()
 
@@ -1574,6 +1597,51 @@ function PANEL:PostInit()
     headerHint:SetTextColor(CLR.dim)
     headerHint:SetText("Customize your look")
     headerHint:SizeToContents()
+
+    local status = vgui.Create("DLabel", header)
+    status:SetFont("ZCity_Menu_Settings_Tiny")
+    status:SetTextColor(CLR.dim)
+    status:SetText("LIVE PREVIEW")
+    status:SizeToContents()
+    status:Dock(RIGHT)
+    status:DockMargin(0, 0, MU(18), 0)
+    status:SetContentAlignment(6)
+
+    local previewStage = vgui.Create("DPanel", mainPanel)
+    previewStage:SetPos(MU(18), MU(CFG.headerH + 16))
+    previewStage:SetSize(mainPanel:GetWide()-MU(CFG.selectorWidth + 36), mainPanel:GetTall()-MU(CFG.headerH + 62))
+    previewStage:SetMouseInputEnabled(false)
+    previewStage.Paint = function(this,w,h)
+        local t = RealTime()
+        local cell = math.max(MU(40), 1)
+        surface.SetDrawColor(25,25,25,185)
+        surface.DrawRect(0,0,w,h)
+        surface.SetDrawColor(255,255,255,28)
+        surface.DrawOutlinedRect(0,0,w,h,1)
+        surface.SetDrawColor(255,255,255,6)
+        surface.DrawRect(1,1,w-2,MU(34))
+        surface.SetDrawColor(255,255,255,9)
+        for i=-1,math.ceil(w/cell)+1 do
+            local x = i*cell + math.sin(t*0.24+i*1.73)*MU(10) + math.sin(t*0.09+i*0.41)*MU(5)
+            local lean = math.sin(t*0.13+i*0.87)*MU(8)
+            surface.DrawLine(x, MU(34), x+lean, h)
+        end
+        for i=0,math.ceil(h/cell)+1 do
+            local y = MU(34)+i*cell + math.cos(t*0.2+i*1.31)*MU(8) + math.sin(t*0.07+i*0.63)*MU(5)
+            local lean = math.cos(t*0.11+i*0.92)*MU(7)
+            surface.DrawLine(0, y, w, y+lean)
+        end
+        surface.SetDrawColor(255,255,255,4)
+        for i=1,6 do
+            local x = (math.sin(t*(0.035+i*0.003)+i*2.1)*0.5+0.5)*w
+            local y = MU(34)+(math.cos(t*(0.027+i*0.004)+i*1.4)*0.5+0.5)*(h-MU(34))
+            draw.RoundedBox(2,x-MU(1),y-MU(1),MU(3),MU(3),Color(255,255,255,12))
+        end
+        surface.SetDrawColor(255,255,255,32)
+        surface.DrawLine(w*0.5-MU(60),h-MU(38),w*0.5+MU(60),h-MU(38))
+        draw.SimpleText("01 / CHARACTER PREVIEW", "ZCity_Menu_Settings_Tiny", w-MU(12), MU(10), Color(105,105,105), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
+        draw.SimpleText("Choose a category on the left", "ZCity_Menu_Settings_Tiny", w-MU(12), h-MU(10), Color(95,95,95), TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM)
+    end
 
     selectorPanel = vgui.Create("DPanel", mainPanel)
     selectorPanel:SetSize(MU(CFG.selectorWidth), mainPanel:GetTall())
@@ -1639,43 +1707,47 @@ function PANEL:PostInit()
     previewNameLabel:SetTextColor(CLR.dim)
     previewNameLabel:SetText("NAME")
     previewNameLabel:SizeToContents()
-    previewNameLabel:SetPos(self.AppearancePreviewX - sidebarW, MU(68))
+    previewNameLabel:SetPos(MU(36), MU(112))
 
     nameEntry = vgui.Create("DTextEntry", mainPanel)
-    nameEntry:SetSize(MU(CFG.nameWidth), MU(22))
-    nameEntry:SetPos(self.AppearancePreviewX - sidebarW - MU(6), MU(84))
+    nameEntry:SetSize(MU(CFG.nameWidth), MU(27))
+    nameEntry:SetPos(MU(30), MU(128))
     nameEntry:SetFont("ZCity_Menu_Settings_Tiny")
     nameEntry:SetText(main.AppearanceTable.AName or "")
     nameEntry:SetUpdateOnType(true)
     nameEntry:SetContentAlignment(5)
     nameEntry.Paint = function(this,w,h)
-        draw.RoundedBox(4,0,0,w,h,Color(16,16,16,245))
+        draw.RoundedBox(3,0,0,w,h,Color(12,12,12,245))
         local c = this:HasFocus() and CLR.accent or CLR.accentDim
         surface.SetDrawColor(c.r,c.g,c.b,160)
         surface.DrawOutlinedRect(0,0,w,h,1)
+        surface.SetDrawColor(c.r,c.g,c.b,this:HasFocus() and 220 or 80)
+        surface.DrawRect(0,0,MU(3),h)
         this:DrawTextEntryText(Color(235,235,235), Color(140,140,140), CLR.accent)
     end
     function nameEntry:OnValueChange(val) main.AppearanceTable.AName=val main:SyncSharedPreview() end
 
     do
         local rp = vgui.Create("DPanel", mainPanel)
-        rp:SetSize(MU(240), MU(26))
-        rp:SetPos(mainPanel:GetWide()/2-MU(120), mainPanel:GetTall()-MU(36))
+        rp:SetSize(MU(278), MU(30))
+        rp:SetPos(MU(24), mainPanel:GetTall()-MU(38))
         rp.Paint = function(this,w,h)
-            draw.RoundedBox(4,0,0,w,h,Color(22,22,22,200))
+            draw.RoundedBox(3,0,0,w,h,Color(18,18,18,235))
             surface.SetDrawColor(CLR.accent.r,CLR.accent.g,CLR.accent.b,50)
             surface.DrawOutlinedRect(0,0,w,h,1)
+            surface.SetDrawColor(255,255,255,40)
+            surface.DrawRect(MU(62),MU(6),1,h-MU(12))
         end
         local rl = vgui.Create("DLabel", rp)
-        rl:SetPos(MU(5), MU(2))
-        rl:SetSize(MU(34), MU(22))
+        rl:SetPos(MU(8), 0)
+        rl:SetSize(MU(48), MU(30))
         rl:SetFont("ZCity_Menu_Settings_Tiny")
         rl:SetTextColor(CLR.dim)
-        rl:SetText("Rotate")
-        rl:SizeToContents()
+        rl:SetText("ROTATE")
+        rl:SetContentAlignment(4)
         local rs = vgui.Create("DSlider", rp)
-        rs:SetPos(MU(38), MU(7))
-        rs:SetSize(MU(164), MU(12))
+        rs:SetPos(MU(72), MU(8))
+        rs:SetSize(MU(158), MU(14))
         rs:SetTrapInside(true)
         function rs:Paint(w,h)
             draw.RoundedBox(3,0,h*0.5-3,w,6,Color(40,40,40,220))
@@ -1686,8 +1758,8 @@ function PANEL:PostInit()
             draw.RoundedBox(3,2,MU(1),w-4,h-MU(2),CLR.accent)
         end
         local rv = vgui.Create("DLabel", rp)
-        rv:SetPos(MU(206), MU(2))
-        rv:SetSize(MU(30), MU(22))
+        rv:SetPos(MU(236), 0)
+        rv:SetSize(MU(34), MU(30))
         rv:SetFont("ZCity_Menu_Settings_Tiny")
         rv:SetTextColor(CLR.dim)
         rv:SetText("0"..string.upper("\194\176"))
@@ -1702,44 +1774,51 @@ function PANEL:PostInit()
 
     savedSnapshot = BuildComparable(main.AppearanceTable)
 
-    UI.TextButton(sidebar, "Model", function() OpenModelMenu() end, function() return main.ActiveSection=="Model" end)
-    UI.TextButton(sidebar, "Hat", function() OpenAccessorySlot(1,"Hat",{head=true,ears=true}) end, function() return main.ActiveSection=="Hat" end)
-    UI.TextButton(sidebar, "Face", function() OpenAccessorySlot(2,"Face",{face=true}) end, function() return main.ActiveSection=="Face" end)
-    UI.TextButton(sidebar, "Body", function() OpenAccessorySlot(3,"Body",{torso=true,spine=true}) end, function() return main.ActiveSection=="Body" end)
-    UI.TextButton(sidebar, "Hair", function() OpenAccessorySlot(4,"Hair",{head1=true}) end, function() return main.ActiveSection=="Hair" end)
-    UI.TextButton(sidebar, "Mask", function() OpenAccessorySlot(5,"Mask",{face2=true}) end, function() return main.ActiveSection=="Mask" end)
-    UI.TextButton(sidebar, "Body 2", function() OpenAccessorySlot(6,"Body 2",{spine2=true}) end, function() return main.ActiveSection=="Body 2" end)
-    UI.TextButton(sidebar, "Acc. Tint", function() OpenAccessoryColorMenu() end, function() return main.ActiveSection=="Acc. Tint" end)
-    UI.TextButton(sidebar, "Poses", function() OpenPosesMenu() end, function() return main.ActiveSection=="Poses" end)
-
-    do local sp = vgui.Create("DPanel", sidebar) sp:Dock(TOP) sp:SetTall(MU(6)) sp.Paint = function() end end
-
-    UI.TextButton(sidebar, "Jacket", function() OpenClothesMenu("main","Jacket",true) end, function() return main.ActiveSection=="Jacket" end)
-    UI.TextButton(sidebar, "Pants", function() OpenClothesMenu("pants","Pants") end, function() return main.ActiveSection=="Pants" end)
-    UI.TextButton(sidebar, "Boots", function() OpenClothesMenu("boots","Boots") end, function() return main.ActiveSection=="Boots" end)
-    UI.TextButton(sidebar, "Gloves", function() OpenGlovesMenu() end, function() return main.ActiveSection=="Gloves" end)
-
-    do local sp = vgui.Create("DPanel", sidebar) sp:Dock(TOP) sp:SetTall(MU(6)) sp.Paint = function() end end
-
-    UI.TextButton(sidebar, "Facemap", function() OpenFacemapMenu() end, function() return main.ActiveSection=="Facemap" end)
-    UI.TextButton(sidebar, "Torso Shape", function() OpenBodygroupMenu("TORSO","Torso Shape") end, function() return main.ActiveSection=="Torso Shape" end)
-    UI.TextButton(sidebar, "Legs Shape", function() OpenBodygroupMenu("LEGS","Legs Shape") end, function() return main.ActiveSection=="Legs Shape" end)
+    UI.SectionLabel(sidebar, "Identity")
+    UI.ButtonGrid(sidebar, {
+        {"Model", function() OpenModelMenu() end, function() return main.ActiveSection=="Model" end},
+        {"Facemap", function() OpenFacemapMenu() end, function() return main.ActiveSection=="Facemap" end}
+    })
+    UI.SectionLabel(sidebar, "Accessories")
+    UI.ButtonGrid(sidebar, {
+        {"Hat", function() OpenAccessorySlot(1,"Hat",{head=true,ears=true}) end, function() return main.ActiveSection=="Hat" end},
+        {"Face", function() OpenAccessorySlot(2,"Face",{face=true}) end, function() return main.ActiveSection=="Face" end},
+        {"Body", function() OpenAccessorySlot(3,"Body",{torso=true,spine=true}) end, function() return main.ActiveSection=="Body" end},
+        {"Hair", function() OpenAccessorySlot(4,"Hair",{head1=true}) end, function() return main.ActiveSection=="Hair" end},
+        {"Mask", function() OpenAccessorySlot(5,"Mask",{face2=true}) end, function() return main.ActiveSection=="Mask" end},
+        {"Body 2", function() OpenAccessorySlot(6,"Body 2",{spine2=true}) end, function() return main.ActiveSection=="Body 2" end},
+        {"Tint", function() OpenAccessoryColorMenu() end, function() return main.ActiveSection=="Acc. Tint" end},
+        {"Poses", function() OpenPosesMenu() end, function() return main.ActiveSection=="Poses" end}
+    })
+    UI.SectionLabel(sidebar, "Clothing")
+    UI.ButtonGrid(sidebar, {
+        {"Jacket", function() OpenClothesMenu("main","Jacket",true) end, function() return main.ActiveSection=="Jacket" end},
+        {"Pants", function() OpenClothesMenu("pants","Pants") end, function() return main.ActiveSection=="Pants" end},
+        {"Boots", function() OpenClothesMenu("boots","Boots") end, function() return main.ActiveSection=="Boots" end},
+        {"Gloves", function() OpenGlovesMenu() end, function() return main.ActiveSection=="Gloves" end}
+    })
+    UI.SectionLabel(sidebar, "Bodygroups")
+    UI.ButtonGrid(sidebar, {
+        {"Torso", function() OpenBodygroupMenu("TORSO","Torso Shape") end, function() return main.ActiveSection=="Torso Shape" end},
+        {"Legs", function() OpenBodygroupMenu("LEGS","Legs Shape") end, function() return main.ActiveSection=="Legs Shape" end}
+    })
 
     do
         local sp = vgui.Create("DPanel", sidebar)
         sp:Dock(TOP)
-        sp:DockMargin(MU(6), MU(12), MU(6), MU(3))
-        sp:SetTall(MU(66))
+        sp:DockMargin(MU(8), MU(5), MU(8), MU(3))
+        sp:SetTall(MU(76))
         sp.Paint = function(self,w,h)
-            draw.RoundedBox(4,0,0,w,h,Color(22,22,22,180))
+            draw.RoundedBox(3,0,0,w,h,Color(20,20,20,220))
             surface.SetDrawColor(CLR.accent.r,CLR.accent.g,CLR.accent.b,50)
             surface.DrawOutlinedRect(0,0,w,h,1)
+            draw.SimpleText("BODY SCALE", "ZCity_Menu_Settings_Tiny", MU(7), MU(2), Color(100,100,100), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
         end
         local function addSlider(parent, title, valueKey)
             local row = vgui.Create("DPanel", parent)
             row:Dock(TOP)
             row:SetTall(MU(30))
-            row:DockMargin(MU(2),0,MU(2),MU(1))
+            row:DockMargin(MU(2),0,MU(2),0)
             row.Paint = function() end
             local tl = vgui.Create("DLabel", row)
             tl:Dock(LEFT)
@@ -1788,6 +1867,7 @@ function PANEL:PostInit()
             refresh()
             return row
         end
+        do local gap = vgui.Create("DPanel", sp) gap:Dock(TOP) gap:SetTall(MU(14)) gap.Paint = function() end end
         addSlider(sp, "Height", "AHeight")
         addSlider(sp, "Weight", "ABodySize")
     end
@@ -1844,11 +1924,15 @@ function PANEL:PostInit()
 
     local lowerActions = vgui.Create("DPanel", sidebar)
     lowerActions:Dock(TOP)
-    lowerActions:DockMargin(MU(6), MU(6), MU(6), MU(3))
+    lowerActions:DockMargin(MU(8), MU(6), MU(8), MU(3))
     lowerActions:SetTall(MU(CFG.actBtnH)*4 + MU(6))
-    lowerActions.Paint = function() end
+    lowerActions.Paint = function(this,w,h)
+        surface.SetDrawColor(255,255,255,18)
+        surface.DrawRect(0,0,w,1)
+    end
 
     local applyBtn = UI.ActionButton(lowerActions, "Apply", function() main.ActiveSection="Apply" CloseSelectorPanel() ApplyAppearance() end, function() return main.ActiveSection=="Apply" end)
+    applyBtn.Primary = true
     local saveBtn = UI.ActionButton(lowerActions, "Save Preset", function() main.ActiveSection="Save Preset" CloseSelectorPanel() SavePresetUI() end, function() return main.ActiveSection=="Save Preset" end)
     local loadBtn = UI.ActionButton(lowerActions, "Load Preset", function() main.ActiveSection="Load Preset" CloseSelectorPanel() LoadPresetUI() end, function() return main.ActiveSection=="Load Preset" end)
     local delBtn = UI.ActionButton(lowerActions, "Delete Preset", function() main.ActiveSection="Delete Preset" CloseSelectorPanel() DeletePresetUI() end, function() return main.ActiveSection=="Delete Preset" end)

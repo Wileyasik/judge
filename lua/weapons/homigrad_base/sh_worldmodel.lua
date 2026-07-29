@@ -739,27 +739,8 @@ function SWEP:WorldModel_Transform(bNoApply, bNoAdditional, model)
 			renderAng = laggedAng
 		end
 
-			if CLIENT and not bNoAdditional and owner:OnGround() and not self:IsResting() and not self:KeyDown(IN_SPEED) then
-				local move = math.Clamp(owner:GetVelocity():Length2D() / math.max(owner:GetRunSpeed(), 1), 0, 1.35)
-				if move > 0.02 then
-					local phase = CurTime() * (6.4 + move * 1.8) + owner:EntIndex() * 0.61803398875
-					local inertia = math.Clamp(self:GetWeaponInertiaFactor() / 5, 0.2, 1)
-					local jellyPos = Vector(
-						math.sin(phase * 0.5) * 0.18,
-						math.sin(phase) * 0.35,
-						math.cos(phase * 2) * 0.22
-					) * move * inertia
-					local jellyAng = Angle(
-						math.sin(phase) * 0.8,
-						math.cos(phase * 0.5) * 0.65,
-						math.sin(phase * 2) * 1.2
-					) * move * inertia
-					renderPos, renderAng = LocalToWorld(jellyPos, jellyAng, renderPos, renderAng)
-				end
-			end
-
-			self.visualDesiredPos, self.visualDesiredAng = renderPos, renderAng
-			model:SetRenderOrigin(renderPos)
+		self.visualDesiredPos, self.visualDesiredAng = renderPos, renderAng
+		model:SetRenderOrigin(renderPos)
 		model:SetRenderAngles(renderAng)
 		model:SetPos(renderPos)
 		model:SetAngles(renderAng)
