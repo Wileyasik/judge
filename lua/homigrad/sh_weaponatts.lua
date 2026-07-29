@@ -1007,8 +1007,8 @@ hg.attachments.sight = {
 		"sight",
 		"models/weapons/mods/scope_armasight_zeus_pro.mdl",
 		Angle(0, 0, -90),
-		offset = Vector(-1, -0.25, -0),
-		offsetView = Vector(-2, 0, 010),
+		offset = Vector(-1, -0.0, -0),
+		offsetView = Vector(-2, 0, 10),
 		{},
 		mountType = "picatinny",
 		scopemat = Material("decals/scope.png"),
@@ -1021,8 +1021,9 @@ hg.attachments.sight = {
 		FOVMax = 22,
 		FOVScoped = 40,
 		blackoutsize = 4000,
-		sizeperekrestie = 4000,
+		sizeperekrestie = 2700,
 		perekrestieSize = true,
+		stableReticle = true,
 		thermal = true,
 		mount = "models/weapons/mods/mount_reapir.mdl",
 		mountVec = Vector(-1.5, 0, 0),
@@ -1033,11 +1034,6 @@ hg.attachments.sight = {
 
 		drawFunction = function(self,model) -- in swep:drawattachment
 			model:SetSubMaterial(3,"hg/scope_lens")
-			if not model.printedLensMaterials then
-				print("=== optic17 lens materials ===")
-				for index, material in ipairs(model:GetMaterials()) do print(index, material) end
-				model.printedLensMaterials = true
-			end
 		end,
 
 		sightFunction = function(self)
@@ -1058,7 +1054,7 @@ hg.attachments.sight = {
 		scopemat = Material("decals/scope.png"),
 		mat = Material("effects/arc9/rt"),
 		perekrestie = Material("vgui/arc9_eft_shared/reticles/scope_all_sig_sauer_echo1_thermal_reflex_sight_1_2x_30hz_lod0_mark_00.png"),
-		localScopePos = Vector(20, -0.5, 1.65),
+		localScopePos = Vector(120, -0.5, 1.65),
 		scope_blackout = 1200,
 		rot = 0,
 		FOVMin = 20,
@@ -1067,6 +1063,7 @@ hg.attachments.sight = {
 		blackoutsize = 4500,
 		sizeperekrestie = 4000,
 		perekrestieSize = false,
+		stableReticle = true,
 		thermal = true,
 		PhysModel = "models/hunter/plates/plate025.mdl",
 		PhysPos = Vector(1, 0, 0),
@@ -1074,11 +1071,6 @@ hg.attachments.sight = {
 
 		drawFunction = function(self,model) -- in swep:drawattachment
 			model:SetSubMaterial(3,"hg/scope_lens")
-			if not model.printedLensMaterials then
-				print("=== optic18 lens materials ===")
-				for index, material in ipairs(model:GetMaterials()) do print(index, material) end
-				model.printedLensMaterials = true
-			end
 		end,
 
 		sightFunction = function(self)

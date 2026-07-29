@@ -375,7 +375,9 @@ function SWEP:DoRT()
 			local blackout = self.blackoutsize * 0.75
 			surface.SetDrawColor(255, 255, 255, 255)
 			surface.SetMaterial(self.perekrestie)
-			surface.DrawTexturedRectRotatedHuy(0, 0, (self.sizeperekrestie * rtsize / 512) / ((self.perekrestieSize and 4 ) or self.ZoomFOV / 3), (self.sizeperekrestie * rtsize / 512) / ((self.perekrestieSize and 4 ) or self.ZoomFOV / 3), 0, y / (scrh / ScrH()), x / (scrw / ScrW()), self.rot)
+			local reticleY = self.stableReticle and rtsize / 2 or y / (scrh / ScrH())
+			local reticleX = self.stableReticle and rtsize / 2 or x / (scrw / ScrW())
+			surface.DrawTexturedRectRotatedHuy(0, 0, (self.sizeperekrestie * rtsize / 512) / ((self.perekrestieSize and 4 ) or self.ZoomFOV / 3), (self.sizeperekrestie * rtsize / 512) / ((self.perekrestieSize and 4 ) or self.ZoomFOV / 3), 0, reticleY, reticleX, self.rot)
 
 			surface.SetDrawColor(100, 100, 100)
 			surface.SetMaterial(self.scopemat)
