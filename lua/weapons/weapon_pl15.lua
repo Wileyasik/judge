@@ -22,10 +22,17 @@ SWEP.MagModel = "models/weapons/mods/mag_pl15.mdl"
 
 SWEP.AnimList = {
 	["idle"] = "idle",
+	["idle_empty"] = "idle_empty",
 	["reload"] = "reload",
 	["reload_empty"] = "reload_empty",
 	["inspect"] = "inspect",
 }
+
+function SWEP:PrimaryShootPost()
+	if self:Clip1() <= 0 then
+		self:PlayAnim("idle_empty", 1, true)
+	end
+end
 
 SWEP.AnimsEvents = {
 	["inspect"] = {
@@ -80,7 +87,7 @@ SWEP.FakeReloadEvents = {
 			self:GetWM():ManipulateBoneScale(94, vector_origin)
 		end
 	end,
-	[0.55] = function( self ) 
+	[0.45] = function( self ) 
 		if CLIENT and self:Clip1() < 1 then
 			self:GetWM():ManipulateBoneScale(50, vector_full)
 			self:GetWM():ManipulateBoneScale(93, vector_full)
@@ -152,6 +159,12 @@ SWEP.holsteredPos = Vector(0, -2, -1)
 SWEP.holsteredAng = Angle(0, 20, 30)
 SWEP.shouldntDrawHolstered = true
 SWEP.availableAttachments = {
+	sight = {
+		["mountType"] = "pistolmount",
+		["mountBone"] = "mod_reciever",
+		["mount"] = Vector(1, -0, 0.45),
+		["mountAngle"] = Angle(900, 90, -90),
+	},
 	barrel = {
 		[1] = {"supressor2", Vector(0, 0.0, 0), {}},
 		[2] = {"supressor1", Vector(0, 0.0, 0), {}},
@@ -179,13 +192,11 @@ SWEP.ShootAnimMul = 4
 function SWEP:DrawPost()
 	local wep = self:GetWM()
 	if CLIENT and IsValid(wep) then
-		self.shooanim = LerpFT(0.4,self.shooanim or 0,(self:Clip1() > 0 or self.reload) and 0 or 1)
-		wep:ManipulateBonePosition(95, Vector(0, 1.5 * self.shooanim, 0), false)
-		wep:ManipulateBoneScale(101, self.shooanim > 0.1 and vector_origin or vector_full)
-		if self:Clip1() < 1 and self.shooanim > 0.1 then
-			self:GetWM():ManipulateBoneScale(93, vector_origin)
-			self:GetWM():ManipulateBoneScale(94, vector_origin)
+		local empty = self:Clip1() < 1 and not self.reload
+		wep:ManipulateBoneScale(101, empty and vector_origin or vector_full)
+		if empty then
+			wep:ManipulateBoneScale(93, vector_origin)
+			wep:ManipulateBoneScale(94, vector_origin)
 		end
 	end
 end
-

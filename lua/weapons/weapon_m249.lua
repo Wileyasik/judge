@@ -185,9 +185,10 @@ SWEP.availableAttachments = {
 		["mount"] = Vector(-1, 0, 0),
 	},
 	sight = {
-		["mount"] = Vector(-15.5, -0.09, 1.4),
+		["mount"] = Vector(-0, 1, 0.2),
 		["mountType"] = "picatinny",
-		["mountAngle"] = Angle(0, -0.75, 90),
+		["mountBone"] = "mod_scope",
+		["mountAngle"] = Angle(0, 90, 90),
 	},
 	underbarrel = {
 		["mount"] = Vector(1.5, -1.1, -2.3),

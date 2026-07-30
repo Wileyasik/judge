@@ -195,10 +195,15 @@ SWEP.availableAttachments = {
 		["mountType"] = {"picatinny"},
 		["mount"] = {["picatinny"] = Vector(-16, 1.6, 0.050)},
 	},
-		grip = {
+	grip = {
 		["mount"] = {["picatinny"] = Vector(10, 0.55, 0.15)},
 		["mountType"] = {"picatinny"},
 		["mountAngle"] = Angle(0,0,0)
+	},
+	underbarrel = {
+		["mount"] = Vector(8, -0.1, -0.1),
+		["mountAngle"] = Angle(0, -0.75,0),
+		["mountType"] = "picatinny_small"
 	},
 }
 

@@ -1,4 +1,4 @@
-SWEP.Base = "weapon_m4super"
+SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "ASH-12"
@@ -12,7 +12,7 @@ SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_ash12.mdl" -- Проверь путь!
 SWEP.WorldModelReal = "models/weapons/c_ash12.mdl"
 
-SWEP.FakePos = Vector(-15, 1, 4) -- Подбери в игре
+SWEP.FakePos = Vector(-18, 3.5, 6) -- Подбери в игре
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
 SWEP.AttachmentPos = Vector(3.5,-0.2,-0.05)
@@ -79,10 +79,16 @@ SWEP.Primary.Wait = 0.085 -- ~700 RPM
 SWEP.NumBullet = 1
 
 SWEP.availableAttachments = {
-    sight = {
-        ["mountType"] = "",
-        ["mount"] = Vector(-12, 2, 0),
-    }
+	sight = {
+		["mountType"] = "picatinny",
+		["mount"] = Vector(-14, 3.25, 0.05),
+		["mountAngle"] = Angle(0,0,0)
+	},
+	underbarrel = {
+		["mount"] = Vector(7, 0, 0.2),
+		["mountAngle"] = Angle(0, -0.75,0),
+		["mountType"] = "picatinny_small"
+	},
 }
 
 SWEP.AnimShootMul = 3
@@ -90,7 +96,7 @@ SWEP.AnimShootHandMul = 10
 SWEP.DeploySnd = {"homigrad/weapons/draw_hmg.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/hmg_holster.mp3", 55, 100, 110}
 SWEP.HoldType = "rpg"
-SWEP.ZoomPos = Vector(0, -3.4054, 4.4373)
+SWEP.ZoomPos = Vector(0, -0.8856, 5.6616)
 SWEP.RHandPos = Vector(-32, -111, 14)
 SWEP.LHandPos = Vector(37, -2, -2)
 SWEP.Ergonomics = 1.0
@@ -171,7 +177,7 @@ end
 function SWEP:Reload(time)
     if self.AnimStart_Draw > CurTime() - 0.5 then return end
     if not self:CanUse() then return end
-    if self.reloadCoolDown > CurTime() then return end
+    if (self.reloadCoolDown or 0) > CurTime() then return end
     if self.Primary.Next > CurTime() then return end
     if self:GetNetVar("shootgunReload", 0) > CurTime() then return end
 

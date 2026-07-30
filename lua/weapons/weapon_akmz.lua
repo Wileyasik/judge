@@ -229,13 +229,18 @@ SWEP.availableAttachments = {
 	},
 	sight = {
 		["mountType"] = {"picatinny", "dovetail"},
-		["mount"] = {["dovetail"] = Vector(-24, -0.25, 1.25), ["picatinny"] = Vector(-22, 0, 1.9)},
+		["mount"] = {["dovetail"] = Vector(-24, -0.25, 1.25), ["picatinny"] = Vector(-18, 0.3, 1.77)},
 		["mountAngle"] = Angle(0,0,90)
 	},
-		grip = {
-		["mount"] = {["picatinny"] = Vector(7, 1.3, -1)},
+	grip = {
+		["mount"] = {["picatinny"] = Vector(5, 1.3, -1)},
 		["mountType"] = {"picatinny"},
 		["mountAngle"] = Angle(0,0,90)
+	},
+	underbarrel = {
+		["mount"] = Vector(7, -1.4, -1),
+		["mountAngle"] = Angle(0, -0.75,90),
+		["mountType"] = "picatinny_small"
 	},
 }
 

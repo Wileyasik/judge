@@ -81,8 +81,8 @@ SWEP.RecoilMul = 0.3
 SWEP.FakeVPShouldUseHand = true
 SWEP.AnimList = {
 	["idle"] = "idle",
-	["reload"] = "reload",
-	["reload_empty"] = "reload_empty",
+	["reload"] = "reload_m",
+	["reload_empty"] = "reload_empty_m",
 	["inspect"] = "look",
 }
 
@@ -122,7 +122,7 @@ end
 
 SWEP.GunCamPos = Vector(6, -17, -4)
 SWEP.GunCamAng = Angle(190, 0, -90)
-SWEP.FakeBodyGroups = "0111101222131"
+SWEP.FakeBodyGroups = "0111101022131"
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_UpperArm"
 SWEP.ViewPunchDiv = 40
@@ -167,8 +167,10 @@ end
 
 SWEP.availableAttachments = {
 	sight = {
-		["mountType"] = {"picatinny"},
-		["mount"] = Vector(-18, 2.9, 0.095),
+		["mountType"] = "dovetail",
+		["mountBone"] = "mod_scope",
+		["mount"] = Vector(0.8, 1.5, 2.9),
+		["mountAngle"] = Angle(0, -90, 90),
 	},
 	barrel = {
 		[1] = {"supressor15", Vector(-1, 0.2, 0), {}},

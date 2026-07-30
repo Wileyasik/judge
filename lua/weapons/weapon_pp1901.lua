@@ -212,12 +212,17 @@ SWEP.availableAttachments = {
 		[2] = {"supressor1", Vector(0, 0, 0), {}},
 		[3] = {"supressor15", Vector(1.9, 0, 0), {}},
 		["mount"] = Vector(-0.8, -0, 0.),
-		["mountAngle"] = Angle(0, 0, 90),
+		["mountAngle"] = Angle(0, 0, 0),
 	},
 	sight = {
 		["mountType"] = {"picatinny"},
 		["mount"] = Vector(-12, 0, 1.65),
 		["mountAngle"] = Angle(0, 0, 90),
+	},
+		grip = {
+		["mount"] = {["picatinny"] = Vector(12.6, 1.3, -0.67)},
+		["mountType"] = {"picatinny"},
+		["mountAngle"] = Angle(0,0,90)
 	},
 }
 

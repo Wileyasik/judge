@@ -261,6 +261,17 @@ if CLIENT then
 	end
 end
 function SWEP:Attachment_Transform(model,pos,ang,plc,att,attdata,available)
+	local mountBone = available[plc] and available[plc]["mountBone"]
+	if mountBone then
+		local weaponModel = self:GetWM()
+		local bone = IsValid(weaponModel) and weaponModel:LookupBone(mountBone)
+		local matrix = bone and weaponModel:GetBoneMatrix(bone)
+		if matrix then
+			pos = matrix:GetTranslation()
+			ang = matrix:GetAngles()
+		end
+	end
+
 	vecadd:Zero()
 	if att[2] and isvector(att[2]) then vecadd:Add(att[2]) end
 	if available[plc] and available[plc]["mount"] and isvector(available[plc]["mount"]) then vecadd:Add(available[plc]["mount"]) end

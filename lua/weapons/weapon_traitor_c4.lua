@@ -9,6 +9,12 @@ SWEP.AdminOnly = false
 SWEP.Slot = 4
 SWEP.SlotPos = 2
 
+if CLIENT then
+	SWEP.WepSelectIcon = Material("entities/weapon_insurgencyc4clicker.png")
+	SWEP.IconOverride = "entities/weapon_insurgencyc4clicker.png"
+	SWEP.BounceWeaponIcon = false
+end
+
 SWEP.Primary.ClipSize = -1
 SWEP.Primary.DefaultClip = -1
 SWEP.Primary.Automatic = false

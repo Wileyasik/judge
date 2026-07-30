@@ -179,6 +179,11 @@ SWEP.availableAttachments = {
 		["mount"] = Vector(-12.5, 2.1, 0.05),
 		["mountType"] = "picatinny",
 	},
+	grip = {
+		["mount"] = {["picatinny"] = Vector(13, 0.4, 0.1)},
+		["mountType"] = {"picatinny"},
+		["mountAngle"] = Angle(0,0,0)
+	},
 }
 
 SWEP.RHandPos = Vector(1, -1, 0)

@@ -40,6 +40,7 @@ SWEP.ViewPunchDiv = 50
 
 SWEP.AnimList = {
 	["idle"] = "base_idle",
+	["idle_empty"] = "idle_empty",
 	["reload"] = "reload",
 	["reload_empty"] = "reload_empty0",
 	["inspect"] = "inspect",
@@ -67,6 +68,11 @@ function SWEP:AllowedInspect()
 	if self:Clip1() < self.Primary.ClipSize then return end
 	if self.drawBullet == false then return end
 	return true
+end
+
+function SWEP:PrimaryShootPost()
+	if self:Clip1() > 0 then return end
+	self:PlayAnim("idle_empty", 1, true)
 end
 
 function SWEP:ModelCreated(model)
@@ -209,8 +215,9 @@ SWEP.availableAttachments = {
 	},
 	sight = {
 		["mountType"] = "pistolmount",
-		["mount"] = Vector(-6, -1, -0.4),
-		["mountAngle"] = Angle(0, 0, -90),
+		["mountBone"] = "mod_reciever",
+		["mount"] = Vector(1, 1, 0.6),
+		["mountAngle"] = Angle(900, 90, -90),
 	},
 	underbarrel = {
 		["mount"] = Vector(12.55, -0.2, -0.09),
@@ -250,8 +257,6 @@ function SWEP:DrawPost()
 		end
 	end
 
-	self.shooanim = LerpFT(0.4, self.shooanim or 0, (self:Clip1() > 0 or self.reload) and 0 or 1)
-	wep:ManipulateBonePosition(43, Vector(0, 0.8 * self.shooanim, 0), false)
 end
 
 SWEP.WorldPartsOffsetPos = Vector(-20, 5, 10)
@@ -468,4 +473,3 @@ if CLIENT then
 		if IsValid(self.HeldMagCSModel) then self.HeldMagCSModel:Remove() end
 	end
 end
-

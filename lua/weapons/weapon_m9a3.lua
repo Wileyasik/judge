@@ -29,6 +29,7 @@ SWEP.ViewPunchDiv = 50
 
 SWEP.AnimList = {
 	["idle"] = "base_idle",
+	["idle_empty"] = "idle_empty",
 	["reload"] = "reload",
 	["reload_empty"] = "reload_empty0",
 	["inspect"] = "inspect",
@@ -57,6 +58,11 @@ if self.isReloading then return end
 	if self:Clip1() < self.Primary.ClipSize then return end
 	if self.drawBullet == false then return end
 	return true
+end
+
+function SWEP:PrimaryShootPost()
+	if self:Clip1() > 0 then return end
+	self:PlayAnim("idle_empty", 1, true)
 end
 
 SWEP.FakeMagDropBone = 50
@@ -133,8 +139,9 @@ SWEP.availableAttachments = {
 	},
 	sight = {
 		["mountType"] = "pistolmount",
-		["mount"] = Vector(-5.5, -1.1, 0.05),
-		["mountAngle"] = Angle(0, 0, 180),
+		["mountBone"] = "mod_reciever",
+		["mount"] = Vector(1, -0.3, 0.7),
+		["mountAngle"] = Angle(900, 90, -90),
 	},
 	underbarrel = {
 		["mount"] = Vector(12.2, 1, -1),
@@ -142,14 +149,6 @@ SWEP.availableAttachments = {
 		["mountType"] = "picatinny_small"
 	},
 }
-
-function SWEP:DrawPost()
-	local wep = self:GetWM()
-	if CLIENT and IsValid(wep) then
-		self.shooanim = LerpFT(0.4, self.shooanim or 0, (self:Clip1() > 0 or self.reload) and 0 or 1)
-		wep:ManipulateBonePosition(54, Vector(0, 1.5 * self.shooanim, 0), false)
-	end
-end
 
 if CLIENT then
 	local vector_origin = Vector(0, 0, 0)

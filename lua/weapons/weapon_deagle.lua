@@ -28,10 +28,17 @@ SWEP.ReloadTime = 3
 
 SWEP.AnimList = {
 	["idle"] = "idle",
+	["idle_empty"] = "idle_empty",
 	["reload"] = "reload",
 	["reload_empty"] = "reload_empty0",
 	["inspect"] = "inspect",
 }
+
+function SWEP:PrimaryShootPost()
+	if self:Clip1() <= 0 then
+		self:PlayAnim("idle_empty", 1, true)
+	end
+end
 
 SWEP.AnimsEvents = {
 	["inspect"] = {
@@ -94,7 +101,15 @@ if CLIENT then
 					end
 				end)
 			end
-		end
+		end,
+		[0.45] = function(self)
+			if self:Clip1() < 1 then
+				self:GetWM():ManipulateBoneScale(48, vector_full)
+				for i = 49, 55 do
+					self:GetWM():ManipulateBoneScale(i, vector_full)
+				end
+			end
+		end,
 	}
 end
 
@@ -149,8 +164,9 @@ SWEP.lengthSub = 20
 SWEP.availableAttachments = {
 	sight = {
 		["mountType"] = "pistolmount",
-		["mount"] = Vector(-7, -0.2, 0),
-		["mountAngle"] = Angle(0, 0, 0),
+		["mountBone"] = "mod_reciever",
+		["mount"] = Vector(1, -0.3, 0.7),
+		["mountAngle"] = Angle(900, 90, -90),
 	},
 	underbarrel = {
 		["mount"] = Vector(12.2, -1.2, -1),
@@ -174,16 +190,6 @@ SWEP.LHPos = Vector(-1.2,-1.4,-2.8)
 SWEP.LHAng = Angle(5,9,-100)
 
 SWEP.ShootAnimMul = 7
-
-local vector_one = Vector(1,1,1)
-
-function SWEP:DrawPost()
-	local wep = self:GetWeaponEntity()
-	if CLIENT and IsValid(wep) then
-		self.shooanim = LerpFT(0.4,self.shooanim or 0,(self:Clip1() > 0 or self.reload) and 0 or 3)
-		wep:ManipulateBonePosition(44,Vector(0 ,0 ,-1*self.shooanim ),false)
-	end
-end
 
 SWEP.punchmul = 5
 SWEP.punchspeed = 1

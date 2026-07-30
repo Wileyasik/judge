@@ -51,8 +51,8 @@ SWEP.AttachmentAng = Angle(0,0,90)
 SWEP.FakeVPShouldUseHand = true
 SWEP.AnimList = {
 	["idle"] = "idle",
-	["reload"] = "reloadt",
-	["reload_empty"] = "reload_empty",
+	["reload"] = "reload_nt",
+	["reload_empty"] = "reload_empty_n",
 	["inspect"] = "look",
 }
 
@@ -219,6 +219,15 @@ SWEP.bipodAvailable = true
 SWEP.bipodsub = 15
 
 SWEP.RecoilMul = 0.3
+
+SWEP.availableAttachments = {
+	sight = {
+		["mountType"] = "dovetail",
+		["mountBone"] = "mod_scope",
+		["mount"] = Vector(0.8, 1.5, 2.5),
+		["mountAngle"] = Angle(0, -90, 90),
+	},
+}
 
 --local to head
 SWEP.RHPos = Vector(4,-7,4)
