@@ -4,12 +4,14 @@ local vecZero = Vector(0,0,0)
 local vecInf = Vector(0,0,0) / 0
 
 local function removeBone(rag, bone, phys_bone, nohuys)
+	if not bone or not phys_bone or phys_bone < 0 then return end
 	if !nohuys then rag:ManipulateBoneScale(bone, vecZero) end
 	--rag:ManipulateBonePosition(bone,vecInf) -- Thanks Rama (only works on certain graphics cards!)
 
 	if rag.gibRemove[phys_bone] then return end
 
 	local phys_obj = rag:GetPhysicsObjectNum(phys_bone)
+	if not IsValid(phys_obj) then return end
 	phys_obj:EnableCollisions(false)
 	phys_obj:SetMass(0.1)
 	--rag:RemoveInternalConstraint(phys_bone)
@@ -92,12 +94,18 @@ local eyeModels = {
 for _, mdl in ipairs(meatModels) do util.PrecacheModel(mdl) end
 for _, mdl in ipairs(eyeModels) do util.PrecacheModel(mdl) end
 local gibRemoveTime = 60 --120
-function SpawnMeatGore(mainent, pos, count, force, scale, spawnEyes)
+function SpawnMeatGore(mainent, pos, count, force, scale, spawnEyes, models)
+	if istable(spawnEyes) then
+		models = spawnEyes
+		spawnEyes = false
+	end
+	models = istable(models) and #models > 0 and models or meatModels
 	force = force or Vector(0,0,0)
 	for i = 1, (count or math.random(8, 10)) do
 		local ent = ents_Create("prop_physics")
-		ent:SetModel(meatModels[math.random(#meatModels)])
-		ent:SetSubMaterial(0, mat)
+		if not IsValid(ent) then continue end
+		ent:SetModel(models[math.random(#models)])
+		if models == meatModels then ent:SetSubMaterial(0, mat) end
 		ent:SetPos(pos)
 		ent:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
 		ent:SetModelScale(math.Rand(0.8,1.1) * (scale or 1))
@@ -107,7 +115,7 @@ function SpawnMeatGore(mainent, pos, count, force, scale, spawnEyes)
 
 		local phys = ent:GetPhysicsObject()
 		if IsValid(phys) then
-			phys:SetVelocity(mainent:GetVelocity() + VectorRand(-65,65) + force / 10)
+			phys:SetVelocity((IsValid(mainent) and mainent:GetVelocity() or vector_origin) + VectorRand(-65,65) + force / 10)
 			phys:AddAngleVelocity(VectorRand(-65,65))
 		end
 
@@ -118,11 +126,22 @@ function SpawnMeatGore(mainent, pos, count, force, scale, spawnEyes)
 		end
 
 		ent:AddCallback( "PhysicsCollide", PhysCallback )
+
+		local entIndex = ent:EntIndex()
+		timer.Simple(0.2, function()
+			if not IsValid(ent) then return end
+			net.Start("hg_gib_bloodspill")
+			net.WriteUInt(entIndex, 16)
+			net.WriteFloat(math.Rand(1, 2))
+			net.WriteBool(false)
+			net.Broadcast()
+		end)
 	end
 
 	if spawnEyes then
 		for i = 1, math.random(1, 2) do
 			local ent = ents_Create("prop_physics")
+			if not IsValid(ent) then continue end
 			ent:SetModel(eyeModels[math.random(#eyeModels)])
 			ent:SetSubMaterial(0, mat)
 			ent:SetPos(pos)
@@ -134,7 +153,7 @@ function SpawnMeatGore(mainent, pos, count, force, scale, spawnEyes)
 
 			local phys = ent:GetPhysicsObject()
 			if IsValid(phys) then
-				phys:SetVelocity(mainent:GetVelocity() + VectorRand(-65,65) + force / 10)
+				phys:SetVelocity((IsValid(mainent) and mainent:GetVelocity() or vector_origin) + VectorRand(-65,65) + force / 10)
 				phys:AddAngleVelocity(VectorRand(-65,65))
 			end
 
@@ -149,21 +168,35 @@ function SpawnMeatGore(mainent, pos, count, force, scale, spawnEyes)
 	end
 end
 
-local headpos_male, headpos_female, headang = Vector(0,0,5), Vector(-2,0,4), Angle(0,0,-0)
+local headpos_male, headpos_female, headang = Vector(0,0,7), Vector(-2,0,6), Angle(0,0,0)
 
 util.AddNetworkString("addfountain")
+util.AddNetworkString("hg_gib_bloodspill")
 
 hg.fountains = hg.fountains or {}
 local headModels = {
-	{ model = Model("models/headpartial/headpartial.mdl"), pos = Vector(0,0,0), ang = Angle(0,0,0) },
-	{ model = Model("models/headpartial/headpartial1.mdl"), pos = Vector(0,0,0), ang = Angle(0,0,0) },
-	{ model = Model("models/headpartial/headpartial2.mdl"), pos = Vector(0,0,0), ang = Angle(0,0,0) },
-	{ model = Model("models/headpartial/headpartial3.mdl"), pos = Vector(0,0,0), ang = Angle(0,0,0) },
-	{ model = Model("models/headpartial/headpartial4.mdl"), pos = Vector(0,0,0), ang = Angle(0,0,0) },
-	{ model = Model("models/headpartial/headpartial5.mdl"), pos = Vector(0,0,0), ang = Angle(0,0,0) },
+	Model("models/headpartial/headpartial1.mdl"),
+	Model("models/headpartial/headpartial2.mdl"),
+	Model("models/headpartial/headpartial3.mdl"),
+	Model("models/headpartial/headpartial4.mdl"),
+	Model("models/headpartial/headpartial5.mdl"),
 }
-for _, head in ipairs(headModels) do
-	util.PrecacheModel(head.model)
+local headGibModels = {
+	Model("models/gore/head_headbitfrontleft.mdl"),
+	Model("models/gore/head_headbitfrontright.mdl"),
+	Model("models/gore/head_headbitbackleft.mdl"),
+	Model("models/gore/head_headbitbackright.mdl"),
+	Model("models/gore/head_headbittopleft.mdl"),
+	Model("models/gore/head_headbittopright.mdl"),
+	Model("models/gore/head_eye01.mdl"),
+	Model("models/gore/head_eye02.mdl"),
+	Model("models/gore/head_jawlo.mdl"),
+}
+for _, model in ipairs(headModels) do
+	util.PrecacheModel(model)
+end
+for _, model in ipairs(headGibModels) do
+	util.PrecacheModel(model)
 end
 local sounds = {
 	Sound("player/zombie_head_explode_01.wav"),
@@ -176,8 +209,71 @@ local sounds = {
 for _, snd in ipairs(sounds) do
 	util.PrecacheSound(snd)
 end
-function Gib_Input(rag, bone, force)
+local function sendGibBloodSpill(ent, stump)
+	if not IsValid(ent) then return end
+	net.Start("hg_gib_bloodspill")
+	net.WriteUInt(ent:EntIndex(), 16)
+	net.WriteFloat(math.Rand(5, 10))
+	net.WriteBool(stump or false)
+	net.Broadcast()
+end
+
+local function getHeadGoreStage(damage)
+	return math.Clamp(math.ceil(math.max((damage or 0) - 175, 0) / 5), 1, 5)
+end
+
+local function getInitialHeadGoreStage(damage)
+	return math.min(getHeadGoreStage(damage), table.Random({1,1,1,1,2,2,2,3,4,5}))
+end
+
+local function setupHeadGore(ent, rag, stage)
+	if not IsValid(ent) or not IsValid(rag) or not headModels[stage] then return end
+	ent:SetModel(headModels[stage])
+	local att = rag:GetAttachment(3)
+	local pos, ang
+	if att then
+		pos, ang = LocalToWorld(ThatPlyIsFemale(rag) and headpos_female or headpos_male, headang, att.Pos, att.Ang)
+	else
+		local headBone = rag:LookupBone("ValveBiped.Bip01_Head1")
+		local matrix = headBone and rag:GetBoneMatrix(headBone)
+		pos = matrix and matrix:GetTranslation() or rag:GetPos()
+		ang = matrix and matrix:GetAngles() or rag:GetAngles()
+	end
+	ent:SetPos(pos)
+	ent:SetAngles(ang)
+	if att then ent:SetParent(rag, 3) else ent:SetParent(rag) end
+	return pos
+end
+
+function Gib_UpdateHeadGoreStage(rag, damage)
+	if not IsValid(rag) or not rag.headexploded then return end
+	local stage = getHeadGoreStage(damage)
+	if (rag.headGoreStage or 0) >= stage then return end
+
+	rag.headGoreStage = stage
+	if IsValid(rag.headGore) then
+		rag.headGore:SetModel(headModels[stage])
+		sendGibBloodSpill(rag.headGore, true)
+		SpawnMeatGore(rag.headGore, rag.headGore:GetPos(), 3, VectorRand(-120, 120), 0.45, false, headGibModels)
+		return
+	end
+
+	local gore = ents_Create("prop_dynamic")
+	if not IsValid(gore) then return end
+	local pos = setupHeadGore(gore, rag, stage)
+	if not pos then gore:Remove() return end
+	gore:Spawn()
+	rag.headGore = gore
+	sendGibBloodSpill(gore, true)
+	SpawnMeatGore(gore, pos, 3, VectorRand(-120, 120), 0.45, false, headGibModels)
+	rag:CallOnRemove("remove_head_gore", function()
+		if IsValid(gore) then gore:Remove() end
+	end)
+end
+
+function Gib_Input(rag, bone, force, damage)
 	if not IsValid(rag) then return end
+	if not bone then return end
 	
 	local gibRemove = rag.gibRemove
 
@@ -190,47 +286,46 @@ function Gib_Input(rag, bone, force)
 
 	local phys_bone = rag:TranslateBoneToPhysBone(bone)
 	local phys_obj = rag:GetPhysicsObjectNum(phys_bone)
+	if phys_bone < 0 or not IsValid(phys_obj) then return end
 	
 	if (not gibRemove[phys_bone]) and (bone == rag:LookupBone("ValveBiped.Bip01_Head1")) then
 		--sound.Emit(rag,"player/headshot" .. math.random(1, 2) .. ".wav")
 		--sound.Emit(rag,"physics/flesh/flesh_squishy_impact_hard" .. math.random(2, 4) .. ".wav")
 		--sound.Emit(rag,"physics/body/body_medium_break3.wav")
 		--sound.Emit(rag,"physics/glass/glass_sheet_step" .. math.random(1,4) .. ".wav", 90, 50, 2)
-		rag:EmitSound(sounds[math.random(#sounds)], 70, math.random(95, 105), 2)
+		rag:EmitSound(sounds[math.random(#sounds)], 70, math.random(115, 125), 2)
 
 		Gib_RemoveBone(rag, bone, phys_bone)
 		
 		--rag:ManipulateBoneScale(rag:LookupBone("ValveBiped.Bip01_Neck1"),vecZero)
-		rag:ManipulateBonePosition(rag:LookupBone("ValveBiped.Bip01_Neck1"),Vector(-1,0,0))
+		local neckBone = rag:LookupBone("ValveBiped.Bip01_Neck1")
+		if neckBone then rag:ManipulateBonePosition(neckBone, Vector(-1,0,0)) end
 
-		local headChoice = headModels[math.random(#headModels)]
+		local stage = getInitialHeadGoreStage(damage)
 		local headVis = ents_Create("prop_dynamic")
-		headVis:SetModel(headChoice.model)
-		local att = rag:GetAttachment(3)
-		local pos, ang = LocalToWorld(ThatPlyIsFemale(rag) and headpos_female or headpos_male, headang, att.Pos, att.Ang)
-		
-		local extraOffset = vector_origin
-		if ThatPlyIsFemale(rag) and headChoice.model == "models/headpartial/headpartial5.mdl" then
-			extraOffset = Vector(0,0,2)
-		end
-		
-		headVis:SetPos(pos + headChoice.pos + extraOffset)
-		headVis:SetAngles(ang + headChoice.ang)
-		headVis:SetParent(rag, 3)
+		if not IsValid(headVis) then return end
+		local pos = setupHeadGore(headVis, rag, stage)
+		if not pos then headVis:Remove() return end
 		headVis:Spawn()
+		rag.headGore = headVis
+		rag.headGoreStage = stage
+		sendGibBloodSpill(headVis, true)
 
-		SpawnMeatGore(headVis, pos, nil, force, nil, true) --модельки поменять и будет эпик
+		SpawnMeatGore(headVis, pos, nil, force, nil, false, headGibModels)
+		rag:CallOnRemove("remove_head_gore", function()
+			if IsValid(headVis) then headVis:Remove() end
+		end)
 
 		local armors = rag:GetNetVar("Armor",{})
 
-		if armors["head"] and !hg.armor["head"][armors["head"]].nodrop then
+		if armors["head"] and hg.armor["head"] and hg.armor["head"][armors["head"]] and !hg.armor["head"][armors["head"]].nodrop then
 			local ent = hg.DropArmorForce(rag, armors["head"])
-			ent:SetPos(phys_obj:GetPos())
+			if IsValid(ent) then ent:SetPos(phys_obj:GetPos()) end
 		end
 		
-		if armors["face"] and !hg.armor["face"][armors["face"]].nodrop then
+		if armors["face"] and hg.armor["face"] and hg.armor["face"][armors["face"]] and !hg.armor["face"][armors["face"]].nodrop then
 			local ent = hg.DropArmorForce(rag, armors["face"])
-			ent:SetPos(phys_obj:GetPos())
+			if IsValid(ent) then ent:SetPos(phys_obj:GetPos()) end
 		end
 
 		rag.noHead = true
@@ -251,3 +346,102 @@ function Gib_Input(rag, bone, force)
 		SetNetVar("fountains", hg.fountains)
 	end
 end
+
+local stomachGoreModel = Model("models/noob_dev2323/gib/intestine.mdl")
+local intestineChunkModels = {
+	Model("models/mosi/fnv/props/gore/meatbit02.mdl"),
+	Model("models/mosi/fnv/props/gore/meatbit03.mdl"),
+	Model("models/mosi/fnv/props/gore/meatbit01.mdl"),
+	Model("models/mosi/fnv/props/gore/goreintestine.mdl"),
+}
+util.PrecacheModel(stomachGoreModel)
+for _, model in ipairs(intestineChunkModels) do util.PrecacheModel(model) end
+
+local function getStomachBone(ent)
+	return ent:LookupBone("ValveBiped.Bip01_Spine1") or ent:LookupBone("ValveBiped.Bip01_Spine") or ent:LookupBone("ValveBiped.Bip01_Pelvis") or 0
+end
+
+local function setupStomachGoreParent(gore, ent)
+	if not IsValid(gore) or not IsValid(ent) then return false end
+	gore:SetParent(ent)
+	gore:AddEffects(EF_BONEMERGE)
+	gore:SetSolid(SOLID_NONE)
+	return true
+end
+
+local function clearStomachGoreRefs(gore)
+	if IsValid(gore.StomachGoreHost) and gore.StomachGoreHost.StomachGoreEnt == gore then gore.StomachGoreHost.StomachGoreEnt = nil end
+	if IsValid(gore.StomachGoreOwner) and gore.StomachGoreOwner.StomachGoreEnt == gore then gore.StomachGoreOwner.StomachGoreEnt = nil end
+end
+
+local function bindStomachGore(gore, host, owner)
+	local oldHost = gore.StomachGoreHost
+	if IsValid(oldHost) and oldHost.RemoveCallOnRemove then oldHost:RemoveCallOnRemove("remove_stomach_gore") end
+	if IsValid(oldHost) and oldHost.StomachGoreEnt == gore then oldHost.StomachGoreEnt = nil end
+	if not setupStomachGoreParent(gore, host) then return false end
+
+	gore.StomachGoreHost = host
+	gore.StomachGoreOwner = owner
+	host.StomachGoreEnt = gore
+	if IsValid(owner) then owner.StomachGoreEnt = gore end
+	host:CallOnRemove("remove_stomach_gore", function()
+		if IsValid(gore) then gore:Remove() end
+	end)
+	return true
+end
+
+function hg.AttachStomachGore(target, force)
+	if not IsValid(target) then return end
+	local ent = target
+	if target:IsPlayer() and IsValid(target.FakeRagdoll) then ent = target.FakeRagdoll end
+	if IsValid(ent.StomachGoreEnt) or IsValid(target.StomachGoreEnt) then return end
+
+	local gore = ents_Create("prop_dynamic")
+	if not IsValid(gore) then return end
+	gore:SetModel(stomachGoreModel)
+	if not bindStomachGore(gore, ent, target) then gore:Remove() return end
+	gore:Spawn()
+	gore:CallOnRemove("clear_stomach_gore_refs", function() clearStomachGoreRefs(gore) end)
+
+	local bone = getStomachBone(ent)
+	local matrix = ent:GetBoneMatrix(bone)
+	local pos = matrix and matrix:GetTranslation() or ent:GetPos()
+	ent:SetNWBool("NoVomitView", true)
+	if target ~= ent then target:SetNWBool("NoVomitView", true) end
+	ent:EmitSound(sounds[math.random(#sounds)], 70, math.random(95, 105), 1)
+	sendGibBloodSpill(gore, true)
+	SpawnMeatGore(ent, pos, 4, force, 0.7)
+	SpawnMeatGore(ent, pos, 6, force or VectorRand(-120, 120), 0.55, false, intestineChunkModels)
+
+	local owner = target:IsPlayer() and target or ent:IsRagdoll() and hg.RagdollOwner(ent) or ent
+	if ent.organism then ent.organism.stomachgibbed = true end
+	if target.organism then target.organism.stomachgibbed = true end
+	if IsValid(owner) and owner.organism then
+		local org = owner.organism
+		org.stomachgibbed = true
+		hg.organism.AddWoundManual(owner, 160, vector_origin, Angle(0,0,0), bone, CurTime())
+		org.internalBleed = (org.internalBleed or 0) + 3
+		org.bleed = math.max(org.bleed or 0, 1.2)
+		org.painadd = (org.painadd or 0) + 25
+		org.shock = math.min((org.shock or 0) + 12, 70)
+	end
+end
+
+local function reparentStomachGore(fromEnt, toEnt)
+	if not IsValid(fromEnt) or not IsValid(toEnt) then return end
+	local gore = fromEnt.StomachGoreEnt
+	if not IsValid(gore) then return end
+	bindStomachGore(gore, toEnt, IsValid(gore.StomachGoreOwner) and gore.StomachGoreOwner or toEnt)
+end
+
+hook.Add("Player Spawn", "HG_ClearStomachGoreOnSpawn", function(ply)
+	if IsValid(ply.StomachGoreEnt) then ply.StomachGoreEnt:Remove() end
+	ply.StomachGoreEnt = nil
+	ply:SetNWBool("NoVomitView", false)
+end)
+hook.Add("Fake", "HG_ReparentStomachGoreToRag", function(ply, rag) reparentStomachGore(ply, rag) end)
+hook.Add("Fake Up", "HG_ReparentStomachGoreToPlayer", function(ply, rag) reparentStomachGore(rag, ply) end)
+hook.Add("Player Getup", "HG_ReparentStomachGorePlayerGetup", function(ply)
+	if IsValid(ply) and IsValid(ply.FakeRagdoll) then reparentStomachGore(ply.FakeRagdoll, ply) end
+end)
+hook.Add("RagdollDeath", "HG_StomachGoreDeathRag", function(ply, rag) reparentStomachGore(ply, rag) end)

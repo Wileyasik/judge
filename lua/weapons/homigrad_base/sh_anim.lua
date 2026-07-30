@@ -142,6 +142,7 @@ function SWEP:AnimHold()
 	self.rotfuckinghands = self.IsPistolHoldType and not self:IsPistolHoldType()
 	local _
 	local ply = self:GetOwner()
+	if self.DisablePistolPostures and ply.posture and ply.posture >= 7 and ply.posture <= 9 then ply.posture = 0 end
 	
 	if not self.attachments then return end
 	//self.holdtype = self.attachments.grip and #self.attachments.grip ~= 0 and hg.attachments.grip[self.attachments.grip[1]].holdtype or self.HoldType

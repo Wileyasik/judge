@@ -7,6 +7,7 @@ net.Receive("organism_send", function()
 	local moreinfopls = net.ReadBool()
 	local add = net.ReadBool()
 	local ply = org.owner
+	if !IsValid(ply) then return end
 	
 	if ply:IsNPC() then
 		hg.organism_ents[ply] = true
@@ -22,11 +23,7 @@ net.Receive("organism_send", function()
 	end
 
 	if ply.is_lookedat and not moreinfopls then return end
-	if !IsValid(ply) then return end
 	if spectatov_ne_trogaem and (ply == LocalPlayer():GetNWEntity("spect",nil)) and not LocalPlayer():Alive() then return end
-	
-	local old_org = table.Copy(ply.organism)
-	ply.organism = old_org
 
 	ply.new_organism = org
 
@@ -42,7 +39,7 @@ net.Receive("organism_send", function()
 	
 	local rag = ply:GetNWEntity("FakeRagdoll")
 	if IsValid(rag) then
-		rag.organism = old_org
+		rag.organism = ply.organism
 		rag.new_organism = org
 	end
 
@@ -157,6 +154,16 @@ local list = {
 	0, 
 	{"heart", 1, true}, 
 	{"heartstop", true, true}, 
+	{"fibrillation", true, true},
+	{"arrhythmia", 1, true},
+	{"bloodPressure", 90},
+	{"systolic", 120},
+	{"diastolic", 80},
+	{"cardiacOutput", 1},
+	{"myocardialOxygen", 1},
+	{"heartStrain", 1, true},
+	{"hypertension", 1, true},
+	{"hypotension", 1, true},
 	{"pulse", 70}, 
 	{"heartbeat", 70}, false, 
 	{"stomach", 1, true}, 

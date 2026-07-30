@@ -15,15 +15,39 @@ local head_otrub_max_chance = 0.35
 local head_consciousness_mul = 28
 local head_otrub_consciousness_cap = 0.04
 local instant_pain_shock_scale = 0.75
-local player_limb_gib_threshold = 160
-local player_head_gib_threshold = 175
+local player_limb_gib_threshold = 130
+local player_head_gib_threshold = 140
 local player_buckshot_head_gib_threshold = 112
+local player_stomach_gib_threshold = 260
+local player_blast_limb_gib_threshold = 80
+local player_fall_head_gib_threshold = 1.2
+local blast_gib_damage_mul = 700
+local melee_gib_damage_mul = 0.35
 local ragdoll_fall_skull_damage_mul = 1.2
 local ragdoll_fall_jaw_damage_mul = 0.45
 local ragdoll_fall_skull_break_blood_mul = 1.15
 local rifle_penetration_threshold = 11
 local rifle_low_penetration_threshold = 9.5
 local rifle_low_penetration_damage_threshold = 55
+local gib_damage_decay = {
+	[HITGROUP_HEAD] = 3,
+}
+local body_part_health = {
+	[HITGROUP_HEAD] = player_head_gib_threshold,
+	[HITGROUP_LEFTLEG] = player_limb_gib_threshold,
+	[HITGROUP_RIGHTLEG] = player_limb_gib_threshold,
+	[HITGROUP_LEFTARM] = player_limb_gib_threshold,
+	[HITGROUP_RIGHTARM] = player_limb_gib_threshold,
+	[HITGROUP_STOMACH] = player_stomach_gib_threshold,
+}
+local body_part_heal = {
+	[HITGROUP_HEAD] = 1,
+	[HITGROUP_LEFTLEG] = 1,
+	[HITGROUP_RIGHTLEG] = 1,
+	[HITGROUP_LEFTARM] = 1,
+	[HITGROUP_RIGHTARM] = 1,
+	[HITGROUP_STOMACH] = 1,
+}
 local function ApplyFatalOrganismDamage(org, dmgInfo)
 	local owner = org and org.owner
 	if not IsValid(owner) or org.fatalDamageQueued then return end
@@ -70,6 +94,10 @@ local function Trace_Bullet(box, hit, ricochet, impact, org, organs, dmg, dmgInf
 	local name = organ[1]
 	if not name then return 0 end
 	if org.superfighter and not (string.find(name,"vest") or string.find(name,"helmet")) then return 0 end
+	if name == "stomach" or name == "intestines" then
+		org.lastGibHitGroup = HITGROUP_STOMACH
+		org.lastGibHitTime = CurTime()
+	end
 	local bone = organ[2] or 0
 	local func = input_list[name]
 	local hook_info = {
@@ -128,6 +156,30 @@ local dir = Vector(0, 0, 0)
 local CurTime = CurTime
 local angZero = Angle(0, 0, 0)
 
+local function AddGibDamageStack(org, hitgroup, damage)
+	org.gibdmgstack = org.gibdmgstack or {}
+	org.gibdmgstack[hitgroup] = org.gibdmgstack[hitgroup] or {0, CurTime()}
+	local stack = org.gibdmgstack[hitgroup]
+	local curtime = CurTime()
+	stack[1] = math.max((stack[1] or 0) - (curtime - (stack[2] or curtime)) * (gib_damage_decay[hitgroup] or 0), 0) + damage
+	stack[2] = curtime
+	return stack[1]
+end
+
+local function DamageBodyPart(org, hitgroup, damage, maxHealth)
+	maxHealth = maxHealth or body_part_health[hitgroup]
+	if not maxHealth then return end
+	org.gibhealth = org.gibhealth or {}
+	org.gibhealth[hitgroup] = org.gibhealth[hitgroup] or {maxHealth, CurTime()}
+
+	local health = org.gibhealth[hitgroup]
+	local curtime = CurTime()
+	health[1] = math.min((health[1] or maxHealth) + (curtime - (health[2] or curtime)) * (body_part_heal[hitgroup] or 0), maxHealth)
+	health[1] = math.max(health[1] - damage, 0)
+	health[2] = curtime
+	return maxHealth - health[1]
+end
+
 local RagdollDamageBoneMul = {
 	[HITGROUP_LEFTLEG] = 0.25,
 	[HITGROUP_RIGHTLEG] = 0.25,
@@ -158,7 +210,7 @@ local bonetohitgroup = {
 	["ValveBiped.Bip01_R_UpperArm"] = HITGROUP_RIGHTARM,
 	["ValveBiped.Bip01_R_Forearm"] = HITGROUP_RIGHTARM,
 	["ValveBiped.Bip01_R_Hand"] = HITGROUP_RIGHTARM,
-	["ValveBiped.Bip01_Pelvis"] = HITGROUP_CHEST,
+	["ValveBiped.Bip01_Pelvis"] = HITGROUP_STOMACH,
 	["ValveBiped.Bip01_Spine2"] = HITGROUP_CHEST,
 	["ValveBiped.Bip01_Spine1"] = HITGROUP_STOMACH,
 	["ValveBiped.Bip01_Spine4"] = HITGROUP_CHEST,
@@ -170,6 +222,43 @@ local bonetohitgroup = {
 	["ValveBiped.Bip01_R_Calf"] = HITGROUP_RIGHTLEG,
 	["ValveBiped.Bip01_R_Foot"] = HITGROUP_RIGHTLEG
 }
+
+local stomachFallbackBones = {
+	"ValveBiped.Bip01_Spine1",
+	"ValveBiped.Bip01_Spine",
+	"ValveBiped.Bip01_Pelvis",
+}
+
+local function getDamageHitgroup(ent, bone, dmgPos)
+	local translatedBone = ent:TranslatePhysBoneToBone(bone or 0)
+	local bonename = translatedBone and translatedBone >= 0 and ent:GetBoneName(translatedBone) or nil
+	local hitgroup = bonetohitgroup[bonename] or HITGROUP_GENERIC
+	if not ent:IsRagdoll() or hitgroup ~= HITGROUP_GENERIC then return hitgroup, bonename end
+
+	for _, physNum in ipairs({0, 1}) do
+		local realPhysNum = hg.realPhysNum and hg.realPhysNum(ent, physNum) or physNum
+		local phys = ent:GetPhysicsObjectNum(realPhysNum)
+		if IsValid(phys) and dmgPos:DistToSqr(phys:GetPos()) < 1225 then return HITGROUP_STOMACH, "ValveBiped.Bip01_Pelvis" end
+	end
+	for _, name in ipairs(stomachFallbackBones) do
+		local fallbackBone = ent:LookupBone(name)
+		local matrix = fallbackBone and ent:GetBoneMatrix(fallbackBone)
+		if matrix and dmgPos:DistToSqr(matrix:GetTranslation()) < 625 then return HITGROUP_STOMACH, name end
+	end
+	return hitgroup, bonename
+end
+
+local function getGibbedHeadForcePhys(ent, physBone)
+	if not ent.headexploded then return physBone end
+	local bone = ent:TranslatePhysBoneToBone(physBone or 0)
+	if bone ~= ent:LookupBone("ValveBiped.Bip01_Head1") then return physBone end
+	for _, name in ipairs({"ValveBiped.Bip01_Neck1", "ValveBiped.Bip01_Spine4", "ValveBiped.Bip01_Spine2"}) do
+		local fallback = ent:LookupBone(name)
+		local translated = fallback and ent:TranslateBoneToPhysBone(fallback)
+		if translated and translated >= 0 and IsValid(ent:GetPhysicsObjectNum(translated)) then return translated end
+	end
+	return physBone
+end
 
 local hitgrouptolimb = {
 	[HITGROUP_LEFTLEG] = "lleg",
@@ -548,11 +637,14 @@ function hg.AddHarm(ply, harm, reason)
 	ply.harm = ply.harm + harm
 end
 
-function hg.ExplodeHead(ent)
+function hg.ExplodeHead(ent, damage, slash, force)
 	if !IsValid(ent) then return end
+	if ent.headexploded or ent.headExplodePending then return end
+	ent.headExplodePending = true
+	local sourceEnt = ent
 
 	local ply = ent:IsRagdoll() and hg.RagdollOwner(ent) or ent
-	if ply:IsPlayer() and ply:Alive() then ply:Kill() end
+	if IsValid(ply) and ply:IsPlayer() and ply:Alive() then ply:Kill() end
 	if ent:IsNPC() and ent.organism then
 		ent.organism.shock = 100
 		ent.organism.alive = false
@@ -560,7 +652,15 @@ function hg.ExplodeHead(ent)
 
 	timer.Simple(0, function()
 		local ent = ent:IsRagdoll() and ent or ent:GetNWEntity("RagdollDeath")
-		if not IsValid(ent) then return end
+		if not IsValid(ent) then
+			if IsValid(sourceEnt) then sourceEnt.headExplodePending = nil end
+			return
+		end
+		if ent.headexploded then
+			if IsValid(sourceEnt) then sourceEnt.headExplodePending = nil end
+			return
+		end
+		ent.headExplodePending = true
 		--[[if not isbool(ent) then
 			hook.Run("OnHeadExplode", ply, ent)
 		end]]
@@ -568,7 +668,7 @@ function hg.ExplodeHead(ent)
 		local headBone = ent:LookupBone("ValveBiped.Bip01_Head1")
 		local mat = headBone and ent:GetBoneMatrix(headBone)
 		
-		Gib_Input(ent, headBone)
+		Gib_Input(ent, headBone, force, damage)
 		
 		if mat then
 			local pos = mat:GetTranslation()
@@ -583,10 +683,18 @@ function hg.ExplodeHead(ent)
 			net.Broadcast()
 		end
 		
+		if not ent.organism then
+			ent.headexploded = true
+			ent.headExplodePending = nil
+			if IsValid(sourceEnt) then sourceEnt.headExplodePending = nil end
+			return
+		end
 		ent.organism.headamputated = true
 		ent.headexploded = true
+		ent.headExplodePending = nil
+		if IsValid(sourceEnt) then sourceEnt.headExplodePending = nil end
 
-		ent.organism.owner.fullsend = true
+		if IsValid(ent.organism.owner) then ent.organism.owner.fullsend = true end
 		hg.send_bareinfo(ent.organism)
 	end)
 end
@@ -987,8 +1095,11 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	local tr = util.QuickTrace(dmgPos, dirCool * 100)
 	local len = math.abs(dmgInfo:GetDamageForce():Length())
 
-	local bonename = ent:GetBoneName(ent:TranslatePhysBoneToBone(bone))
-	local hitgroup = bonetohitgroup[bonename] or 0
+	local hitgroup, bonename = getDamageHitgroup(ent, bone, dmgPos)
+	if org.lastGibHitGroup and org.lastGibHitTime and org.lastGibHitTime + 0.1 > CurTime() then
+		hitgroup = org.lastGibHitGroup
+		bonename = hitgroup == HITGROUP_STOMACH and "ValveBiped.Bip01_Pelvis" or bonename
+	end
 	--print(dmg_before, 1)
 	--if ent:IsRagdoll() then
 		if RagdollForceBoneMul[hitgroup] then len = len * RagdollForceBoneMul[hitgroup] end
@@ -1168,7 +1279,8 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 		end
 		
 		if ent:IsRagdoll() then
-			ent:GetPhysicsObjectNum(bone or 0):ApplyForceCenter(force * 1)
+			local phys = ent:GetPhysicsObjectNum(getGibbedHeadForcePhys(ent, bone) or 0)
+			if IsValid(phys) then phys:ApplyForceCenter(force) end
 		end
 	end
 
@@ -1178,36 +1290,71 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 			HITGROUP_RIGHTARM,
 			HITGROUP_RIGHTLEG,
 			HITGROUP_LEFTLEG,
-			HITGROUP_HEAD
+			HITGROUP_HEAD,
+			HITGROUP_STOMACH
 		})
 	end
 
 	local lend = math.max(0.1, (ent:GetPos() - dmgInfo:GetDamagePosition()):Length())
-	local headMit = (hitgroup == HITGROUP_HEAD) and (org.lastHeadArmorMitigation or 1) or 1
+	local armorMit = hitgroup == HITGROUP_HEAD and (org.lastHeadArmorMitigation or 1) or (org.lastArmorMitigation or 1)
 	local isBuckshot = dmgInfo:IsDamageType(DMG_BUCKSHOT)
-	local damageStack = (dmg_before * headMit) / (dmgInfo:IsDamageType(DMG_BULLET) and RagdollDamageBoneMul[hitgroup] or 1)
+	local damageStack = (dmg_before * armorMit) / (dmgInfo:IsDamageType(DMG_BULLET) and RagdollDamageBoneMul[hitgroup] or 1)
 	--print(damageStack, 3)
-	damageStack = damageStack * (dmgInfo:IsDamageType(DMG_BLAST) and 200 / lend or 1) * (!dmgInfo:IsDamageType(DMG_CLUB+DMG_SLASH+DMG_BULLET+DMG_BUCKSHOT+DMG_BLAST+DMG_SNIPER) and 0 or 1) * (ent:IsNPC() and 3 or 1)
+	if dmgInfo:IsDamageType(DMG_SLASH + DMG_CLUB + DMG_GENERIC) then damageStack = damageStack * melee_gib_damage_mul end
+	if hitgroup == HITGROUP_HEAD and IsValid(inf) and inf.HeadGibDamageMul then damageStack = damageStack * inf.HeadGibDamageMul end
+	if hitgroup == HITGROUP_HEAD and dmgInfo:IsDamageType(DMG_SLASH) then damageStack = damageStack * 25 end
+	local inflictorClass = IsValid(dmgInfo:GetInflictor()) and dmgInfo:GetInflictor():GetClass() or ""
+	local grenadeBlastMul = string.find(inflictorClass, "ent_hg_grenade") and 1.8 or 1
+	damageStack = damageStack * (dmgInfo:IsDamageType(DMG_BLAST) and blast_gib_damage_mul / lend * grenadeBlastMul or 1) * (!dmgInfo:IsDamageType(DMG_CLUB+DMG_SLASH+DMG_BULLET+DMG_BUCKSHOT+DMG_BLAST+DMG_SNIPER) and 0 or 1) * (ent:IsNPC() and 3 or 1)
 	if impact.armorStopped then damageStack = 0 end
 	--damageStack = damageStack * (bullet and bullet.AmmoType and hg.ammotypeshuy[bullet.AmmoType] and hg.ammotypeshuy[bullet.AmmoType].BulletSettings and hg.ammotypeshuy[bullet.AmmoType].BulletSettings.Mass or 1) / 8
 	
 	org.dmgstack = org.dmgstack or {}
 	org.dmgstack[hitgroup] = org.dmgstack[hitgroup] or {}
-	local mul = (org.dmgstack[hitgroup][3] or 0) + 1
-	org.dmgstack[hitgroup][1] = ((org.dmgstack[hitgroup][2] and (ent.organism.dmgstack[hitgroup][2] + 0.05 * mul) > CurTime()) and ent.organism.dmgstack[hitgroup][1] * ((ent.organism.dmgstack[hitgroup][2] + 0.05 * mul) - CurTime()) / (0.05 * mul) or 0) + damageStack * mul
-	org.dmgstack[hitgroup][2] = CurTime()
-	org.dmgstack[hitgroup][3] = (org.dmgstack[hitgroup][3] or 0) + damageStack / 500
+	local bodyPartMaxHealth = body_part_health[hitgroup]
+	if bodyPartMaxHealth and (hitgrouptolimb[hitgroup] or hitgroup == HITGROUP_HEAD) and not org.isPly then bodyPartMaxHealth = 100 end
+	local gibStack
+	local headGoreStack
+	if bodyPartMaxHealth then
+		gibStack = DamageBodyPart(org, hitgroup, damageStack, bodyPartMaxHealth)
+		if hitgroup == HITGROUP_HEAD then headGoreStack = AddGibDamageStack(org, hitgroup, damageStack) end
+	else
+		local mul = (org.dmgstack[hitgroup][3] or 0) + 1
+		org.dmgstack[hitgroup][1] = ((org.dmgstack[hitgroup][2] and (ent.organism.dmgstack[hitgroup][2] + 0.05 * mul) > CurTime()) and ent.organism.dmgstack[hitgroup][1] * ((ent.organism.dmgstack[hitgroup][2] + 0.05 * mul) - CurTime()) / (0.05 * mul) or 0) + damageStack * mul
+		org.dmgstack[hitgroup][2] = CurTime()
+		org.dmgstack[hitgroup][3] = (org.dmgstack[hitgroup][3] or 0) + damageStack / 500
+		gibStack = hitgroup == HITGROUP_HEAD and AddGibDamageStack(org, hitgroup, damageStack) or org.dmgstack[hitgroup][1]
+	end
+	org.dmgstack[hitgroup][1] = headGoreStack or gibStack
+	if hitgroup == HITGROUP_HEAD and ent.headexploded and Gib_UpdateHeadGoreStage then Gib_UpdateHeadGoreStage(ent, headGoreStack or gibStack) end
+	if hitgroup == HITGROUP_STOMACH and not org.stomachgibbed and hg.AttachStomachGore and gibStack >= player_stomach_gib_threshold then
+		hg.AttachStomachGore(ent, dirCool * len)
+	end
 
-	local mat = ent:GetBoneMatrix(ent:TranslatePhysBoneToBone(bone))
+	local translatedBone = ent:TranslatePhysBoneToBone(bone or 0)
+	local mat = translatedBone and translatedBone >= 0 and ent:GetBoneMatrix(translatedBone) or nil
 	local hitgroup_max = 100
 	if org.isPly then
-		hitgroup_max = hitgroup == HITGROUP_HEAD and (isBuckshot and player_buckshot_head_gib_threshold or player_head_gib_threshold) or hitgrouptolimb[hitgroup] and player_limb_gib_threshold or hitgroup_max
+		hitgroup_max = hitgroup == HITGROUP_HEAD and (isBuckshot and player_buckshot_head_gib_threshold or player_head_gib_threshold) or hitgrouptolimb[hitgroup] and player_limb_gib_threshold or hitgroup == HITGROUP_STOMACH and player_stomach_gib_threshold or hitgroup_max
 	end
-	local instant = org.dmgstack[hitgroup][1] > hitgroup_max
+	if dmgInfo:IsDamageType(DMG_BLAST) and hitgrouptolimb[hitgroup] then hitgroup_max = player_blast_limb_gib_threshold end
+	local instant = bodyPartMaxHealth and gibStack >= hitgroup_max or gibStack > hitgroup_max
 	--print(damageStack, org.dmgstack[hitgroup][1], org.dmgstack[hitgroup][3])
 	local blast = dmgInfo:IsDamageType(DMG_BLAST)
-	
-	timer.Create("dmgstack"..org.entindex, !instant and 1 or 0, 1, function()
+	local slash = dmgInfo:IsDamageType(DMG_SLASH)
+	if instant and hitgroup == HITGROUP_HEAD and !ent.headexploded then hg.ExplodeHead(ent, headGoreStack or gibStack, slash, dirCool * len) end
+	if instant and (hitgrouptolimb[hitgroup] or hg.amputeetable[bonename]) then
+		if blast then
+			for _, limb in ipairs({"lleg", "rleg", "larm", "rarm", "lhand", "rhand", "llegup", "rlegup", "larmup", "rarmup"}) do
+				if !org[limb.."amputated"] and math.random(5) < 200 / lend then hg.organism.AmputateLimb(org, limb) end
+			end
+		else
+			local limbToAmputate = hg.amputeetable[bonename] or hitgrouptolimb[hitgroup]
+			if limbToAmputate and !org[limbToAmputate.."amputated"] then hg.organism.AmputateLimb(org, limbToAmputate) end
+		end
+	end
+
+	if not bodyPartMaxHealth then timer.Create("dmgstack"..org.entindex, !instant and 1 or 0, 1, function()
 		--if !IsValid(ply) then return end
 		
 		local rag = IsValid(ply) and (IsValid(ply:GetNWEntity("RagdollDeath", ply.FakeRagdoll)) and ply:GetNWEntity("RagdollDeath", ply.FakeRagdoll)) or ent:IsRagdoll() and ent or ent:IsNPC() and ent
@@ -1216,9 +1363,10 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 		timer.Simple(0.01, function()
 			if !org then return end
 			if !org.dmgstack then return end
-			if !org.dmgstack[hitgroup] then return end
-			if !org.dmgstack[hitgroup][1] then return end
-			local should = org.dmgstack[hitgroup][1] > hitgroup_max
+			local hitgroupStack = org.dmgstack[hitgroup]
+			if !hitgroupStack then return end
+			if !hitgroupStack[1] then return end
+			local should = hitgroupStack[1] > hitgroup_max
 
 			local limbs = {
 				"lleg",
@@ -1233,42 +1381,27 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 				"rarmup",
 			}
 
-			if should and (hitgrouptolimb[hitgroup] or hg.amputeetable[bonename]) then
-				if blast then
-					for i, limb in ipairs(limbs) do
-						if !org[limb.."amputated"] and math.random(5) < 200 / lend then
-							hg.organism.AmputateLimb(org, limb)
-						end
-					end
-				else
-					local limbToAmputate = hg.amputeetable[bonename] or hitgrouptolimb[hitgroup]
-					if limbToAmputate and !org[limbToAmputate.."amputated"] then
-						hg.organism.AmputateLimb(org, limbToAmputate)
-					end
-				end
-			end
-
 			if !IsValid(rag) then
-				org.dmgstack[hitgroup][1] = nil
-				org.dmgstack[hitgroup][2] = nil
+				hitgroupStack[1] = nil
+				hitgroupStack[2] = nil
 
 				return
 			end
 
 			if IsValid(ply) and ply:Alive() and not (should and hitgroup == HITGROUP_HEAD) then
-				org.dmgstack[hitgroup][1] = nil
-				org.dmgstack[hitgroup][2] = nil
+				hitgroupStack[1] = nil
+				hitgroupStack[2] = nil
 
 				return
 			end
 
-			should = org.dmgstack[hitgroup][1] > hitgroup_max
+			should = hitgroupStack[1] > hitgroup_max
 			--print(rag, should, hitgroup == HITGROUP_HEAD, bonename, hitgroup, HITGROUP_HEAD)
 			if should and hitgroup == HITGROUP_HEAD then
-				hg.ExplodeHead(ent)
+				hg.ExplodeHead(ent, hitgroupStack[1], slash, dirCool * len)
 
-				org.dmgstack[hitgroup][1] = nil
-				org.dmgstack[hitgroup][2] = nil
+				hitgroupStack[1] = nil
+				hitgroupStack[2] = nil
 			end
 			
 			if IsValid(rag) then
@@ -1295,13 +1428,13 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 				end
 			end
 
-			org.dmgstack[hitgroup][1] = nil
-			org.dmgstack[hitgroup][2] = nil
+			hitgroupStack[1] = nil
+			hitgroupStack[2] = nil
 
 			org.owner.fullsend = true
 			hg.send_bareinfo(org)
 		end)
-	end)
+	end) end
 
 	--[[if !org.llegamputated and dmgInfo:IsDamageType(DMG_BLAST) then
 		hg.organism.AmputateLimb(org, "lleg")
@@ -1799,6 +1932,10 @@ local function velocityDamage(ent, data)
 				net.WriteInt(1, 8)
 				net.Broadcast()
 			end
+
+			if !ent.headexploded and dmg * headDamageMul > player_fall_head_gib_threshold then
+				hg.ExplodeHead(ent, dmg * 30, false, data.OurOldVelocity - data.TheirOldVelocity)
+			end
 		end
 	else
 		local sfd = org.fakePlayer and ent or ply
@@ -1948,6 +2085,16 @@ hook.Add("Player Spawn", "huyhuyhuy22", function(ply)
 
 	ply.wounds = {}
 	ply.arterialwounds = {}
+
+	timer.Simple(0, function()
+		if !IsValid(ply) or !ply.organism then return end
+		ply.organism.gibhealth = nil
+		ply.organism.gibdmgstack = nil
+		ply.organism.stomachgibbed = false
+		ply.organism.lastGibHitGroup = nil
+		ply.organism.lastGibHitTime = nil
+		ply.headExplodePending = nil
+	end)
 end)
 
 hook.Add("Player Getup", "huyhhgss", function(ply)

@@ -172,6 +172,9 @@ module[2] = function(owner, org, timeValue)
 	org.painlessen = sub
 	org.pain = org.avgpain * math.max(1 - adrenaline / 4, 0.75) * math.max(1 - org.analgesia, 0)
 	org.nearpainlimit = not org.otrub and org.pain >= org.pain_turn * pain_fake_threshold
+	if org.isPly and org.pain >= 85 and IsValid(owner) and owner.Thought then
+		owner:Thought("You are experiencing excruciating pain.", 8, "thought_excruciatingpain", 0, Color(255, 160, 160))
+	end
 	org.painadd = min(max(org.painadd - add * analgesiaMul, 0), 150)
 	if org.nearpainlimit then
 		org.needfake = true

@@ -27,13 +27,24 @@ for i = 1, #bones do
 	boneNames[bones[i][1]] = bones[i][3]
 end
 
+local oppositeBones = {
+	[2] = 3,
+	[3] = 2,
+	[4] = 6,
+	[6] = 4,
+	[5] = 7,
+	[7] = 5,
+	[8] = 11,
+	[11] = 8,
+	[9] = 12,
+	[12] = 9,
+	[13] = 14,
+	[14] = 13
+}
+
 local function roundNumber(value)
 	if math.abs(value) < 0.0005 then value = 0 end
 	return string.format("%.3f", value)
-end
-
-local function vectorString(value)
-	return "Vector(" .. roundNumber(value.x) .. ", " .. roundNumber(value.y) .. ", " .. roundNumber(value.z) .. ")"
 end
 
 local function angleString(value)
@@ -52,9 +63,12 @@ local function openPostureMaker()
 	frame:SetDeleteOnClose(true)
 	frame:MakePopup()
 
-	local pose = {}
-	for i = 1, #bones do
-		pose[bones[i][1]] = {pos = Vector(), ang = Angle()}
+	local poses = {}
+	for modelIndex = 1, #models do
+		poses[modelIndex] = {}
+		for i = 1, #bones do
+			poses[modelIndex][bones[i][1]] = {ang = Angle()}
+		end
 	end
 
 	local ragdolls = {}
@@ -62,6 +76,10 @@ local function openPostureMaker()
 	local activeModel = 1
 	local updatingControls = false
 	local sliders = {}
+
+	local function activePose()
+		return poses[activeModel]
+	end
 
 	local function createRagdoll(definition)
 		local rag = ClientsideRagdoll(definition.model)
@@ -108,16 +126,25 @@ local function openPostureMaker()
 			local reference = data.entity:GetPhysicsObjectNum(0)
 			if not IsValid(reference) then continue end
 
-			for physBone, change in pairs(pose) do
+			for physBone, change in pairs(poses[i]) do
 				local phys = data.entity:GetPhysicsObjectNum(physBone)
 				local base = data.base[physBone]
 				if not IsValid(phys) or not base then continue end
 
-				local localPos = base.pos + change.pos
+				local localPos = base.pos
 				local _, localAng = LocalToWorld(vector_origin, change.ang, vector_origin, base.ang)
 				local worldPos, worldAng = LocalToWorld(localPos, localAng, reference:GetPos(), reference:GetAngles())
 				phys:SetPos(worldPos)
 				phys:SetAngles(worldAng)
+			end
+		end
+	end
+
+	local function showActiveModel()
+		for i = 1, #ragdolls do
+			local data = ragdolls[i]
+			if data and IsValid(data.entity) then
+				data.entity:SetNoDraw(i ~= activeModel)
 			end
 		end
 	end
@@ -149,13 +176,10 @@ local function openPostureMaker()
 	selectedLabel:SetContentAlignment(5)
 
 	local function refreshControls()
-		local change = pose[selected]
+		local change = activePose()[selected]
 		if not change then return end
 
 		updatingControls = true
-		sliders.posX:SetValue(change.pos.x)
-		sliders.posY:SetValue(change.pos.y)
-		sliders.posZ:SetValue(change.pos.z)
 		sliders.angP:SetValue(change.ang.p)
 		sliders.angY:SetValue(change.ang.y)
 		sliders.angR:SetValue(change.ang.r)
@@ -171,6 +195,7 @@ local function openPostureMaker()
 		slider:SetMinMax(minimum, maximum)
 		slider:SetDecimals(decimals)
 		slider.OnValueChanged = function(_, value)
+			local pose = activePose()
 			if updatingControls or not pose[selected] then return end
 			changed(pose[selected], tonumber(value) or 0)
 			applyPose()
@@ -178,9 +203,6 @@ local function openPostureMaker()
 		return slider
 	end
 
-	sliders.posX = addSlider("Position X", -60, 60, 2, function(change, value) change.pos.x = value end)
-	sliders.posY = addSlider("Position Y", -60, 60, 2, function(change, value) change.pos.y = value end)
-	sliders.posZ = addSlider("Position Z", -60, 60, 2, function(change, value) change.pos.z = value end)
 	sliders.angP = addSlider("Angle Pitch", -180, 180, 1, function(change, value) change.ang.p = value end)
 	sliders.angY = addSlider("Angle Yaw", -180, 180, 1, function(change, value) change.ang.y = value end)
 	sliders.angR = addSlider("Angle Roll", -180, 180, 1, function(change, value) change.ang.r = value end)
@@ -190,14 +212,24 @@ local function openPostureMaker()
 	help:SetTall(72)
 	help:SetWrap(true)
 	help:SetContentAlignment(5)
-	help:SetText("Left-drag moves a limb, right-drag rotates it, middle-drag rotates the camera, and the wheel moves depth. Hold Shift and use the wheel to zoom.")
+	help:SetText("Left-click selects a limb, right-drag rotates it, middle-drag rotates the camera. Hold Shift and use the wheel to zoom.")
+
+	local switchModel = vgui.Create("DButton", right)
+	switchModel:Dock(TOP)
+	switchModel:SetTall(34)
+	switchModel:SetText("Switch Model")
+	switchModel.DoClick = function()
+		activeModel = activeModel % #models + 1
+		showActiveModel()
+		refreshControls()
+	end
 
 	local resetSelected = vgui.Create("DButton", right)
 	resetSelected:Dock(TOP)
 	resetSelected:SetTall(34)
 	resetSelected:SetText("Reset Selected Limb")
 	resetSelected.DoClick = function()
-		pose[selected] = {pos = Vector(), ang = Angle()}
+		activePose()[selected] = {ang = Angle()}
 		applyPose()
 		refreshControls()
 	end
@@ -208,16 +240,56 @@ local function openPostureMaker()
 	resetAll:SetText("Reset Entire Pose")
 	resetAll.DoClick = function()
 		for i = 1, #bones do
-			pose[bones[i][1]] = {pos = Vector(), ang = Angle()}
+			activePose()[bones[i][1]] = {ang = Angle()}
 		end
 		applyPose()
 		refreshControls()
 	end
 
+	local mirrorAngles = vgui.Create("DButton", right)
+	mirrorAngles:Dock(TOP)
+	mirrorAngles:SetTall(34)
+	mirrorAngles:SetText("Copy Mirrored Angles")
+	mirrorAngles.DoClick = function()
+		local opposite = oppositeBones[selected]
+		if not opposite then
+			notification.AddLegacy("Selected bone cannot mirror.", NOTIFY_ERROR, 3)
+			return
+		end
+
+		local pose = activePose()
+		local angle = pose[selected].ang
+		pose[opposite].ang = Angle(angle.p, -angle.y, -angle.r)
+		selected = opposite
+		applyPose()
+		refreshControls()
+	end
+
+	local transferModel = vgui.Create("DButton", right)
+	transferModel:Dock(TOP)
+	transferModel:SetTall(34)
+	transferModel:SetText("Transfer To Other Model")
+	transferModel.DoClick = function()
+		local targetModel = activeModel % #models + 1
+		for i = 1, #bones do
+			local physBone = bones[i][1]
+			local angle = poses[activeModel][physBone].ang
+			poses[targetModel][physBone].ang = Angle(angle.p, angle.y, angle.r)
+		end
+
+		applyPose()
+		notification.AddLegacy("Angles transferred to " .. models[targetModel].name .. ".", NOTIFY_GENERIC, 4)
+	end
+
+	local applyPreset = vgui.Create("DButton", right)
+	applyPreset:Dock(TOP)
+	applyPreset:SetTall(34)
+	applyPreset:SetText("Apply Copied Preset")
+
 	local copy = vgui.Create("DButton", right)
 	copy:Dock(BOTTOM)
 	copy:SetTall(46)
-	copy:SetText("Copy Offsets")
+	copy:SetText("Copy Angles")
 
 	local viewport = vgui.Create("DPanel", frame)
 	viewport:Dock(FILL)
@@ -250,10 +322,8 @@ local function openPostureMaker()
 		local bestBone
 		local bestModel
 
-		for modelIndex = 1, #ragdolls do
-			local data = ragdolls[modelIndex]
-			if not data or not IsValid(data.entity) then continue end
-
+		local data = ragdolls[activeModel]
+		if data and IsValid(data.entity) then
 			for i = 1, #bones do
 				local physBone = bones[i][1]
 				local phys = data.entity:GetPhysicsObjectNum(physBone)
@@ -267,7 +337,7 @@ local function openPostureMaker()
 				if distance <= radius * radius and (not bestDistance or distance < bestDistance) then
 					bestDistance = distance
 					bestBone = physBone
-					bestModel = modelIndex
+					bestModel = activeModel
 				end
 			end
 		end
@@ -294,10 +364,8 @@ local function openPostureMaker()
 				render.DrawLine(Vector(grid, -70, 2), Vector(grid, 70, 2), Color(45, 48, 54), true)
 			end
 
-			for modelIndex = 1, #ragdolls do
-				local data = ragdolls[modelIndex]
-				if not data or not IsValid(data.entity) then continue end
-
+			local data = ragdolls[activeModel]
+			if data and IsValid(data.entity) then
 				data.entity:DrawModel()
 
 				for i = 1, #bones do
@@ -305,7 +373,7 @@ local function openPostureMaker()
 					local phys = data.entity:GetPhysicsObjectNum(physBone)
 					if not IsValid(phys) then continue end
 
-					local isSelected = selected == physBone and activeModel == modelIndex
+					local isSelected = selected == physBone
 					render.DrawWireframeSphere(phys:GetPos(), isSelected and 2.8 or 1.1, 8, 8, isSelected and Color(255, 190, 40) or Color(80, 180, 255), true)
 				end
 			end
@@ -336,7 +404,9 @@ local function openPostureMaker()
 		if code ~= MOUSE_LEFT and code ~= MOUSE_RIGHT then return end
 		if not selectFromMouse() then return end
 
-		dragMode = code == MOUSE_LEFT and "position" or "angle"
+		if code == MOUSE_LEFT then return end
+
+		dragMode = "angle"
 		lastMouseX, lastMouseY = gui.MouseX(), gui.MouseY()
 		self:MouseCapture(true)
 	end
@@ -353,22 +423,11 @@ local function openPostureMaker()
 			return true
 		end
 
-		if not pose[selected] then return false end
-
-		local active = ragdolls[activeModel]
-		if not active or not IsValid(active.entity) then return false end
-		local reference = active.entity:GetPhysicsObjectNum(0)
-		if not IsValid(reference) then return false end
-
-		local worldDelta = cameraAngles():Forward() * delta * 2
-		local localDelta = WorldToLocal(worldDelta, angle_zero, vector_origin, reference:GetAngles())
-		pose[selected].pos = pose[selected].pos + localDelta
-		applyPose()
-		refreshControls()
-		return true
+		return false
 	end
 
 	function viewport:Think()
+		local pose = activePose()
 		if not dragMode or not pose[selected] then return end
 
 		local mouseX, mouseY = gui.MouseX(), gui.MouseY()
@@ -383,20 +442,8 @@ local function openPostureMaker()
 		end
 
 		local change = pose[selected]
-		if dragMode == "angle" then
-			change.ang.p = math.NormalizeAngle(change.ang.p - deltaY * 0.5)
-			change.ang.y = math.NormalizeAngle(change.ang.y + deltaX * 0.5)
-		else
-			local active = ragdolls[activeModel]
-			if not active or not IsValid(active.entity) then return end
-			local reference = active.entity:GetPhysicsObjectNum(0)
-			if not IsValid(reference) then return end
-
-			local angles = cameraAngles()
-			local worldDelta = angles:Right() * deltaX * 0.12 - angles:Up() * deltaY * 0.12
-			local localDelta = WorldToLocal(worldDelta, angle_zero, vector_origin, reference:GetAngles())
-			change.pos = change.pos + localDelta
-		end
+		change.ang.p = math.NormalizeAngle(change.ang.p - deltaY * 0.5)
+		change.ang.y = math.NormalizeAngle(change.ang.y + deltaX * 0.5)
 
 		applyPose()
 		refreshControls()
@@ -405,6 +452,91 @@ local function openPostureMaker()
 	boneList.OnRowSelected = function(_, _, line)
 		selected = line.physBone
 		refreshControls()
+	end
+
+	local function applyPresetText(text)
+		text = tostring(text or "")
+		local body = text:match("postureOffsets%s*=%s*(%b{})") or text:match("return%s*(%b{})") or text:match("^%s*(%b{})%s*$")
+		if not body then
+			notification.AddLegacy("Invalid posture preset.", NOTIFY_ERROR, 4)
+			return false
+		end
+
+		local compiled = CompileString("return " .. body, "hg_posture_preset", false)
+		if isstring(compiled) then
+			notification.AddLegacy("Invalid posture preset.", NOTIFY_ERROR, 4)
+			return false
+		end
+
+		local ok, preset = pcall(compiled)
+		if not ok or not istable(preset) then
+			notification.AddLegacy("Invalid posture preset.", NOTIFY_ERROR, 4)
+			return false
+		end
+
+		for modelIndex = 1, #models do
+			local modelPreset = preset[models[modelIndex].key]
+			if istable(modelPreset) then
+				for i = 1, #bones do
+					local physBone = bones[i][1]
+					local entry = modelPreset[physBone]
+					if istable(entry) and entry.ang then
+						poses[modelIndex][physBone].ang = Angle(tonumber(entry.ang.p) or 0, tonumber(entry.ang.y) or 0, tonumber(entry.ang.r) or 0)
+					end
+				end
+			end
+		end
+
+		applyPose()
+		refreshControls()
+		notification.AddLegacy("Posture preset applied.", NOTIFY_GENERIC, 4)
+		return true
+	end
+
+	local function openPresetPaste(text)
+		local pasteFrame = vgui.Create("DFrame")
+		pasteFrame:SetSize(700, 500)
+		pasteFrame:Center()
+		pasteFrame:SetTitle("Paste Posture Preset")
+		pasteFrame:MakePopup()
+
+		local entry = vgui.Create("DTextEntry", pasteFrame)
+		entry:Dock(FILL)
+		entry:DockMargin(8, 8, 8, 8)
+		entry:SetMultiline(true)
+		entry:SetText(text or "")
+
+		local apply = vgui.Create("DButton", pasteFrame)
+		apply:Dock(BOTTOM)
+		apply:DockMargin(8, 0, 8, 8)
+		apply:SetTall(34)
+		apply:SetText("Apply Preset")
+		apply.DoClick = function()
+			if applyPresetText(entry:GetValue()) then
+				pasteFrame:Remove()
+			end
+		end
+	end
+
+	applyPreset.DoClick = function()
+		local text = ""
+		if input and isfunction(input.GetClipboardText) then
+			text = input.GetClipboardText()
+		elseif isfunction(GetClipboardText) then
+			text = GetClipboardText()
+		elseif system and isfunction(system.GetClipboardText) then
+			text = system.GetClipboardText()
+		end
+		text = tostring(text or "")
+
+		if text:find("postureOffsets", 1, true) or text:find("male09", 1, true) or text:find("female06", 1, true) then
+			if not applyPresetText(text) then
+				openPresetPaste(text)
+			end
+			return
+		end
+
+		openPresetPaste(text)
 	end
 
 	copy.DoClick = function()
@@ -417,24 +549,17 @@ local function openPostureMaker()
 			local data = ragdolls[modelIndex]
 			if not data or not IsValid(data.entity) then continue end
 
-			local reference = data.entity:GetPhysicsObjectNum(0)
-			if not IsValid(reference) then continue end
-
 			output[#output + 1] = "\t[\"" .. data.definition.key .. "\"] = {"
 			for i = 1, #bones do
 				local physBone = bones[i][1]
-				local phys = data.entity:GetPhysicsObjectNum(physBone)
-				if not IsValid(phys) then continue end
-
-				local localPos, localAng = WorldToLocal(phys:GetPos(), phys:GetAngles(), reference:GetPos(), reference:GetAngles())
-				output[#output + 1] = "\t\t[" .. physBone .. "] = {bone = \"" .. boneNames[physBone] .. "\", pos = " .. vectorString(localPos) .. ", ang = " .. angleString(localAng) .. "},"
+				output[#output + 1] = "\t\t[" .. physBone .. "] = {bone = \"" .. boneNames[physBone] .. "\", ang = " .. angleString(poses[modelIndex][physBone].ang) .. "},"
 			end
 			output[#output + 1] = "\t},"
 		end
 
 		output[#output + 1] = "}"
 		SetClipboardText(table.concat(output, "\n"))
-		notification.AddLegacy("ShadowControl posture offsets copied.", NOTIFY_GENERIC, 4)
+		notification.AddLegacy("ShadowControl posture angles copied.", NOTIFY_GENERIC, 4)
 		surface.PlaySound("buttons/button15.wav")
 	end
 
@@ -447,6 +572,7 @@ local function openPostureMaker()
 		if hgPostureMaker == frame then hgPostureMaker = nil end
 	end
 
+	showActiveModel()
 	applyPose()
 	refreshControls()
 	boneList:SelectFirstItem()

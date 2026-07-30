@@ -87,6 +87,22 @@ surface.CreateFont("RemDeathStateFont", {
 local remDeathStateColor = Color(255, 255, 255, 0)
 local remDeathStateStation
 local remDeathStateLoading
+local remHeartStopped = false
+local remFibrillationStation
+local remFibrillationLoading
+local remFibrillationStopping
+local remHeartStopLoading
+
+local function PlayRemHeartStopSound(uncon)
+	if remHeartStopLoading then return end
+	remHeartStopLoading = true
+	sound.PlayFile("sound/" .. (uncon and "rem_heartstopuncon.wav" or "rem_heartstop.wav"), "noblock noplay", function(station)
+		remHeartStopLoading = nil
+		if not IsValid(station) then return end
+		station:SetVolume(1)
+		station:Play()
+	end)
+end
 
 local function PlayRemDeathStateSound()
 	if IsValid(remDeathStateStation) then
@@ -108,6 +124,59 @@ local function PlayRemDeathStateSound()
 end
 
 net.Receive("rem_deathstate_sound", PlayRemDeathStateSound)
+
+local function StartRemFibrillationSound()
+	if IsValid(remFibrillationStation) then
+		remFibrillationStopping = nil
+		remFibrillationStation:Play()
+		if remFibrillationStation.ChangeVolume then remFibrillationStation:ChangeVolume(1, 1) else remFibrillationStation:SetVolume(1) end
+		return
+	end
+	if remFibrillationLoading then return end
+	remFibrillationLoading = true
+	sound.PlayFile("sound/rem_fibrillation.mp3", "noplay", function(station)
+		remFibrillationLoading = nil
+		if not IsValid(station) then return end
+		local ply = LocalPlayer()
+		local org = IsValid(ply) and (ply.new_organism or ply.organism)
+		if not IsValid(ply) or not ply:Alive() or not org or not org.fibrillation then station:Stop() return end
+		remFibrillationStation = station
+		station:EnableLooping(true)
+		station:SetVolume(0)
+		station:Play()
+		if station.ChangeVolume then station:ChangeVolume(1, 1) else station:SetVolume(1) end
+	end)
+end
+
+local function StopRemFibrillationSound()
+	if not IsValid(remFibrillationStation) or remFibrillationStopping then return end
+	remFibrillationStopping = true
+	if remFibrillationStation.ChangeVolume then
+		remFibrillationStation:ChangeVolume(0, 1)
+	else
+		remFibrillationStation:Stop()
+		remFibrillationStation = nil
+		remFibrillationStopping = nil
+		return
+	end
+	timer.Simple(1.05, function()
+		if not remFibrillationStopping or not IsValid(remFibrillationStation) then return end
+		remFibrillationStation:Stop()
+		remFibrillationStation = nil
+		remFibrillationStopping = nil
+	end)
+end
+
+hook.Add("Think", "RemCardiacSounds", function()
+	local ply = LocalPlayer()
+	if not IsValid(ply) then return end
+	local org = ply:Alive() and (ply.new_organism or ply.organism)
+	local heartstop = org and org.heartstop or false
+	local fibrillation = org and org.fibrillation or false
+	if heartstop and not remHeartStopped then PlayRemHeartStopSound(org.otrub) end
+	remHeartStopped = heartstop
+	if fibrillation then StartRemFibrillationSound() else StopRemFibrillationSound() end
+end)
 
 hook.Add("Think", "RemDeathStateSoundStop", function()
 	local ply = LocalPlayer()
@@ -727,7 +796,7 @@ hook.Add("OnNetVarSet","wounds_netvar",function(index, key, var)
 			--PrintTable(ent.wounds)
 			local rag = IsValid(ent:GetNWEntity("FakeRagdoll")) and ent:GetNWEntity("FakeRagdoll")-- or IsValid(ent:GetNWEntity("RagdollDeath")) and ent:GetNWEntity("RagdollDeath")
 			if IsValid(rag) then
-				rag.wounds = rag:GetNetVar("wounds") or var
+				rag.wounds = var
 			end
 		end
 	end
@@ -755,7 +824,7 @@ hook.Add("OnNetVarSet","wounds_netvar2",function(index, key, var)
 			local rag = IsValid(ent:GetNWEntity("FakeRagdoll")) and ent:GetNWEntity("FakeRagdoll")-- or IsValid(ent:GetNWEntity("RagdollDeath")) and ent:GetNWEntity("RagdollDeath")
 			
 			if IsValid(rag) then
-				rag.arterialwounds = rag:GetNetVar("arterialwounds") or var
+				rag.arterialwounds = var
 			end
 		end
 	end
@@ -766,6 +835,12 @@ hook.Add("Player Spawn", "removewounds", function(ply)
 
 	ply.wounds = {}
 	ply.arterialwounds = {}
+
+	local rag = ply:GetNWEntity("FakeRagdoll")
+	if IsValid(rag) then
+		rag.wounds = {}
+		rag.arterialwounds = {}
+	end
 end)
 
 hook.Add("Fake", "huyhuyhuy235", function(ply,ragdoll)

@@ -9,7 +9,7 @@ male["ValveBiped.Bip01_Spine"] = {
 male["ValveBiped.Bip01_Head1"] = {
 	{
 		"skull", --bone
-		0.5,
+		0.05,
 		Vector(5.5, -1.5, 0),
 		Angle(0, 0, 0),
 		Vector(2.5, 4.8, 3.2),

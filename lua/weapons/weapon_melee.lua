@@ -220,6 +220,7 @@ SWEP.HeadRagdollChance = 0.55
 SWEP.HeadRagdollForceMul = 1.35
 SWEP.HeadRagdollUpMul = 1.2
 SWEP.HeadRagdollMinDamage = 20
+SWEP.HeadGibDamageMul = 0.1
 
 SWEP.PenetrationPrimary = 8
 SWEP.PenetrationSecondary = 4

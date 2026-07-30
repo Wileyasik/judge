@@ -53,7 +53,6 @@ local function ForceApplyAppearance(ply, tbl, noModelChange)
         gordon = true,
         groove = true,
         headcrabzombie = true,
-        infection_zombie = true,
         metrocop = true,
         nationalguard = true,
         police = true,
@@ -80,6 +79,10 @@ local function ForceApplyAppearance(ply, tbl, noModelChange)
         if not IsValid(ent) or not ent:IsPlayer() then return false end
 
         local roundName = getRoundName()
+        -- Infection zombies keep the model assigned by the round without a player class.
+        if roundName == "infection" and ent:Team() == 1 and ent:GetNWBool("Infection_IsZombie", false) then
+            return true
+        end
         if roundName == "survival" or roundName == "superfighters" then
             return false
         end

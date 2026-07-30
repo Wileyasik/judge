@@ -19,6 +19,8 @@ SWEP.SprayRand = {Angle(0, 0, 0), Angle(0, 0, 0)}
 SWEP.addSprayMul = 1
 
 SWEP.RecoilMul = 0.7
+SWEP.ScreenRecoilMul = 0.6
+SWEP.WeaponRecoilMul = 1.25
 
 local cos, sin, math_max, math_min = math.cos, math.sin, math.max, math.min
 function SWEP:GetPrimaryMul()
@@ -65,6 +67,7 @@ function SWEP:PrimarySpread()
 		mul = mul * (((organism.larm or 0) + (organism.rarm or 0) + 2) / 1 + ((organism.larmamputated and 5 or 0) + (organism.rarmamputated and 5 or 0)))
 		mul = mul * ((owner.posture == 7 or owner.posture == 8 or owner.holdingWeapon) and 2 or 1)
 		mul = mul * self.RecoilMul
+		local screenRecoilMul = self.ScreenRecoilMul or 1
 		mul = mul * (owner:Crouching() and 0.75 or 1)
 		--mul = mul * (hg.IsOnGround(hg.GetCurrentCharacter(owner)) and 1 or 5)
 		mul = mul * (self:IsResting() and 0.1 or 1)
@@ -99,11 +102,11 @@ function SWEP:PrimarySpread()
 			
 			local huyang = angrand2 * mul / 2 * mulhuy
 			huyang[3] = 0
-			ViewPunch2(huyang * (owner.posture == 1 and not self:IsZoom() and 3 or 1) * 0.25)-- ^ ((not self.Primary.Automatic and 0.5 or 1)))
+			ViewPunch2(huyang * (owner.posture == 1 and not self:IsZoom() and 3 or 1) * 0.25 * screenRecoilMul)-- ^ ((not self.Primary.Automatic and 0.5 or 1)))
 			
 			local angpopa = angrand2 * mul
 			angpopa[3] = 0
-			ViewPunch(angpopa * (hg_coolcamera:GetBool() and 3 or 1))-- ^ ((not self.Primary.Automatic and 0.5 or 1)))
+			ViewPunch(angpopa * (hg_coolcamera:GetBool() and 3 or 1) * screenRecoilMul)-- ^ ((not self.Primary.Automatic and 0.5 or 1)))
 			spray = spray + angRand * 2 * (self.randmul or 1)
 		end
 
@@ -113,10 +116,10 @@ function SWEP:PrimarySpread()
 		//ViewPunch2(angleprikol)
 
 		local mul = mul * self.Primary.Force2 / 100 * (self:IsPistolHoldType() and 2 or 1) * (self.NumBullet and self.NumBullet * 3 or 1)
-		ViewPunch2(Angle(-1 * math.Rand(1,2),-1 * math.Rand(-1,1),0) * mul)
-		ViewPunch(Angle(-1 * math.Rand(1,2),-1 * math.Rand(-1,1),0) * mul / -2)
-		timer.Simple(0.01, function() ViewPunch2(Angle(-1 * math.Rand(1,2),1 * math.Rand(-1,1),0) * mul) end)
-		timer.Simple(0.02, function() ViewPunch2(Angle(1 * math.Rand(1,2.4),0,0) * mul) end)
+		ViewPunch2(Angle(-1 * math.Rand(1,2),-1 * math.Rand(-1,1),0) * mul * screenRecoilMul)
+		ViewPunch(Angle(-1 * math.Rand(1,2),-1 * math.Rand(-1,1),0) * mul / -2 * screenRecoilMul)
+		timer.Simple(0.01, function() ViewPunch2(Angle(-1 * math.Rand(1,2),1 * math.Rand(-1,1),0) * mul * screenRecoilMul) end)
+		timer.Simple(0.02, function() ViewPunch2(Angle(1 * math.Rand(1,2.4),0,0) * mul * screenRecoilMul) end)
 
 		local eyeang = owner:EyeAngles()
 		local sprayAng = (spray * (self:IsResting() and 0.1 or 1) * 8 + angrand3 * self.addSprayMul) * (eyeang.z == 180 and -1 or 1)
@@ -125,11 +128,11 @@ function SWEP:PrimarySpread()
 		sprayAng:RotateAroundAxis(angle_zero:Forward(), eyeang.roll)
 		sprayAng.roll = 0
 
-		owner:SetEyeAngles(eyeang + sprayAng * 2 * (organism.recoilmul or 1) * (owner.posture == 1 and not self:IsZoom() and 0.1 or 1) * 0.25)
+		owner:SetEyeAngles(eyeang + sprayAng * 2 * (organism.recoilmul or 1) * (owner.posture == 1 and not self:IsZoom() and 0.1 or 1) * 0.25 * screenRecoilMul)
 		
 		local rnd1, rnd2 = math.Rand(1,2), math.Rand(-1,1)
-		ViewPunch2(Angle(2 * rnd1,2 * rnd2,0) * mul * 0.5)
-		ViewPunch(Angle(-2 * rnd1,-2 *rnd2,0) * mul)
+		ViewPunch2(Angle(2 * rnd1,2 * rnd2,0) * mul * 0.5 * screenRecoilMul)
+		ViewPunch(Angle(-2 * rnd1,-2 *rnd2,0) * mul * screenRecoilMul)
 
 		local max_clip1 = self:GetMaxClip1()
 		

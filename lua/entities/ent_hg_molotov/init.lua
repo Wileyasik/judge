@@ -106,9 +106,9 @@ function ENT:Detonate()
 				--util.Decal("BeerSplash", Tr.HitPos + Tr.HitNormal, Tr.HitPos - Tr.HitNormal)
 				if Tr.Entity:IsPlayer() then Tr.Entity:Ignite() end
 				--local fire = CreateVFire(Tr.Entity, Tr.HitPos, Tr.HitNormal, 7, self)
-				CreateVFireBall(30, 12, Tr.HitPos + vector_up * 4, self.Velocity / 5 - vector_up * 10 + VectorRand() * 150,self.owner or self)
+				CreateVFireBall(30, 12, Tr.HitPos + vector_up * 4, (self.Velocity or self:GetVelocity()) / 5 - vector_up * 10 + VectorRand() * 150,self.owner or self)
 			else
-				CreateVFireBall(25, 7, SelfPos + vector_up * 12, self.Velocity/2+ VectorRand() * 250,self.owner or self)
+				CreateVFireBall(25, 7, SelfPos + vector_up * 12, (self.Velocity or self:GetVelocity())/2+ VectorRand() * 250,self.owner or self)
 			end
 		end
 	end)

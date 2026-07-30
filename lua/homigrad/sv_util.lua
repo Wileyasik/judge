@@ -877,6 +877,10 @@ function DoorIsOpen2( door )
 end
 
 function hgBlastThatDoor(ent, vel) -- taken from JMod
+	local meleeHit = ent.SDD_LastMeleeHit and ent.SDD_LastMeleeHit > CurTime() - 0.1
+	if SDD_DamageDoor and (meleeHit or math.random(100) <= 60) and SDD_DamageDoor(ent, math.random(20, 45)) then return end
+	if SDD_AdvanceDoorBreakPhase and SDD_AdvanceDoorBreakPhase(ent) then return end
+
 	local Moddel, Pozishun, Ayngul, Muteeriul, Skin = ent:GetModel(), ent:GetPos(), ent:GetAngles(), ent:GetMaterial(), ent:GetSkin()
 	sound.Play("Wood_Crate.Break", Pozishun, 60, 100)
 	sound.Play("Wood_Furniture.Break", Pozishun, 60, 100)
@@ -1266,6 +1270,7 @@ local TrackedModelsa = {
 	["models/weapons/w_knife_t.mdl"] = "weapon_pocketknife",
 	["models/weapons/w_knife_ct.mdl"] = "weapon_pocketknife",
 	["models/props_canal/mattpipe.mdl"] = "weapon_leadpipe",
+	["models/weapons/w_crowbar.mdl"] = "weapon_hg_crowbar",
 }
 
 local TrackedModels = {}

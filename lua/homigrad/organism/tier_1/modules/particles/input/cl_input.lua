@@ -14,6 +14,10 @@ local mat_huy = Material("effects/blood_core")
 mat_huy:SetTexture("$basetexture",texture)
 
 local cloudmat = Material("effects/smoke_b")
+local bloodSpillMats = {}
+for i = 1, 6 do
+	bloodSpillMats[i] = Material("bloodspill/blood" .. i)
+end
 
 --оставь это лучше выглядит
 --[[for i = 4, 6 do
@@ -64,6 +68,34 @@ hg.addBloodPart = addBloodPart
 hg.addBloodPart2 = addBloodPart2
 
 local Rand = math.Rand
+local spillColor = Color(70, 0, 0, 255)
+hg.gibbloodspillparticles = hg.gibbloodspillparticles or {}
+
+local function addGibBloodSpill(ent, stump)
+	if not IsValid(ent) then return end
+	if LocalPlayer():GetNetVar("disappearance", nil) or ent:GetNetVar("disappearance", nil) then return end
+	if #hg.gibbloodspillparticles > 120 then table.remove(hg.gibbloodspillparticles, 1) end
+	local vel = VectorRand(-18, 18) + ent:GetVelocity() * 0.04
+	vel[3] = vel[3] + (stump and Rand(10, 22) or Rand(-2, 10))
+	hg.gibbloodspillparticles[#hg.gibbloodspillparticles + 1] = {ent:GetPos() + VectorRand(-3, 3), vel, bloodSpillMats[math.random(#bloodSpillMats)], CurTime(), Rand(0.35, 0.55), stump and Rand(1, 2) or Rand(0.25, 0.6), stump and Rand(9, 16) or Rand(3, 6), stump}
+end
+
+hook.Add("PostDrawTranslucentRenderables", "hg_gib_bloodspill", function()
+	local time, ft = CurTime(), FrameTime()
+	for i = #hg.gibbloodspillparticles, 1, -1 do
+		local part = hg.gibbloodspillparticles[i]
+		local frac = (time - part[4]) / part[5]
+		if frac >= 1 then table.remove(hg.gibbloodspillparticles, i) continue end
+		part[1]:Add(part[2] * ft)
+		part[2]:Mul(0.96)
+		part[2][3] = part[2][3] - (part[8] and 10 or 30) * ft
+		local grow = 1 - (1 - frac) * (1 - frac)
+		local size = Lerp(grow, part[6], part[7])
+		spillColor.a = 255 * (1 - frac)
+		render.SetMaterial(part[3])
+		render.DrawSprite(part[1], size, size, spillColor)
+	end
+end)
 
 local hg_bloodimpacts = ConVarExists("hg_bloodimpacts") and GetConVar("hg_bloodimpacts") or CreateConVar("hg_bloodimpacts", 0, FCVAR_ARCHIVE + FCVAR_REPLICATED, "Enable custom blood impact effects spray cool kill death", 0, 1)
 local bloodImpactCloudSize = 16
@@ -152,6 +184,15 @@ hook.Add("HG_OrganismChanged", "explodelegs", function(oldorg, org)
 end)
 
 hg.explode = explode
+
+net.Receive("hg_gib_bloodspill", function()
+	local entIndex = net.ReadUInt(16)
+	net.ReadFloat()
+	local stump = net.ReadBool()
+	local ent = Entity(entIndex)
+	if not IsValid(ent) then return end
+	for i = 1, stump and 16 or 5 do addGibBloodSpill(ent, stump) end
+end)
 
 net.Receive("addfountain",function()
 	local ent = net.ReadEntity()

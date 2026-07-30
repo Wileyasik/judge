@@ -195,9 +195,12 @@ end
 local function IsArmorBreakProtected(ent)
 	if not IsValid(ent) then return false end
 	if ent:IsNPC() and ent:GetClass() == "npc_combine_s" then return true end
-	if ent:IsPlayer() and ent.PlayerClassName == "Gordon" then return true end
+
+	local ply = ent:IsPlayer() and ent or (ent:IsRagdoll() and hg.RagdollOwner(ent))
+	if not IsValid(ply) then return false end
+	if ply.PlayerClassName == "Gordon" then return true end
 	-- Combine and Metrocop armor is unbreakable.
-	if ent:IsPlayer() and (ent.PlayerClassName == "Combine" or ent.PlayerClassName == "Metrocop") then return true end
+	if ply.PlayerClassName == "Combine" or ply.PlayerClassName == "Metrocop" then return true end
 	return false
 end
 

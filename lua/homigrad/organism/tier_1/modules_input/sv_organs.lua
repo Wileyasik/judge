@@ -27,11 +27,18 @@ input_list.heart = function(org, bone, dmg, dmgInfo)
 	local oldDmg = org.heart
 
 	local result = damageOrgan(org, dmg * 0.3, dmgInfo, "heart")
+	local delta = org.heart - oldDmg
 
-	hg.AddHarmToAttacker(dmgInfo, (org.heart - oldDmg) * 10, "Heart damage harm")
+	hg.AddHarmToAttacker(dmgInfo, delta * 10, "Heart damage harm")
 	
 	org.shock = org.shock + dmg * 20
-	addInternalBleed(org, (org.heart - oldDmg) * 10, "heart")
+	org.painadd = org.painadd + dmg * 18
+	addInternalBleed(org, delta * 10, "heart")
+	org.heartStrain = math.Clamp((org.heartStrain or 0) + delta * 1.4, 0, 1)
+	if hg.organism.AddCardiacStress then hg.organism.AddCardiacStress(org, delta * (dmgInfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT) and 2.4 or 1.2)) end
+	if delta > 0.08 and dmgInfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT + DMG_SLASH) and math.Rand(0, 1) < math.Clamp(delta * 1.8, 0, 0.75) then
+		hg.organism.StartFibrillation(org)
+	end
 
 	return result
 end
@@ -114,7 +121,7 @@ local function damageBrainLobe(org, bone, dmg, dmgInfo, key)
 	local result = damageOrgan(org, dmg, dmgInfo, key)
 	local delta = (org[key] or 0) - oldDmg
 
-	org.brain = math.min((org.brain or 0) + getBrainLobeDamage(org) - oldBrainLobeDamage, 1)
+	org.brain = math.min((org.brain or 0) + (getBrainLobeDamage(org) - oldBrainLobeDamage) * 1.5, 1)
 	org.consciousness = math.Approach(org.consciousness, 0, delta * profile.consciousness)
 	org.disorientation = org.disorientation + delta * profile.disorientation
 	org.shock = org.shock + dmg * profile.shock
@@ -323,7 +330,7 @@ input_list.rarmartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) r
 input_list.larmartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("larmartery", org, dmg, dmgInfo, boneindex, dir, hit) end
 input_list.rlegartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("rlegartery", org, dmg, dmgInfo, boneindex, dir, hit) end
 input_list.llegartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("llegartery", org, dmg, dmgInfo, boneindex, dir, hit) end
-input_list.spineartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return 0 end--hitArtery("spineartery", org, dmg, dmgInfo, boneindex, dir, hit) end
+input_list.spineartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("spineartery", org, dmg, dmgInfo, boneindex, dir, hit) end
 input_list.eyeL = function(org, bone, dmg, dmgInfo)
 	local oldDmg = org.eyeL or 0
 	dmg = dmg * 0.75
@@ -382,7 +389,6 @@ input_list.lungsR = function(org, bone, dmg, dmgInfo)
 end
 
 input_list.trachea = function(org, bone, dmg, dmgInfo)
-	do return 0 end
 	local oldDmg = org.trachea
 
 	if dmgInfo:IsDamageType(DMG_BLAST) then dmg = dmg / 5 end

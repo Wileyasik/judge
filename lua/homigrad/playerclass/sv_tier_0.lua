@@ -32,13 +32,14 @@ function Player:GiveSwep(list, mulClip1) -- улучшенный tdm.GiveSwep
 end
 
 util.AddNetworkString("setupclass")
-hook.Add("PlayerInitializeSpawn", "PlayerClass", function(plySend)
+hook.Add("PlayerInitialSpawn", "PlayerClass", function(plySend)
 	for i, ply in player.Iterator() do
 		if not ply:GetPlayerClass() then continue end
 		net.Start("setupclass")
-		net.WriteEntity(ply)
-		net.WriteString(ply:GetNWString("Class"))
-		net.WriteString(ply:GetNWString("ClassOld"))
+			net.WriteEntity(ply)
+			net.WriteString(ply.PlayerClassName or "")
+			net.WriteString(ply.PlayerClassNameOld or "")
+			net.WriteTable({})
 		net.Send(plySend)
 	end
 end)
