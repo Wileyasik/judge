@@ -104,7 +104,7 @@ SWEP.Primary.Automatic = false
 SWEP.Primary.Ammo = ".50 Action Express"
 SWEP.Primary.Cone = 0
 SWEP.Primary.Damage = 55
-SWEP.Primary.Sound = {"weapons/arccw_ur/deagle/fire-01.ogg", 75, 55, 65}
+SWEP.Primary.Sound = {"weapons/darsu_eft/rsh12/rsh_12_outdoor_close_oneshot.wav", 75, 55, 65}
 SWEP.SupressedSound = false
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/makarov/handling/makarov_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Force = 35
@@ -151,8 +151,8 @@ SWEP.podkid = 2
 SWEP.availableAttachments = {
 	sight = {
 		["mountType"] = "picatinny",
-		["mount"] = Vector(-3, 0.5, 0),
-		["mountAngle"] = Angle(0, 0, 0),
+		["mount"] = Vector(-5, -1.7, 0),
+		["mountAngle"] = Angle(0, 0, 180),
 	},
 }
 

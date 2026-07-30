@@ -457,14 +457,21 @@ hook.Add("HUDPaint", "homigrad-test-att", function()
 	local attmuzle = wep:GetMuzzleAtt(gun, true)
 	local att = gun:GetAttachment(gun:LookupAttachment(wep.FakeEjectBrassATT or "ejectbrass")) or gun:GetAttachment(gun:LookupAttachment("shell"))
 	local pos, ang
-	if not att then
+	local bone = wep.FakeEjectBrassBone and gun:LookupBone(wep.FakeEjectBrassBone)
+	local matrix = bone and gun:GetBoneMatrix(bone)
+	if matrix then
+		pos, ang = matrix:GetTranslation(), matrix:GetAngles()
+	elseif not att then
 		pos, ang = gun:GetPos(), gun:GetAngles()
 	else
 		pos, ang = att.Pos, att.Ang
 	end
 
 	local _
-	if wep.EjectPos then pos = gun:GetPos() + ang:Right() * wep.EjectPos.x + ang:Up() * wep.EjectPos.z + ang:Forward() * wep.EjectPos.y end
+	if wep.EjectPos then
+		local origin = matrix and pos or gun:GetPos()
+		pos = origin + ang:Right() * wep.EjectPos.x + ang:Up() * wep.EjectPos.z + ang:Forward() * wep.EjectPos.y
+	end
 	if wep.EjectAng then _,ang = LocalToWorld(vecZero,wep.EjectAng,vecZero,ang) end
 	local posa = pos:ToScreen()
 	draw.RoundedBox(0, posa.x - 2, posa.y - 2, 4, 4, blue)

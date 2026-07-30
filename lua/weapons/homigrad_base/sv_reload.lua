@@ -4,6 +4,7 @@ util.AddNetworkString("hgwep reload")
 function SWEP:Reload(time)
 	if self.reload then return end
 	if IsValid(self:GetOwner().FakeRagdoll) and self:GetOwner().FakeRagdoll.ConsLH then return end
+	if isfunction(self.AllowedInspect) and self:Clip1() >= self.Primary.ClipSize and self:AllowedInspect() then return end
 	if not self:CanUse() or not self:CanReload() then self:OnCantReload() return end
 	self.LastReload = CurTime()
 	self:ReloadStart()

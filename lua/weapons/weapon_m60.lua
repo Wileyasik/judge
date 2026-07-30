@@ -17,7 +17,7 @@ SWEP.Primary.Sound = {"homigrad/weapons/rifle/hmg2.wav", 75, 100, 110}
 SWEP.SupressedSound = {"homigrad/weapons/rifle/hmg2.wav", 75, 100, 110}
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/fnfal/handling/fnfal_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.11
-SWEP.ReloadTime = 6.4
+SWEP.ReloadTime = 8
 
 function SWEP:PostFireBullet(bullet)
 	local owner = self:GetOwner()
@@ -180,15 +180,10 @@ SWEP.availableAttachments = {
 		["mount"] = Vector(-2, 0, 0.1),
 	},
 	sight = {
-		["mount"] = Vector(0.99, 0, 0),
+		["mount"] = Vector(-0, 0, 0),
 		["mountType"] = "picatinny",
 		["mountBone"] = "mod_scope",
-		["mountAngle"] = Angle(0, 90, 90),
-	},
-	underbarrel = {
-		["mount"] = Vector(1.5, -0.5, 5.75),
-		["mountAngle"] = Angle(0, -0.75, 90),
-		["mountType"] = "picatinny_small"
+		["mountAngle"] = Angle(0, -90, 90),
 	},
 }
 

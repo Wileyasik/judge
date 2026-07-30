@@ -1,7 +1,7 @@
 SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
-SWEP.PrintName = "MK11 Mod 0"
+SWEP.PrintName = "MK11 Taupe"
 SWEP.Author = "Knight's Armament Company"
 SWEP.Instructions = "Semi-automatic DMR chambered in 7.62x51 NATO\n\nRate of fire ~200 rounds per minute"
 SWEP.Category = "Weapons - Sniper Rifles"
@@ -147,7 +147,7 @@ SWEP.HeldMagOffsetPos = Vector(0, -0.8, -1.4)
 SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
 
 SWEP.FakeMagDropBone = 50
-SWEP.MagModel = "models/weapons/arc9/darsu_eft/mods/mag_ar10_lancer_l7_awm_762x51_25.mdl"
+SWEP.MagModel = "models/weapons/mods/mag_ar10_lancer_l7_awm_762x51_25.mdl"
 
 if CLIENT then
 	local vector_full = Vector(1, 1, 1)
@@ -255,6 +255,11 @@ SWEP.availableAttachments = {
 		["mount"] = {["picatinny"] = Vector(2, 0.3, 0.15)},
 		["mountType"] = {"picatinny"},
 		["mountAngle"] = Angle(0, 0, 0)
+	},
+	underbarrel = {
+		["mount"] = Vector(3.1, -0.15, 0.15),
+		["mountAngle"] = Angle(0, -0.75,0),
+		["mountType"] = "picatinny_small"
 	},
 }
 

@@ -17,7 +17,7 @@ SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
 SWEP.AttachmentPos = Vector(3.5,-0.2,-0.05)
 SWEP.AttachmentAng = Angle(0,0,0)
-SWEP.StartAtt = {"ironsight1"}
+SWEP.StartAtt = {"optic3"}
 
 SWEP.ViewPunchDiv = 235
 SWEP.FakeBodyGroups = "02111111114"
@@ -103,13 +103,20 @@ SWEP.Primary.Wait = 0.45
 SWEP.NumBullet = 1
 
 SWEP.availableAttachments = {
-    barrel = {
-        [1] = {"", Vector(-5, 0, 0), {}},
-    },
     sight = {
         ["mountType"] = {"picatinny", "ironsight"},
-        ["mount"] = Vector(-35, 2.2, 0.05),
+        ["mount"] = Vector(-31, 2.2, 0.05),
     },
+    		grip = {
+		["mount"] = {["picatinny"] = Vector(-3, 0.55, 0)},
+		["mountType"] = {"picatinny"},
+		["mountAngle"] = Angle(0, 0, 0)
+	},
+		underbarrel = {
+		["mount"] = Vector(-2, -0.9, -1),
+		["mountAngle"] = Angle(0, -0.75,90),
+		["mountType"] = "picatinny_small"
+	},
 }
 
 SWEP.AnimShootMul = 3
@@ -275,4 +282,3 @@ end
 function SWEP:CanPrimaryAttack()
     return not (self:GetNetVar("shootgunReload", 0) > CurTime())
 end
-

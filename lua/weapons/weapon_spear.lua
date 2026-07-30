@@ -118,7 +118,7 @@ SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
 SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
 
 SWEP.FakeMagDropBone = 50
-SWEP.MagModel = "models/weapons/arc9/darsu_eft/mods/mag_ar10_lancer_l7_awm_762x51_25.mdl"
+SWEP.MagModel = "models/weapons/mods/mag_ar10_lancer_l7_awm_762x51_25.mdl"
 
 if CLIENT then
 	local vector_full = Vector(1, 1, 1)
@@ -204,7 +204,7 @@ SWEP.ScrappersSlot = "Primary"
 
 SWEP.DistSound = "weapons/darsu_eft/spear/spear_dist.wav"
 
-SWEP.StartAtt = {"supressor9", "optic5"}
+SWEP.StartAtt = {"supressor9", "optic23"}
 SWEP.availableAttachments = {
 	barrel = {
 		[1] = {"supressor9", Vector(0, 0, 0), {}},

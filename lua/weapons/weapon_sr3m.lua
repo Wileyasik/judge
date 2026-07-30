@@ -98,7 +98,7 @@ SWEP.ReloadHold = nil
 SWEP.FakeVPShouldUseHand = false
 
 SWEP.FakeMagDropBone = 50
-SWEP.MagModel = "models/weapons/arc9/darsu_eft/mods/mag_val2_30.mdl"
+SWEP.MagModel = "models/weapons/mods/mag_val2_30.mdl"
 
 SWEP.HeldMagModel = "models/weapons/mods/mag_val2_30sr3.mdl"
 

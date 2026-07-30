@@ -504,7 +504,7 @@ end)
 
 function SWEP:Step_Inspect(time)
 	if self.inspect == nil or self.reload ~= nil then return end
-	if self:KeyDown(IN_RELOAD) or self:KeyDown(IN_ATTACK) or self:KeyDown(IN_ATTACK2) then
+	if self:KeyDown(IN_ATTACK) or self:KeyDown(IN_ATTACK2) then
 		self.inspect = nil
 	end
 

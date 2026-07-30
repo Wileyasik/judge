@@ -221,6 +221,9 @@ SWEP.availableAttachments = {
 		["mountType"] = {"picatinny"},
 		["mountAngle"] = Angle(0,0,90)
 	},
+	magwell = {
+		["mountType"] = {"ak_545_60", "ak_545"},
+	},
 }
 
 SWEP.RHandPos = Vector(0, -1, 0)
@@ -263,8 +266,13 @@ function SWEP:DrawPost()
 	if not IsValid(wm) then return end
 
 	-- Magazine
+	local heldMagModel = self:GetActiveMagazineModel(self.HeldMagModel, "held")
+	if IsValid(self.HeldMagCSModel) and self.HeldMagCSModelPath ~= heldMagModel then
+		self.HeldMagCSModel:Remove()
+	end
 	if not IsValid(self.HeldMagCSModel) then
-		self.HeldMagCSModel = ClientsideModel(self.HeldMagModel, RENDERGROUP_BOTH)
+		self.HeldMagCSModel = ClientsideModel(heldMagModel, RENDERGROUP_BOTH)
+		self.HeldMagCSModelPath = heldMagModel
 		if IsValid(self.HeldMagCSModel) then self.HeldMagCSModel:SetNoDraw(true) end
 	end
 	if IsValid(self.HeldMagCSModel) then
@@ -397,22 +405,23 @@ if CLIENT then
 			if not istable(partData) or not isstring(partData.model) or partData.model == "" then
 				continue
 			end
+			local modelPath = partName == "magazine" and self:GetActiveMagazineModel(partData.model, "world") or partData.model
 
 			local model = self.BC_DroppedPartModels[partName]
 			local oldPath = self.BC_DroppedPartPaths[partName]
 
-			if IsValid(model) and oldPath ~= partData.model then
+			if IsValid(model) and oldPath ~= modelPath then
 				model:Remove()
 				model = nil
 			end
 
 			if not IsValid(model) then
-				model = ClientsideModel(partData.model, RENDERGROUP_BOTH)
+				model = ClientsideModel(modelPath, RENDERGROUP_BOTH)
 				if IsValid(model) then
 					model:SetNoDraw(true)
 					model:DrawShadow(true)
 					self.BC_DroppedPartModels[partName] = model
-					self.BC_DroppedPartPaths[partName] = partData.model
+					self.BC_DroppedPartPaths[partName] = modelPath
 				end
 			end
 		end

@@ -72,6 +72,38 @@ end
 
 SWEP.FakeVPShouldUseHand = false
 
+SWEP.HeldPistolgripModel = "models/weapons/mods/ak_pgrip_ak74_bakelit.mdl"
+SWEP.HeldPistolgripBone = "weapon"
+SWEP.HeldPistolgripOffsetPos = Vector(0, -12.3, -1.3)
+SWEP.HeldPistolgripOffsetAng = Angle(0, 0, 0)
+
+if CLIENT then
+	function SWEP:DrawPost()
+		local wm = self:GetWM()
+		if not IsValid(wm) then return end
+
+		if not IsValid(self.HeldPistolgripCSModel) then
+			self.HeldPistolgripCSModel = ClientsideModel(self.HeldPistolgripModel, RENDERGROUP_BOTH)
+			if not IsValid(self.HeldPistolgripCSModel) then return end
+			self.HeldPistolgripCSModel:SetNoDraw(true)
+		end
+
+		local bone = wm:LookupBone(self.HeldPistolgripBone)
+		local matrix = bone and wm:GetBoneMatrix(bone)
+		if not matrix then return end
+
+		local pos, ang = LocalToWorld(self.HeldPistolgripOffsetPos, self.HeldPistolgripOffsetAng, matrix:GetTranslation(), matrix:GetAngles())
+		self.HeldPistolgripCSModel:SetRenderOrigin(pos)
+		self.HeldPistolgripCSModel:SetRenderAngles(ang)
+		self.HeldPistolgripCSModel:SetupBones()
+		self.HeldPistolgripCSModel:DrawModel()
+	end
+
+	function SWEP:OnRemove()
+		if IsValid(self.HeldPistolgripCSModel) then self.HeldPistolgripCSModel:Remove() end
+	end
+end
+
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_ak50.png")
 SWEP.IconOverride = "entities/arc9_eft_ak50.png"
 
@@ -104,13 +136,17 @@ SWEP.Primary.Wait = 0.25
 SWEP.NumBullet = 1
 
 SWEP.availableAttachments = {
-   sight = {
-		["mountType"] = {"picatinny", "ironsight"},
-		["mount"] = {ironsight = Vector(-35.5, 0.7, 0.05), picatinny = Vector(-22, 1.4, 0.05)}
+	sight = {
+		["mountType"] = {"picatinny"},
+		["mount"] = {["picatinny"] = Vector(-21.5, 1.4, 0.05)},
 	},
+	barrel = false,
+	underbarrel = false,
+	grip = false,
+	magwell = false,
 }
 
-SWEP.StartAtt = {"ironsight1"}
+SWEP.StartAtt = {"optic19"}
 
 SWEP.AnimShootMul = 1
 SWEP.AnimShootHandMul = 3

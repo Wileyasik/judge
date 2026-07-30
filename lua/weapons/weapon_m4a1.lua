@@ -157,7 +157,7 @@ SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
 SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
 
 SWEP.FakeMagDropBone = 50
-SWEP.MagModel = "models/weapons/arc9/darsu_eft/mods/mag_stanag_colt_ar15_std_556x45_30.mdl"
+SWEP.MagModel = "models/weapons/mods/mag_stanag_colt_ar15_std_556x45_30.mdl"
 
 if CLIENT then
 	local vector_full = Vector(1, 1, 1)
@@ -282,6 +282,9 @@ SWEP.availableAttachments = {
 		["mountType"] = {"picatinny", "ironsight"},
 		["mount"] = {["picatinny"] = Vector(-14, 1.2, 0.045), ["ironsight"] = Vector(-15, 1, 0.045)},
 	},
+	magwell = {
+		["mountType"] = {"stanag_556_60", "stanag_556_100"},
+	},
 }
 
 SWEP.RHandPos = Vector(0, -1, 0)
@@ -344,8 +347,13 @@ function SWEP:DrawPost()
 	end
 
 	-- Magazine
+	local heldMagModel = self:GetActiveMagazineModel(self.HeldMagModel, "held")
+	if IsValid(self.HeldMagCSModel) and self.HeldMagCSModelPath ~= heldMagModel then
+		self.HeldMagCSModel:Remove()
+	end
 	if not IsValid(self.HeldMagCSModel) then
-		self.HeldMagCSModel = ClientsideModel(self.HeldMagModel, RENDERGROUP_BOTH)
+		self.HeldMagCSModel = ClientsideModel(heldMagModel, RENDERGROUP_BOTH)
+		self.HeldMagCSModelPath = heldMagModel
 		if IsValid(self.HeldMagCSModel) then self.HeldMagCSModel:SetNoDraw(true) end
 	end
 	if IsValid(self.HeldMagCSModel) then
@@ -583,22 +591,23 @@ if CLIENT then
 			if not istable(partData) or not isstring(partData.model) or partData.model == "" then
 				continue
 			end
+			local modelPath = partName == "magazine" and self:GetActiveMagazineModel(partData.model, "world") or partData.model
 
 			local model = self.BC_DroppedPartModels[partName]
 			local oldPath = self.BC_DroppedPartPaths[partName]
 
-			if IsValid(model) and oldPath ~= partData.model then
+			if IsValid(model) and oldPath ~= modelPath then
 				model:Remove()
 				model = nil
 			end
 
 			if not IsValid(model) then
-				model = ClientsideModel(partData.model, RENDERGROUP_BOTH)
+				model = ClientsideModel(modelPath, RENDERGROUP_BOTH)
 				if IsValid(model) then
 					model:SetNoDraw(true)
 					model:DrawShadow(true)
 					self.BC_DroppedPartModels[partName] = model
-					self.BC_DroppedPartPaths[partName] = partData.model
+					self.BC_DroppedPartPaths[partName] = modelPath
 				end
 			end
 		end

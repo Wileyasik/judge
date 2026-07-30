@@ -9,25 +9,42 @@ SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_pist_glock18.mdl"
-SWEP.WorldModelFake = "models/weapons/arccw/c_ud_glock.mdl"
+SWEP.WorldModelFake = "models/weapons/c_glock.mdl"
 
-SWEP.FakePos = Vector(-18, 2.34, 4.32)
-SWEP.FakeAng = Angle(0, 0, 0)
-SWEP.AttachmentPos = Vector(0.5,-1.2,-6.5)
-SWEP.AttachmentAng = Angle(0,0,0)
-SWEP.FakeAttachment = "1"
-SWEP.FakeBodyGroups = "0000"
-SWEP.FakeBodyGroupsPresets = {
-	"0000",
-	"1000",
-	"0001",
-	"1001",
-	"0006",
-	"1006",
+SWEP.UseARC9Parts = true
+SWEP.ARC9Parts = {
+	magazine = {
+		model = "models/weapons/mods/mag_glock_std_17.mdl",
+		bonemerge = false,
+		bone = "mod_magazine",
+		pos = Vector(0, 0, 0),
+		ang = Angle(0, -90, 0),
+	},
+	frontsight = {
+		model = "models/weapons/mods/glock_fs.mdl",
+		bonemerge = false,
+		bone = "mod_reciever",
+		pos = Vector(-0, -0, 0.04),
+		ang = Angle(0, -90, 0),
+	},
+	rearsight = {
+		model = "models/weapons/mods/glock_rs.mdl",
+		bonemerge = false,
+		bone = "mod_reciever",
+		pos = Vector(0, 0, 0),
+		ang = Angle(0, -90, 0),
+	},
 }
 
+SWEP.FakePos = Vector(-22, 2.34, 4.32)
+SWEP.FakeAng = Angle(0, 0, 0)
+SWEP.AttachmentPos = Vector(0.2,0,-6.5)
+SWEP.AttachmentAng = Angle(0,0,0)
+SWEP.FakeAttachment = "1"
+SWEP.FakeBodyGroups = "1150000000"
 
-SWEP.FakeEjectBrassATT = "2"
+
+SWEP.FakeEjectBrassBone = "shellport"
 
 SWEP.FakeVPShouldUseHand = true
 
@@ -36,39 +53,41 @@ SWEP.stupidgun = true
 SWEP.CantFireFromCollision = true // 2 спусковых крючка все дела
 
 SWEP.AnimList = {
+	["inspect"] = "inspect",
+	["reload"] = "reload0",
+	["reload_empty"] = "reload_empty0_0",
 	["idle"] = "idle",
-	["reload"] = "reload",
-	["reload_empty"] = "reload_empty",
 }
+
+function SWEP:AllowedInspect()
+	if not self:CanUse() then return end
+	if self.isReloading then return end
+	if self:Clip1() < self.Primary.ClipSize then return end
+	if self.drawBullet == false then return end
+	return true
+end
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_UpperArm"
 SWEP.ViewPunchDiv = 40
 
-SWEP.FakeReloadSounds = {
-	[0.17] = "weapons/universal/uni_pistol_draw_01.wav",
-	[0.22] = "weapons/tfa_ins2/usp_tactical/magrelease.wav",
-	[0.3] = "weapons/tfa_ins2/usp_tactical/magout.wav",
-	--[0.37] = "weapons/m4a1/m4a1_magrelease.wav",
-	--[0.5] = "weapons/universal/uni_pistol_draw_01.wav",
-	[0.45] = "weapons/universal/uni_crawl_l_03.wav",
-	[0.7] = "zcitysnd/sound/weapons/m9/handling/m9_magin.wav",
-	[0.8] = "zcitysnd/sound/weapons/m9/handling/m9_maghit.wav",
-	--[0.85] = "weapons/m45/m45_boltback.wav",
-	--[0.92] = "weapons/m45/m45_boltrelease.wav",
+SWEP.AnimsEvents = {
+	["inspect"] = {
+		[0.01] = function(self) self:EmitSound("weapons/universal/uni_crawl_l_03.wav") end,
+	},
+	["reload"] = {
+		[0.1] = function(self) self:EmitSound("weapons/darsu_eft/57/fiveseven_mag_out.ogg") end,
+		[0.6] = function(self) self:EmitSound("weapons/darsu_eft/57/fiveseven_mag_in.ogg") end,
+	},
+	["reload_empty"] = {
+		[0.015] = function(self) self:EmitSound("weapons/darsu_eft/57/fiveseven_slider_out_fast.ogg") end,
+		[0.065] = function(self) self:EmitSound("weapons/darsu_eft/57/fiveseven_mag_out.ogg") end,
+		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/57/fiveseven_mag_in.ogg") end,
+		[0.65] = function(self) self:EmitSound("weapons/darsu_eft/57/fiveseven_slider_in_fast.ogg") end,
+	},
 }
 
-SWEP.FakeEmptyReloadSounds = {
-	[0.16] = "weapons/universal/uni_crawl_l_03.wav",
-	[0.22] = "weapons/tfa_ins2/usp_tactical/magrelease.wav",
-	[0.3] = "weapons/tfa_ins2/usp_tactical/magout.wav",
-	--[0.37] = "weapons/m4a1/m4a1_magrelease.wav",
-	[0.37] = "weapons/universal/uni_pistol_draw_01.wav",
-	[0.6] = "zcitysnd/sound/weapons/m9/handling/m9_magin.wav",
-	[0.65] = "zcitysnd/sound/weapons/m9/handling/m9_maghit.wav",
-	[0.85] = "weapons/m45/m45_boltrelease.wav",
-	--[0.92] = "weapons/m45/m45_boltrelease.wav",
-}
+
 SWEP.lmagpos = Vector(1.8,0,-0.3)
 SWEP.lmagang = Angle(-10,0,0)
 SWEP.lmagpos2 = Vector(0,3.5,0.3)
@@ -77,54 +96,38 @@ SWEP.lmagang2 = Angle(0,0,-110)
 SWEP.GunCamPos = Vector(2.2,-17,-3)
 SWEP.GunCamAng = Angle(180,0,-90)
 
-SWEP.MagModel = "models/weapons/zcity/w_glockmag.mdl"
+SWEP.MagModel = "models/weapons/mods/mag_glock_std_17.mdl"
 
 if CLIENT then
-	local vector_full = Vector(1, 1, 1)
 	SWEP.FakeReloadEvents = {
 		[0.15] = function( self, timeMul )
 			if self:Clip1() < 1 then
 				self:GetOwner():PullLHTowards("ValveBiped.Bip01_L_Thigh", 1.5 * timeMul)
 			else
-				self:GetWM():ManipulateBoneScale(46, vector_full)
-				self:GetWM():ManipulateBoneScale(47, vector_origin)
-				self:GetWM():ManipulateBoneScale(49, vector_origin)
 				self:GetOwner():PullLHTowards("ValveBiped.Bip01_L_Thigh", 0.5 * timeMul)
 			end
 		end,
 		[0.3] = function( self )
 			if self:Clip1() < 1 then
 				hg.CreateMag( self, Vector(0,55,-55) )
-				self:GetWM():ManipulateBoneScale(47, vector_origin)
-				self:GetWM():ManipulateBoneScale(49, vector_origin)
-			else
-				self:GetWM():ManipulateBoneScale(47, vector_full)
-				self:GetWM():ManipulateBoneScale(49, vector_full)
-			end
-		end,
-		[0.45] = function( self )
-			if self:Clip1() < 1 then
-				self:GetWM():ManipulateBoneScale(47, vector_full)
-				self:GetWM():ManipulateBoneScale(49, vector_full)
 			end
 		end,
 		[0.9] = function( self, timeMul )
-			if self:Clip1() >= 1 then//fucking idiot doesnt know how > and < work
-				self:GetWM():ManipulateBoneScale(46, vector_origin)
+			if self:Clip1() >= 1 then
 				self:GetOwner():PullLHTowards("ValveBiped.Bip01_L_Thigh", 0.5 * timeMul)
 			end
 		end
 	}
 end
 
-SWEP.FakeMagDropBone = "glock_mag"
+SWEP.FakeMagDropBone = "mod_magazine"
 
-SWEP.WepSelectIcon2 = Material("vgui/hud/tfa_ins2_glock_p80.png")
-SWEP.IconOverride = "entities/weapon_pwb_glock17.png"
+SWEP.WepSelectIcon2 = Material("vgui/hud/rc9_eft_glock17.png")
+SWEP.IconOverride = "entities/arc9_eft_glock17.png"
 
 SWEP.CustomShell = "9x19"
---SWEP.EjectPos = Vector(0,0,2)
---SWEP.EjectAng = Angle(-45,-80,0)
+SWEP.EjectPos = Vector(0,0,0)
+SWEP.EjectAng = Angle(-0,-180,0)
 
 SWEP.weight = 1
 
@@ -138,12 +141,12 @@ SWEP.Primary.Automatic = false
 SWEP.Primary.Ammo = "9x19 mm Parabellum"
 SWEP.Primary.Cone = 0
 SWEP.Primary.Damage = 25
-SWEP.Primary.Sound = {"zcitysnd/sound/weapons/firearms/hndg_glock17/glock_fire_01.wav", 75, 90, 100}
-SWEP.SupressedSound = {"zcitysnd/sound/weapons/m45/m45_suppressed_fp.wav", 65, 90, 100}
+SWEP.Primary.Sound = {"weapons/darsu_eft/glock/glock17_close.wav", 75, 90, 100}
+SWEP.SupressedSound = {"weapons/darsu_eft/glock/glock17_close_silenced.ogg", 65, 90, 100}
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/makarov/handling/makarov_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Force = 25
 SWEP.Primary.Wait = PISTOLS_WAIT
-SWEP.ReloadTime = 4.2
+SWEP.ReloadTime = 3
 SWEP.ReloadSoundes = {
 	"none",
 	"none",
@@ -161,7 +164,7 @@ SWEP.ReloadSoundes = {
 SWEP.DeploySnd = {"homigrad/weapons/draw_pistol.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/holster_pistol.mp3", 55, 100, 110}
 SWEP.HoldType = "revolver"
-SWEP.ZoomPos = Vector(-26, 0.0178, 1.6966)
+SWEP.ZoomPos = Vector(0, -1.9464, 1.9824)
 --SWEP.RHandPos = Vector(-13.5,0,4)
 SWEP.RHandPos = Vector(-4, 0, -3)
 SWEP.LHandPos = false
@@ -186,35 +189,25 @@ SWEP.holsteredAng = Angle(0, 20, 30)
 SWEP.shouldntDrawHolstered = true
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"supressor4", Vector(0,0,0), {}},
-		[2] = {"supressor6", Vector(4.2,0,0), {}},
-		["mount"] = Vector(-0.5,1.5,0),
+		[1] = {"supressor2", Vector(0, 0.0, 0), {}},
+		[2] = {"supressor1", Vector(0, 0.0, 0), {}},
+		["mount"] = Vector(-0.5, 0, -0.05),
+		["mountAngle"] = Angle(0, 0, 180),
 	},
-    magwell = {
-        [1] = {"mag1",Vector(-6.3,-2.2,0), {}},
-    },
+	magwell = {
+		["mountType"] = "glock_mag",
+	},
 	sight = {
-		["mountType"] = {"picatinny","pistolmount"},
-		["mount"] = {["picatinny"] = Vector(-3.1, 2.15, 0), ["pistolmount"] = Vector(-6.2, .5, 0.025)},
-		["mountAngle"] = Angle(0,0,0),
+		["mountType"] = "pistolmount",
+		["mountBone"] = "mod_reciever",
+		["mount"] = Vector(1, 0.5, 0.3),
+		["mountAngle"] = Angle(0,-90,90),
 	},
 	underbarrel = {
 		["mount"] = Vector(12.5, -0.35, -1),
 		["mountAngle"] = Angle(0, -0.6, 90),
 		["mountType"] = "picatinny_small"
 	},
-	mount = {
-		["picatinny"] = {
-			"mount4",
-			Vector(-1.5, -.1, 0),
-			{},
-			["mountType"] = "picatinny",
-		}
-	},
-	grip = {
-		["mount"] = Vector(15, 1.2, 0.1), 
-		["mountType"] = "picatinny"
-	}
 }
 
 --local to head
@@ -227,68 +220,170 @@ SWEP.LHAng = Angle(5,9,-100)
 SWEP.ShootAnimMul = 3
 SWEP.SightSlideOffset = 1.2
 
-function SWEP:DrawPost()
-	local wep = self:GetWeaponEntity()
-	if CLIENT and IsValid(wep) then
-		self.shooanim = LerpFT(0.4,self.shooanim or 0,((self:Clip1() > 0 or self.reload) and 0) or 1.8)
-		wep:ManipulateBonePosition(48,Vector(0 ,0 ,-1*self.shooanim ),false)
-		local mul = self:Clip1() > 0 and 1 or 0
-		--wep:ManipulateBoneScale(12,Vector(mul,mul,mul),false)
-	end
-end
-function SWEP:PostSetupDataTables()
-	self:NetworkVar("Int",0,"GlockSkin")
-	self:NetworkVar("String",1,"RandomBodygroups")
-	if ( CLIENT ) then
-		self:NetworkVarNotify( "GlockSkin", self.OnVarChanged2 )
-		self:NetworkVarNotify( "RandomBodygroups", self.OnVarChanged )
-	end
-end
-
-function SWEP:OnVarChanged( name, old, new )
-	if !IsValid(self:GetWM()) then return end
-
-	self:GetWM():SetBodyGroups(new)
-end
-
-function SWEP:OnVarChanged2( name, old, new )
-	if !IsValid(self:GetWM()) then return end
-
-	self:GetWM():SetSkin(new)
-end
-
-function SWEP:InitializePost()
-	local Skin = math.random(0,2)
-	if math.random(0,100) > 99 then
-		Skin = 3
-	end
-	self:SetGlockSkin(Skin)
-	self:SetRandomBodygroups(self.FakeBodyGroupsPresets[math.random(#self.FakeBodyGroupsPresets)] or "0000")
-end
-
 function SWEP:ModelCreated(model)
-	model:ManipulateBoneScale(46, vector_origin)
-	model:SetBodyGroups(self:GetRandomBodygroups() or "00000")
-	model:SetSkin(self:GetGlockSkin())
+	if not IsValid(model) then return end
+	model:SetBodyGroups(self.FakeBodyGroups)
 end
 
-SWEP.LocalMuzzlePos = Vector(6.5,0,-0.023)
-SWEP.LocalMuzzleAng = Angle(0.2,0,0)
+SWEP.HeldMagModel = "models/weapons/mods/mag_glock_std_17.mdl"
+SWEP.HeldMagBone = "mod_magazine"
+SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
+SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
+SWEP.HeldFrontSightModel = "models/weapons/mods/glock_fs.mdl"
+SWEP.HeldFrontSightBone = "mod_reciever"
+SWEP.HeldFrontSightOffsetPos = Vector(-0, -0, 0.04)
+SWEP.HeldFrontSightOffsetAng = Angle(0, -90, 0)
+SWEP.HeldRearSightModel = "models/weapons/mods/glock_rs.mdl"
+SWEP.HeldRearSightBone = "mod_reciever"
+SWEP.HeldRearSightOffsetPos = Vector(0, 0.05, 0)
+SWEP.HeldRearSightOffsetAng = Angle(0, -90, 0)
+
+SWEP.WorldPartsOffsetPos = Vector(-20, 5, 10)
+SWEP.WorldPartsOffsetAng = Angle(0, 0, 0)
+
+if CLIENT then
+	local zeroVector = Vector(0, 0, 0)
+	local zeroAngle = Angle(0, 0, 0)
+
+	local function drawPartOnBone(self, wm, modelField, pathField, modelPath, boneName, offsetPos, offsetAng)
+		if not isstring(modelPath) or modelPath == "" then return end
+		local model = self[modelField]
+		if IsValid(model) and self[pathField] ~= modelPath then
+			model:Remove()
+			model = nil
+		end
+		if not IsValid(model) then
+			model = ClientsideModel(modelPath, RENDERGROUP_BOTH)
+			self[modelField] = model
+			self[pathField] = modelPath
+			if IsValid(model) then model:SetNoDraw(true) end
+		end
+		if not IsValid(model) then return end
+
+		local boneID = wm:LookupBone(boneName)
+		if boneID == nil then return end
+		local matrix = wm:GetBoneMatrix(boneID)
+		if not matrix then return end
+		local pos, ang = LocalToWorld(offsetPos or zeroVector, offsetAng or zeroAngle, matrix:GetTranslation(), matrix:GetAngles())
+		model:SetRenderOrigin(pos)
+		model:SetRenderAngles(ang)
+		model:SetPos(pos)
+		model:SetAngles(ang)
+		model:SetupBones()
+		model:DrawModel()
+	end
+
+	function SWEP:DrawPost()
+		local wm = self:GetWM()
+		if not IsValid(wm) or not self:ShouldUseFakeModel() then return end
+		drawPartOnBone(self, wm, "HeldMagCSModel", "HeldMagCSModelPath", self:GetActiveMagazineModel(self.HeldMagModel, "held"), self.HeldMagBone, self.HeldMagOffsetPos, self.HeldMagOffsetAng)
+		drawPartOnBone(self, wm, "HeldFrontSightCSModel", "HeldFrontSightCSModelPath", self.HeldFrontSightModel, self.HeldFrontSightBone, self.HeldFrontSightOffsetPos, self.HeldFrontSightOffsetAng)
+		drawPartOnBone(self, wm, "HeldRearSightCSModel", "HeldRearSightCSModelPath", self.HeldRearSightModel, self.HeldRearSightBone, self.HeldRearSightOffsetPos, self.HeldRearSightOffsetAng)
+	end
+
+	function SWEP:CreateDroppedGlockModels()
+		if not IsValid(self.DroppedGlockModel) then
+			self.DroppedGlockModel = ClientsideModel(self.WorldModelFake, RENDERGROUP_BOTH)
+			if IsValid(self.DroppedGlockModel) then
+				self.DroppedGlockModel:SetNoDraw(true)
+				self.DroppedGlockModel:DrawShadow(true)
+				self:ModelCreated(self.DroppedGlockModel)
+			end
+		end
+		self.DroppedGlockParts = self.DroppedGlockParts or {}
+		self.DroppedGlockPartPaths = self.DroppedGlockPartPaths or {}
+		for name, data in pairs(self.ARC9Parts or {}) do
+			if not istable(data) or not isstring(data.model) or data.model == "" then continue end
+			local path = name == "magazine" and self:GetActiveMagazineModel(data.model, "world") or data.model
+			local model = self.DroppedGlockParts[name]
+			if IsValid(model) and self.DroppedGlockPartPaths[name] ~= path then
+				model:Remove()
+				model = nil
+			end
+			if not IsValid(model) then
+				model = ClientsideModel(path, RENDERGROUP_BOTH)
+				if IsValid(model) then
+					model:SetNoDraw(true)
+					model:DrawShadow(true)
+					self.DroppedGlockParts[name] = model
+					self.DroppedGlockPartPaths[name] = path
+				end
+			end
+		end
+	end
+
+	function SWEP:RemoveGlockModels()
+		for _, model in pairs(self.DroppedGlockParts or {}) do
+			if IsValid(model) then model:Remove() end
+		end
+		self.DroppedGlockParts = nil
+		self.DroppedGlockPartPaths = nil
+		if IsValid(self.DroppedGlockModel) then self.DroppedGlockModel:Remove() end
+		self.DroppedGlockModel = nil
+		for _, field in ipairs({"HeldMagCSModel", "HeldFrontSightCSModel", "HeldRearSightCSModel"}) do
+			if IsValid(self[field]) then self[field]:Remove() end
+			self[field] = nil
+		end
+	end
+
+	function SWEP:DrawDroppedGlock()
+		local owner = self:GetOwner()
+		if IsValid(owner) and owner:IsPlayer() then return end
+		self:CreateDroppedGlockModels()
+		local fake = self.DroppedGlockModel
+		if not IsValid(fake) then return end
+		local basePos, baseAng = LocalToWorld(self.WorldPartsOffsetPos or zeroVector, self.WorldPartsOffsetAng or zeroAngle, self:GetPos(), self:GetAngles())
+		fake:SetRenderOrigin(basePos)
+		fake:SetRenderAngles(baseAng)
+		fake:SetPos(basePos)
+		fake:SetAngles(baseAng)
+		fake:SetupBones()
+		fake:DrawModel()
+
+		for name, data in pairs(self.ARC9Parts or {}) do
+			local model = self.DroppedGlockParts and self.DroppedGlockParts[name]
+			if not IsValid(model) or not istable(data) then continue end
+			local partPos, partAng = basePos, baseAng
+			local boneID = fake:LookupBone(data.bone or "")
+			if boneID ~= nil then
+				local matrix = fake:GetBoneMatrix(boneID)
+				if matrix then partPos, partAng = matrix:GetTranslation(), matrix:GetAngles() end
+			end
+			local pos, ang = LocalToWorld(data.pos or zeroVector, data.ang or zeroAngle, partPos, partAng)
+			model:SetRenderOrigin(pos)
+			model:SetRenderAngles(ang)
+			model:SetPos(pos)
+			model:SetAngles(ang)
+			model:SetupBones()
+			if data.skin ~= nil then model:SetSkin(data.skin) end
+			if istable(data.bodygroups) then
+				for id, value in pairs(data.bodygroups) do model:SetBodygroup(tonumber(id) or id, tonumber(value) or 0) end
+			end
+			if istable(data.submaterials) then
+				for id, path in pairs(data.submaterials) do model:SetSubMaterial(tonumber(id) or id, path or "") end
+			end
+			model:DrawModel()
+		end
+
+		local originalWorldModel = self.worldModel
+		self.worldModel = fake
+		self:DrawAttachments()
+		self.worldModel = originalWorldModel
+	end
+
+	function SWEP:DrawWorldModel()
+		self:DrawDroppedGlock()
+	end
+
+	function SWEP:DrawWorldModelTranslucent()
+		self:DrawDroppedGlock()
+	end
+
+	function SWEP:OnRemove()
+		self:RemoveGlockModels()
+	end
+end
+
+SWEP.LocalMuzzlePos = Vector(3.3, -1.95, 1.38)
+SWEP.LocalMuzzleAng = Angle(0, 0, 0)
 SWEP.WeaponEyeAngles = Angle(0,0,0)
-
--- Inspect Assault
-
-SWEP.InspectAnimWepAng = {
-	Angle(0,0,0),
-	Angle(4,4,15),
-	Angle(10,15,25),
-	Angle(10,15,25),
-	Angle(10,15,25),
-	Angle(-6,-15,-15),
-	Angle(1,15,-45),
-	Angle(15,25,-55),
-	Angle(15,25,-55),
-	Angle(15,25,-55),
-	Angle(0,0,0),
-	Angle(0,0,0)
-}

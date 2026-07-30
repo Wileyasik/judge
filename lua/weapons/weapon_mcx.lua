@@ -119,7 +119,7 @@ SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
 SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
 
 SWEP.FakeMagDropBone = 50
-SWEP.MagModel = "models/weapons/arc9/darsu_eft/mods/mag_stanag_colt_ar15_std_556x45_30.mdl"
+SWEP.MagModel = "models/weapons/mods/mag_stanag_colt_ar15_std_556x45_30.mdl"
 
 if CLIENT then
 	local vector_full = Vector(1, 1, 1)
@@ -230,6 +230,9 @@ SWEP.availableAttachments = {
 		["mountAngle"] = Angle(0, -0.75,0),
 		["mountType"] = "picatinny_small"
 	},
+		magwell = {
+		["mountType"] = "stanag_556_60",
+	},
 }
 
 SWEP.RHandPos = Vector(0, -1, 0)
@@ -270,9 +273,14 @@ function SWEP:DrawPost()
 	local wm = self:GetWM()
 	if not IsValid(wm) then return end
 
-	-- Magazine
+-- Magazine
+	local heldMagModel = self:GetActiveMagazineModel(self.HeldMagModel, "held")
+	if IsValid(self.HeldMagCSModel) and self.HeldMagCSModelPath ~= heldMagModel then
+		self.HeldMagCSModel:Remove()
+	end
 	if not IsValid(self.HeldMagCSModel) then
-		self.HeldMagCSModel = ClientsideModel(self.HeldMagModel, RENDERGROUP_BOTH)
+		self.HeldMagCSModel = ClientsideModel(heldMagModel, RENDERGROUP_BOTH)
+		self.HeldMagCSModelPath = heldMagModel
 		if IsValid(self.HeldMagCSModel) then self.HeldMagCSModel:SetNoDraw(true) end
 	end
 	if IsValid(self.HeldMagCSModel) then

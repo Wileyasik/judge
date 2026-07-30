@@ -25,7 +25,7 @@ SWEP.ARC9Parts = {
 		ang = Angle(0, -90, 0)
 	},
 	magazine = {
-		model = "models/weapons/arc9/darsu_eft/mods/mag_stanag_beta_c_mag_556x45_100.mdl",
+		model = "models/weapons/mods/mag_stanag_beta_c_mag_556x45_100.mdl",
 		bonemerge = false,
 		bone = "mod_magazine",
 		pos = Vector(0, 1.1, 0),
@@ -109,8 +109,8 @@ SWEP.FakeViewBobBone = "CAM_Homefield"
 SWEP.AnimList = {
 	["fire"] = "fire",
 	["idle"] = "idle",
-	["reload"] = "reload7",
-	["reload_empty"] = "reload_empty7",
+	["reload"] = "reload7_l",
+	["reload_empty"] = "reload_empty7_l",
 	["inspect"] = "look_0",
 }
 
@@ -135,13 +135,13 @@ SWEP.HeldReceiverBone = "mod_reciever"
 SWEP.HeldReceiverOffsetPos = Vector(0, 0, 0)
 SWEP.HeldReceiverOffsetAng = Angle(0, -90, 0)
 
-SWEP.HeldMagModel = "models/weapons/arc9/darsu_eft/mods/mag_stanag_beta_c_mag_556x45_100.mdl"
+SWEP.HeldMagModel = "models/weapons/mods/mag_stanag_beta_c_mag_556x45_100.mdl"
 SWEP.HeldMagBone = "mod_magazine"
 SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
 SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
 
 SWEP.FakeMagDropBone = 50
-SWEP.MagModel = "models/weapons/arc9/darsu_eft/mods/mag_stanag_beta_c_mag_556x45_100.mdl"
+SWEP.MagModel = "models/weapons/mods/mag_stanag_beta_c_mag_556x45_100.mdl"
 
 if CLIENT then
 	local vector_full = Vector(1, 1, 1)
@@ -225,7 +225,7 @@ SWEP.Primary.Sound = {"weapons/darsu_eft/m4a1/fire_new/m4a1_outdoor_close_onsesh
 SWEP.SupressedSound = {"weapons/darsu_eft/m4a1/fire_new/m4a1_fire_silenced_close_loop2.wav", 65, 90, 100}
 SWEP.Primary.SoundEmpty = {"weapons/mk18/mk18_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.075
-SWEP.ReloadTime = 3
+SWEP.ReloadTime = 4
 
 SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1"
 

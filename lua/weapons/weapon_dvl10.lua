@@ -20,12 +20,8 @@ SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
 SWEP.AttachmentPos = Vector(-8.5, 0, 0)
 SWEP.AttachmentAng = Angle(0, 0, 0)
-SWEP.FakeBodyGroups = "1210211"
+SWEP.FakeBodyGroups = "121121"
 SWEP.CantFireFromCollision = true
-
-SWEP.FakeBodyGroupsPresets = {
-    "1210211"
-}
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_L_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
@@ -71,6 +67,38 @@ if CLIENT then
 end
 
 SWEP.FakeVPShouldUseHand = false
+
+SWEP.HeldGripModel = "models/weapons/mods/pistolgrip_ar15_hk_grip_v2.mdl"
+SWEP.HeldGripBone = "weapon"
+SWEP.HeldGripOffsetPos = Vector(0, -13.5, -2)
+SWEP.HeldGripOffsetAng = Angle(0, -90, 0)
+
+if CLIENT then
+	function SWEP:DrawPost()
+		local wm = self:GetWM()
+		if not IsValid(wm) then return end
+
+		if not IsValid(self.HeldGripCSModel) then
+			self.HeldGripCSModel = ClientsideModel(self.HeldGripModel, RENDERGROUP_BOTH)
+			if not IsValid(self.HeldGripCSModel) then return end
+			self.HeldGripCSModel:SetNoDraw(true)
+		end
+
+		local bone = wm:LookupBone(self.HeldGripBone)
+		local matrix = bone and wm:GetBoneMatrix(bone)
+		if not matrix then return end
+
+		local pos, ang = LocalToWorld(self.HeldGripOffsetPos, self.HeldGripOffsetAng, matrix:GetTranslation(), matrix:GetAngles())
+		self.HeldGripCSModel:SetRenderOrigin(pos)
+		self.HeldGripCSModel:SetRenderAngles(ang)
+		self.HeldGripCSModel:SetupBones()
+		self.HeldGripCSModel:DrawModel()
+	end
+
+	function SWEP:OnRemove()
+		if IsValid(self.HeldGripCSModel) then self.HeldGripCSModel:Remove() end
+	end
+end
 
 
 SWEP.LocalMuzzlePos = Vector(40, -0.66, 3.8)
@@ -211,12 +239,20 @@ function SWEP:AllowedInspect()
 end
 
 function SWEP:AnimHoldPost() end
-function SWEP:ModelCreated(model) model:SetBodyGroups(self:GetRandomBodygroups() or "1210211") end
-function SWEP:PostSetupDataTables() self:NetworkVar("String", 0, "RandomBodygroups"); if CLIENT then self:NetworkVarNotify("RandomBodygroups", self.OnVarChanged) end end
-function SWEP:OnVarChanged(name, old, new) if not IsValid(self:GetWM()) then return end if istable(new) then local normalized = {}; for i = 1, #new do normalized[i] = tostring(new[i]) end; new = table.concat(normalized, "") elseif not isstring(new) then return end self:GetWM():SetBodyGroups(new) end
+function SWEP:ModelCreated(model)
+	if not CLIENT then return end
+	if not IsValid(model) then return end
+	if not self.FakeBodyGroups then return end
+
+	model:SetBodyGroups(self.FakeBodyGroups)
+
+	for i = 0, #model:GetMaterials() - 1 do
+		model:SetSubMaterial(i, "")
+	end
+end
+function SWEP:PostSetupDataTables() end
 
 function SWEP:InitializePost()
-    local randomPreset = table.Random(self.FakeBodyGroupsPresets); if istable(randomPreset) then randomPreset = table.Random(randomPreset) end; if isstring(randomPreset) then self:SetRandomBodygroups(randomPreset) end
     self.AnimStart_Insert = 0
     self.AnimStart_Draw = 0
     self.BlockReload = 0
@@ -339,4 +375,3 @@ end
 function SWEP:CanPrimaryAttack()
     return not (self:GetNetVar("shootgunReload", 0) > CurTime())
 end
-

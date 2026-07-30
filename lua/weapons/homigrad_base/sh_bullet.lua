@@ -1011,14 +1011,21 @@ if CLIENT then
 		local attmuzle = self:GetMuzzleAtt(gun, true)
 		local att = gun:GetAttachment(gun:LookupAttachment(self.FakeEjectBrassATT or "ejectbrass")) or gun:GetAttachment(gun:LookupAttachment("shell"))
 		local pos, ang
-		if not att then
+		local bone = self.FakeEjectBrassBone and gun:LookupBone(self.FakeEjectBrassBone)
+		local matrix = bone and gun:GetBoneMatrix(bone)
+		if matrix then
+			pos, ang = matrix:GetTranslation(), matrix:GetAngles()
+		elseif not att then
 			pos, ang = gun:GetPos(), gun:GetAngles()
 		else
 			pos, ang = att.Pos, att.Ang
 		end
 
 		local _
-		if self.EjectPos then pos = gun:GetPos() + ang:Right() * self.EjectPos.x + ang:Up() * self.EjectPos.z + ang:Forward() * self.EjectPos.y end
+		if self.EjectPos then
+			local origin = matrix and pos or gun:GetPos()
+			pos = origin + ang:Right() * self.EjectPos.x + ang:Up() * self.EjectPos.z + ang:Forward() * self.EjectPos.y
+		end
 		if self.EjectAng then _,ang = LocalToWorld(vecZero,self.EjectAng,vecZero,ang) end
 
 		local ammotype = hg.ammotypeshuy[self.Primary.Ammo].BulletSettings

@@ -18,12 +18,8 @@ SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
 SWEP.AttachmentPos = Vector(-0.5, 0, 0)
 SWEP.AttachmentAng = Angle(0, 0, 0)
-SWEP.FakeBodyGroups = "01011"
+SWEP.FakeBodyGroups = "1120113000"
 SWEP.CantFireFromCollision = true
-
-SWEP.FakeBodyGroupsPresets = {
-    "01011"
-}
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_L_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
@@ -233,24 +229,19 @@ function SWEP:AnimHoldPost()
 end
 
 function SWEP:ModelCreated(model)
-    model:SetBodyGroups(self:GetRandomBodygroups() or "000000000")
-end
+	if not CLIENT then return end
+	if not IsValid(model) then return end
+	if not self.FakeBodyGroups then return end
 
-function SWEP:PostSetupDataTables()
-    self:NetworkVar("String", 0, "RandomBodygroups")
-    if CLIENT then
-        self:NetworkVarNotify("RandomBodygroups", self.OnVarChanged)
-    end
-end
+	model:SetBodyGroups(self.FakeBodyGroups)
 
-function SWEP:OnVarChanged(name, old, new)
-    if not IsValid(self:GetWM()) then return end
-    if istable(new) then local normalized = {}; for i = 1, #new do normalized[i] = tostring(new[i]) end; new = table.concat(normalized, "") elseif not isstring(new) then return end
-    self:GetWM():SetBodyGroups(new)
+	for i = 0, #model:GetMaterials() - 1 do
+		model:SetSubMaterial(i, "")
+	end
 end
+function SWEP:PostSetupDataTables() end
 
 function SWEP:InitializePost()
-    local randomPreset = table.Random(self.FakeBodyGroupsPresets); if istable(randomPreset) then randomPreset = table.Random(randomPreset) end; if isstring(randomPreset) then self:SetRandomBodygroups(randomPreset) end
     self.AnimStart_Insert = 0
     self.AnimStart_Draw = 0
 end

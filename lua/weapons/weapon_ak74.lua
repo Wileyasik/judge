@@ -88,8 +88,8 @@ SWEP.AnimsEvents = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/ak/ak74_magrelease_button.ogg") end,
 		[0.15] = function(self) self:EmitSound("weapons/darsu_eft/ak/akm_magout_metal.ogg") end,
 		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/ak/akm_magin_metal.ogg") end,
-		[0.65] = function(self) self:EmitSound("weapons/darsu_eft/ak/akms_slider_up.ogg") end,
-		[0.75] = function(self) self:EmitSound("weapons/darsu_eft/ak/akms_slider_down.ogg") end,
+		[0.75] = function(self) self:EmitSound("weapons/darsu_eft/ak/akms_slider_up.ogg") end,
+		[0.83] = function(self) self:EmitSound("weapons/darsu_eft/ak/akms_slider_down.ogg") end,
 	},
 }
 
@@ -233,6 +233,9 @@ SWEP.availableAttachments = {
 		["mount"] = {["dovetail"] = Vector(-22, -0.25, 1.8), ["picatinny"] = Vector(-15, 0, 1.5)},
 		["mountAngle"] = Angle(0,0,90)
 	},
+	magwell = {
+		["mountType"] = {"ak_545_60", "ak_545"},
+	},
 }
 
 SWEP.RHandPos = Vector(0, -1, 0)
@@ -274,110 +277,61 @@ function SWEP:DrawPost()
 	local wm = self:GetWM()
 	if not IsValid(wm) then return end
 
-	-- Receiver
-	if not IsValid(self.HeldReceiverCSModel) then
-		self.HeldReceiverCSModel = ClientsideModel(self.HeldReceiverModel, RENDERGROUP_BOTH)
-		if IsValid(self.HeldReceiverCSModel) then self.HeldReceiverCSModel:SetNoDraw(true) end
-	end
-	if IsValid(self.HeldReceiverCSModel) then
-		local boneID = wm:LookupBone(self.HeldReceiverBone)
-		if boneID then
-			local boneMatrix = wm:GetBoneMatrix(boneID)
-			if boneMatrix then
-				local lpos, lang = LocalToWorld(self.HeldReceiverOffsetPos, self.HeldReceiverOffsetAng, boneMatrix:GetTranslation(), boneMatrix:GetAngles())
-				self.HeldReceiverCSModel:SetRenderOrigin(lpos)
-				self.HeldReceiverCSModel:SetRenderAngles(lang)
-				self.HeldReceiverCSModel:SetPos(lpos)
-				self.HeldReceiverCSModel:SetAngles(lang)
-				self.HeldReceiverCSModel:SetupBones()
-				self.HeldReceiverCSModel:DrawModel()
-			end
+	self.HeldARC9PartModels = self.HeldARC9PartModels or {}
+	self.HeldARC9PartPaths = self.HeldARC9PartPaths or {}
+	local positioned = {}
+
+	local function positionPart(partName)
+		if positioned[partName] then return positioned[partName] end
+		local partData = self.ARC9Parts and self.ARC9Parts[partName]
+		if not istable(partData) then return end
+
+		local modelPath = partName == "magazine" and self:GetActiveMagazineModel(partData.model, "held") or partData.model
+		if not isstring(modelPath) or modelPath == "" then return end
+		local model = self.HeldARC9PartModels[partName]
+		if IsValid(model) and self.HeldARC9PartPaths[partName] ~= modelPath then
+			model:Remove()
+			model = nil
 		end
+		if not IsValid(model) then
+			model = ClientsideModel(modelPath, RENDERGROUP_BOTH)
+			if not IsValid(model) then return end
+			model:SetNoDraw(true)
+			self.HeldARC9PartModels[partName] = model
+			self.HeldARC9PartPaths[partName] = modelPath
+		end
+
+		local basePos, baseAng
+		if partData.parent then
+			local parent = positionPart(partData.parent)
+			if not IsValid(parent) then return end
+			basePos, baseAng = parent:GetPos(), parent:GetAngles()
+		else
+			local boneID = wm:LookupBone(partData.bone or "")
+			local matrix = boneID and wm:GetBoneMatrix(boneID)
+			if not matrix then return end
+			basePos, baseAng = matrix:GetTranslation(), matrix:GetAngles()
+		end
+
+		local pos, ang = LocalToWorld(partData.pos or vector_origin, partData.ang or angle_zero, basePos, baseAng)
+		model:SetRenderOrigin(pos)
+		model:SetRenderAngles(ang)
+		model:SetPos(pos)
+		model:SetAngles(ang)
+		if partData.skin ~= nil then model:SetSkin(partData.skin) end
+		if isstring(partData.bodygroups) then model:SetBodyGroups(partData.bodygroups) end
+		model:SetupBones()
+		positioned[partName] = model
+		return model
 	end
 
-	-- Magazine
-	if not IsValid(self.HeldMagCSModel) then
-		self.HeldMagCSModel = ClientsideModel(self.HeldMagModel, RENDERGROUP_BOTH)
-		if IsValid(self.HeldMagCSModel) then self.HeldMagCSModel:SetNoDraw(true) end
-	end
-	if IsValid(self.HeldMagCSModel) then
-		local boneID = wm:LookupBone(self.HeldMagBone)
-		if boneID then
-			local boneMatrix = wm:GetBoneMatrix(boneID)
-			if boneMatrix then
-				local lpos, lang = LocalToWorld(self.HeldMagOffsetPos, self.HeldMagOffsetAng, boneMatrix:GetTranslation(), boneMatrix:GetAngles())
-				self.HeldMagCSModel:SetRenderOrigin(lpos)
-				self.HeldMagCSModel:SetRenderAngles(lang)
-				self.HeldMagCSModel:SetPos(lpos)
-				self.HeldMagCSModel:SetAngles(lang)
-				self.HeldMagCSModel:SetupBones()
-				self.HeldMagCSModel:DrawModel()
-			end
-		end
+	for partName in pairs(self.ARC9Parts or {}) do positionPart(partName) end
+	for partName in pairs(self.ARC9Parts or {}) do
+		local model = positioned[partName]
+		if IsValid(model) then model:DrawModel() end
 	end
 
-	-- Handguard
-	if not IsValid(self.HeldHandguardCSModel) then
-		self.HeldHandguardCSModel = ClientsideModel(self.HeldHandguardModel, RENDERGROUP_BOTH)
-		if IsValid(self.HeldHandguardCSModel) then self.HeldHandguardCSModel:SetNoDraw(true) end
-	end
-	if IsValid(self.HeldHandguardCSModel) then
-		local boneID = wm:LookupBone(self.HeldHandguardBone)
-		if boneID then
-			local boneMatrix = wm:GetBoneMatrix(boneID)
-			if boneMatrix then
-				local lpos, lang = LocalToWorld(self.HeldHandguardOffsetPos, self.HeldHandguardOffsetAng, boneMatrix:GetTranslation(), boneMatrix:GetAngles())
-				self.HeldHandguardCSModel:SetRenderOrigin(lpos)
-				self.HeldHandguardCSModel:SetRenderAngles(lang)
-				self.HeldHandguardCSModel:SetPos(lpos)
-				self.HeldHandguardCSModel:SetAngles(lang)
-				self.HeldHandguardCSModel:SetupBones()
-				self.HeldHandguardCSModel:DrawModel()
-			end
-		end
-	end
-
-	-- Pistolgrip
-	if not IsValid(self.HeldPistolgripCSModel) then
-		self.HeldPistolgripCSModel = ClientsideModel(self.HeldPistolgripModel, RENDERGROUP_BOTH)
-		if IsValid(self.HeldPistolgripCSModel) then self.HeldPistolgripCSModel:SetNoDraw(true) end
-	end
-	if IsValid(self.HeldPistolgripCSModel) then
-		local boneID = wm:LookupBone(self.HeldPistolgripBone)
-		if boneID then
-			local boneMatrix = wm:GetBoneMatrix(boneID)
-			if boneMatrix then
-				local lpos, lang = LocalToWorld(self.HeldPistolgripOffsetPos, self.HeldPistolgripOffsetAng, boneMatrix:GetTranslation(), boneMatrix:GetAngles())
-				self.HeldPistolgripCSModel:SetRenderOrigin(lpos)
-				self.HeldPistolgripCSModel:SetRenderAngles(lang)
-				self.HeldPistolgripCSModel:SetPos(lpos)
-				self.HeldPistolgripCSModel:SetAngles(lang)
-				self.HeldPistolgripCSModel:SetupBones()
-				self.HeldPistolgripCSModel:DrawModel()
-			end
-		end
-	end
-
-	-- Stock
-	if not IsValid(self.HeldStockCSModel) then
-		self.HeldStockCSModel = ClientsideModel(self.HeldStockModel, RENDERGROUP_BOTH)
-		if IsValid(self.HeldStockCSModel) then self.HeldStockCSModel:SetNoDraw(true) end
-	end
-	if IsValid(self.HeldStockCSModel) then
-		local boneID = wm:LookupBone(self.HeldStockBone)
-		if boneID then
-			local boneMatrix = wm:GetBoneMatrix(boneID)
-			if boneMatrix then
-				local lpos, lang = LocalToWorld(self.HeldStockOffsetPos, self.HeldStockOffsetAng, boneMatrix:GetTranslation(), boneMatrix:GetAngles())
-				self.HeldStockCSModel:SetRenderOrigin(lpos)
-				self.HeldStockCSModel:SetRenderAngles(lang)
-				self.HeldStockCSModel:SetPos(lpos)
-				self.HeldStockCSModel:SetAngles(lang)
-				self.HeldStockCSModel:SetupBones()
-				self.HeldStockCSModel:DrawModel()
-			end
-		end
-	end
+	self.HeldMagCSModel = positioned.magazine
 end
 
 
@@ -413,6 +367,7 @@ if CLIENT then
 		if self.FakeBodyGroups then
 			model:SetBodyGroups(self.FakeBodyGroups)
 		end
+		if self.FakeSkin ~= nil then model:SetSkin(self.FakeSkin) end
 
 		if self.ModelCreated then
 			self:ModelCreated(model)
@@ -431,22 +386,23 @@ if CLIENT then
 			if not istable(partData) or not isstring(partData.model) or partData.model == "" then
 				continue
 			end
+			local modelPath = partName == "magazine" and self:GetActiveMagazineModel(partData.model, "world") or partData.model
 
 			local model = self.BC_DroppedPartModels[partName]
 			local oldPath = self.BC_DroppedPartPaths[partName]
 
-			if IsValid(model) and oldPath ~= partData.model then
+			if IsValid(model) and oldPath ~= modelPath then
 				model:Remove()
 				model = nil
 			end
 
 			if not IsValid(model) then
-				model = ClientsideModel(partData.model, RENDERGROUP_BOTH)
+				model = ClientsideModel(modelPath, RENDERGROUP_BOTH)
 				if IsValid(model) then
 					model:SetNoDraw(true)
 					model:DrawShadow(true)
 					self.BC_DroppedPartModels[partName] = model
-					self.BC_DroppedPartPaths[partName] = partData.model
+					self.BC_DroppedPartPaths[partName] = modelPath
 				end
 			end
 		end
@@ -515,9 +471,12 @@ if CLIENT then
 		end
 
 		if istable(self.ARC9Parts) and istable(self.BC_DroppedPartModels) then
-			for partName, partData in pairs(self.ARC9Parts) do
+			local positioned = {}
+			local function positionPart(partName)
+				if positioned[partName] then return positioned[partName] end
+				local partData = self.ARC9Parts[partName]
 				local model = self.BC_DroppedPartModels[partName]
-				if not IsValid(model) or not istable(partData) then continue end
+				if not IsValid(model) or not istable(partData) then return end
 
 				local boneName = partData.bone or ""
 				local extraPosition = BC_VECTOR_ZERO
@@ -529,10 +488,13 @@ if CLIENT then
 					extraAngles = self.WorldMagazineOffsetAng or BC_ANGLE_ZERO
 				end
 
-				local partBasePosition = basePosition
-				local partBaseAngles = baseAngles
+				local partBasePosition, partBaseAngles = basePosition, baseAngles
 
-				if IsValid(fake) and isstring(boneName) and boneName ~= "" then
+				if partData.parent then
+					local parent = positionPart(partData.parent)
+					if not IsValid(parent) then return end
+					partBasePosition, partBaseAngles = parent:GetPos(), parent:GetAngles()
+				elseif IsValid(fake) and isstring(boneName) and boneName ~= "" then
 					local boneID = fake:LookupBone(boneName)
 					if boneID ~= nil then
 						local boneMatrix = fake:GetBoneMatrix(boneID)
@@ -560,6 +522,12 @@ if CLIENT then
 				model:SetupBones()
 
 				BC_ApplyPartAppearance(model, partData)
+				positioned[partName] = model
+				return model
+			end
+
+			for partName in pairs(self.ARC9Parts) do
+				positionPart(partName)
 			end
 		end
 
@@ -596,11 +564,12 @@ if CLIENT then
 
 	function SWEP:OnRemove()
 		self:BC_RemoveDroppedModels()
-		if IsValid(self.HeldReceiverCSModel) then self.HeldReceiverCSModel:Remove() end
-		if IsValid(self.HeldMagCSModel) then self.HeldMagCSModel:Remove() end
-		if IsValid(self.HeldHandguardCSModel) then self.HeldHandguardCSModel:Remove() end
-		if IsValid(self.HeldPistolgripCSModel) then self.HeldPistolgripCSModel:Remove() end
-		if IsValid(self.HeldStockCSModel) then self.HeldStockCSModel:Remove() end
+		for _, model in pairs(self.HeldARC9PartModels or {}) do
+			if IsValid(model) then model:Remove() end
+		end
+		self.HeldARC9PartModels = nil
+		self.HeldARC9PartPaths = nil
+		self.HeldMagCSModel = nil
 	end
 end
 

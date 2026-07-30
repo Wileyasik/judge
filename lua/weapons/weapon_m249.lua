@@ -17,7 +17,7 @@ SWEP.Primary.Sound = {"weapons/zwei/m249/fire/m249_outdoor_close1.wav", 75, 90, 
 SWEP.SupressedSound = {"weapons/zwei/m249/fire/m249_outdoor_suppressed_close4.wav", 75, 90, 100}
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/fnfal/handling/fnfal_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.06
-SWEP.ReloadTime = 6
+SWEP.ReloadTime = 8
 
 function SWEP:PostFireBullet(bullet)
 	if CLIENT then
@@ -188,7 +188,7 @@ SWEP.availableAttachments = {
 		["mount"] = Vector(-0, 1, 0.2),
 		["mountType"] = "picatinny",
 		["mountBone"] = "mod_scope",
-		["mountAngle"] = Angle(0, 90, 90),
+		["mountAngle"] = Angle(0, -90, 90),
 	},
 	underbarrel = {
 		["mount"] = Vector(1.5, -1.1, -2.3),

@@ -207,12 +207,17 @@ function SWEP:AllowedInspect()
 end
 
 function SWEP:AnimHoldPost() end
-function SWEP:ModelCreated(model) model:SetBodyGroups(self:GetRandomBodygroups() or "1111111011") end
+function SWEP:ModelCreated(model)
+	local groups = self:GetRandomBodygroups()
+	model:SetBodyGroups(isstring(groups) and groups != "" and groups or self.FakeBodyGroups)
+end
 function SWEP:PostSetupDataTables() self:NetworkVar("String", 0, "RandomBodygroups"); if CLIENT then self:NetworkVarNotify("RandomBodygroups", self.OnVarChanged) end end
 function SWEP:OnVarChanged(name, old, new) if not IsValid(self:GetWM()) then return end self:GetWM():SetBodyGroups(new) end
 
 function SWEP:InitializePost()
-    self:SetRandomBodygroups(table.Random(self.FakeBodyGroupsPresets))
+	local preset = table.Random(self.FakeBodyGroupsPresets)
+	if istable(preset) then preset = table.Random(preset) end
+	if isstring(preset) then self:SetRandomBodygroups(preset) end
     self.AnimStart_Insert = 0
     self.AnimStart_Draw = 0
     self.BlockReload = 0
@@ -335,4 +340,3 @@ end
 function SWEP:CanPrimaryAttack()
     return not (self:GetNetVar("shootgunReload", 0) > CurTime())
 end
-

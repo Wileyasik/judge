@@ -67,13 +67,8 @@ SWEP.Primary.Wait = 0.25
 SWEP.NumBullet = 1
 
 SWEP.availableAttachments = {
-    barrel = {
-        [1] = {"", Vector(7.3, 0.1, 0), {}},
-    },
-    sight = {
-        ["mountType"] = "",
-        ["mount"] = Vector(-22, 1.8, 0),
-    },
+	barrel = false,
+	sight = false,
 }
 
 SWEP.AnimShootMul = 3
@@ -232,4 +227,3 @@ end
 function SWEP:CanPrimaryAttack()
     return not (self:GetNetVar("shootgunReload", 0) > CurTime())
 end
-

@@ -1,48 +1,57 @@
 SWEP.Base = "weapon_glock17"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
-SWEP.PrintName = "Glock 26"
+SWEP.PrintName = "Glock 19x"
 SWEP.Author = "Glock GmbH"
 SWEP.Instructions = "Glock is a brand of polymer-framed, short recoil-operated, striker-fired, locked-breech semi-automatic pistols designed and produced by Austrian manufacturer Glock Ges.m.b.H. Thats version of Glock is subcompact 10 rounds chambered in 9x19 ammo."
 SWEP.Category = "Weapons - Pistols"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 
-SWEP.FakeBodyGroups = "2108"
-SWEP.FakeBodyGroupsPresets = {
-	"2108",
-	"2108",
-	"2108",
-	"2108",
-	"2108",
-	"2108",
-	"2108",
-	"2108",
-	"2108",
-}
+SWEP.GlockBodygroups = {2, 11, 5, 0, 0, 0, 0, 0, 0, 0}
+SWEP.GlockSkin = 2
 
 SWEP.AnimList = {
+	["inspect"] = "inspect",
+	["reload"] = "reload2",
+	["reload_empty"] = "reload_empty2_0",
 	["idle"] = "idle",
-	["reload"] = "reload_10",
-	["reload_empty"] = "reload_empty_10",
 }
 
-function SWEP:InitializePost()
-	local Skin = math.random(0,2)
-	if math.random(0,100) > 99 then
-		Skin = 3
-	end
-	self:SetGlockSkin(Skin)
-	self:SetRandomBodygroups(self.FakeBodyGroupsPresets[math.random(#self.FakeBodyGroupsPresets)] or "2108")
-end
+SWEP.ARC9Parts = {
+	magazine = {
+		model = "models/weapons/mods/mag_glock_bigstick_31.mdl",
+		bonemerge = false,
+		bone = "mod_magazine",
+		pos = Vector(0, 0, 0),
+		ang = Angle(0, -90, 0),
+	},
+	frontsight = {
+		model = "models/weapons/mods/glock_fs.mdl",
+		bonemerge = false,
+		bone = "mod_reciever",
+		pos = Vector(-0, -0, 00),
+		ang = Angle(0, -0, 0),
+	},
+	rearsight = {
+		model = "models/weapons/mods/glock_rs.mdl",
+		bonemerge = false,
+		bone = "mod_reciever",
+		pos = Vector(0, 0, 0),
+		ang = Angle(0, 0, 0),
+	},
+}
+
+SWEP.MagModel = "models/weapons/mods/mag_glock_bigstick_31.mdl"
+SWEP.HeldMagModel = "models/weapons/mods/mag_glock_bigstick_31.mdl"
 
 SWEP.ReloadTime = 2.8
 
-SWEP.AttachmentPos = Vector(-0.1,-1.2,-6.5)
+SWEP.AttachmentPos = Vector(0.2,0,-6.5)
 SWEP.AttachmentAng = Angle(0,0,0)
 
-SWEP.WepSelectIcon2 = Material("vgui/hud/tfa_ins2_glock_p80.png")
-SWEP.IconOverride = "entities/weapon_pwb_glock17.png"
+SWEP.WepSelectIcon2 = Material("entities/arc9_eft_glock19x.png")
+SWEP.IconOverride = "entities/arc9_eft_glock19x.png"
 
 SWEP.Primary.ClipSize = 10
 SWEP.Primary.DefaultClip = 10
@@ -52,28 +61,10 @@ SWEP.lengthSub = 20
 
 SWEP.Ergonomics = 2
 
-function SWEP:PostSetupDataTables()
-	self:NetworkVar("Int",0,"GlockSkin")
-	if ( CLIENT ) then
-		self:NetworkVarNotify( "GlockSkin", self.OnVarChanged )
-	end
-end
-
-function SWEP:OnVarChanged( name, old, new )
-	if !IsValid(self:GetWM()) then return end
-
-	self:GetWM():SetSkin(new)
-end
-
-function SWEP:InitializePost()
-	local Skin = math.random(0,2)
-	if math.random(0,100) > 99 then
-		Skin = 3
-	end
-	self:SetGlockSkin(Skin)
-end
-
 function SWEP:ModelCreated(model)
-	model:ManipulateBoneScale(46, vector_origin)
-	model:SetSkin(self:GetGlockSkin())
+	if not IsValid(model) then return end
+	for index, value in ipairs(self.GlockBodygroups) do
+		model:SetBodygroup(index - 1, value)
+	end
+	model:SetSkin(self.GlockSkin)
 end

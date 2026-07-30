@@ -17,7 +17,7 @@ SWEP.Primary.Sound = {"weapons/darsu_eft/pkm/fire/pkm_indoor_distant_loop1.wav",
 SWEP.SupressedSound = {"weapons/darsu_eft/pkm/fire/pkm_indoor_silenced_distant_loop1.wav", 75, 100, 110}
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/ak47/handling/ak47_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.09
-SWEP.ReloadTime = 6
+SWEP.ReloadTime = 8
 
 function SWEP:PostFireBullet(bullet)
 	local owner = self:GetOwner()

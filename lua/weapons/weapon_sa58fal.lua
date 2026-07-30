@@ -104,7 +104,7 @@ SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
 SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
 
 SWEP.FakeMagDropBone = 50
-SWEP.MagModel = "models/weapons/arc9/darsu_eft/mods/mag_fal_sarco_fal_l1a1_orig_762x51_30.mdl"
+SWEP.MagModel = "models/weapons/mods/mag_fal_sarco_fal_l1a1_orig_762x51_30.mdl"
 
 if CLIENT then
 	local vector_full = Vector(1, 1, 1)

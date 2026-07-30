@@ -453,7 +453,21 @@ function SWEP:Reload(time)
 	--self.StaminaReloadTime = -- self.ReloadTime * ( IsValid( self:GetOwner() ) and self:GetOwner().organism and self:GetOwner().organism.stamina and 2 -(self:GetOwner().organism.stamina[1] / 180 ) or 1 )
 	self.reload = time + (self.StaminaReloadTime or self.ReloadTime)
 	if self:ShouldUseFakeModel() then
-		self:PlayAnim(self:Clip1() == 0 and "reload_empty" or "reload", (self.StaminaReloadTime or self.ReloadTime), false, function()
+		local empty = self:Clip1() == 0
+		local defaultAnim = empty and "reload_empty" or "reload"
+		local reloadAnim = self:GetMagazineReloadAnimation(empty)
+		local wm = self:GetWM()
+
+		if reloadAnim and (not IsValid(wm) or wm:LookupSequence(reloadAnim) < 0) then
+			reloadAnim = nil
+		end
+
+		reloadAnim = reloadAnim or defaultAnim
+		if self.AnimsEvents and not self.AnimsEvents[reloadAnim] then
+			self.AnimsEvents[reloadAnim] = self.AnimsEvents[self.AnimList[defaultAnim]] or self.AnimsEvents[defaultAnim]
+		end
+
+		self:PlayAnim(reloadAnim, (self.StaminaReloadTime or self.ReloadTime), false, function()
 			self:PlayAnim("idle", 1, not self.NoIdleLoop)
 			--if self.MagIndex then
 			--	self:GetWM():ManipulateBoneScale(self.MagIndex, vector_origin)

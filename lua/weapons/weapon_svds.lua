@@ -117,6 +117,16 @@ SWEP.availableAttachments = {
         ["mountType"] = {"picatinny", "ironsight"},
         ["mount"] = Vector(-27, 1.5, 0),
     },
+		grip = {
+		["mount"] = {["picatinny"] = Vector(-3, 0, 0)},
+		["mountType"] = {"picatinny"},
+		["mountAngle"] = Angle(0, 0, 0)
+	},
+		underbarrel = {
+		["mount"] = Vector(4, -1.2, -1),
+		["mountAngle"] = Angle(0, -0.75,90),
+		["mountType"] = "picatinny_small"
+	},
 }
 
 SWEP.addSprayMul = 1

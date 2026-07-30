@@ -185,7 +185,7 @@ SWEP.ScrappersSlot = "Primary"
 
 SWEP.DistSound = "weapons/darsu_eft/sa58/fire_new/fal_outdoor_close_loop3.wav"
 
-SWEP.StartAtt = {"optic6"}
+SWEP.StartAtt = {"optic6", "grip7"}
 SWEP.availableAttachments = {
 	barrel = {
 		[1] = {"supressor9", Vector(0, 0, 0), {}},
@@ -201,6 +201,11 @@ SWEP.availableAttachments = {
 		["mount"] = {["picatinny"] = Vector(2, 0.3, 0.15)},
 		["mountType"] = {"picatinny"},
 		["mountAngle"] = Angle(0, 0, 0)
+	},
+	underbarrel = {
+		["mount"] = Vector(1, -0.15, 0.13),
+		["mountAngle"] = Angle(0, -0.75,0),
+		["mountType"] = "picatinny_small"
 	},
 }
 

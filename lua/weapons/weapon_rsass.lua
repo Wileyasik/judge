@@ -132,7 +132,7 @@ SWEP.HeldMagOffsetPos = Vector(0, -0.8, -1.5)
 SWEP.HeldMagOffsetAng = Angle(0, 90, 0)
 
 SWEP.FakeMagDropBone = 50
-SWEP.MagModel = "models/weapons/arc9/darsu_eft/mods/mag_ar10_lancer_l7_awm_762x51_25.mdl"
+SWEP.MagModel = "models/weapons/mods/mag_ar10_lancer_l7_awm_762x51_25.mdl"
 
 if CLIENT then
 	local vector_full = Vector(1, 1, 1)
@@ -239,6 +239,11 @@ SWEP.availableAttachments = {
 		["mount"] = {["picatinny"] = Vector(4, 0.3, 0.15)},
 		["mountType"] = {"picatinny"},
 		["mountAngle"] = Angle(0, 0, 0)
+	},
+		underbarrel = {
+		["mount"] = Vector(3.1, -0.15, 0.15),
+		["mountAngle"] = Angle(0, -0.75,0),
+		["mountType"] = "picatinny_small"
 	},
 }
 

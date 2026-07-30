@@ -143,7 +143,7 @@ SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
 SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
 
 SWEP.FakeMagDropBone = 50
-SWEP.MagModel = "models/weapons/arc9/darsu_eft/mods/mag_stanag_colt_ar15_std_556x45_30.mdl"
+SWEP.MagModel = "models/weapons/mods/mag_stanag_colt_ar15_std_556x45_30.mdl"
 
 if CLIENT then
 	local vector_full = Vector(1, 1, 1)
@@ -239,15 +239,15 @@ SWEP.WeaponEyeAngles = Angle(0, 0, 0)
 
 SWEP.HoldType = "rpg"
 
-SWEP.WepSelectIcon2 = Material("entities/arc9_eft_m4a1.png")
-SWEP.IconOverride = "entities/arc9_eft_m4a1.png"
+SWEP.WepSelectIcon2 = Material("entities/arc9_eft_radian.png")
+SWEP.IconOverride = "entities/arc9_eft_radian.png"
 
 SWEP.weight = 3.2
 SWEP.ScrappersSlot = "Primary"
 
 SWEP.DistSound = "weapons/darsu_eft/m4a1/fire_new/tx15_fire_outdoor_close.wav"
 
-SWEP.StartAtt = {"ironsight1"}
+SWEP.StartAtt = {"holo21"}
 SWEP.availableAttachments = {
 	barrel = {
 		[1] = {"supressor5", Vector(0, 0, 0), {}},
@@ -268,6 +268,9 @@ SWEP.availableAttachments = {
 		["mount"] = Vector(10, -0.3, 0.3),
 		["mountAngle"] = Angle(0, -0.75,0),
 		["mountType"] = "picatinny_small"
+	},
+	magwell = {
+		["mountType"] = {"stanag_556_60", "stanag_556_100"},
 	},
 }
 
@@ -331,8 +334,13 @@ function SWEP:DrawPost()
 	end
 
 	-- Magazine
+	local heldMagModel = self:GetActiveMagazineModel(self.HeldMagModel, "held")
+	if IsValid(self.HeldMagCSModel) and self.HeldMagCSModelPath ~= heldMagModel then
+		self.HeldMagCSModel:Remove()
+	end
 	if not IsValid(self.HeldMagCSModel) then
-		self.HeldMagCSModel = ClientsideModel(self.HeldMagModel, RENDERGROUP_BOTH)
+		self.HeldMagCSModel = ClientsideModel(heldMagModel, RENDERGROUP_BOTH)
+		self.HeldMagCSModelPath = heldMagModel
 		if IsValid(self.HeldMagCSModel) then self.HeldMagCSModel:SetNoDraw(true) end
 	end
 	if IsValid(self.HeldMagCSModel) then
@@ -529,22 +537,23 @@ if CLIENT then
 			if not istable(partData) or not isstring(partData.model) or partData.model == "" then
 				continue
 			end
+			local modelPath = partName == "magazine" and self:GetActiveMagazineModel(partData.model, "world") or partData.model
 
 			local model = self.BC_DroppedPartModels[partName]
 			local oldPath = self.BC_DroppedPartPaths[partName]
 
-			if IsValid(model) and oldPath ~= partData.model then
+			if IsValid(model) and oldPath ~= modelPath then
 				model:Remove()
 				model = nil
 			end
 
 			if not IsValid(model) then
-				model = ClientsideModel(partData.model, RENDERGROUP_BOTH)
+				model = ClientsideModel(modelPath, RENDERGROUP_BOTH)
 				if IsValid(model) then
 					model:SetNoDraw(true)
 					model:DrawShadow(true)
 					self.BC_DroppedPartModels[partName] = model
-					self.BC_DroppedPartPaths[partName] = partData.model
+					self.BC_DroppedPartPaths[partName] = modelPath
 				end
 			end
 		end

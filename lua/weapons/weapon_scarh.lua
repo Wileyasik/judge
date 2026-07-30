@@ -92,7 +92,7 @@ SWEP.ReloadHold = nil
 SWEP.FakeVPShouldUseHand = false
 
 SWEP.FakeMagDropBone = 50
-SWEP.MagModel = "models/weapons/arc9/darsu_eft/mods/mag_scar17_mag_dropped.mdl"
+SWEP.MagModel = "models/weapons/mods/mag_scar17_mag_dropped.mdl"
 
 if CLIENT then
 	local vector_full = Vector(1, 1, 1)

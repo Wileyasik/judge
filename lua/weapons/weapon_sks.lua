@@ -185,7 +185,7 @@ SWEP.availableAttachments = {
 	},
 	sight = {
 		["mountType"] = "dovetail",
-		["mount"] = Vector(-24, 2, -0.5),
+		["mount"] = Vector(-24, 1.65, -0.5),
 		["mountAngle"] = Angle(0,0,0)
 	},
 }

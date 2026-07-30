@@ -117,6 +117,24 @@ function SWEP:GetAttachmentInfo(whereabouts, attachment)
 	return attdata
 end
 
+function SWEP:GetActiveMagazineModel(fallback, role)
+	local data = self:GetAttachmentInfo("magwell")
+	if not data then return fallback end
+
+	local roleModel = role and data[role .. "Model"]
+	return roleModel or data[2] or fallback
+end
+
+function SWEP:GetMagazineReloadAnimation(empty)
+	local attachment, data = self:HasAttachment("magwell")
+	if not attachment or not data then return end
+
+	local animations = self.MagazineReloadAnimations and self.MagazineReloadAnimations[attachment[1]]
+	if animations then return animations[empty and 2 or 1] end
+
+	return empty and data.reload_empty or data.reload
+end
+
 function SWEP:ThinkAtt()
 end
 
@@ -142,10 +160,10 @@ function SWEP:DrawAttachments()
 	self.attacments = self:GetNetVar("attachments",{})
 	//self.Supressor = (self:HasAttachment("barrel", "supressor") and true) or self.SetSupressor
 	local magwell, magwellData = self:HasAttachment("magwell")
-	if magwellData then 
-		self.Primary.ClipSize = magwellData.capacity
-	else
-		self.Primary.ClipSize = self.Primary.ClipSize2 or self.Primary.ClipSize
+	self.BaseMagazineCapacity = self.Primary.DefaultClip or self.BaseMagazineCapacity or self.Primary.ClipSize
+	self.Primary.ClipSize = magwellData and magwellData.capacity or self.BaseMagazineCapacity
+	if SERVER and self:Clip1() > self.Primary.ClipSize then
+		self:SetClip1(self.Primary.ClipSize)
 	end
 	
 	if SERVER then return end
@@ -179,7 +197,10 @@ function SWEP:DrawAttachments()
 	self.modelAtt = self.modelAtt or {}
 	local flagRemovehuy = false
 	for plc,att in pairs(self.attachments) do
-		local attdata = hg.attachments[plc][att[1]]
+		local attachmentGroup = hg.attachments[plc]
+		local attdata = attachmentGroup and attachmentGroup[att[1]]
+		if not attdata then continue end
+		if attdata and attdata.weaponManagedModel then continue end
 		
 		local tblhuy = self:HasAttachment(plc) and available[plc] and ((available[plc][att[1]] and istable(available[plc][att[1]]) and available[plc][att[1]][2]) or (istable(available[plc]["removehuy"]) and available[plc]["removehuy"][attdata.mountType] or available[plc]["removehuy"]))
 		if tblhuy then flagRemovehuy = true end
@@ -220,7 +241,8 @@ function SWEP:DrawAttachments()
 
 		self:Attachment_Transform(model,pos,ang,plc,att,attdata,available)
 
-		if attdata.drawFunction then
+		local previewFrame = hg.attachmentsMenuPanel
+		if attdata.drawFunction and not (IsValid(previewFrame) and previewFrame.previewPlacement == plc) then
 			attdata.drawFunction(self,model)
 		end
 
@@ -272,6 +294,15 @@ function SWEP:Attachment_Transform(model,pos,ang,plc,att,attdata,available)
 		end
 	end
 
+	local slotMount = Vector(0, 0, 0)
+	if att[2] and isvector(att[2]) then slotMount:Add(att[2]) end
+	if available[plc] and isvector(available[plc]["mount"]) then slotMount:Add(available[plc]["mount"]) end
+	if available[plc] and istable(available[plc]["mount"]) and isvector(available[plc]["mount"][attdata.mountType]) then
+		slotMount:Add(available[plc]["mount"][attdata.mountType])
+	end
+	slotMount:Rotate(ang)
+	slotMount:Add(pos)
+
 	vecadd:Zero()
 	if att[2] and isvector(att[2]) then vecadd:Add(att[2]) end
 	if available[plc] and available[plc]["mount"] and isvector(available[plc]["mount"]) then vecadd:Add(available[plc]["mount"]) end
@@ -287,6 +318,15 @@ function SWEP:Attachment_Transform(model,pos,ang,plc,att,attdata,available)
 	if attdata.transformFunction then
 		attdata.transformFunction(self,model,vecadd,ang)
 	end
+
+	self.attachmentMenuTransforms = self.attachmentMenuTransforms or {}
+	self.attachmentMenuTransforms[plc] = {
+		id = att[1],
+		frame = FrameNumber(),
+		mountPos = Vector(slotMount.x, slotMount.y, slotMount.z),
+		pos = Vector(vecadd.x, vecadd.y, vecadd.z),
+		ang = Angle(ang.p, ang.y, ang.r)
+	}
 
 	if attdata.bBonemerge and not model.bBonemerged then
 		model:SetParent(self:GetWM())
@@ -307,7 +347,9 @@ function SWEP:Attachment_Transform(model,pos,ang,plc,att,attdata,available)
 	model:SetupBones()
 	local addred = string.find(att[1], "supressor") and 5 * self.dmgStack2 / 30 or 0
 	render.SetColorModulation(1 + addred,1,1)
-	if (IsValid(self:GetOwner()) and attdata.norenderWhenDrop) or not attdata.norenderWhenDrop then
+	local previewFrame = hg.attachmentsMenuPanel
+	local hiddenByPreview = IsValid(previewFrame) and previewFrame.previewPlacement == plc
+	if not hiddenByPreview and ((IsValid(self:GetOwner()) and attdata.norenderWhenDrop) or not attdata.norenderWhenDrop) then
 		model:DrawModel()
 	end
 	render.SetColorModulation(1,1,1)
@@ -330,7 +372,7 @@ function SWEP:Attachment_Transform(model,pos,ang,plc,att,attdata,available)
 		mount:SetPos(pos)
 		mount:SetAngles(ang)
 		mount:SetupBones()
-		mount:DrawModel()
+		if not hiddenByPreview then mount:DrawModel() end
 	end
 
 	if attdata.holotex then--just create a second model with only glass for stencil (why cant i render just the glass bruuh)
@@ -825,129 +867,648 @@ if CLIENT then
 		return scroll
 	end
 
-	CreateMenu = function()
-		if IsValid(hg.attachmentsMenuPanel) then
-			hg.attachmentsMenuPanel:Remove()
-			hg.attachmentsMenuPanel = nil
+	local slotOrder = {"sight", "barrel", "underbarrel", "grip", "magwell"}
+	local slotNames = {
+		sight = "OPTICS",
+		barrel = "MUZZLE",
+		underbarrel = "UNDERBARREL",
+		grip = "FOREGRIP",
+		magwell = "MAGAZINE"
+	}
+	local slotSides = {sight = 1, barrel = -1, underbarrel = -1, grip = -1, magwell = -1}
+	local slotRows = {sight = 0.3, underbarrel = 0.18, barrel = 0.36, grip = 0.54, magwell = 0.72}
+	local slotAnchorBones = {
+		magwell = {"mod_magazine"}
+	}
+	-- Value from 0 to 1: 0.5 pauses inspect at 50%, 0.2 at 20%, and so on.
+	local inspectFreezeFraction = 0.3
+	local menuAccent = Color(210, 225, 230)
+	local menuMuted = Color(145, 155, 160)
+	local menuPanelColor = Color(10, 13, 15, 238)
+
+	surface.CreateFont("HG_Attachment_Title", {
+		font = "Roboto Condensed",
+		size = 28,
+		weight = 700,
+		extended = true
+	})
+	surface.CreateFont("HG_Attachment_Label", {
+		font = "Roboto Condensed",
+		size = 17,
+		weight = 600,
+		extended = true
+	})
+	surface.CreateFont("HG_Attachment_Small", {
+		font = "Roboto Condensed",
+		size = 13,
+		weight = 500,
+		extended = true
+	})
+	surface.CreateFont("HG_Attachment_Card", {
+		font = "Roboto Condensed",
+		size = 11,
+		weight = 600,
+		extended = true
+	})
+
+	local function getAttachmentDefinition(id)
+		local placement = hg.GetAttachmentTab(id)
+		return placement, placement and hg.attachments[placement] and hg.attachments[placement][id]
+	end
+
+	local function getInventoryCounts()
+		local counts = {}
+		local inv = lply:GetNetVar("Inventory", {})
+		for _, id in pairs(inv.Attachments or {}) do
+			counts[id] = (counts[id] or 0) + 1
+		end
+		return counts
+	end
+
+	local function getWeaponAttachments(wep)
+		return wep:GetNetVar("attachments", wep.attachments or {}) or {}
+	end
+
+	local function findExplicitEntry(slot, id)
+		for _, entry in pairs(slot or {}) do
+			if istable(entry) and entry[1] == id then return entry end
+		end
+	end
+
+	local function mountTypesMatch(slotType, attachmentType)
+		if not slotType or not attachmentType then return false end
+		if istable(slotType) then return table.HasValue(slotType, attachmentType) end
+		return slotType == attachmentType
+	end
+
+	local function isCompatible(wep, placement, id, definition)
+		if not definition or definition[1] != placement then return false end
+		local slot = wep.availableAttachments and wep.availableAttachments[placement]
+		if not slot then return false end
+		local explicit = findExplicitEntry(slot, id) != nil
+		if not slot.mountType and not definition.mountType then return explicit end
+		return mountTypesMatch(slot.mountType, definition.mountType)
+	end
+
+	local function getEmptySlotReference(wep, placement, slot)
+		for index = 1, #slot do
+			local entry = slot[index]
+			local id = istable(entry) and entry[1]
+			local _, definition = getAttachmentDefinition(id)
+			if id and definition and isCompatible(wep, placement, id, definition) then
+				return entry, definition
+			end
 		end
 
-		local tblcpy = refreshtbl()
+		local ids = {}
+		for id, definition in pairs(hg.attachments[placement] or {}) do
+			if isCompatible(wep, placement, id, definition) then ids[#ids + 1] = id end
+		end
+		table.sort(ids)
+		if not ids[1] then return end
+		return nil, hg.attachments[placement][ids[1]]
+	end
 
-		local frame = vgui.Create( "ZFrame" )
-		hg.attachmentsMenuPanel = frame
-		frame:SetTitle("")
-		frame:SetSize( ScrW() / 3, ScrH() / 2 )
-		frame:Center()
-		frame:MakePopup()
-		frame:SetKeyboardInputEnabled(false)
-		frame:SetVisible(false)
-		frame:SetColorBG(attMenuFill)
-		frame:SetColorBR(attMenuOutline)
+	local function finiteNumber(value)
+		return isnumber(value) and value == value and value > -math.huge and value < math.huge
+	end
 
-		if IsValid(frame.btnClose) then
-			frame.btnClose:SetVisible(false)
-			frame.btnClose:SetMouseInputEnabled(false)
+	local function projectForView(worldPos, view, panelW, panelH)
+		if not isvector(worldPos) or not istable(view) or not isvector(view.origin) or not isangle(view.angles) then return end
+		local viewportW = view.width or view.w or ScrW()
+		local viewportH = view.height or view.h or ScrH()
+		if not finiteNumber(viewportW) or not finiteNumber(viewportH) or viewportW <= 0 or viewportH <= 0 then return end
+
+		local aspect = view.aspect or view.aspectratio or viewportW / viewportH
+		local horizontalFov = view.fov
+		if not finiteNumber(aspect) or aspect <= 0 or not finiteNumber(horizontalFov) or horizontalFov <= 0 or horizontalFov >= 180 then return end
+
+		local delta = worldPos - view.origin
+		local depth = delta:Dot(view.angles:Forward())
+		local tanHalfFov = math.tan(math.rad(horizontalFov) * 0.5)
+		if not finiteNumber(depth) or depth <= 0.001 or not finiteNumber(tanHalfFov) or tanHalfFov <= 0 then return end
+
+		local normalizedX = delta:Dot(view.angles:Right()) / (depth * tanHalfFov)
+		local normalizedY = delta:Dot(view.angles:Up()) * aspect / (depth * tanHalfFov)
+		if not finiteNumber(normalizedX) or not finiteNumber(normalizedY) or math.abs(normalizedX) > 1 or math.abs(normalizedY) > 1 then return end
+		if view.inverted then normalizedX = -normalizedX end
+
+		local viewportX = finiteNumber(view.x) and view.x or 0
+		local viewportY = finiteNumber(view.y) and view.y or 0
+		local screenX = viewportX + (normalizedX + 1) * viewportW * 0.5
+		local screenY = viewportY + (1 - normalizedY) * viewportH * 0.5
+		local x = screenX * panelW / ScrW()
+		local y = screenY * panelH / ScrH()
+		if not finiteNumber(x) or not finiteNumber(y) then return end
+		return x, y
+	end
+
+	local function getSlotAnchor(wep, placement, previewID, previewModel)
+		local slot = wep.availableAttachments and wep.availableAttachments[placement]
+		if not slot then return end
+		local installed = getWeaponAttachments(wep)[placement]
+		if previewID then installed = findExplicitEntry(slot, previewID) or {previewID} end
+		local installedID = installed and installed[1]
+		local hasInstalledAttachment = installedID and installedID != "empty"
+		local wm = wep:GetWM()
+		if not IsValid(wm) then return end
+		wm:SetupBones()
+		local _, definition = getAttachmentDefinition(installedID)
+		local referenceEntry
+		if not previewID and not hasInstalledAttachment and (placement == "grip" or placement == "underbarrel") then
+			referenceEntry, definition = getEmptySlotReference(wep, placement, slot)
+		end
+		local rendered = wep.attachmentMenuTransforms and wep.attachmentMenuTransforms[placement]
+		if not previewID and definition and rendered and rendered.id == installedID and rendered.frame >= FrameNumber() - 1 then
+			local anchor = definition.uiAnchor
+			if isvector(anchor) then
+				local anchorPos = LocalToWorld(anchor, angle_zero, rendered.pos, rendered.ang)
+				return anchorPos, rendered.ang
+			end
+			return rendered.pos, rendered.ang
 		end
 
-		local title = vgui.Create("DLabel", frame)
-		title:SetPos(14, 12)
-		title:SetTextColor(color_white)
-		title:SetText("attachments")
-		title:SetFont("ZCity_Menu_Settings_Small")
-		title:SizeToContents()
-
-		local closeButton = vgui.Create("DButton", frame)
-		closeButton:SetSize(28, 28)
-		closeButton:SetPos(frame:GetWide() - 38, 10)
-		closeButton:SetText("X")
-		closeButton.Paint = PaintCloseButton
-		closeButton.DoClick = function()
-			frame:Close()
+		local pos, ang
+		if slot.mountBone then
+			local bone = wm:LookupBone(slot.mountBone)
+			local matrix = bone and wm:GetBoneMatrix(bone)
+			if matrix then
+				pos = matrix:GetTranslation()
+				ang = matrix:GetAngles()
+			end
 		end
-
-		local lbl = vgui.Create("DLabel", frame)
-		lbl:SetText( "" )
-		lbl:SetFont("ZCity_Tiny")
-		lbl:SetSize(0, ScreenScaleH(15))
-		lbl:Dock(BOTTOM)
-		lbl:DockMargin(10,0,10,10)
-
-		lbl.Paint = function(self, w, h)
-			draw.SimpleText("LMB - Add attachment | RMB - remove attachment", "ZCity_Tiny", w * 0.5, h * 0.5, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		if not pos then
+			for _, boneName in ipairs(slotAnchorBones[placement] or {}) do
+				local bone = wm:LookupBone(boneName)
+				local matrix = bone and wm:GetBoneMatrix(bone)
+				if matrix then
+					pos = matrix:GetTranslation()
+					ang = matrix:GetAngles()
+					break
+				end
+			end
 		end
+		if placement == "magwell" and not previewID then return pos, ang end
 
-		local scroll = makeScroll(frame)
-
-		function frame:RefreshTbl()
-			tblcpy = refreshtbl()
-
-			if IsValid(scroll) then
-				scroll:Remove()
+		if not pos then
+			local attachmentName = wep:ShouldUseFakeModel() and wep.FakeAttachment or "muzzle"
+			local attachmentIndex = wm:LookupAttachment(attachmentName)
+			local raw = attachmentIndex and attachmentIndex > 0 and wm:GetAttachment(attachmentIndex)
+			if not raw then
+				attachmentIndex = wm:LookupAttachment("muzzle_flash")
+				raw = attachmentIndex and attachmentIndex > 0 and wm:GetAttachment(attachmentIndex)
 			end
 
-			scroll = makeScroll(frame)
+			if raw and isvector(raw.Pos) and isangle(raw.Ang) then
+				pos = Vector(raw.Pos.x, raw.Pos.y, raw.Pos.z)
+				ang = Angle(raw.Ang.p, raw.Ang.y, raw.Ang.r)
+				pos, ang = LocalToWorld(wep.attPos or vector_origin, wep.attAng or angle_zero, pos, ang)
+				ang:RotateAroundAxis(ang:Forward(), wep.rotatehuy or 0)
+			else
+				pos = Vector(wm:GetPos().x, wm:GetPos().y, wm:GetPos().z)
+				ang = Angle(wm:GetAngles().p, wm:GetAngles().y, wm:GetAngles().r)
+				ang:RotateAroundAxis(ang:Forward(), 90)
+				local _, adjustedAng = LocalToWorld(vector_origin, wep.attAng or angle_zero, vector_origin, ang)
+				ang = adjustedAng
+				local attPos = wep.attPos or vector_origin
+				pos:Add(ang:Up() * attPos[1] + ang:Right() * attPos[2] + ang:Forward() * attPos[3])
+			end
 
-			table.sort(tblcpy, function(a, b) return ((string.byte(a[1][1], 1, 1) + (a[2] and 9999 or 0)) > (string.byte(b[1][1], 1, 1) + (b[2] and 9999 or 0))) end)
-			for k, v in pairs(tblcpy) do
-				if !hg.attachmentslaunguage[v[1]] then continue end
-				local but = vgui.Create("DButton")
-				but.equipped = v[2]
-				but:SetText( hg.attachmentslaunguage[v[1]]..(v[2] and " - on the weapon" or "") )
-				but:SetFont("ZCity_Tiny")
-				but:SetTextColor(color_white)
-				but:Dock( TOP )
-				but:DockMargin( 6, 0, 6, 5 )
-				but:SetSize(0, ScreenScaleH(20))
-				but.Paint = PaintButton
+			if wep:ShouldUseFakeModel() then
+				pos, ang = LocalToWorld(wep.AttachmentPos or vector_origin, wep.AttachmentAng or angle_zero, pos, ang)
+			end
+		end
 
-				local but2 = vgui.Create("DButton", but)
-				but2:SetText( "Drop" )
-				but2:SetFont("ZCity_SuperTiny")
-				but2:SetTextColor(color_white)
-				but2:Dock( RIGHT )
-				but2:DockMargin( 0, 3, 3, 3 )
-				but2:SetWide( ScreenScaleH(28) )
-				but2.Paint = PaintDropButton
+		local offset = Vector(0, 0, 0)
+		if hasInstalledAttachment and installed and isvector(installed[2]) then offset:Add(installed[2]) end
+		if not hasInstalledAttachment and referenceEntry and isvector(referenceEntry[2]) then offset:Add(referenceEntry[2]) end
+		if isvector(slot.mount) then
+			offset:Add(slot.mount)
+		elseif istable(slot.mount) then
+			local mountType = definition and definition.mountType or (istable(slot.mountType) and slot.mountType[1] or slot.mountType)
+			if mountType and isvector(slot.mount[mountType]) then
+				offset:Add(slot.mount[mountType])
+			end
+		end
+		if definition and isvector(definition.offset) then offset:Add(definition.offset) end
 
-				but2.DoClick = function()
-					dropAttachment(v[1])
+		offset:Rotate(ang)
+		pos:Add(offset)
+
+		if not definition then return pos, ang end
+		local mountAngle = angle_zero
+		if isangle(slot.mountAngle) then
+			mountAngle = slot.mountAngle
+		elseif istable(slot.mountAngle) and definition.mountType and isangle(slot.mountAngle[definition.mountType]) then
+			mountAngle = slot.mountAngle[definition.mountType]
+		end
+		local definitionAngle = isangle(definition[3]) and definition[3] or angle_zero
+		local _, finalAngle = LocalToWorld(vector_origin, definitionAngle + mountAngle, vector_origin, ang)
+		local model = IsValid(previewModel) and previewModel or wep.modelAtt and wep.modelAtt[placement]
+		if not previewID and definition.transformFunction then definition.transformFunction(wep, model, pos, finalAngle) end
+		if isvector(definition.uiAnchor) then pos = LocalToWorld(definition.uiAnchor, angle_zero, pos, finalAngle) end
+
+		return pos, finalAngle
+	end
+
+	local function getCardNameLines(id, maxWidth)
+		local name = string.upper(hg.attachmentslaunguage[id] or id)
+		surface.SetFont("HG_Attachment_Card")
+		local words = string.Explode(" ", name, false)
+		local lines = {""}
+		for _, word in ipairs(words) do
+			local line = lines[#lines]
+			local candidate = line == "" and word or line .. " " .. word
+			if surface.GetTextSize(candidate) <= maxWidth then
+				lines[#lines] = candidate
+			elseif #lines < 2 then
+				lines[#lines + 1] = word
+			else
+				lines[2] = lines[2] .. " " .. word
+			end
+		end
+
+		for index = 1, #lines do
+			while #lines[index] > 1 and surface.GetTextSize(lines[index] .. (index == 2 and "..." or "")) > maxWidth do
+				lines[index] = string.sub(lines[index], 1, -2)
+			end
+		end
+		if #lines == 2 and table.concat(lines, " ") != name then lines[2] = lines[2] .. "..." end
+		return lines
+	end
+
+	local function updatePreviewTransform(frame)
+		if not IsValid(frame) or not IsValid(frame.previewModel) or not frame.previewPlacement or not frame.previewID then return end
+		local pos, ang = getSlotAnchor(frame.weapon, frame.previewPlacement, frame.previewID, frame.previewModel)
+		if not pos or not ang then return end
+		frame.previewModel:SetPos(pos)
+		frame.previewModel:SetAngles(ang)
+		frame.previewModel:SetupBones()
+
+		local _, definition = getAttachmentDefinition(frame.previewID)
+		if IsValid(frame.previewMount) and definition then
+			local mountPos, mountAng = LocalToWorld(definition.mountVec or vector_origin, definition.mountAng or angle_zero, pos, ang)
+			frame.previewMount:SetPos(mountPos)
+			frame.previewMount:SetAngles(mountAng)
+			frame.previewMount:SetupBones()
+		end
+
+		if IsValid(frame.previewHolo) and definition then
+			local holoPos, holoAng = LocalToWorld(definition.addholovec or vector_origin, definition.addholoang or angle_zero, pos, ang)
+			frame.previewHolo:SetPos(holoPos)
+			frame.previewHolo:SetAngles(holoAng)
+			frame.previewHolo:SetupBones()
+		end
+	end
+
+	hook.Add("PreDrawHalos", "HG_AttachmentMenuPreview", function()
+		local frame = hg.attachmentsMenuPanel
+		if not IsValid(frame) or not IsValid(frame.previewModel) then return end
+		local models = {frame.previewModel}
+		if IsValid(frame.previewMount) then models[#models + 1] = frame.previewMount end
+		if IsValid(frame.previewHolo) then models[#models + 1] = frame.previewHolo end
+		halo.Add(models, color_white, 1, 1, 1, true, true)
+	end)
+
+	CreateMenu = function()
+		if IsValid(hg.attachmentsMenuPanel) then hg.attachmentsMenuPanel:Remove() end
+
+		local wep = lply:GetActiveWeapon()
+		if not IsValid(wep) or not ishgweapon(wep) or not wep.availableAttachments then return end
+
+		local frame = vgui.Create("DFrame")
+		hg.attachmentsMenuPanel = frame
+		frame.weapon = wep
+		frame:SetTitle("")
+		frame:SetSize(ScrW(), ScrH())
+		frame:SetPos(0, 0)
+		frame:SetDraggable(false)
+		frame:ShowCloseButton(false)
+		frame:MakePopup()
+		frame:SetKeyboardInputEnabled(true)
+		frame.slotButtons = {}
+		frame.slotSections = {}
+		frame.pendingUntil = 0
+		frame.availableSlots = {}
+		for _, placement in ipairs(slotOrder) do
+			if wep.availableAttachments[placement] then
+				frame.availableSlots[#frame.availableSlots + 1] = placement
+			end
+		end
+
+		local inspectSequence = wep.AnimList and wep.AnimList.inspect
+		local wm = wep:GetWM()
+		if inspectSequence and IsValid(wm) and wm:LookupSequence(inspectSequence) >= 0 then
+			frame.inspectDuration = 5
+			frame.inspectStarted = CurTime()
+			wep:PlayAnim("inspect", frame.inspectDuration, false)
+			frame.inspectSequence = inspectSequence
+		end
+
+		function frame:Paint(w, h)
+			surface.SetDrawColor(0, 0, 0, 105)
+			surface.DrawRect(0, 0, w, h)
+			surface.SetDrawColor(0, 0, 0, 115)
+			surface.DrawRect(0, 0, w, h * 0.095)
+			surface.DrawRect(0, h * 0.91, w, h * 0.09)
+
+			draw.SimpleText("WEAPON MODDING", "HG_Attachment_Title", w * 0.045, h * 0.035, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+			draw.SimpleText(IsValid(self.weapon) and self.weapon.PrintName or "", "HG_Attachment_Label", w * 0.046, h * 0.069, menuMuted, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+			draw.SimpleText("LMB  EQUIP / REMOVE     RMB  DROP FROM INVENTORY", "HG_Attachment_Small", w * 0.5, h * 0.95, menuMuted, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+
+			local view = hg.LastMainRenderView or render.GetViewSetup(true)
+			local minX, minY = 4, 4
+			local maxX, maxY = w - 5, h - 5
+
+			render.SetScissorRect(0, 0, w, h, true)
+			for placement, button in pairs(self.slotButtons) do
+				if not IsValid(button) then continue end
+				local worldPos = getSlotAnchor(self.weapon, placement)
+				local screenX, screenY = projectForView(worldPos, view, w, h)
+				if not screenX or screenX < minX or screenX > maxX or screenY < minY or screenY > maxY then continue end
+				local bx, by = button.section:GetPos()
+				local targetX = math.Clamp(bx + (button.side == 1 and 0 or button:GetWide()), minX, maxX)
+				local targetY = math.Clamp(by + button:GetTall() * 0.5, minY, maxY)
+				local elbowX = math.Clamp(targetX + (button.side == 1 and -45 or 45), minX, maxX)
+				surface.SetDrawColor(menuAccent)
+				surface.DrawLine(screenX, screenY, elbowX, targetY)
+				surface.DrawLine(elbowX, targetY, targetX, targetY)
+				surface.DrawRect(screenX - 3, screenY - 3, 6, 6)
+			end
+			render.SetScissorRect(0, 0, 0, 0, false)
+		end
+
+		local closeButton = vgui.Create("DButton", frame)
+		closeButton:SetText("")
+		closeButton:SetSize(42, 42)
+		closeButton:SetPos(ScrW() - 66, 24)
+		closeButton.Paint = function(self, w, h)
+			surface.SetDrawColor(self:IsHovered() and Color(80, 30, 30, 245) or menuPanelColor)
+			surface.DrawRect(0, 0, w, h)
+			surface.SetDrawColor(menuAccent)
+			surface.DrawOutlinedRect(0, 0, w, h, 1)
+			draw.SimpleText("X", "HG_Attachment_Label", w * 0.5, h * 0.5, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		end
+		closeButton.DoClick = function() frame:Close() end
+
+		function frame:RunAttachmentAction(action, id)
+			if CurTime() < self.pendingUntil then return end
+			self.pendingUntil = CurTime() + 1.1
+			if action == "add" then addAttachment(id)
+			elseif action == "remove" then removeAttachment(id)
+			elseif action == "drop" then dropAttachment(id) end
+		end
+
+		function frame:ClearPreview()
+			if IsValid(self.hiddenMagazineModel) then
+				self.hiddenMagazineModel:SetModelScale(self.hiddenMagazineScale or 1, 0)
+				self.hiddenMagazineModel:SetColor(self.hiddenMagazineColor or color_white)
+				self.hiddenMagazineModel:SetRenderMode(self.hiddenMagazineRenderMode or RENDERMODE_NORMAL)
+			end
+			self.hiddenMagazineModel = nil
+			self.hiddenMagazineScale = nil
+			self.hiddenMagazineColor = nil
+			self.hiddenMagazineRenderMode = nil
+			if IsValid(self.previewModel) then self.previewModel:Remove() end
+			if IsValid(self.previewMount) then self.previewMount:Remove() end
+			if IsValid(self.previewHolo) then self.previewHolo:Remove() end
+			self.previewModel = nil
+			self.previewMount = nil
+			self.previewHolo = nil
+			self.previewPlacement = nil
+			self.previewID = nil
+		end
+
+		function frame:SetPreview(placement, id)
+			if self.previewPlacement == placement and self.previewID == id and IsValid(self.previewModel) then return end
+			self:ClearPreview()
+			local _, definition = getAttachmentDefinition(id)
+			if not definition or not isstring(definition[2]) or definition[2] == "" then return end
+
+			local model = ClientsideModel(definition[2])
+			if not IsValid(model) then return end
+			model:SetNoDraw(false)
+			if definition.fScale then model:SetModelScale(definition.fScale, 0) end
+			if definition[4] then
+				for index, material in pairs(definition[4]) do model:SetSubMaterial(index, material or "null") end
+			end
+			if definition.bBonemerge and IsValid(self.weapon:GetWM()) then
+				model:SetParent(self.weapon:GetWM())
+				model:AddEffects(EF_BONEMERGE)
+			end
+			if isstring(definition.mount) and definition.mount != "" then
+				self.previewMount = ClientsideModel(definition.mount)
+				if IsValid(self.previewMount) then self.previewMount:SetNoDraw(false) end
+			end
+			if isstring(definition.holomodel) and definition.holomodel != "" then
+				self.previewHolo = ClientsideModel(definition.holomodel)
+				if IsValid(self.previewHolo) then
+					self.previewHolo:SetNoDraw(false)
+					self.previewHolo:SetModelScale(definition.holoscale or 1.2, 0)
+				end
+			end
+
+			self.previewModel = model
+			self.previewPlacement = placement
+			self.previewID = id
+			updatePreviewTransform(self)
+			self:UpdateManagedMagazineVisibility()
+		end
+
+		function frame:UpdateManagedMagazineVisibility()
+			local magazine = self.previewPlacement == "magwell" and self.weapon.HeldMagCSModel
+			if magazine != self.hiddenMagazineModel then
+				if IsValid(self.hiddenMagazineModel) then
+					self.hiddenMagazineModel:SetModelScale(self.hiddenMagazineScale or 1, 0)
+					self.hiddenMagazineModel:SetColor(self.hiddenMagazineColor or color_white)
+					self.hiddenMagazineModel:SetRenderMode(self.hiddenMagazineRenderMode or RENDERMODE_NORMAL)
+				end
+				self.hiddenMagazineModel = IsValid(magazine) and magazine or nil
+				if IsValid(self.hiddenMagazineModel) then
+					self.hiddenMagazineScale = self.hiddenMagazineModel:GetModelScale()
+					self.hiddenMagazineColor = self.hiddenMagazineModel:GetColor()
+					self.hiddenMagazineRenderMode = self.hiddenMagazineModel:GetRenderMode()
+				end
+			end
+
+			if IsValid(self.hiddenMagazineModel) then
+				self.hiddenMagazineModel:SetModelScale(0.001, 0)
+				self.hiddenMagazineModel:SetRenderMode(RENDERMODE_TRANSCOLOR)
+				self.hiddenMagazineModel:SetColor(Color(255, 255, 255, 0))
+			end
+		end
+
+		function frame:BuildSlotCards(placement)
+			if self.previewPlacement == placement then self:ClearPreview() end
+			local section = self.slotSections[placement]
+			if not IsValid(section) then return end
+			if IsValid(section.cards) then section.cards:Remove() end
+
+			local cards = vgui.Create("DIconLayout", section)
+			section.cards = cards
+			cards:SetPos(0, 44)
+			cards:SetSize(section:GetWide(), section:GetTall() - 44)
+			cards:SetSpaceX(8)
+			cards:SetSpaceY(8)
+
+			local attachments = getWeaponAttachments(self.weapon)
+			local installed = attachments[placement]
+			local installedID = installed and installed[1]
+			local slot = self.weapon.availableAttachments[placement]
+
+			local function addCard(id, count, isInstalled)
+				local card = cards:Add("DButton")
+				card:SetSize(68, 68)
+				card:SetText("")
+				card.nameLines = getCardNameLines(id, 62)
+				card.Paint = function(button, w, h)
+					local fill = isInstalled and Color(28, 48, 50, 248) or (button:IsHovered() and Color(31, 38, 41, 248) or Color(13, 17, 19, 242))
+					surface.SetDrawColor(fill)
+					surface.DrawRect(0, 0, w, h)
+					surface.SetDrawColor(isInstalled and Color(131, 210, 190) or menuAccent)
+					surface.DrawOutlinedRect(0, 0, w, h, isInstalled and 2 or 1)
+					if isInstalled then
+						draw.SimpleText("ON", "HG_Attachment_Small", 5, 4, Color(131, 210, 190), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+					elseif count and count > 1 then
+						draw.SimpleText("x" .. count, "HG_Attachment_Small", w - 5, 4, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
+					end
+					local lineCount = #button.nameLines
+					for lineIndex, line in ipairs(button.nameLines) do
+						draw.SimpleText(line, "HG_Attachment_Card", w * 0.5, h - 3 - (lineCount - lineIndex) * 10, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM)
+					end
+				end
+				card.OnCursorEntered = function(button)
+					frame.previewCard = button
+					frame:SetPreview(placement, id)
+				end
+				card.OnCursorExited = function(button)
+					if frame.previewCard != button then return end
+					frame.previewCard = nil
+					frame:ClearPreview()
 				end
 
-				local img = vgui.Create("DImage", but)
-				img:SetSize(ScreenScaleH(20), ScreenScaleH(20))
-				img:Dock(LEFT)
-				img:DockMargin( 5, 0, 0, 0 )
-				if hg.attachmentsIcons[v[1]] then
-					img:SetImage( hg.attachmentsIcons[v[1]] )
+				local iconPath = hg.attachmentsIcons[id]
+				if iconPath then
+					local icon = vgui.Create("DImage", card)
+					icon:SetImage(iconPath)
+					icon:SetSize(42, 30)
+					icon:SetPos(13, 10)
+					icon:SetMouseInputEnabled(false)
 				end
 
-				/*but.Think = function()
-					if !hg.attachmentslaunguage[tblcpy[k][1]] then return end
-
-					img:SetImage( hg.attachmentsIcons[tblcpy[k][1]] )
-
-					but:SetText( hg.attachmentslaunguage[tblcpy[k][1]]..(tblcpy[k][2] and " - on the weapon" or "") )
-				end*/
-
-				but.DoClick = function()
-					if v[2] then return end
-
-					addAttachment(v[1])
+				if isInstalled then
+					card:SetTooltip(slot.cannotremove and "This module cannot be removed" or "LMB: remove")
+					card.DoClick = function()
+						if not slot.cannotremove then frame:RunAttachmentAction("remove", id) end
+					end
+				else
+					card:SetTooltip("LMB: equip  |  RMB: drop")
+					card.DoClick = function()
+						if not installedID or installedID == "empty" then frame:RunAttachmentAction("add", id) end
+					end
+					card.DoRightClick = function() frame:RunAttachmentAction("drop", id) end
 				end
+			end
 
-				but.DoRightClick = function()
-					if !v[2] then return end
+			if installedID and installedID != "empty" then addCard(installedID, nil, true) end
 
-					removeAttachment(v[1])
+			local choices = {}
+			for id, count in pairs(getInventoryCounts()) do
+				local candidatePlacement, definition = getAttachmentDefinition(id)
+				if candidatePlacement == placement and isCompatible(self.weapon, placement, id, definition) then
+					choices[#choices + 1] = {id = id, count = count}
 				end
+			end
+			table.sort(choices, function(a, b)
+				return (hg.attachmentslaunguage[a.id] or a.id) < (hg.attachmentslaunguage[b.id] or b.id)
+			end)
+			for _, choice in ipairs(choices) do addCard(choice.id, choice.count, false) end
+			local slotButton = self.slotButtons[placement]
+			if IsValid(slotButton) then slotButton.moduleCount = #choices + (installedID and installedID != "empty" and 1 or 0) end
 
-				scroll:AddItem(but)
+			cards:InvalidateLayout(true)
+		end
+
+		function frame:RefreshTbl()
+			self.pendingUntil = 0
+			local attachments = getWeaponAttachments(self.weapon)
+			for placement, button in pairs(self.slotButtons) do
+				local installed = attachments[placement]
+				button.installedID = installed and installed[1]
+				self:BuildSlotCards(placement)
+			end
+		end
+
+		for index, placement in ipairs(frame.availableSlots) do
+			local section = vgui.Create("DPanel", frame)
+			frame.slotSections[placement] = section
+			local button = vgui.Create("DPanel", section)
+			frame.slotButtons[placement] = button
+			button.section = section
+			button.side = slotSides[placement] or (index % 2 == 0 and -1 or 1)
+			local sectionWidth = math.Clamp(ScrW() * 0.23, 280, 440)
+			local sectionHeight = 190
+			local screenMargin = math.Clamp(ScrW() * 0.04, 24, 76)
+			local x = button.side == 1 and ScrW() - screenMargin - sectionWidth or screenMargin
+			local y = ScrH() * (slotRows[placement] or (0.2 + index * 0.12))
+			section:SetSize(sectionWidth, sectionHeight)
+			section:SetPos(x, y)
+			section.Paint = function() end
+			button:SetSize(sectionWidth, 38)
+			button:SetPos(0, 0)
+			button.Paint = function(self, w, h)
+				surface.SetDrawColor(menuPanelColor)
+				surface.DrawRect(0, 0, w, h)
+				surface.SetDrawColor(menuAccent)
+				surface.DrawOutlinedRect(0, 0, w, h, 1)
+				draw.SimpleText(slotNames[placement] or string.upper(placement), "HG_Attachment_Label", 10, h * 0.5, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+				draw.SimpleText((self.moduleCount or 0) .. " MODULES", "HG_Attachment_Small", w - 10, h * 0.5, menuMuted, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
 			end
 		end
 
 		frame:RefreshTbl()
 
-		frame:SlideDown(0.5)
+		function frame:Think()
+			if not IsValid(self.weapon) or lply:GetActiveWeapon() != self.weapon or not lply:Alive() then
+				self:Close()
+				return
+			end
+
+			if self.inspectSequence and self.weapon.seq == self.inspectSequence and CurTime() >= self.inspectStarted + self.inspectDuration * inspectFreezeFraction then
+				self.weapon.animtime = CurTime() + self.inspectDuration * (1 - inspectFreezeFraction)
+				self.weapon.animspeed = self.inspectDuration
+				self.weapon.cycling = false
+				self.weapon.reverseanim = false
+				local model = self.weapon:GetWM()
+				if IsValid(model) then model:SetCycle(inspectFreezeFraction) end
+			end
+			updatePreviewTransform(self)
+			self:UpdateManagedMagazineVisibility()
+
+		end
+
+		function frame:OnKeyCodePressed(key)
+			if key == KEY_ESCAPE then self:Close() end
+		end
+
+		function frame:OnRemove()
+			self:ClearPreview()
+			if hg.attachmentsMenuPanel == self then hg.attachmentsMenuPanel = nil end
+			if IsValid(self.weapon) and self.inspectSequence and self.weapon.seq == self.inspectSequence and not self.weapon.reload then
+				local weapon = self.weapon
+				local model = weapon:GetWM()
+				if IsValid(model) then model:SetCycle(inspectFreezeFraction) end
+				weapon.animtime = CurTime() + inspectFreezeFraction * self.inspectDuration
+				weapon.animspeed = self.inspectDuration
+				weapon.cycling = false
+				weapon.reverseanim = true
+				weapon.callback = function(currentWeapon)
+					if IsValid(currentWeapon) and not currentWeapon.reload then
+						currentWeapon:PlayAnim("idle", 1, not currentWeapon.NoIdleLoop)
+					end
+				end
+			end
+		end
 	end
 
 	concommand.Add("hg_get_attachments", function(ply, cmd, args)

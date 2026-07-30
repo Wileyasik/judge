@@ -42,7 +42,7 @@ SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
 SWEP.ViewPunchDiv = 50
 
-SWEP.MagModel = "models/weapons/arc9/darsu_eft/mods/mag_ak_molot_556x45_45.mdl"
+SWEP.MagModel = "models/weapons/mods/mag_ak_molot_556x45_45.mdl"
 SWEP.FakeMagDropBone = 50
 
 local path = "weapons/darsu_eft/saiga12/"

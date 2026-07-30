@@ -43,7 +43,7 @@ SWEP.Primary.Sound = {"weapons/darsu_eft/pkm/pkm_outdoor_close_loop1.wav", 75, 8
 SWEP.SupressedSound = {"weapons/darsu_eft/rpd/fire/rpd_outdoor_silenced_close_loop4.wav", 75, 80, 90}
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/ak47/handling/ak47_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.09
-SWEP.ReloadTime = 6
+SWEP.ReloadTime = 8
 
 SWEP.DeploySnd = {"homigrad/weapons/draw_hmg.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/hmg_holster.mp3", 55, 100, 110}

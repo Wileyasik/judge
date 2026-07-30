@@ -736,6 +736,19 @@ local function renderscene(pos, angle, fov)
 	renderView.fov = fov
 	renderView.origin = view.origin
 	renderView.angles = view.angles
+	if isvector(renderView.origin) and isangle(renderView.angles) then
+		hg.LastMainRenderView = {
+			x = renderView.x or 0,
+			y = renderView.y or 0,
+			w = renderView.w,
+			h = renderView.h,
+			fov = renderView.fov,
+			aspectratio = renderView.w / renderView.h,
+			origin = Vector(renderView.origin.x, renderView.origin.y, renderView.origin.z),
+			angles = Angle(renderView.angles.p, renderView.angles.y, renderView.angles.r),
+			inverted = invert
+		}
+	end
 	if mapswithfog[map] then
 		renderView.zfar = zfar
 	end

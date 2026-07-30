@@ -288,7 +288,7 @@ hg.attachments.sight = {
 		"sight",
 		"models/weapons/arc9/darsu_eft/mods/scope_base_trijicon_rmr.mdl",
 		Angle(0, 0, -90),
-		offset = Vector(-1, 1, -0.05),
+		offset = Vector(-1, 1, 0.35),
 		offsetView = Vector(-0.55, 0, 10),
 		{},
 		mountType = "pistolmount",
@@ -299,6 +299,10 @@ hg.attachments.sight = {
 		PhysModel = "models/hunter/plates/plate025.mdl",
 		PhysPos = Vector(0, 0, 0),
 		PhysAng = Angle(0, 90, 0),
+
+		mount = "models/weapons/mods/mount_all_trijicon_rm33.mdl",
+		mountVec = Vector(-0, 0, -0.2),
+		mountAng = Angle(0, 0, 0),
 
 		transformFunction = function(self,model,vecadd,ang) -- in transformfunction
 			if self.availableAttachments.sight.mountBone then return end
@@ -334,7 +338,7 @@ hg.attachments.sight = {
 		"models/weapons/arc9/darsu_eft/mods/scope_fullfield_tac30.mdl",
 		Angle(0, 0, -90),
 		offset = Vector(2, 1.5, -0.025),
-		offsetView = Vector(0, 0, 12),
+		offsetView = Vector(0, 0, 13),
 		{},
 		mountType = "picatinny",
 		scopemat = Material("decals/scope.png"),
@@ -349,6 +353,7 @@ hg.attachments.sight = {
 		blackoutsize = 4000,
 		sizeperekrestie = 2200,
 		perekrestieSize = true,
+		stableReticle = true,
 		mount = "models/weapons/arc9/darsu_eft/mods/mount_all_geissele_super_precision.mdl",
 		mountVec = Vector(-3, 0, -1.5),
 		mountAng = Angle(0, 0, 0),
@@ -372,7 +377,7 @@ hg.attachments.sight = {
 		"models/weapons/arc9/darsu_eft/mods/scope_all_valday_ps320.mdl",
 		Angle(0, 0, -90),
 		offset = Vector(-1, 0, -0.02),
-		offsetView = Vector(-1.5, 0, 7),
+		offsetView = Vector(-1.5, 0, 8.5),
 		{},
 		mountType = "picatinny",
 		scopemat = Material("decals/scope.png"),
@@ -390,6 +395,7 @@ hg.attachments.sight = {
 		PhysPos = Vector(1, 0, 0),
 		PhysAng = Angle(0, 90, 0),
 		perekrestieSize = false,
+		stableReticle = true,
 
 		drawFunction = function(self,model) -- in swep:drawattachment
 		end,
@@ -426,6 +432,7 @@ hg.attachments.sight = {
 		PhysAng = Angle(0, 90, 0),
 
 		perekrestieSize = true,
+		stableReticle = true,
 
 		drawFunction = function(self,model) -- in swep:drawattachment
 		end,
@@ -458,6 +465,7 @@ hg.attachments.sight = {
 		blackoutsize = 3700,
 		sizeperekrestie = 3200,
 		perekrestieSize = true,
+		stableReticle = false,
 		mount = "models/weapons/arc9/darsu_eft/mods/mount_all_geissele_super_precision.mdl",
 		mountVec = Vector(-3, 0, -1.6),
 		mountAng = Angle(0, 0, 0),
@@ -496,6 +504,7 @@ hg.attachments.sight = {
 		blackoutsize = 3800,
 		sizeperekrestie = 2000,
 		perekrestieSize = false,
+		stableReticle = true,
 		mount = "models/weapons/arc9/darsu_eft/mods/mount_all_lobaev_dvl.mdl",
 		mountVec = Vector(-1.8, 0, -1.5),
 		mountAng = Angle(0, 0, 0),
@@ -519,7 +528,7 @@ hg.attachments.sight = {
 		"models/weapons/arc9/darsu_eft/mods/scope_sig_bravo4.mdl",
 		Angle(0, 0, -90),
 		offset = Vector(0, 0, -0.02),
-		offsetView = Vector(-1.35, 0, 8),
+		offsetView = Vector(-1.35, 0, 9),
 		{},
 		mountType = "picatinny",
 		scopemat = Material("decals/scope.png"),
@@ -534,6 +543,7 @@ hg.attachments.sight = {
 		blackoutsize = 4500,
 		sizeperekrestie = 2100,
 		perekrestieSize = true,
+		stableReticle = true,
 		PhysModel = "models/hunter/plates/plate025.mdl",
 		PhysPos = Vector(1, 0, 0),
 		PhysAng = Angle(0, 90, 0),
@@ -554,7 +564,7 @@ hg.attachments.sight = {
 		"models/weapons/arc9/darsu_eft/mods/scope_leupold_mark4_hamr.mdl",
 		Angle(0, 0, -90),
 		offset = Vector(0, 0, -0.025),
-		offsetView = Vector(-1.65, 0, 7),
+		offsetView = Vector(-1.65, 0, 8),
 		{},
 		mountType = "picatinny",
 		scopemat = Material("decals/scope.png"),
@@ -569,6 +579,7 @@ hg.attachments.sight = {
 		blackoutsize = 4000,
 		sizeperekrestie = 2500,
 		perekrestieSize = false,
+		stableReticle = true,
 		PhysModel = "models/hunter/plates/plate025.mdl",
 		PhysPos = Vector(1, 0, 0),
 		PhysAng = Angle(0, 90, 0),
@@ -675,7 +686,7 @@ hg.attachments.sight = {
 		"models/weapons/arc9_eft_shared/atts/scope/eft_scope_ta01.mdl",
 		Angle(0, 0, -90),
 		offset = Vector(0, 0.3, -0.03),
-		offsetView = Vector(-1.35, 0, 8),
+		offsetView = Vector(-1.35, 0, 9),
 		{},
 		mountType = "picatinny",
 		scopemat = Material("decals/scope.png"),
@@ -690,6 +701,7 @@ hg.attachments.sight = {
 		blackoutsize = 4700,
 		sizeperekrestie = 4500,
 		perekrestieSize = true,
+		stableReticle = true,
 
 		mount = "models/weapons/arc9/darsu_eft/mods/mount_vulcan_gen3.mdl",
 		mountVec = Vector(-0.9, 0, -0.3),
@@ -729,6 +741,7 @@ hg.attachments.sight = {
 		FOVScoped = 40,
 		blackoutsize = 4200,
 		sizeperekrestie = 2000,
+		stableReticle = true,
 		PhysModel = "models/hunter/plates/plate025.mdl",
 		PhysPos = Vector(1, 0, 0),
 		PhysAng = Angle(0, 90, 0),
@@ -765,6 +778,7 @@ hg.attachments.sight = {
 		blackoutsize = 3500,
 		sizeperekrestie = 5000,
 		perekrestieSize = false,
+		stableReticle = true,
 
 		mount = "models/weapons/arc9_eft_shared/atts/mounts/mount_dovetail_sag_bit_bracket.mdl",
 		mountVec = Vector(-2, 1, -1.5),
@@ -833,6 +847,7 @@ hg.attachments.sight = {
 		blackoutsize = 2200,
 		sizeperekrestie = 6000,
 		perekrestieSize = true,
+		stableReticle = true,
 
 		drawFunction = function(self,model) -- in swep:drawattachment
 			if not model.submated then
@@ -853,7 +868,7 @@ hg.attachments.sight = {
 		"models/weapons/mods/scope_elcan_specter.mdl",
 		Angle(0, 0, -90),
 		offset = Vector(0, -0.25, -0.04),
-		offsetView = Vector(-1.65, 0, 7),
+		offsetView = Vector(-1.65, 0, 8),
 		{},
 		mountType = "picatinny",
 		scopemat = Material("decals/scope.png"),
@@ -868,6 +883,7 @@ hg.attachments.sight = {
 		blackoutsize = 4500,
 		sizeperekrestie = 4500,
 		perekrestieSize = false,
+		stableReticle = true,
 		PhysModel = "models/hunter/plates/plate025.mdl",
 		PhysPos = Vector(1, 0, 0),
 		PhysAng = Angle(0, 90, 0),
@@ -903,6 +919,7 @@ hg.attachments.sight = {
 		blackoutsize = 4000,
 		sizeperekrestie = 1600,
 		perekrestieSize = false,
+		stableReticle = true,
 		thermal = true,
 		mount = "models/weapons/mods/mount_reapir.mdl",
 		mountVec = Vector(-0, 0, 0),
@@ -993,6 +1010,7 @@ hg.attachments.sight = {
 		blackoutsize = 4500,
 		sizeperekrestie = 3000,
 		perekrestieSize = false,
+		stableReticle = true,
 		PhysModel = "models/hunter/plates/plate025.mdl",
 		PhysPos = Vector(1, 0, 0),
 		PhysAng = Angle(0, 90, 0),
@@ -1106,6 +1124,7 @@ hg.attachments.sight = {
 		blackoutsize = 4500,
 		sizeperekrestie = 4500,
 		perekrestieSize = false,
+		stableReticle = true,
 		mount = "models/weapons/mods/mount_all_jp_enterprises_ftsm.mdl",
 		mountVec = Vector(-1, 0, -1.4),
 		mountAng = Angle(0, 0, 0),
@@ -1245,27 +1264,149 @@ hg.attachments.sight = {
 		end,
 		valid = true,
 	},
+	["optic23"] = {
+		"sight",
+		"models/weapons/mods/scope_sig_tango6t.mdl",
+		Angle(0, 0, -90),
+		offset = Vector(3, 1.3, -0.04),
+		offsetView = Vector(0, 0, 13),
+		{},
+		mountType = "picatinny",
+		scopemat = Material("decals/scope.png"),
+		mat = Material("effects/arc9/rt"),
+		perekrestie = Material("vgui/arc9_eft_shared/reticles/scope_30mm_sig_tango6t_1_6x24_lod0_mark_6.png"),
+		localScopePos = Vector(12, 0, 0),
+		scope_blackout = 1200,
+		rot = 0,
+		FOVMin = 5,
+		FOVMax = 22,
+		FOVScoped = 40,
+		blackoutsize = 3600,
+		sizeperekrestie = 4500,
+		perekrestieSize = false,
+		stableReticle = true,
+		mount = "models/weapons/mods/mount_all_jp_enterprises_ftsm.mdl",
+		mountVec = Vector(-2.3, 0, -1.4),
+		mountAng = Angle(0, 0, 0),
+		PhysModel = "models/hunter/plates/plate025.mdl",
+		PhysPos = Vector(1, 0, 0),
+		PhysAng = Angle(0, 90, 0),
+		holo = Material("vgui/arc9_eft_shared/reticles/new/scope_base_trijicon_rmr_mark.png"),
+		holo_size = CLIENT and ScreenScale(0.4) or 1,
+		holomodel = "models/weapons/mods/scope_swampfox_justice.mdl",
+		addholovec = Vector(0.9, 0, 1),
+		addholoang = Angle(0, 0, 0),
+		addholoview = 1.7,
+
+		drawFunction = function(self, model)
+			model:SetSubMaterial(2, "hg/scope_lens")
+			if not IsValid(self) then return end
+
+			local inf = hg.attachments.sight["optic23"]
+			self.modelAtt["addholo23"] = IsValid(self.modelAtt["addholo23"]) and self.modelAtt["addholo23"] or ClientsideModel(inf.holomodel)
+			local addholo = self.modelAtt["addholo23"]
+			if not IsValid(addholo) then return end
+
+			addholo:DrawModel()
+			addholo:SetNoDraw(model:GetNoDraw())
+
+			local model2 = addholo.model
+			if not IsValid(model2) then
+				model2 = ClientsideModel(inf.holomodel)
+				if not IsValid(model2) then return end
+
+				model2:SetNoDraw(true)
+				addholo.model = model2
+				self.holomodels = self.holomodels or {}
+				local holomodels = self.holomodels
+				holomodels[model2] = true
+
+				model:CallOnRemove("removeoptic23holo", function()
+					holomodels[model2] = nil
+					if IsValid(model2) then model2:Remove() end
+				end)
+			end
+
+			if not addholo.submat then
+				addholo:SetSubMaterial(0, "")
+				addholo:SetSubMaterial(1, "null")
+				model2:SetSubMaterial(0, "null")
+				model2:SetSubMaterial(1, "white")
+				addholo.submat = true
+			end
+		end,
+
+		sightFunction = function(self)
+			self:DoRT()
+		end,
+
+		viewFunction = function(self, model, pos)
+			if self:KeyDown(IN_ATTACK2) then
+				local owner = self:GetOwner()
+				local switchKey = IsValid(owner.FakeRagdoll) and self:KeyDown(IN_JUMP) or self:KeyDown(IN_USE)
+				if switchKey then
+					if not self.keypr then
+						self.viewmode1 = not self.viewmode1
+						self.keypr = true
+						self:EmitSound("universal/uni_lean_" .. (self.viewmode1 and "in" or "out") .. "_0" .. math.random(4) .. ".wav", 35, math.random(95, 105))
+					end
+				else
+					self.keypr = false
+				end
+			end
+
+			local inf = hg.attachments.sight["optic23"]
+			self.upview = Lerp(FrameTime() * (self.viewmode1 and 12 or 4), self.upview or 0, self.viewmode1 and inf.addholoview or 0)
+			return pos + model:GetAngles():Up() * self.upview
+		end,
+
+		transformFunction = function(self, model, vecadd, ang)
+			if not IsValid(self) then return end
+
+			local inf = hg.attachments.sight["optic23"]
+			self.modelAtt["addholo23"] = IsValid(self.modelAtt["addholo23"]) and self.modelAtt["addholo23"] or ClientsideModel(inf.holomodel)
+			local addholo = self.modelAtt["addholo23"]
+			if not IsValid(addholo) then return end
+
+			local pos, holoang = LocalToWorld(inf.addholovec, inf.addholoang, vecadd, ang)
+			addholo:SetRenderOrigin(pos)
+			addholo:SetRenderAngles(holoang)
+			addholo:SetModelScale(1.2)
+			addholo:SetupBones()
+
+			if IsValid(addholo.model) then
+				addholo.model:SetRenderOrigin(pos)
+				addholo.model:SetRenderAngles(holoang)
+				addholo.model:SetModelScale(1.2)
+				addholo.model:SetupBones()
+			end
+		end,
+		valid = true,
+	},
 	["holo21"] = {
 		"sight",
 		"models/weapons/mods/scope_trijicon_sro.mdl",
 		Angle(0, 0, -90),
-		offset = Vector(-3.1, -0.3, -0.05),
+		offset = Vector(-1.5, 0, -0.05),
 		offsetView = Vector(-0.8, 0, 8),
 		{},
 		mountType = "picatinny",
 		holotex = "models/weapons/arc9_eft_shared/atts/optic/transparent_glass",
-		holo = Material("vgui/arc9_eft_shared/reticles/new/scope_base_sig_romeo_4_mark.png"),
-		holo_size = CLIENT and ScreenScale(0.8) or 1,
+		holo = Material("vgui/arc9_eft_shared/reticles/new/scope_base_aimpoint_acro_p1_mark.png"),
+		holo_size = CLIENT and ScreenScale(0.3) or 1,
 		PhysModel = "models/hunter/plates/plate025.mdl",
 		PhysPos = Vector(0, 0, 0),
 		PhysAng = Angle(0, 90, 0),
+		mount = "models/weapons/mods/mount_all_trijicon_rm33.mdl",
+		mountVec = Vector(-0, 0, -0),
+		mountAng = Angle(0, 0, 0),
 		valid = true,
 	},
 	["holo22"] = {
 		"sight",
 		"models/weapons/mods/scope_swampfox_justice.mdl",
 		Angle(0, 0, -90),
-			offset = Vector(-3.1, -0.25, -0.05),	
+			offset = Vector(-1.5, -0, -0.05),	
 		offsetView = Vector(-0.7, 0, 8),
 		{},
 		mountType = "picatinny",
@@ -1275,6 +1416,9 @@ hg.attachments.sight = {
 		PhysModel = "models/hunter/plates/plate025.mdl",
 		PhysPos = Vector(0, 0, 0),
 		PhysAng = Angle(0, 90, 0),
+		mount = "models/weapons/mods/mount_all_trijicon_rm33.mdl",
+		mountVec = Vector(-0, 0, -0),
+		mountAng = Angle(0, 0, 0),
 		valid = true,
 	},
 	["optic22"] = {
@@ -2043,12 +2187,94 @@ hg.attachments.underbarrel = {
 hg.attachments.magwell = {
 	["mag1"] = {
 		"magwell",
-		"models/weapons/arc9/darsu_eft/mods/mag_glock_drum_50.mdl",
-		Angle(180, 180, 90),
+		"models/weapons/mods/mag_glock_drum_50.mdl",
+		Angle(0, -90, 0),
 		{},
-		offsetPos = Vector(0, 0, 0),
+		mountType = "glock_mag",
 		capacity = 50,
 		ammotype = "9x19 mm Parabellum",
+		reload = "reload3",
+		reload_empty = "reload_empty3_0",
+		weaponManagedModel = true,
+		valid = true,
+	},
+	["mag2"] = {
+		"magwell",
+		"models/weapons/mods/mag_stanag_magpul_pmag_d-60_556x45_60.mdl",
+		Angle(0, -90, 0),
+		{},
+		mountType = "stanag_556_60",
+		capacity = 60,
+		ammotype = "5.56x45 mm",
+		reload = "reload5",
+		reload_empty = "reload_empty5",
+		weaponManagedModel = true,
+		valid = true,
+	},
+	["mag3"] = {
+		"magwell",
+		"models/weapons/mods/mag_ak74_izhmash_6l31_545x39_60.mdl",
+		Angle(0, 0, 0),
+		{},
+		mountType = "ak_545_60",
+		capacity = 60,
+		ammotype = "5.45x39 mm",
+		reload = "reload60rnd",
+		reload_empty = "reload60rnd_empty",
+		weaponManagedModel = true,
+		valid = true,
+	},
+	["mag4"] = {
+		"magwell",
+		"models/weapons/mods/mag_ak_izhmash_rpk16_drum_545x39_95.mdl",
+		Angle(0, 0, 0),
+		{},
+		mountType = "ak_545",
+		capacity = 95,
+		ammotype = "5.45x39 mm",
+		reload = "reloadbigdrum",
+		reload_empty = "reloadbigdrum_empty",
+		weaponManagedModel = true,
+		valid = true,
+	},
+	["mag5"] = {
+		"magwell",
+		"models/weapons/mods/mag_ak_x_products_x_47_drum_762x39_50.mdl",
+		Angle(0, 0, 0),
+		{},
+		mountType = "ak_762",
+		capacity = 50,
+		ammotype = "7.62x39 mm",
+		reload = "reloadsmalldrum",
+		reload_empty = "reloadsmalldrum_empty",
+		weaponManagedModel = true,
+		valid = true,
+	},
+	["mag6"] = {
+		"magwell",
+		"models/weapons/mods/mag_ak_molot_rpk_drum_762x39_75.mdl",
+		Angle(0, 0, 0),
+		{},
+		mountType = "ak_762_75",
+		capacity = 75,
+		ammotype = "7.62x39 mm",
+		reload = "reloadbigdrum",
+		reload_empty = "reloadbigdrum_empty",
+		weaponManagedModel = true,
+		valid = true,
+	},
+	["mag7"] = {
+		"magwell",
+		"models/weapons/mods/mag_stanag_beta_c_mag_556x45_100.mdl",
+		Angle(0, -90, 0),
+		{},
+		mountType = "stanag_556_100",
+		capacity = 100,
+		ammotype = "5.56x45 mm",
+		reload = "reload7",
+		reload_empty = "reload_empty7_l",
+		weaponManagedModel = true,
+		valid = true,
 	},
 }
 hg.attachments.agsmag = {
@@ -2136,6 +2362,7 @@ local attNames = {
 	["optic19"] = "Nightforce ATACR 7-35x56",
 	["optic21"] = "Schmidt & Bender PM II 1-8x24",
 	["optic22"] = "Armasight Vulcan MG35x NV",
+	["optic23"] = "SIG Sauer TANGO6T 1-6x24",
 
 	-- Iron sights
 	["ironsight1"] = "MBUS backiron and foreiron",
@@ -2169,7 +2396,13 @@ local attNames = {
 	["grip_akdong"] = "AK-74 Dong Grip",
 
 	-- Magazines
-	["mag1"] = "Rounded mag Glock18 32 Bullets",
+	["mag1"] = "Glock 9x19 50-round drum",
+	["mag2"] = "Magpul PMAG D-60 5.56x45 60-round drum",
+	["mag3"] = "Izhmash 6L31 5.45x39 60-round magazine",
+	["mag4"] = "Izhmash RPK-16 5.45x39 95-round drum",
+	["mag5"] = "X Products X-47 7.62x39 50-round drum",
+	["mag6"] = "Molot RPK 7.62x39 75-round drum",
+	["mag7"] = "Beta C-Mag 5.56x45 100-round drum",
 }
 
 local attachmentsIcons = {
@@ -2200,7 +2433,7 @@ local attachmentsIcons = {
 
 	-- Holographic sights
 	["holo1"] = "vgui/icons/sights_eotech",
-	["holo2"] = "entities/kobra.png",
+	["holo2"] = "entities/cobra1.png",
 	["holo3"] = "entities/eft_attachments/scopes/romeo8t.png",
 	["holo4"] = "entities/eft_attachments/scopes/mrs.png",
 	["holo5"] = "entities/eft_attachments/scopes/okp7.png",
@@ -2243,6 +2476,7 @@ local attachmentsIcons = {
 	["optic19"] = "entities/30mmmarch.png",
 	["optic21"] = "entities/34mmpmii312x50.png",
 	["optic22"] = "entities/vulcan.png",
+	["optic23"] = "entities/tango.png",
 
 	-- Iron sights
 	["ironsight1"] = "entities/eft_attachments/ironsights/mbus.png",
@@ -2257,7 +2491,7 @@ local attachmentsIcons = {
 	-- Grips
 	["grip1"] = "entities/eft_attachments/foregrips/rk2.png",
 	["grip2"] = "entities/eft_attachments/foregrips/ash12.png",
-	["grip3"] = "entities/afg.png",
+	["grip3"] = "entities/mlokafg.png",
 	["grip4"] = "entities/kac.png",
 	["grip5"] = "entities/mlokafg.png",
 	["grip6"] = "entities/rvg.png",
@@ -2265,14 +2499,21 @@ local attachmentsIcons = {
 	["grip8"] = "entities/rk5.png",
 	["grip9"] = "entities/rtm.png",
 	["grip11"] = "entities/oso.png",
-	["grip12"] = "entities/.png",
+	["grip12"] = "entities/uvg.png",
 	["grip13"] = "entities/cqr.png",
 	["grip14"] = "entities/b25u.png",
 	["grip15"] = "entities/se5.png",
 	["grip_akdong"] = "entities/ak74hg.png",
 
 	-- Magazines
-	["mag1"] = "entities/eft_attachments/mags/eft_mag_drum545.png",
+	["mag1"] = "entities/drum.png",
+	["mag2"] = "entities/556x45_magpul_pmag_d60_stanag_60round_magazine.png",
+	["mag3"] = "entities/5456l31.png",
+	["mag4"] = "entities/545drum.png",
+	["mag5"] = "entities/762x47.png",
+	["mag6"] = "entities/762molot75.png",
+	["mag7"] = "entities/balls.png",
+	["mag8"] = "entities/eft_mag_drum545.png",
 }
 
 local attCategoryNames = {
