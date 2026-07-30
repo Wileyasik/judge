@@ -548,15 +548,16 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		return
 	end
 
-	if owner:IsPlayer() and not owner:Alive() then return end
-
 	local isPly = owner:IsPlayer()
+	local alive = owner:Alive()
+	if isPly and not alive then return end
+	local curTime = CurTime()
 
 	org.isPly = isPly
 
 	if isPly or org.fakePlayer then
 		if not org.fakePlayer then
-			org.alive = owner:Alive()
+			org.alive = alive
 		end
 	else
 		org.alive = false
@@ -621,7 +622,7 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 			org.furryinfected = false
 		end
 	else
-		if (org.lightstun - CurTime()) <= 0 then
+		if (org.lightstun - curTime) <= 0 then
 			org.assimilated = math.Approach(org.assimilated, 0, (timeValue / 60 * org.pulse / 70) * 6)
 		end
 	end
@@ -644,7 +645,7 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	if org.berserk > 0 and !org.berserkActive then
 		org.berserkActive = true
 
-		owner.lastBerserkLaughSoundCD = CurTime() + 5
+		owner.lastBerserkLaughSoundCD = curTime + 5
 
 		timer.Simple(3.95, function()
 			org.berserkActive2 = true
@@ -670,8 +671,8 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		org.disorientation = math.max(org.disorientation, 0.6 + panicattack_disorientation * org.panicattack)
 		org.adrenalineAdd = math.Approach(org.adrenalineAdd or 0, math.Remap(org.panicattack, panicattack_threshold, 1, panicattack_adrenaline_add_target * 0.5, panicattack_adrenaline_add_target), timeValue / panicattack_adrenaline_add_rise_time)
 
-		if isPly and CurTime() >= (org.nextPanicHeartRoll or 0) then
-			org.nextPanicHeartRoll = CurTime() + panicattack_heart_roll_delay
+		if isPly and curTime >= (org.nextPanicHeartRoll or 0) then
+			org.nextPanicHeartRoll = curTime + panicattack_heart_roll_delay
 			if math.random(100) <= panicattack_heart_roll_chance then
 				org.heartstop = true
 				owner:Notify("My heart just stopped.", 2, "panicattack_heartstop", 2, nil, Color(255, 120, 120))
@@ -679,7 +680,7 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		end
 	else
 		org.panicattackActive = false
-		org.nextPanicHeartRoll = CurTime() + panicattack_heart_roll_delay
+		org.nextPanicHeartRoll = curTime + panicattack_heart_roll_delay
 	end
 
 	local brainDelta = (org.brain or 0) - oldSeizureBrain
@@ -702,7 +703,6 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		hg.organism.AddSeizure(org, timeValue * temperatureStress * seizure_temperature_gain_mul)
 	end
 
-	local curTime = CurTime()
 	local seizureBrainDamage = math.max(org.brain or 0, lobeDamage)
 	if seizureBrainDamage > 0.05 then
 		org.nextSeizureRoll = org.nextSeizureRoll or (curTime + seizure_brain_roll_delay)
@@ -800,7 +800,7 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	org.canmove = (org.spine2 < hg.organism.fake_spine2 and org.spine3 < hg.organism.fake_spine3) and not org.otrub
 	org.canmovehead = (org.spine3 < hg.organism.fake_spine3) and not org.otrub
 	
-	if not (org.canmove and org.canmovehead and (org.stun - CurTime()) < 0) then org.needfake = true end
+	if not (org.canmove and org.canmovehead and (org.stun - curTime) < 0) then org.needfake = true end
 	if (org.blood < 2700) then org.needfake = true end
 
 	local just_went_uncon = not org.otrub and org.needotrub
@@ -835,10 +835,10 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	end
 
 	if isPly and org.otrub and org.incapacitated then
-		org.deathStateEnd = org.deathStateEnd or CurTime() + 25
-		if (org.defibDeathGrace or 0) > CurTime() then org.deathStateEnd = org.defibDeathGrace end
+		org.deathStateEnd = org.deathStateEnd or curTime + 25
+		if (org.defibDeathGrace or 0) > curTime then org.deathStateEnd = org.defibDeathGrace end
 
-		if CurTime() >= org.deathStateEnd and not org.deathStateKilled then
+		if curTime >= org.deathStateEnd and not org.deathStateKilled then
 			org.deathStateKilled = true
 			owner:Kill()
 			return
@@ -905,12 +905,12 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		org.heartstop = true
 	end
 
-	time = CurTime()
+	time = curTime
 
 	if IsValid(owner) then
-		org.sendPlyTime = org.sendPlyTime or CurTime()
+		org.sendPlyTime = org.sendPlyTime or curTime
 		if (org.sendPlyTime > time) and !just_went_uncon then return end
-		org.sendPlyTime = CurTime() + 1 + (not isPly and 2 or 0)
+		org.sendPlyTime = curTime + 1 + (not isPly and 2 or 0)
 		send_bareinfo(org)
 
 		local woundsSig = wounds_signature(org.wounds)
@@ -925,7 +925,7 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 			org.owner:SetNetVar("arterialwounds", org.arterialwounds)
 		end
 
-		if isPly and owner:Alive() then
+		if isPly and alive then
 			send_organism(org, owner)
 		end
 	end

@@ -310,7 +310,7 @@ function zb:Think(time)
 	zb:EndRoundThink()
 end
 
-hook.Add("Think", "zb-think", function() zb:Think(CurTime()) end)
+timer.Create("zb-think", 1, 0, function() zb:Think(CurTime()) end)
 
 function zb:KillPlayers()
 	local mode = CurrentRound()

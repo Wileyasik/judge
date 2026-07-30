@@ -432,21 +432,27 @@ end
 hook.Add("Player Think", "loot-fellows",function(ply)
     if not ply:Alive() then return end
     ply.keypressed = ply.keypressed or false
-    --if not ply:GetLookTrace() then return end
-    local wep = ply:GetActiveWeapon()
 
-    local use = IsValid(ply.FakeRagdoll) and (ply:KeyDown(IN_WALK) and ply:KeyDown(IN_SPEED) and not ply:KeyDown(IN_ATTACK) and not ply:KeyDown(IN_ATTACK2)) or (not IsValid(ply.FakeRagdoll) and (ply:KeyDown(IN_ATTACK2) and ply:KeyDown(IN_USE)))
-    if use and not IsValid(ply.FakeRagdoll) and IsValid(wep) and wep.GetFists and wep:GetFists() then
+    local fakeRagdoll = IsValid(ply.FakeRagdoll)
+    local use = fakeRagdoll and (ply:KeyDown(IN_WALK) and ply:KeyDown(IN_SPEED) and not ply:KeyDown(IN_ATTACK) and not ply:KeyDown(IN_ATTACK2)) or (not fakeRagdoll and (ply:KeyDown(IN_ATTACK2) and ply:KeyDown(IN_USE)))
+    if not use then
         ply.keypressed = false
         return
     end
+
+    if not fakeRagdoll then
+        local wep = ply:GetActiveWeapon()
+        if IsValid(wep) and wep.GetFists and wep:GetFists() then
+            ply.keypressed = false
+            return
+        end
+    end
+
+    local trace = hg.eyeTrace(ply, 60)
     
-    if use then
-        local trace = hg.eyeTrace(ply, 60)
-    
-        if not trace then return end
-        local ent = trace.Entity
-        ent = IsValid(hg.RagdollOwner(ent)) and hg.RagdollOwner(ent) or ent
+    if not trace then return end
+    local ent = trace.Entity
+    ent = IsValid(hg.RagdollOwner(ent)) and hg.RagdollOwner(ent) or ent
 		if IsValid(ent) and ent:IsPlayer() and ent ~= ply and ent:Alive() and ent.organism and not ent.organism.otrub then
 			if not ply.keypressed then ply:ChatPrint("You cant loot them, they are awake.") end
 			ply.keypressed = true
@@ -465,9 +471,6 @@ hook.Add("Player Think", "loot-fellows",function(ply)
         if not ply.keypressed then ply:OpenInventory(ent) end
         
         ply.keypressed = true
-    else
-        ply.keypressed = false
-    end
 end)
 
 --// Prop inventory example

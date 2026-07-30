@@ -52,17 +52,19 @@ local clr_red, lerpAng = Color(150, 0, 0), Angle(0, 0, 0)
 hook.Add("Org Think", "Headcrab",function(owner, org, timeValue)
     if not IsValid(owner) then return end
     if not owner:IsPlayer() or not owner:Alive() then return end
+    if not org.headcrabon then return end
 
-    if org.headcrabon and (org.headcrabon + 30) < CurTime() and org.brain != 1 and owner.organism.spine3 != 1 then
+    local curTime = CurTime()
+
+	if (org.headcrabon + 30) < curTime and org.brain != 1 and owner.organism.spine3 != 1 then
 		local ent = hg.GetCurrentCharacter(owner) or owner
-		local mul = ((org.headcrabon + 60) - CurTime()) / 60
+		local mul = ((org.headcrabon + 60) - curTime) / 60
 		if mul > 0 then
 			ent:GetPhysicsObjectNum(math.random(ent:GetPhysicsObjectCount()) - 1):ApplyForceCenter(VectorRand(-750 * mul,750 * mul))
 		end
 	end
 
-    if owner:IsPlayer() then
-		if org.headcrabon then
+	if owner:IsPlayer() then
 			owner.noHead = true
 			owner:SetNWString("PlayerName", "Body with headcrab")
 			org.brain = 0.3
@@ -73,7 +75,7 @@ hook.Add("Org Think", "Headcrab",function(owner, org, timeValue)
 				owner:SetEyeAngles(owner:EyeAngles() + lerpAng)
 			end
 
-			if (org.headcrabon + 60) < CurTime() and org.alive and not org.headcrabevent then
+			if (org.headcrabon + 60) < curTime and org.alive and not org.headcrabevent then
 				owner:EmitSound("npc/zombie/zombie_alert" .. math.random(3) .. ".wav", 80, math.random(60, 70))
 				owner:EmitSound("neck_snap_01.wav", 80, 80, 1, CHAN_AUTO)
 				owner:SetPlayerClass("headcrabzombie")
@@ -92,17 +94,16 @@ hook.Add("Org Think", "Headcrab",function(owner, org, timeValue)
 				hg.FakeUp(owner, true)
 				owner:SetNetVar("headcrab", false)
 			end
-		end
 
-        if org.alive and org.headcrabon and (org.headcrabon + 20) < CurTime() then
-			if (org.headcrabon + 30) > CurTime() then
+        if org.alive and org.headcrabon and (org.headcrabon + 20) < curTime then
+			if (org.headcrabon + 30) > curTime then
 				owner:EmitSound("npc/zombie/zombie_pain"..math.random(6)..".wav", 80, math.random(80, 90))
 				org.painadd = org.painadd + 15
 				hg.StunPlayer(owner, 5)
 			end
 		end
 
-        if org.alive and org.headcrabon and (org.headcrabon + 60) < CurTime() then
+        if org.alive and org.headcrabon and (org.headcrabon + 60) < curTime then
 			owner:SetNWString("PlayerName", "Body with headcrab")
 			org.alive = false
 		end

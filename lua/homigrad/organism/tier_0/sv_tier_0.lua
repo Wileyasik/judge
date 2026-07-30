@@ -58,7 +58,7 @@ local delay = 0
 local time, mulTime, start
 local CurTime = CurTime
 local SysTime = SysTime
-hook.Add("Think", "homigrad-organism", function()
+timer.Create("homigrad-organism", tickrate, 0, function()
 	time = CurTime()
 	local tickrate2 = tickrate// / math.max(game.GetTimeScale(), 0.01)
 	//print(delay ,time + tickrate)
@@ -71,9 +71,10 @@ hook.Add("Think", "homigrad-organism", function()
 		return
 	end
 	
-	mulTime = (SysTime() - start) * game.GetTimeScale()
+	local sysTime = SysTime()
+	mulTime = (sysTime - start) * game.GetTimeScale()
 
-	start = SysTime()
+	start = sysTime
 	for owner, org in pairs(hg.organism.list) do -- теперь ясно почему от трупов лагает...
 		if org.godmode then continue end
 		hook_Run("Org Think", owner, org, mulTime)
@@ -82,8 +83,9 @@ end)
 
 local lastcall = SysTime()
 hook.Add("Org Think Call", "homigrad-organism", function(owner, org)
-	if (SysTime() - lastcall) < tickrate then return end
-	lastcall = SysTime()
+	local sysTime = SysTime()
+	if (sysTime - lastcall) < tickrate then return end
+	lastcall = sysTime
 	hook_Run("Org Think", owner, org, 0.00001)
 end)
 

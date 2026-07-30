@@ -71,10 +71,11 @@ end
 hook.Add("Org Think", "VirusRandomEvents", function(owner, org, timeValue)
     if not owner:IsPlayer() or not owner:Alive() then return end
     if owner:IsPlayer() and owner.Virus and owner.Virus.Infected and (owner.Virus.Stage == 1 or owner.Virus.Stage == 2) then
-        if not owner.NextVirusRandomEventTime or CurTime() >= owner.NextVirusRandomEventTime then
+        local curTime = CurTime()
+        if not owner.NextVirusRandomEventTime or curTime >= owner.NextVirusRandomEventTime then
             local event = math.random(1, 2) == 1 and "Cough" or "Sneeze"
             module.TriggerRandomEvent(owner, event)
-            owner.NextVirusRandomEventTime = CurTime() + math.random(10, 15)
+            owner.NextVirusRandomEventTime = curTime + math.random(10, 15)
         end
     end
 end)
@@ -82,10 +83,11 @@ end)
 hook.Add("Org Think", "TemperatureSounds", function(owner, org, timeValue) -- добавил звуки при низкой температуре Ж))
     if not owner:IsPlayer() or not owner:Alive() or org.otrub then return end
     if owner:IsPlayer() and org.temperature > 24 and org.temperature < 35 then
-        if not owner.ColdRandomEventTime or CurTime() >= owner.ColdRandomEventTime then
+        local curTime = CurTime()
+        if not owner.ColdRandomEventTime or curTime >= owner.ColdRandomEventTime then
             local event = math.random(1, 2) == 1 and "Cough" or "Sneeze"
             module.TriggerRandomEvent(owner, event)
-            owner.ColdRandomEventTime = CurTime() + math.random(math.Remap(org.temperature, 35, 24, 60, 15), math.Remap(org.temperature, 35, 24, 120, 30))
+            owner.ColdRandomEventTime = curTime + math.random(math.Remap(org.temperature, 35, 24, 60, 15), math.Remap(org.temperature, 35, 24, 120, 30))
         end
     end
 end)
