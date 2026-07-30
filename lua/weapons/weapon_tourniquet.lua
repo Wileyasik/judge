@@ -22,7 +22,16 @@ if CLIENT then
 		surface.SetDrawColor( 255, 255, 255, alpha )
 		surface.SetMaterial( self.WepSelectIcon2 )
 	
-		surface.DrawTexturedRect( x, y + 10,  wide, wide/2 )
+		local maxWide = wide
+		local maxTall = wide / 2
+		local iconWide = self.WepSelectIcon2:Width()
+		local iconTall = self.WepSelectIcon2:Height()
+		if iconWide <= 0 or iconTall <= 0 then return end
+		local scale = math.min(maxWide / iconWide, maxTall / iconTall)
+		local drawWide = iconWide * scale
+		local drawTall = iconTall * scale
+
+		surface.DrawTexturedRect( x + (maxWide - drawWide) / 2, y + 10 + (maxTall - drawTall) / 2, drawWide, drawTall )
 	
 		self:PrintWeaponInfo( x + wide + 20, y + tall * 0.95, alpha )
 	

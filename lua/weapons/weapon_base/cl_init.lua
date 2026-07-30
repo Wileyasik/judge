@@ -53,8 +53,22 @@ function SWEP:DrawWeaponSelection( x, y, wide, tall, alpha )
 	x = x + 10
 	wide = wide - 20
 
-	-- Draw that mother
-	surface.DrawTexturedRect( x + fsin, y - fsin,  wide - fsin * 2 , ( wide / 2 ) + fsin )
+	local maxWide = wide - fsin * 2
+	local maxTall = (wide / 2) + fsin
+	local iconWide, iconTall
+	if isnumber(self.WepSelectIcon) then
+		iconWide, iconTall = surface.GetTextureSize(self.WepSelectIcon)
+	else
+		iconWide = self.WepSelectIcon:Width()
+		iconTall = self.WepSelectIcon:Height()
+	end
+	if iconWide <= 0 or iconTall <= 0 then return end
+	local scale = math.min(maxWide / iconWide, maxTall / iconTall)
+	local drawWide = iconWide * scale
+	local drawTall = iconTall * scale
+
+	-- Keep the weapon icon's native aspect ratio inside the original drawing area.
+	surface.DrawTexturedRect( x + fsin + (maxWide - drawWide) / 2, y - fsin + (maxTall - drawTall) / 2, drawWide, drawTall )
 
 	-- Draw weapon info box
 	self:PrintWeaponInfo( x + wide + 20, y + tall * 0.95, alpha )
