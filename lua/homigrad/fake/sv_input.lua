@@ -7,6 +7,7 @@ concommand.Add("fake", function(ply)
 	--ply.fakecd = CurTime() + cooldown
 	ply._godFakeBypass = true
 	if not IsValid(ply.FakeRagdoll) then
+		if hook.Run("CanPlayerFake", ply) == false then ply._godFakeBypass = nil return end
 		hg.Fake(ply)
 	else
 		hg.FakeUp(ply)
