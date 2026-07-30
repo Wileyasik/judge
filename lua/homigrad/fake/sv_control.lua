@@ -317,6 +317,13 @@ hook.Add("Fake", "Contorl", function(ply, ragdoll)
 	if ply.otrubCollapseStart then
 		ragdoll.otrubCollapseStart = ply.otrubCollapseStart
 	end
+
+	hg.ClearRagdollSlideState(ragdoll)
+
+	local plyVel = ply:GetVelocity()
+	ragdoll._slideEntrySpeed = Vector(plyVel.x, plyVel.y, 0):Length()
+	ragdoll._slideEntryDir = Vector(plyVel.x, plyVel.y, 0):GetNormalized()
+	ragdoll._slideEntryTime = CurTime()
 end)
 
 hook.Add("HG_OnOtrub", "OtrubCollapseStart", function(ply)
@@ -412,6 +419,7 @@ local models_female = {
 
 local vector_zero = Vector(0,0,0)
 local vector_usehull = Vector(6, 6, 6)
+local slideFrictionBones = {13, 14, 12, 9}
 local fall_cover_mins = Vector(-6, -6, -6)
 local fall_cover_maxs = Vector(6, 6, 6)
 local fall_cover_offsets = {
@@ -441,6 +449,39 @@ local speedupbones = {
 }
 
 local vecfive = Vector(5,5,5)
+
+local function restoreSlideMaterials(ragdoll)
+	if not ragdoll._slideMaterialSet then return end
+
+	for _, fNum in ipairs(slideFrictionBones) do
+		local phys = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, fNum))
+		if IsValid(phys) and ragdoll._origMaterials and ragdoll._origMaterials[fNum] then
+			phys:SetMaterial(ragdoll._origMaterials[fNum])
+		end
+	end
+
+	ragdoll._origMaterials = nil
+	ragdoll._slideMaterialSet = false
+end
+
+local function clearSlideState(ragdoll, cooldown)
+	restoreSlideMaterials(ragdoll)
+	ragdoll._slideActive = false
+	ragdoll._slideStartTime = nil
+	ragdoll._slideDir = nil
+	ragdoll.isSliding = false
+
+	if cooldown then
+		ragdoll._slideCooldown = CurTime() + cooldown
+	end
+end
+
+function hg.ClearRagdollSlideState(ragdoll)
+	if not IsValid(ragdoll) then return end
+	clearSlideState(ragdoll)
+	ragdoll._slideCooldown = nil
+	ragdoll.isDropkicking = false
+end
 
 local player_GetHumans = player.GetHumans
 
@@ -529,7 +570,7 @@ hook.Add("Think", "Fake", function()
 					local name = ragdoll:GetBoneName(bone)
 
 					if IsValid(physobj) then
-						local bone_impulse = ply.HitBones and ply.HitBones[bonename] or CurTime()
+						local bone_impulse = ply.HitBones and ply.HitBones[name] or CurTime()
 						local amt_impulse = (2 - math.Clamp(bone_impulse - CurTime(),0,2)) / 2
 						
 						local p = {}
@@ -1264,62 +1305,178 @@ hook.Add("Think", "Fake", function()
 
 		if ply:KeyDown(IN_DUCK) and !ply:InVehicle() then
 			if org.canmove and org.spine1 < hg.organism.fake_spine1 then
-				local head = ragdoll:GetPhysicsObject(ragdoll:TranslateBoneToPhysBone(ragdoll:LookupBone("ValveBiped.Bip01_Head1")))
-				local angle = -(-angles2)
-				angle:RotateAroundAxis(angle:Forward(), -90)
+				local lthigh = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, 11))
+				local rthigh = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, 8))
 
-				if ishgweapon(wep) then
-					angle:RotateAroundAxis(angle:Up(), -angle.p - 30)
-				end
+				if lthigh and rthigh then
+					local legAng1 = Angle(0, 0, 0)
+					local legAng2 = Angle(0, 0, 0)
 
-				if ply:KeyDown(IN_ATTACK2) and !ishgweapon(wep) then
-					angle:RotateAroundAxis(angle:Up(), 30)
-				end
+					legAng1:Set(angles)
+					legAng1:RotateAroundAxis(angles:Right(), 80)
+					legAng1:RotateAroundAxis(angles:Forward(), -40)
+					legAng1:RotateAroundAxis(angles:Up(), -70)
 
-				angle:RotateAroundAxis(angle:Right(), -15)
-				shadowControl(ragdoll, 8, 0.001, angle, 120, 30)
+					legAng2:Set(angles)
+					legAng2:RotateAroundAxis(angles:Right(), 65)
+					legAng2:RotateAroundAxis(angles:Forward(), -40)
+					legAng2:RotateAroundAxis(angles:Up(), -70)
 
-				if ply:KeyDown(IN_ATTACK2) and !ishgweapon(wep) then
-					angle:RotateAroundAxis(angle:Up(), -30)
-				end
+					shadowControl(ragdoll, 11, 0.001, legAng1, 200, 10)
+					shadowControl(ragdoll, 8, 0.001, legAng2, 200, 10)
 
-				if ply:KeyDown(IN_ATTACK) and !ishgweapon(wep) then
-					angle:RotateAroundAxis(angle:Up(), 30)
-				end
+					local calfAng1 = Angle(0, 0, 0)
+					local calfAng2 = Angle(0, 0, 0)
 
-				angle:RotateAroundAxis(angle:Right(), 30)
-				shadowControl(ragdoll, 11, 0.001, angle, 120, 30) -- ragdoll, physNumber, ss, ang, maxang, maxangdamp, pos, maxspeed, maxspeeddamp
+					calfAng1:Set(legAng1)
+					calfAng1:RotateAroundAxis(angles:Right(), -90)
 
-				if ply:KeyDown(IN_ATTACK) and !ishgweapon(wep) then
-					angle:RotateAroundAxis(angle:Up(), -30)
-				end
+					calfAng2:Set(legAng2)
+					calfAng2:RotateAroundAxis(angles:Right(), -90)
 
-				//if vellen < 200 then
-				if !ply:KeyDown(IN_ATTACK2) or ishgweapon(wep) then
-					angle:RotateAroundAxis(angle:Up(), 90)
-				end
-				shadowControl(ragdoll, 9, 0.001, angle, 120, 30)
-				if !ply:KeyDown(IN_ATTACK2) or ishgweapon(wep) then
-					angle:RotateAroundAxis(angle:Up(), -90)
-				end
-				if !ply:KeyDown(IN_ATTACK) or ishgweapon(wep) then
-					angle:RotateAroundAxis(angle:Up(), 90)
-				end
-				shadowControl(ragdoll, 12, 0.001, angle, 120, 30)
+					shadowControl(ragdoll, 12, 0.001, calfAng1, 150, 10)
+					shadowControl(ragdoll, 9, 0.001, calfAng2, 150, 10)
 
-				local rleg = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, 13))
-				local lleg = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, 14))
+					local slideMinStartSpeed = 150
+					local slideMinKeepSpeed = 40
+					local slideMaxDuration = 4
+					local slideCooldown = 3
+					local curVel = spine:GetVelocity()
+					local horizontalVel = Vector(curVel.x, curVel.y, 0)
+					local horizontalSpeed = horizontalVel:Length()
 
-				local force = angles2:Forward()
-				force:Normalize()
-				force = force * 100 * ragdoll.dtime / 0.015 * ragdoll.power
+					local groundTrace = util.TraceLine({
+						start = spine:GetPos(),
+						endpos = spine:GetPos() - vector_up * 40,
+						filter = {ply, ragdoll},
+						mask = MASK_SOLID,
+					})
+					local onGround = groundTrace.Hit
+
+					if ragdoll._slideCooldown and CurTime() >= ragdoll._slideCooldown then
+						ragdoll._slideCooldown = nil
+					end
+
+					local entrySpeed = 0
+					local entryDir = vector_up
+					if ragdoll._slideEntryTime and CurTime() - ragdoll._slideEntryTime < 0.1 then
+						entrySpeed = ragdoll._slideEntrySpeed or 0
+						entryDir = ragdoll._slideEntryDir or vector_up
+					end
+
+					local checkSpeed = math.max(horizontalSpeed, entrySpeed)
+
+					if ragdoll._slideActive then
+						local slideTime = CurTime() - ragdoll._slideStartTime
+						local falling = curVel.z < -80
+						local dirDot = 0
+
+						if ragdoll._slideDir and horizontalSpeed > 1 then
+							dirDot = ragdoll._slideDir:GetNormalized():Dot(horizontalVel:GetNormalized())
+						end
+
+						if horizontalSpeed < slideMinKeepSpeed or slideTime > slideMaxDuration or not onGround or falling or dirDot < -0.1 then
+							clearSlideState(ragdoll, slideCooldown)
+						end
+					end
+
+					if not ragdoll._slideActive and checkSpeed >= slideMinStartSpeed and not ragdoll._slideCooldown and onGround then
+						ragdoll._slideActive = true
+						ragdoll._slideStartTime = CurTime()
+						local eyeForward = angles:Forward()
+						local fallbackDir = Vector(eyeForward.x, eyeForward.y, 0)
+						if fallbackDir:LengthSqr() <= 1 then fallbackDir = Vector(1, 0, 0) end
+						local dir = horizontalVel:LengthSqr() > 1 and horizontalVel:GetNormalized() or (entryDir:LengthSqr() > 1 and entryDir:GetNormalized() or fallbackDir:GetNormalized())
+						ragdoll._slideDir = dir
+						ragdoll.isSliding = true
+
+						shadowControl(ragdoll, 11, 0.001, legAng1, 500, 150)
+						shadowControl(ragdoll, 8, 0.001, legAng2, 500, 150)
+						shadowControl(ragdoll, 12, 0.001, calfAng1, 400, 120)
+						shadowControl(ragdoll, 9, 0.001, calfAng2, 400, 120)
+					end
+
+					if ragdoll._slideActive then
+						ragdoll.isSliding = true
+
+						if not ragdoll._slideMaterialSet then
+							ragdoll._origMaterials = {}
+							for _, fNum in ipairs(slideFrictionBones) do
+								local phys = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, fNum))
+								if IsValid(phys) then
+									ragdoll._origMaterials[fNum] = phys:GetMaterial()
+									phys:SetMaterial("ice")
+								end
+							end
+							ragdoll._slideMaterialSet = true
+						end
+
+						local slideDir = ragdoll._slideDir
+						local slidePhys = {0, 1}
+						local slideForce = 1700 * (ragdoll.power or 1) * ragdoll.dtime / 0.015
+
+						for _, physNum in ipairs(slidePhys) do
+							local phys = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, physNum))
+							if IsValid(phys) then
+								phys:Wake()
+								phys:ApplyForceCenter(slideDir * slideForce / #slidePhys)
+								phys:ApplyForceCenter(curVel * -2 * ragdoll.dtime / 0.015 / #slidePhys)
+							end
+						end
+
+						local pelvis = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, 0))
+						if IsValid(pelvis) then pelvis:ApplyForceCenter(vector_up * -800 * ragdoll.dtime / 0.015) end
+
+						local spine1 = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, 1))
+						if IsValid(spine1) then shadowControl(ragdoll, 1, 0.4, spine1:GetAngles(), 30, 5) end
+
+						if hg_fake_stamina:GetBool() then
+							org.stamina.subadd = org.stamina.subadd + 0.08
+						end
+					else
+						restoreSlideMaterials(ragdoll)
+						clearSlideState(ragdoll)
+						ragdoll.isDropkicking = ply:KeyDown(IN_ATTACK) and ply:KeyDown(IN_ATTACK2) and not onGround
+
+						if ragdoll.isDropkicking then
+							legAng1:Set(angles)
+							legAng1:RotateAroundAxis(angles:Right(), 75)
+							legAng1:RotateAroundAxis(angles:Forward(), -100)
+							legAng1:RotateAroundAxis(angles:Up(), -70)
+
+							legAng2:Set(angles)
+							legAng2:RotateAroundAxis(angles:Right(), 75)
+							legAng2:RotateAroundAxis(angles:Forward(), -100)
+							legAng2:RotateAroundAxis(angles:Up(), -70)
+
+							calfAng1:Set(legAng1)
+							calfAng1:RotateAroundAxis(angles:Right(), 20)
+							calfAng2:Set(legAng2)
+							calfAng2:RotateAroundAxis(angles:Right(), 20)
+
+							local foot1 = Angle(0, 0, 0)
+							local foot2 = Angle(0, 0, 0)
+							foot1:Set(calfAng1)
+							foot1:RotateAroundAxis(angles:Right(), 90)
+							foot2:Set(calfAng2)
+							foot2:RotateAroundAxis(angles:Right(), 90)
+
+							shadowControl(ragdoll, 11, 0.001, legAng1, 600, 200)
+							shadowControl(ragdoll, 8, 0.001, legAng2, 600, 200)
+							shadowControl(ragdoll, 13, 0.001, foot1, 600, 200)
+							shadowControl(ragdoll, 14, 0.001, foot2, 600, 200)
+							shadowControl(ragdoll, 12, 0.001, calfAng1, 600, 200)
+							shadowControl(ragdoll, 9, 0.001, calfAng2, 600, 200)
+						end
+					end
 
 				if org.lleg >= 1 or org.rleg >= 1 then
 					org.painadd = org.painadd + ragdoll.dtime * 2 * (org.lleg + org.rleg)
 				end
-				//rleg:ApplyForceCenter(force)
-				//lleg:ApplyForceCenter(force)
 			end
+		else
+			clearSlideState(ragdoll)
+			ragdoll.isDropkicking = false
 		end
 		local vel = ragdoll:GetVelocity()
 		local vellen = vel:Length()
@@ -1383,6 +1540,105 @@ hook.Add("Think", "Fake", function()
 			end
 		end*/
 	end
+end)
+
+hook.Add("Ragdoll Collide", "SlideDamage", function(ragdoll, data)
+	if not ragdoll.isSliding and not ragdoll.isDropkicking then return end
+
+	local hitEnt = data.HitEntity
+	if not IsValid(hitEnt) or hitEnt == game.GetWorld() or hitEnt == ragdoll then return end
+
+	local physObj = data.PhysObject
+	if not IsValid(physObj) then return end
+
+	local physBone = -1
+	for i = 0, ragdoll:GetPhysicsObjectCount() - 1 do
+		if ragdoll:GetPhysicsObjectNum(i) == physObj then
+			physBone = i
+			break
+		end
+	end
+	if physBone < 0 then return end
+
+	local bone = ragdoll:TranslatePhysBoneToBone(physBone)
+	if bone < 0 then return end
+
+	local boneName = ragdoll:GetBoneName(bone)
+	if not boneName then return end
+
+	local hitBones = {
+		["ValveBiped.Bip01_L_Foot"] = true,
+		["ValveBiped.Bip01_R_Foot"] = true,
+		["ValveBiped.Bip01_L_Calf"] = true,
+		["ValveBiped.Bip01_R_Calf"] = true,
+		["ValveBiped.Bip01_L_Thigh"] = true,
+		["ValveBiped.Bip01_R_Thigh"] = true,
+	}
+
+	if not hitBones[boneName] then return end
+
+	local ply = hg.RagdollOwner(ragdoll)
+	if not IsValid(ply) or not ply:Alive() then return end
+
+	local isDropkick = ragdoll.isDropkicking
+	if isDropkick then
+		ragdoll.dropkickHits = ragdoll.dropkickHits or {}
+		if (ragdoll.dropkickCd or 0) > CurTime() then return end
+		if (ragdoll.dropkickHits[hitEnt] or 0) > CurTime() then return end
+		ragdoll.dropkickHits[hitEnt] = CurTime() + 0.5
+		ragdoll.dropkickCd = CurTime() + 0.8
+	else
+		ragdoll.slideHits = ragdoll.slideHits or {}
+		if (ragdoll.slideCd or 0) > CurTime() then return end
+		if (ragdoll.slideHits[hitEnt] or 0) > CurTime() then return end
+		ragdoll.slideHits[hitEnt] = CurTime() + 0.5
+		ragdoll.slideCd = CurTime() + 1
+	end
+
+	local speed = data.OurOldVelocity:Length()
+	local attackerPhys = ragdoll:GetPhysicsObject()
+	local attackerSpeed = IsValid(attackerPhys) and attackerPhys:GetVelocity():Length() or ragdoll:GetVelocity():Length()
+
+	if isDropkick then
+		speed = math.max(speed, attackerSpeed)
+		if speed < 260 then return end
+	end
+
+	local dmg = isDropkick and math.Clamp((speed - 180) / 8, 12, 60) or math.Clamp(speed / 25, 2, 20)
+	local targetPly = hg.RagdollOwner(hitEnt) or (hitEnt:IsPlayer() and hitEnt)
+
+	local dmgInfo = DamageInfo()
+	dmgInfo:SetDamage(dmg)
+	dmgInfo:SetDamageType(DMG_CLUB)
+	dmgInfo:SetAttacker(ply)
+	dmgInfo:SetInflictor(ragdoll)
+	dmgInfo:SetDamagePosition(physObj:GetPos())
+	dmgInfo:SetDamageForce(data.OurOldVelocity:GetNormalized() * dmg * 50)
+
+	if not IsValid(targetPly) then
+		hitEnt:TakeDamageInfo(dmgInfo)
+	else
+		local hitgroup = HITGROUP_GENERIC
+		if boneName:find("R_Foot") or boneName:find("R_Calf") or boneName:find("R_Thigh") then
+			hitgroup = HITGROUP_RIGHTLEG
+		elseif boneName:find("L_Foot") or boneName:find("L_Calf") or boneName:find("L_Thigh") then
+			hitgroup = HITGROUP_LEFTLEG
+		end
+
+		hook.Run("HomigradDamage", targetPly, dmgInfo, hitgroup, hg.GetCurrentCharacter(targetPly), dmg)
+
+		if isDropkick and targetPly.organism then
+			local speedMul = math.Clamp((speed - 260) / 420, 0, 1)
+			targetPly.organism.painadd = targetPly.organism.painadd + 8 + speedMul * 22
+			targetPly.organism.shock = math.min((targetPly.organism.shock or 0) + 8 + speedMul * 32, 95)
+		end
+	end
+
+	if hg_fake_stamina:GetBool() and ply.organism then
+		ply.organism.stamina.subadd = ply.organism.stamina.subadd + (isDropkick and 12 or 26)
+	end
+
+	ragdoll:EmitSound("kickland" .. math.random(1, 2) .. ".mp3", 75, math.random(95, 110))
 end)
 
 hook.Add("PlayerDeath", "homigrad-fake-control", function(ply)

@@ -468,6 +468,11 @@ end)
 local function RemoveRag(self, ply)
 	if self.override then return end
 	if not IsValid(ply) or ply.FakeRagdoll ~= self then return end
+
+	if hg.ClearRagdollSlideState then
+		hg.ClearRagdollSlideState(self)
+	end
+
 	ply.FakeRagdoll = nil
 	ply.Removed = true
 	if ply:Alive() then ply:Kill() end
@@ -1130,6 +1135,10 @@ function hg.FakeUp(ply, forced, instant)
 	local ragdoll = ply.FakeRagdoll
 	
 	if !IsValid(ragdoll) then return end
+
+	if hg.ClearRagdollSlideState then
+		hg.ClearRagdollSlideState(ragdoll)
+	end
 
 	if ragdoll.welds then
 		if ply:InVehicle() then
