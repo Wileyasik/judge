@@ -22,7 +22,7 @@ end
 
 local function wantsSquint()
 	local lply = LocalPlayer()
-	if not IsValid(lply) or not lply:Alive() then return false end
+	if not IsValid(lply) or not lply:IsPlayer() or not lply:Alive() then return false end
 	if GetViewEntity() ~= lply then return false end
 	if not zooming then return false end
 
@@ -32,9 +32,22 @@ local function wantsSquint()
 	return true
 end
 
-hook.Add("HG_CalcView", "HG_SquintOpticKill", function(ply)
+hook.Add("Think", "HG_SquintDeadReset", function()
+	local lply = LocalPlayer()
+	if not IsValid(lply) or not lply:IsPlayer() or lply:Alive() then return end
+
+	zooming = false
+	squintLerp = 0
+	lerpfovadd2 = 0
+end)
+
+hook.Add("HG_CalcView", "HG_SquintOpticKill", function()
 	if not zooming then return end
-	local wep = ply.GetActiveWeapon and ply:GetActiveWeapon()
+
+	local lply = LocalPlayer()
+	if not IsValid(lply) or not lply:IsPlayer() or not lply:Alive() then return end
+
+	local wep = lply.GetActiveWeapon and lply:GetActiveWeapon()
 	if opticZoomActive(wep) then
 		lerpfovadd2 = 0
 	end
@@ -81,3 +94,10 @@ local function applySquintVPWrap()
 end
 hook.Add("HomigradRun", "HG_SquintVPWrap", applySquintVPWrap)
 applySquintVPWrap()
+
+hook.Add("Player_Death", "HG_SquintResetOnDeath", function(ply)
+	if ply ~= LocalPlayer() then return end
+	zooming = false
+	squintLerp = 0
+	lerpfovadd2 = 0
+end)
