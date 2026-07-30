@@ -174,28 +174,18 @@ if SERVER then
 		local disorientation_dis = (self.BlastDis * 1.5) / 0.01905  
 
 		for i, enta in ipairs(ents.FindInSphere(SelfPos, disorientation_dis)) do
+			if not enta.organism then continue end
+			if not IsValid(enta.organism.owner) or not enta.organism.owner:IsPlayer() then continue end
+
 			local tracePos = enta:IsPlayer() and (enta:GetPos() + enta:OBBCenter()) or enta:GetPos()
 			local tr = hg.ExplosionTrace(SelfPos, tracePos, {self})
-			local phys = enta:GetPhysicsObject()
-			
-			local phys = enta:GetPhysicsObject()
-			local force = (enta:GetPos() - SelfPos)
-			local len = force:Length()
-			force:Div(len)
+			local len = enta:GetPos():Distance(SelfPos)
 			local frac = math.Clamp((disorientation_dis - len) / disorientation_dis, 0.1, 1) 
-			local physics_frac = math.Clamp((dis - len) / dis, 0.5, 1)  
-			local forceadd = force * physics_frac * 50000  
+			local behindwall = tr.Entity != enta and tr.MatType != MAT_GLASS
+			if behindwall then continue end
 
-			if enta.organism then
-				local behindwall = tr.Entity != enta and tr.MatType != MAT_GLASS
-				if IsValid(enta.organism.owner) and enta.organism.owner:IsPlayer() and not behindwall then
-					hg.ExplosionDisorientation(enta, 5 * frac, 6 * frac)
-					hg.RunZManipAnim(enta.organism.owner, "shieldexplosion")
-				end
-			end
-
-			if len > dis then continue end
-			if tr.Entity != enta then continue end
+			hg.ExplosionDisorientation(enta, 5 * frac, 6 * frac)
+			hg.RunZManipAnim(enta.organism.owner, "shieldexplosion")
 		end
 
 		--[[local boom = DamageInfo()

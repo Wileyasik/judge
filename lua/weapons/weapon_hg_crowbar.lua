@@ -176,30 +176,13 @@ SWEP.BlockDirectionalCharge = "overhead" --left, right, overhead, center, neutra
 
 
 function SWEP:PrimaryAttack()
-    if hg.KeyDown(self:GetOwner(),IN_USE) then
-        local tr = self.Owner:GetEyeTrace()
-        if IsValid(tr.Entity) and string.find(string.lower(tr.Entity:GetClass()), "door") and self:GetOwner():GetPos():Distance(tr.Entity:GetPos()) <= 80 then
-            local locked = false
-            if tr.Entity.GetInternalVariable then
-                locked = tr.Entity:GetInternalVariable("m_bLocked")
-            end
-            if not locked then
-                return
-            end
-            if not self.BreakingDoor then
-                self.BreakingDoor = true
-                self.BreakStartTime = CurTime()
-                self.BreakDuration = math.random(15, 20)
-                self.DoorEntity = tr.Entity
-                self.NextBreakSound = CurTime() + math.Rand(1, 2)
-            end
-            return
-        end
-    end
     self.BaseClass.PrimaryAttack(self)
 end
 
 function SWEP:PrimaryAttackAdd(ent)
+end
+
+function SWEP:ChargeAttackAdd(ent)
     if hgIsDoor(ent) and math.random(10) > 8 then
         hgBlastThatDoor(ent,self:GetOwner():GetAimVector() * 30 + self:GetOwner():GetVelocity())
     end

@@ -27,6 +27,7 @@ SWEP.PainMultiplier = 1
 SWEP.BreakBoneMul = 0.33
 SWEP.Penetration = 1
 SWEP.DamageMul = 0.8
+SWEP.HeadGibDamageMul = 0.35
 SWEP.animtime = 0
 SWEP.WorkWithFake = false
 SWEP.supportTPIK = true

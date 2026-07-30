@@ -155,10 +155,6 @@ end
 
 util.AddNetworkString("tdm_roundend")
 function MODE:EndRound()
-	timer.Simple(2,function()
-		net.Start("tdm_roundend")
-		net.Broadcast()
-	end)
 	local endround, winner = zb:CheckWinner(self:CheckAlivePlayers())
 	for k,ply in player.Iterator() do
 		if ply:Team() == winner then
@@ -176,6 +172,7 @@ function MODE:PlayerDeath(ply)
 end
 util.AddNetworkString( "tdm_open_buymenu" )
 function MODE:ShowSpare1(ply ) -- OpenMenu
+	if CurrentRound().name ~= "tdm" then return end
 	if not ply:Alive() then return end
 	net.Start( "tdm_open_buymenu" )
 	net.Send( ply )
@@ -185,8 +182,9 @@ util.AddNetworkString( "tdm_buyitem" )
 
 local AttachmentPrice = 50
 net.Receive("tdm_buyitem",function(len,ply)
+	if CurrentRound().name ~= "tdm" then return end
 	if !CurrentRound().buymenu then return end
-	if ((zb.ROUND_START or 0) + 40 < CurTime()) then ply:ChatPrint("Time's up!") return end
+	if ((zb.ROUND_START or 0) + 35 < CurTime()) then ply:ChatPrint("Time's up!") return end
 	local tItem = net.ReadTable()
 	if not istable(tItem) then return end
 	local category = tItem[1]
@@ -197,6 +195,7 @@ net.Receive("tdm_buyitem",function(len,ply)
 	local item = buyItems[category][index]
 
 	if not item then return end
+	if item.TeamBased ~= nil and item.TeamBased ~= ply:Team() then return end
 
 	if tItem[3] then
 		if not ply:HasWeapon(item.ItemClass) then ply:ChatPrint("You can't buy this attachment without a weapon.") return end

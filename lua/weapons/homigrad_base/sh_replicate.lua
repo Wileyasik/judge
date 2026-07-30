@@ -4,9 +4,12 @@ if CLIENT then
 		local self = net.ReadEntity()
 		local shoot = net.ReadBool()
 		local broadcastAnyways = net.ReadBool()
+		local shootID = net.ReadUInt(16)
 		
 		if not IsValid(self) then return end
 		if !broadcastAnyways and self:GetOwner() == LocalPlayer() and !game.SinglePlayer() then return end
+		if shootID ~= 0 and self.hgLastShootID == shootID then return end
+		self.hgLastShootID = shootID
 		
 		if self.Shoot then
 			self:Shoot(shoot)

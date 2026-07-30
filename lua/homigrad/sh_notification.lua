@@ -87,6 +87,7 @@ end
 
 if CLIENT then
 	local hg_old_notificate = ConVarExists("hg_old_notificate") and GetConVar("hg_old_notificate") or CreateConVar("hg_old_notificate",0,{FCVAR_USERINFO,FCVAR_ARCHIVE},"Toggle old notifications (chatprints)",0,1)
+	local hg_newthoughts = ConVarExists("hg_newthoughts") and GetConVar("hg_newthoughts") or CreateClientConVar("hg_newthoughts", "0", true, true, "Toggle new stacked injury thoughts", 0, 1)
 
 	surface.CreateFont("BerserkFont", {
 		font = "Who asks Satan",
@@ -122,7 +123,21 @@ if CLIENT then
 		outline = false,
 	})
 
+	surface.CreateFont("ThoughtFont", {
+		font = "BudgetLabel",
+		extended = true,
+		size = ScreenScale(11),
+		weight = 0,
+		blursize = 0,
+		scanlines = 0,
+		antialias = true,
+		strikeout = false,
+		shadow = false,
+		outline = false,
+	})
+
 	hg.notifications = hg.notifications or {}
+	hg.thoughts = hg.thoughts or {}
 	hg.notificationFont = "HuyFont"
 
 	hook.Add("Player_Death","removeNotifications",function(ply)
@@ -130,6 +145,7 @@ if CLIENT then
 
 		//hg.currentNotification = nil
 		hg.notifications = {}
+		hg.thoughts = {}
 	end)
 
 	hook.Add("Player Spawn","removeNotificationsa",function(ply)
@@ -137,6 +153,7 @@ if CLIENT then
 
 		hg.currentNotification = nil
 		hg.notifications = {}
+		hg.thoughts = {}
 	end)
 
 	hook.Add("HG_OnOtrub","removeNotificationsb",function(ply)
@@ -144,6 +161,7 @@ if CLIENT then
 
 		//hg.currentNotification = nil
 		hg.notifications = {}
+		hg.thoughts = {}
 	end)
 
 	local defaultShowTimer = 3
@@ -178,6 +196,20 @@ if CLIENT then
 		table.insert(hg.notifications, {msg, (showTimer or defaultShowTimer), clr or Color(255, 255, 255, 255)})
 	end
 
+	local function CreateThought(msg, clr)
+		if not hg_newthoughts:GetBool() then return end
+		if lply:IsBerserk() then return end
+
+		table.insert(hg.thoughts, {msg, CurTime(), clr or Color(255, 255, 255, 255)})
+
+		while #hg.thoughts > 3 do
+			local tbl = hg.thoughts[1]
+			local clr = tbl[3]
+			chat.AddText(Color(clr.r, clr.g, clr.b, 255), tbl[1] .. "\n")
+			table.remove(hg.thoughts, 1)
+		end
+	end
+
 	local PLAYER = FindMetaTable("Player")
 
 	function PLAYER:Notify(...)
@@ -188,11 +220,16 @@ if CLIENT then
 		return CreateNotificationBerserk(...)
 	end
 
+	function PLAYER:Thought(...)
+		return CreateThought(...)
+	end
+
 	net.Receive("HGNotificate",function()
 		local msg = net.ReadString()
 		local clr = net.ReadColor()
 
 		if msg == "" then return end
+		if hg_newthoughts:GetBool() then return end
 
 		CreateNotification(msg, showtime, clr)
 	end)
@@ -206,8 +243,18 @@ if CLIENT then
 		CreateNotificationBerserk(msg, showtime, clr)
 	end)
 
+	net.Receive("HGThought",function()
+		local msg = net.ReadString()
+		local clr = net.ReadColor()
+
+		if msg == "" then return end
+
+		CreateThought(msg, clr)
+	end)
+
 	hg.CreateNotification = CreateNotification
 	hg.CreateNotificationBerserk = CreateNotificationBerserk
+	hg.CreateThought = CreateThought
 	local colred = Color(255,0,0)
 
 	local time_spent = CurTime()
@@ -383,7 +430,39 @@ if CLIENT then
 		end
 	end
 
-	hook.Add("DrawOverlay", "HGNotificationsThink", NotificationsDraw)
+	local thoughtBrown = Color(20, 20, 20)
+	local function ThoughtsDraw()
+		if not hg_newthoughts:GetBool() then return end
+		if #hg.thoughts == 0 then return end
+		if not lply:Alive() then hg.thoughts = {} return end
+
+		local time = CurTime()
+		local duration = 4.5
+		local fade = 0.6
+
+		for i = #hg.thoughts, 1, -1 do
+			local tbl = hg.thoughts[i]
+			local delta = time - tbl[2]
+
+			if delta >= duration then
+				local clr = tbl[3]
+				chat.AddText(Color(clr.r, clr.g, clr.b, 255), tbl[1] .. "\n")
+				table.remove(hg.thoughts, i)
+			else
+				local clr = tbl[3]
+				local alpha = math.min(delta / fade, 1, (duration - delta) / fade) * 255
+				local y = ScrH() - ScrH() / 4 - (i - 1) * ScreenScale(14)
+
+				thoughtBrown.a = alpha
+				draw.SimpleTextOutlined(tbl[1], "ThoughtFont", ScrW() / 2, y, Color(clr.r, clr.g, clr.b, alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, thoughtBrown)
+			end
+		end
+	end
+
+	hook.Add("DrawOverlay", "HGNotificationsThink", function()
+		NotificationsDraw()
+		ThoughtsDraw()
+	end)
 	hook.Add("Think", "HGNotificationsThink", NotificationsThink)
 else
 	concommand.Add("hg_notify", function(ply, cmd, args)

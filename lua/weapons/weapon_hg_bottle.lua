@@ -56,10 +56,12 @@ SWEP.PenetrationSizePrimary = 0.8
 SWEP.StaminaPrimary = 8
 
 SWEP.AttackLen1 = 45
+SWEP.CantClash = true
 
 SWEP.noreverse = true
-SWEP.BlockTier = 1.5
+SWEP.BlockTier = 2
 SWEP.BlockMaterial = "none"
+SWEP.BlockSound = {"GlassBottle.ImpactHard", 68, {95, 102}}
 
 SWEP.AttackHit = "GlassBottle.ImpactHard"
 SWEP.AttackHitFlesh = "Flesh.ImpactHard"

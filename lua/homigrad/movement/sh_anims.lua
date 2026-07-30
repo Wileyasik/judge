@@ -47,7 +47,7 @@ end
 		local speed = vel:Length()
 		local jogging = IsJogging(ply, vel)
 		if CLIENT and ply == LocalPlayer() and (ply.hg_isSprinting or ply.hg_isJogging) and ply:KeyDown(IN_FORWARD) then speed = math.max(speed, jogging and 210 or 280) end
-		if (not ply:InVehicle()) and ply:IsOnGround() and speed > 180 and wep and runHoldTypes[wep:GetHoldType()] and not isAmputated then
+		if (not ply:InVehicle()) and ply:IsOnGround() and not hg.KeyDown(ply, IN_JUMP) and speed > 180 and wep and runHoldTypes[wep:GetHoldType()] and not isAmputated then
 			local isFurry = ply.PlayerClassName == "furry"
 			local anim = ACT_HL2MP_RUN_FAST
 			if jogging then

@@ -64,14 +64,20 @@ AddItemToBUY( "Ruger 10/22", "Weapon", "weapon_ruger", 1000, "Carbines", {} )
 AddItemToBUY( "Mini-14", "Weapon", "weapon_mini14", 2200, "Carbines", {} )
 
 AddItemToBUY( "AKM", "Weapon", "weapon_akm", 3200, "Assault", {"holo6","holo1","holo2","supressor1","optic7"}, nil, 0 )--0 = terrorist, 1 = swat
+AddItemToBUY( "AK-74", "Weapon", "weapon_ak74", 2400, "Assault", {"holo6","holo1","holo2","supressor1","supressor8","optic7"}, nil, 0 )
+AddItemToBUY( "Type 56", "Weapon", "weapon_type56", 2600, "Assault", {"supressor1","supressor6"}, nil, 0 )
+AddItemToBUY( "M16A1", "Weapon", "weapon_m16a1", 3000, "Assault", {"holo1","holo2","holo6","optic7"}, nil, 0 )
+AddItemToBUY( "AR-15", "Weapon", "weapon_ar15", 2900, "Assault", {"holo1","holo2","holo15","optic8","supressor2","supressor6","grip1","grip2","grip3","laser4"}, nil, 1 )
 AddItemToBUY( "M4A1", "Weapon", "weapon_m4a1", 2700, "Assault", {"holo1","holo2","supressor2","holo15","optic8"}, nil, 1 )
 AddItemToBUY( "HK416", "Weapon", "weapon_hk416", 3000, "Assault", {"holo1","holo2","supressor2","holo15","optic8"}, nil, 1 )
-AddItemToBUY( "AK-74", "Weapon", "weapon_ak74", 2400, "Assault", {"holo6","holo1","holo2","supressor1","supressor8","optic7"}, nil, 0 )
 
-AddItemToBUY( "MP-5", "Weapon", "weapon_mp5", 1500, "Submachine", {"supressor4"} )
-AddItemToBUY( "MP-7", "Weapon", "weapon_mp7", 2300, "Submachine", {"holo1","holo2","supressor2","holo15"} )
+AddItemToBUY( "MP5K", "Weapon", "weapon_mp5k", 1300, "Submachine", {"holo1","holo2","holo15","supressor4","supressor6"}, nil, 0 )
+AddItemToBUY( "MP-5", "Weapon", "weapon_mp5", 1500, "Submachine", {"supressor4"}, nil, 0 )
 AddItemToBUY( "MAC-11", "Weapon", "weapon_mac11", 1600, "Submachine", {"supressor4"}, nil, 0 )
 AddItemToBUY( "Uzi", "Weapon", "weapon_uzi", 1300, "Submachine", {}, nil, 0 )
+AddItemToBUY( "MP5A5", "Weapon", "weapon_mp5a5", 1800, "Submachine", {"holo1","holo2","holo15","supressor4","supressor6"}, nil, 1 )
+AddItemToBUY( "MP5SD6", "Weapon", "weapon_mp5sd6", 2000, "Submachine", {"holo1","holo2","holo15","supressor4","supressor6"}, nil, 1 )
+AddItemToBUY( "MP-7", "Weapon", "weapon_mp7", 2300, "Submachine", {"holo1","holo2","supressor2","holo15"}, nil, 1 )
 AddItemToBUY( "KRISS Vector", "Weapon", "weapon_vector", 2300, "Submachine", {"holo1", "holo2", "supressor4", "holo15"}, nil, 1 )
 AddItemToBUY( "P90", "Weapon", "weapon_p90", 2300, "Submachine", {"holo1", "holo2", "supressor4", "holo15"}, nil, 1 )
 AddItemToBUY( "Steyr TMP", "Weapon", "weapon_tmp", 2100, "Submachine", {"holo1", "holo2", "supressor4", "holo15"}, nil, 1 )
@@ -80,9 +86,13 @@ AddItemToBUY( "Šcorpion vz. 61", "Weapon", "weapon_skorpion", 1200, "Submachine
 AddItemToBUY( "\"Deer Hunter\" Bow", "Weapon", "weapon_hg_bow", 2000, "Special", {} )
 
 AddItemToBUY( "Remington-870", "Weapon", "weapon_remington870", 1700, "Shotguns", {"holo1","holo2","supressor5","holo15"} )
+AddItemToBUY( "M870", "Weapon", "weapon_m870", 1800, "Shotguns", {"holo1","holo2","holo15","supressor5"}, nil, 0 )
 AddItemToBUY( "SPAS-12", "Weapon", "weapon_spas12", 2200, "Shotguns", {"supressor5"} )
 AddItemToBUY( "Sawed-off IZh-43", "Weapon", "weapon_doublebarrel_short", 800, "Shotguns", {}, nil, 0 )
 AddItemToBUY( "IZh-43", "Weapon", "weapon_doublebarrel", 1100, "Shotguns", {}, nil, 0 )
+AddItemToBUY( "M4 Sport", "Weapon", "weapon_m4sport", 1900, "Shotguns", {"holo1","holo2","holo15","supressor5"}, nil, 1 )
+AddItemToBUY( "M590A1", "Weapon", "weapon_m590a1", 2100, "Shotguns", {"holo1","holo2","holo15","supressor5"}, nil, 1 )
+AddItemToBUY( "M870 MCS", "Weapon", "weapon_m870mcs", 2300, "Shotguns", {"holo1","holo2","holo15","supressor5"}, nil, 1 )
 AddItemToBUY( "XM-1014", "Weapon", "weapon_xm1014", 2300, "Shotguns", {"holo14", "holo3"} )
 
 AddItemToBUY( "M249", "Weapon", "weapon_m249", 5750, "Heavy", {"holo1","holo2","supressor2","holo15"} )
@@ -124,6 +134,8 @@ AddItemToBUY( "Morphine", "Weapon", "weapon_morphine", 1000, "Medical", {} )
 AddItemToBUY( "Fentanyl", "Weapon", "weapon_fentanyl", 2000, "Medical", {} )
 AddItemToBUY( "Epipen", "Weapon", "weapon_adrenaline", 800, "Medical", {} )
 AddItemToBUY( "Bloodbag", "Weapon", "weapon_bloodbag", 400, "Medical", {} )
+AddItemToBUY( "Defibrillator", "Weapon", "weapon_defibrillator", 1500, "Medical", {} )
+AddItemToBUY( "Midazolam", "Weapon", "weapon_midazolam", 500, "Medical", {} )
 AddItemToBUY( "Mannitol", "Weapon", "weapon_mannitol", 300, "Medical", {} )
 AddItemToBUY( "Naloxone", "Weapon", "weapon_naloxone", 100, "Medical", {} )
 AddItemToBUY( "Decompression needle", "Weapon", "weapon_needle", 50, "Medical", {} )
@@ -133,6 +145,8 @@ AddItemToBUY( "Beta-Blocker", "Weapon", "weapon_betablock", 250, "Medical", {} )
 AddItemToBUY( "M67", "Weapon", "weapon_hg_grenade_tpik", 500, "Explosive", {} )
 AddItemToBUY( "RGD-5", "Weapon", "weapon_hg_rgd_tpik", 450, "Explosive", {} )
 AddItemToBUY( "Flashbang", "Weapon", "weapon_hg_flashbang_tpik", 250, "Explosive", {} )
+AddItemToBUY( "Molotov", "Weapon", "weapon_hg_molotov_tpik", 400, "Explosive", {}, nil, 0 )
+AddItemToBUY( "Incendiary Grenade", "Weapon", "weapon_hg_grenade_incendiary_tpik", 600, "Explosive", {}, nil, 1 )
 
 --Ammo
 AddItemToBUY( "7.62x39mm (30)", "Ammo", "ent_ammo_7.62x39mm", 100, "Ammo", {}, 30)
@@ -184,7 +198,7 @@ AddItemToBUY( ".44 Remington Magnum (20)", "Ammo", "ent_ammo_.44remingtonmagnum"
 AddItemToBUY( "Arrow", "Ammo", "ent_ammo_arrow", 25, "Ammo", {}, 5)
 
 function MODE:HG_MovementCalc_2( mul, ply, cmd, mv )
-    if (zb.ROUND_START or 0) + 20 > CurTime() and cmd then
+    if (zb.ROUND_START or 0) + 35 > CurTime() and cmd then
         cmd:RemoveKey(IN_ATTACK)
         cmd:RemoveKey(IN_FORWARD)
         cmd:RemoveKey(IN_BACK)
@@ -209,7 +223,7 @@ function MODE:HG_MovementCalc_2( mul, ply, cmd, mv )
 end
 
 function MODE:PlayerCanLegAttack( ply )
-	if zb.CROUND == "dm" and (zb.ROUND_START or 0) + 20 > CurTime() then
+	if zb.CROUND == "dm" and (zb.ROUND_START or 0) + 35 > CurTime() then
 		return false
 	end
 end

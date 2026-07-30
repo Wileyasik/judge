@@ -246,7 +246,7 @@ OpenMenu = function(tbl)
 		but:DockMargin(mg, first and mg or 0, mg, ScaleMenu(4))
         first = false
 		but:SetText("")
-		but.guiltText = "Forgive "..ply:Name().."? You will forgive him "..math.Round(harm,1).." karma."
+		but.guiltText = "Forgive "..ply:Name().."? You will restore "..math.Round(harm,1).." karma and get "..math.Round(harm).." XP."
 		but:SetTextColor(color_white)
         but.ply = ply
         but.name = ply:Name()

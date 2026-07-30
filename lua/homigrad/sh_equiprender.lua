@@ -213,6 +213,55 @@ if CLIENT then
 			end
 		end
 	end
+
+	local defibModel = "models/weapons/defib/w_eq_defibrillator.mdl"
+	local defibBone = "ValveBiped.Bip01_Spine2"
+	local defibPos = Vector(1.5, 7.5, 0)
+	local defibAng = Angle(85, 180, 90)
+	local defibFemPos = Vector(-2.4, 0, 1.1)
+
+	function hg.RenderDefibs(ent, ply)
+		if not IsValid(ent) or not IsValid(ply) then return end
+
+		if not (ply:GetNetVar("DefibAttached", false) or ent:GetNetVar("DefibAttached", false)) then
+			if IsValid(ply.modelDefib) then
+				ply.modelDefib:Remove()
+				ply.modelDefib = nil
+			end
+			return
+		end
+
+		local bone = ent:LookupBone(defibBone)
+		if not bone then return end
+
+		if not IsValid(ply.modelDefib) then
+			ply.modelDefib = ClientsideModel(defibModel)
+			ply.modelDefib:SetNoDraw(true)
+
+			ply:CallOnRemove("removedefib", function()
+				if IsValid(ply.modelDefib) then
+					ply.modelDefib:Remove()
+					ply.modelDefib = nil
+				end
+			end)
+		end
+
+		local model = ply.modelDefib
+		if not IsValid(model) then return end
+
+		local matrix = ent:GetBoneMatrix(bone)
+		if not matrix then return end
+
+		local fem = ThatPlyIsFemale(ent)
+		local bonePos, boneAng = matrix:GetTranslation(), matrix:GetAngles()
+		bonePos:Add(boneAng:Forward() * (fem and defibFemPos[1] or 0) + boneAng:Up() * (fem and defibFemPos[2] or 0) + boneAng:Right() * (fem and defibFemPos[3] or 0))
+
+		local pos, ang = LocalToWorld(defibPos, defibAng, bonePos, boneAng)
+		model:SetRenderOrigin(pos)
+		model:SetRenderAngles(ang)
+		model:SetParent(ent, bone)
+		model:DrawModel()
+	end
 	
 	hook.Add("OnNetVarSet","ArmorVarSet",function(index, key, var)
 		if key == "Armor" then

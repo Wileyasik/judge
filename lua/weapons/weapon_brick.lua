@@ -27,8 +27,11 @@ SWEP.Attack2HitFlesh = "Flesh.ImpactHard"
 SWEP.DeploySnd = "Concrete.ImpactHard"
 
 SWEP.DamageType = DMG_CLUB
-SWEP.DamagePrimary = 6
+SWEP.DamagePrimary = 13
 SWEP.DamageSecondary = 6
+
+
+SWEP.CantClash = true
 
 SWEP.PenetrationPrimary = 3
 SWEP.PenetrationSecondary = 3
@@ -88,7 +91,7 @@ function SWEP:CustomAttack2()
     ent.localshit = Vector(0,0,0)
     ent.wep = self:GetClass()
     ent.owner = ply
-    ent.damage = 9
+    ent.damage = 16
     ent.MaxSpeed = 700
     ent.DamageType = DMG_CLUB
     ent.AttackHit = "Concrete.ImpactHard"

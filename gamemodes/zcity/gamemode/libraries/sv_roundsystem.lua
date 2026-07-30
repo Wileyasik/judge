@@ -12,15 +12,18 @@ local ZB_FORCE_LIMITED_MODE_POOL = true
 local ZB_FORCED_TEMP_MODE_WEIGHTS = {
         ["hmcd"] = 0.85,
         ["dm"] = 0.1,
+        ["tdm"] = 0.05,
         ["riot"] = 0.05
 }
 local ZB_FORCED_MODE_POOL = {
         ["hmcd"] = true,
         ["dm"] = true,
+        ["tdm"] = true,
         ["riot"] = true
 }
 local ZB_NO_BACK_TO_BACK_MODES = {
         ["dm"] = true,
+        ["tdm"] = true,
         ["riot"] = true
 }
 local ZB_HAS_CHANGELEVEL

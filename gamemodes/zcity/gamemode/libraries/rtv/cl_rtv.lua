@@ -11,6 +11,10 @@ local VoteCD = 0
 -- RTV CL Functions
 local BlurBackground = hg.BlurBackground
 
+function zb.IsRTVActive()
+    return rtvStarted
+end
+
 local function RTVUnit(num)
     return math.floor(num * math.min(ScrW(), ScrH()) / 1000)
 end

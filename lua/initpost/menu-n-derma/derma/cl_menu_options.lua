@@ -5,11 +5,17 @@ function hg.settings:AddOpt( strCategory, strConVar, strTitle, bDecimals, bStrin
     self.tbl[strCategory] = self.tbl[strCategory] or {}
     self.tbl[strCategory][strConVar] = { strCategory, strConVar, strTitle, bDecimals or false, bString or false, category }
 end
-local hg_firstperson_death = CreateClientConVar("hg_firstperson_death", "0", true, false, "Toggle first-person death camera view", 0, 1)
+local hg_firstperson_death = CreateClientConVar("hg_firstperson_death", "0", true, false, "Toggle first-person death camera view", 0, 0)
 local hg_font_default = "Lora"
 local hg_font = ConVarExists("hg_font") and GetConVar("hg_font") or CreateClientConVar("hg_font", hg_font_default, true, false, "change every text font to selected because ui customization is cool")
 local hg_oldradialmenu = CreateClientConVar("hg_oldradialmenu", "0", true, false, "use the old radial menu style", 0, 1)
 local hg_nojogging = CreateClientConVar("hg_nojogging", "0", true, true, "Automatically sprint when holding shift.", 0, 1)
+
+local function ForceHGFirstPersonDeath()
+	if hg_firstperson_death:GetString() != "0" then
+		RunConsoleCommand("hg_firstperson_death", "0")
+	end
+end
 
 local function ForceHGFont()
 	if hg_font:GetString() != hg_font_default then
@@ -17,7 +23,14 @@ local function ForceHGFont()
 	end
 end
 
+ForceHGFirstPersonDeath()
 ForceHGFont()
+
+cvars.AddChangeCallback("hg_firstperson_death", function(_, _, newValue)
+	if newValue != "0" then
+		RunConsoleCommand("hg_firstperson_death", "0")
+	end
+end, "hg_firstperson_death_lock")
 
 cvars.AddChangeCallback("hg_font", function(_, _, newValue)
 	if newValue != hg_font_default then
@@ -26,7 +39,10 @@ cvars.AddChangeCallback("hg_font", function(_, _, newValue)
 end, "hg_font_lock")
 
 hook.Add("InitPostEntity", "hg_font_force_join", function()
+	ForceHGFirstPersonDeath()
 	ForceHGFont()
+	timer.Simple(1, ForceHGFirstPersonDeath)
+	timer.Simple(5, ForceHGFirstPersonDeath)
 	timer.Simple(1, ForceHGFont)
 	timer.Simple(5, ForceHGFont)
 end)
@@ -100,7 +116,7 @@ end
 hook.Add("OnScreenSizeChanged", "ZCity_Settings_Fonts", CreateSettingsFonts)
 CreateSettingsFonts()
 
-hg.settings:AddOpt("Gameplay","hg_old_notificate", "Old Notifications")
+hg.settings:AddOpt("Gameplay","hg_newthoughts", "New thoughts")
 hg.settings:AddOpt("Gameplay","hg_showthoughts", "Show thoughts")
 hg.settings:AddOpt("Gameplay","hg_hints", "Show hints")
 hg.settings:AddOpt("Gameplay","hg_gary", "HG GARY")
@@ -145,7 +161,6 @@ hg.settings:AddOpt("Weapons","hg_dynamic_mags", "Dynamic Ammo Inspect")
 hg.settings:AddOpt("Weapons","hg_zoomsensitivity", "Scope sensitivity")
 hg.settings:AddOpt("Weapons","hg_highpitchgunfire", "Toggle high pitched gunfire sounds inside buildings")
 
-hg.settings:AddOpt("View","hg_firstperson_death", "First-Person Death")
 hg.settings:AddOpt("View","hg_fov", "Field Of View")
 hg.settings:AddOpt("View","hg_newspectate", "Smooth Spectator Camera")
 hg.settings:AddOpt("View","hg_cshs_fake", "C'sHS Ragdoll Camera")
@@ -264,6 +279,7 @@ local info_fallback_medal = {
 }
 local info_stat_rows = {
     {"Kills", "Kills"},
+    {"Headshots", "Headshots"},
     {"Deaths", "Deaths"},
     {"Suicides", "Suicides"}
 }
@@ -337,6 +353,10 @@ local function InfoGetPlayerStat(ply, key)
     local cached = ply.SvDB and ply.SvDB[key]
     if cached ~= nil then
         return tonumber(cached) or 0
+    end
+
+    if key == "Headshots" then
+        return tonumber(ply:GetNWInt("Headshots", 0)) or 0
     end
 
     local methodName = info_stat_methods[key]
@@ -1364,6 +1384,7 @@ function InfoRefreshContent()
 
         local statValues = {
             Kills = 0,
+            Headshots = 0,
             Deaths = 0,
             Suicides = 0
         }

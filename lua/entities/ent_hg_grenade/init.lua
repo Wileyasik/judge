@@ -290,33 +290,38 @@ function ENT:Explode()
 	local dis = self.BlastDis / 0.01905 * GRENADE_BLAST_RADIUS_MULT
 	local disorientation_dis = GRENADE_DISORIENTATION_RADIUS / 0.01905
 	local entsCount = 0
+	local propForces = {}
 	for i, enta in ipairs(ents.FindInSphere(selfPos, disorientation_dis)) do
-		local tracePos = enta:IsPlayer() and (enta:GetPos() + enta:OBBCenter()) or enta:GetPos()
-		local tr = hg.ExplosionTrace(selfPos, tracePos, {self})
+		local entPos = enta:GetPos()
 		local phys = enta:GetPhysicsObject()
 		if IsValid(phys) then
 			entsCount = entsCount + 1
 		end
-		
-		local phys = enta:GetPhysicsObject()
-		local force = (enta:GetPos() - selfPos)
+
+		local force = entPos - selfPos
 		local len = force:Length()
-		force:Div(len)
-		local frac = math.Clamp((disorientation_dis - len) / disorientation_dis, 0.1, 1)
-		local physics_frac = math.Clamp((dis - len) / dis, 0.5, 1)
-		local forceadd = force * physics_frac * GRENADE_KNOCKBACK_FORCE
-		local liftForce = Vector(0, 0, GRENADE_LIFT_FORCE * physics_frac * GRENADE_LIFT_FRAC)
 
 		if enta.organism then
 			if IsValid(enta.organism.owner) and enta.organism.owner:IsPlayer() then
+				local frac = math.Clamp((disorientation_dis - len) / disorientation_dis, 0.1, 1)
 				hg.ExplosionDisorientation(enta, 5 * frac, 6 * frac)
 				hg.RunZManipAnim(enta.organism.owner, "shieldexplosion")
 			end
 		end
 
 		if len > dis then continue end
-		if tr.Entity != enta then continue end
+		if len > 0 then
+			force:Div(len)
+		else
+			force:Set(vector_up)
+		end
 
+		local physics_frac = math.Clamp((dis - len) / dis, 0.5, 1)
+		local forceadd = force * physics_frac * GRENADE_KNOCKBACK_FORCE
+		local liftForce = Vector(0, 0, GRENADE_LIFT_FORCE * physics_frac * GRENADE_LIFT_FRAC)
+		local tracePos = enta:IsPlayer() and (entPos + enta:OBBCenter()) or entPos
+		local tr = hg.ExplosionTrace(selfPos, tracePos, {self})
+		if tr.Entity != enta then continue end
 
 		if enta:IsPlayer() then
 			hg.AddForceRag(enta, 0, (forceadd + liftForce) * 0.5, 0.5)
@@ -326,7 +331,32 @@ function ENT:Explode()
 		end
 
 		if not IsValid(phys) then continue end
-		phys:ApplyForceCenter(forceadd + liftForce)
+		local totalForce = forceadd + liftForce
+		if string.StartWith(enta:GetClass(), "prop_physics") then
+			propForces[#propForces + 1] = {phys, totalForce}
+		else
+			phys:ApplyForceCenter(totalForce)
+		end
+	end
+
+	if #propForces > 0 then
+		local forceIndex = 1
+		local function applyPropForceBatch()
+			local lastIndex = math.min(forceIndex + 15, #propForces)
+			for i = forceIndex, lastIndex do
+				local forceData = propForces[i]
+				if IsValid(forceData[1]) then
+					forceData[1]:ApplyForceCenter(forceData[2])
+				end
+			end
+
+			forceIndex = lastIndex + 1
+			if forceIndex <= #propForces then
+				timer.Simple(0, applyPropForceBatch)
+			end
+		end
+
+		applyPropForceBatch()
 	end
 
 	if entsCount > 10 and not self.LegacyInDoorSound then

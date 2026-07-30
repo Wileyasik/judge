@@ -3,8 +3,10 @@ local PANEL = {}
 
 local Statics = {
     {"Kills", "Kills"},
+    {"Headshots", "Headshots"},
     {"Suicides", "Suicides"},
     {"Deaths", "Deaths"},
+    {"K/D", "K/D"},
     --{"Victories being a traitor", "zb_hmcd_t_wins"},
    -- {"Neutralizings a traitor", "zb_hmcd_ino_t_kills"}
 }
@@ -28,10 +30,30 @@ local function GetAccountFont(font, fallback)
     return font or fallback
 end
 
-local function GetStatValue(ply, key, request)
+local function GetRawStatValue(ply, key, request)
     if not IsValid(ply) then return 0 end
-    if request and ply.GetStatVal then return ply:GetStatVal(key, 0) end
-    return ply.SvDB and ply.SvDB[key] or 0
+    if request and ply.GetStatVal then return tonumber(ply:GetStatVal(key, 0)) or 0 end
+
+    local cached = ply.SvDB and ply.SvDB[key]
+    if cached != nil then return tonumber(cached) or 0 end
+
+    if key == "Headshots" then
+        return tonumber(ply:GetNWInt("Headshots", 0)) or 0
+    end
+
+    return 0
+end
+
+local function GetStatValue(ply, key, request)
+    if key == "K/D" then
+        local kills = GetRawStatValue(ply,"Kills",request)
+        local deaths = GetRawStatValue(ply,"Deaths",request)
+        local suicides = GetRawStatValue(ply,"Suicides",request)
+        local effectiveDeaths = math.max(deaths - suicides, 0)
+        return string.format("%.2f", kills / math.max(effectiveDeaths, 1))
+    end
+
+    return math.floor(GetRawStatValue(ply,key,request))
 end
 
 local function TypeText(label,target,speed)

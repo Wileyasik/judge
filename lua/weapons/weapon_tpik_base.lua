@@ -476,6 +476,7 @@ elseif CLIENT then
         local ent = net.ReadEntity()
         local sendtoclient = net.ReadBool()
         if IsValid(ent) and ent.PlayAnim and ( sendtoclient and sendtoclient or !ent:IsLocal()) then
+            if tbl.anim == "Shove" and ent:IsLocal() and ent.anim == "Shove" and (ent.animtime or 0) > CurTime() then return end
             ent:PlayAnim(tbl.anim,tbl.time,tbl.cycling,tbl.callback,tbl.reverse)
             --if tbl.anim == "attack" or tbl.anim == "attack2" and ent:GetOwner().AnimRestartGesture then
             --    ent:GetOwner():AnimRestartGesture(GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_HL2MP_GESTURE_RANGE_ATTACK_SLAM, true)

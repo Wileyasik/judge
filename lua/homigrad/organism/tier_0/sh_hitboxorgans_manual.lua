@@ -25,7 +25,7 @@ male["ValveBiped.Bip01_Head1"] = {
 	},
 	{
 		"jaw", --jaw
-		0.5,
+		0.05,
 		Vector(1, -3, 0),
 		Angle(0, 0, 0),
 		Vector(2, 3, 2),

@@ -183,7 +183,7 @@ local traitor_panel = {
     dead_anim = {}, 
     width = 300,
     height = 280,
-    assist_height = 200,
+    assist_height = 280,
     spacing = 26,
     padding = 15,
     left_padding = 90, 
@@ -346,7 +346,7 @@ hook.Add("HUDPaint", "DrawTraitorPanel", function()
     draw.SimpleText(word2, "TraitorPanelWords", x + traitor_panel.width/2, word_y, 
                     traitor_panel.colors.words, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     
-    if is_main then
+    if MODE.TraitorsLocal and #MODE.TraitorsLocal > 0 then
         for steamid, avatar in pairs(traitor_panel.assistant_avatars) do
             if IsValid(avatar) then
                 avatar:SetVisible(false)
@@ -357,12 +357,10 @@ hook.Add("HUDPaint", "DrawTraitorPanel", function()
         local has_assistants = false
         MODE.TraitorsLocal = MODE.TraitorsLocal or {}
         
-        if #MODE.TraitorsLocal > (ply.MainTraitor and 1 or 0) then
-            has_assistants = true
-        end
+        if #MODE.TraitorsLocal > 0 then has_assistants = true end
         
         if has_assistants then
-            draw.SimpleText("Your Assistants:", "TraitorPanelText", x + traitor_panel.width/2, assist_y, 
+            draw.SimpleText(is_main and "Your Assistants:" or "Other Traitors:", "TraitorPanelText", x + traitor_panel.width/2, assist_y, 
                             Color(220, 220, 220), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
             
             assist_y = assist_y + 25   
@@ -452,13 +450,6 @@ hook.Add("HUDPaint", "DrawTraitorPanel", function()
             draw.SimpleText("No assistants available", "TraitorPanelText", x + traitor_panel.width/2, assist_y, 
                             Color(150, 150, 150), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
         end
-    else
-
-        for steamid, avatar in pairs(traitor_panel.assistant_avatars) do
-            if IsValid(avatar) then
-                avatar:SetVisible(false)
-            end
-        end
     end
 end)
 
@@ -479,7 +470,7 @@ end)
 
 
 hook.Add("Think", "UpdateTraitorAssistants", function()
-	if not LocalPlayer().isTraitor or not LocalPlayer().MainTraitor then return end
+	if not LocalPlayer().isTraitor then return end
 
 	if not traitor_panel.next_assistant_check or traitor_panel.next_assistant_check < CurTime() then
 		traitor_panel.next_assistant_check = CurTime() + 0.5
@@ -502,7 +493,7 @@ end)
 
 
 hook.Add("Think", "RequestTraitorStatus", function()
-	if not LocalPlayer().isTraitor or not LocalPlayer().MainTraitor then return end
+	if not LocalPlayer().isTraitor then return end
 	
 	if not traitor_panel.next_status_request or traitor_panel.next_status_request < CurTime() then
 		traitor_panel.next_status_request = CurTime() + 2

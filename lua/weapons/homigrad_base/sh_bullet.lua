@@ -51,6 +51,12 @@ local bulletHit
 local timer, util, math, IsValid, WorldToLocal, Vector, sound, EffectData, game = timer, util, math, IsValid, WorldToLocal, Vector, sound, EffectData, game
 local table_Copy = table.Copy
 local hg_bulletholes = CreateConVar("hg_bulletholes", "0", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Enable R6S bulletholes feature", 0, 1)
+local knockbackMul, knockbackMin = 0.35, 25
+
+local function scaleBulletForce(force, pellets)
+	pellets = math.max(pellets or 1, 1)
+	return math.max((force or 0) * (knockbackMul / pellets), knockbackMin / pellets)
+end
 
 local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 	if CLIENT then return end
@@ -122,7 +128,7 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 			local tBullet = {
 				Attacker = IsValid(self) and IsValid(self:GetOwner()) and self:GetOwner() or self,
 				Damage = dmg * 0.65,
-				Force = force / 3,
+				Force = scaleBulletForce(force / 3, bullet.Pellets),
 				Num = 1,
 				Tracer = 0,
 				TracerName = "nil",
@@ -137,6 +143,7 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 				penetrated = bullet.penetrated + 1,
 				dmgtype = bullet.dmgtype or DMG_BULLET,
 				NpcShoot = bullet.NpcShoot,
+				Pellets = bullet.Pellets,
 				limit_ricochet = bullet.limit_ricochet + 1,
 				noricochet = bullet.noricochet,
 				AmmoType = bullet.AmmoType
@@ -228,7 +235,7 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 		local tBullet = {
 			Attacker = IsValid(self) and IsValid(self:GetOwner()) and self:GetOwner() or self,
 			Damage = (dmg or 1) * .85,
-			Force = force / 3,
+			Force = scaleBulletForce(force / 3, bullet.Pellets),
 			Num = 1,
 			Tracer = 0,
 			TracerName = "nil",
@@ -242,6 +249,7 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 			Diameter = bullet.Diameter,
 			penetrated = bullet.penetrated + 1,
 			dmgtype = bullet.dmgtype or DMG_BULLET,
+			Pellets = bullet.Pellets,
 			limit_ricochet = bullet.limit_ricochet + 1,
 			noricochet = bullet.noricochet,
 			AmmoType = bullet.AmmoType
@@ -343,13 +351,13 @@ bulletHit = function(ply, tr, dmgInfo, bullet, Weapon)
 		util.ScreenShake(trPos, 3, 1, 1, 128)
 	end
 	
-	-- if force >= 35 and dist <= 1400000 and (math.random(3) == 2 or force >= 45) and !tr.Entity:IsRagdoll() then
-	-- 	util.Decal("Impact.ShootPowderAdd", trPos + trNormal, trPos - trNormal)
-	-- 	util.ScreenShake(trPos, 3, 10, 1, 150)
-	-- end
+	 if force >= 35 and dist <= 1400000 and (math.random(3) == 2 or force >= 45) and !tr.Entity:IsRagdoll() then
+	 	util.Decal("Impact.ShootPowderAdd", trPos + trNormal, trPos - trNormal)
+	 	util.ScreenShake(trPos, 3, 10, 1, 150)
+	 end
 
-	-- gasInertia(trPos, force * 3, -tr.Normal, Weapon, tr)
-	-- gasInertia(trStart, force * 3, tr.Normal, Weapon, tr)
+	 gasInertia(trPos, force * 3, -tr.Normal, Weapon, tr)
+	 gasInertia(trStart, force * 3, tr.Normal, Weapon, tr)
 
 	local penetration, dmgmul
 	if tr.Entity:IsVehicle() then
@@ -711,12 +719,13 @@ function SWEP:FireBullet()
 		bullet.Dir = (owner:GetAngles()+AngleRand(-4,4)+Angle(npcPitchOffset,npcYawOffset,0)):Forward()
 	end
 
-	bullet.Force = ammotype.Force and ammotype.Force / 1.5 or primary.Force
+	bullet.Force = scaleBulletForce(ammotype.Force and ammotype.Force / 1.5 or primary.Force, numbullet)
     bullet.Damage = ammotype.Damage or primary.Damage or 25
 	bullet.Damage = bullet.Damage * (self.Supressor and 0.9 or 1) * (self.DamageMultiplier or 1)
 
 	bullet.Spread = (ammotype.Spread or self.Primary.Spread or 0) * 3
 	bullet.Num = 1
+	bullet.Pellets = numbullet
 	
 	bullet.AmmoType = primary.Ammo
 	bullet.TracerName = self.Tracer or "nil"

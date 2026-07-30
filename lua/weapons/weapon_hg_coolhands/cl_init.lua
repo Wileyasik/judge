@@ -100,10 +100,7 @@ function SWEP:SecondaryAttack()
         local owner = self:GetOwner()
         if not self:CanShove() or not owner:KeyDown(IN_USE) then return end
 
-        if not IsFirstTimePredicted() then
-                self:PlayAnim("Shove",1)
-                return
-        end
+		if not IsFirstTimePredicted() then return end
 
         self.ShoveEnd = CurTime() + shoveAnimTime
         self.Charging = nil
@@ -731,7 +728,7 @@ function SWEP:Think()
                 self.blockSound = nil
         end
 
-        local chargeHeld = owner:KeyDown(IN_USE) or owner:KeyDown(IN_ATTACK)
+        local chargeHeld = owner:KeyDown(IN_USE) and owner:KeyDown(IN_ATTACK)
         local wantsCharge = owner.PlayerClassName ~= "furry" and owner:KeyDown(IN_USE) and owner:KeyDown(IN_ATTACK) and (self:GetFists() or owner:KeyDown(IN_SPEED))
         if self.Charging and self.ChargeComfort and wantsCharge then
                 self.Charging = nil
@@ -805,6 +802,7 @@ function SWEP:PrimaryAttack(forcespecial)
 	end
 
 	if self:GetBlocking() then return end
+	if self.Charging and not forcespecial then return end
 	--if owner:KeyDown(IN_SPEED) then return end
 
         if not forcespecial and not isfur and owner:KeyDown(IN_USE) then
@@ -816,10 +814,7 @@ function SWEP:PrimaryAttack(forcespecial)
                 return
         end
 
-	if not IsFirstTimePredicted() then
-		self:PlayAnim(forcespecial and "attack_charge_end" or side,forcespecial and 1 or 0.8)
-		return
-	end
+	if not IsFirstTimePredicted() then return end
 	self.attacked = CurTime() + 0.2
 
         local special_attack = forcespecial and true or false

@@ -1,8 +1,8 @@
 if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_tpik_base"
-SWEP.PrintName = "M67"
+SWEP.PrintName = "AN M14"
 SWEP.Instructions = 
-[[M67 fragmentation grenade is used by many countries around the world since 1968. It has a pyrotechnic delay of 4-5.5 seconds.
+[[The AN M14 is an incendiary grenade used by the United States Army and Navy forces (AN). It has a pyrotechnic delay of 1.2 to 2.3 seconds.
 
 LMB - High ready
 While high ready:
@@ -31,13 +31,13 @@ SWEP.HoldType = "camera"
 SWEP.ViewModel = ""
 SWEP.WorkWithFake = true
 
-SWEP.WorldModel = "models/weapons/tfa_ins2/w_m67.mdl"
-SWEP.WorldModelReal = "models/weapons/zcity/c_m67.mdl"
+SWEP.WorldModel = "models/weapons/floppa/incendiary/w_m18.mdl"
+SWEP.WorldModelReal = "models/weapons/floppa/incendiary/c_m18.mdl"
 SWEP.WorldModelExchange = false
 
 if CLIENT then
-	SWEP.WepSelectIcon = Material("vgui/hud/tfa_ins2_m67")
-	SWEP.IconOverride = "vgui/hud/tfa_ins2_m67"
+	SWEP.WepSelectIcon = Material("vgui/floppa/hud/incendiary/tfa_ins2_anm14")
+	SWEP.IconOverride = "vgui/floppa/hud/incendiary/tfa_ins2_anm14"
 	SWEP.BounceWeaponIcon = false
 end
 
@@ -53,7 +53,7 @@ SWEP.SlotPos = 4
 SWEP.setlh = true
 SWEP.setrh = true
 
-SWEP.ENT = "ent_hg_grenade_m67"
+SWEP.ENT = "ent_hg_grenade_incendiary"
 
 SWEP.AnimsEvents = {
 	["pullbackhigh"] = {
@@ -80,7 +80,7 @@ SWEP.AnimsEvents = {
 
 SWEP.AnimList = {
     -- self:PlayAnim( anim,time,cycling,callback,reverse,sendtoclient )
-	["deploy"] = { "draw", 1, false },
+	["deploy"] = { "base_draw", 1, false },
     ["attack"] = { "throw", 0.8, false, false, function(self)
 
 		if CLIENT then return end
@@ -107,6 +107,9 @@ SWEP.AnimList = {
 			self:SetShowPin(true)
 		end)
 	end, 0.65 },
+	["trapplace"] = {"pullbacklow", 1.8, false, false, function(self)
+		self.ReadyToTrap = true
+	end},
 	["attack2"] = { "lowthrow", 0.8, false, false, function(self)
 		--local tr = self:GetEyeTrace()
 		--self:Tie(tr)
@@ -162,7 +165,7 @@ SWEP.ViewBobCamBone = "ValveBiped.Bip01_R_Hand"
 SWEP.ViewPunchDiv = 120
 
 SWEP.CallbackTimeAdjust = 0.1
-SWEP.NoTrap = true
+SWEP.NoTrap = false
 
 function SWEP:Deploy( wep )
 	self:PlayAnim("deploy")
@@ -254,7 +257,7 @@ function SWEP:Throw(mul, time, nosound, throwPosAdjust, throwAngAdjust)
 	throwAngAdjust = throwAngAdjust or Angle(0,0,0)
 	--throwPosAdjust[2] = throwPosAdjust[2] + 2
 	local _,_,headm = self:GetEyeTrace()
-	local eyepos = headm and headm:GetTranslation() or false
+	local eyepos = headm:GetTranslation() or false
 	local ang = IsValid(entOwner) and owner:EyeAngles() or self:GetAngles()
 	local hand = eyepos and eyepos + ang:Forward() * throwPosAdjust[1] + ang:Right() * (throwPosAdjust[2] + 2) + ang:Up() * throwPosAdjust[3] or self:GetPos()
 
@@ -402,9 +405,9 @@ local vec_remove = Vector(0,0,0)
 local vec_show = Vector(1,1,1)
 
 SWEP.ItemsBones = {
-	["Grenade"] = {57},
-	["Spoon"] = {58},
-	["Pin"] = {59,60,61},
+	["Grenade"] = {89},
+	["Spoon"] = {88},
+	["Pin"] = {87,90,91},
 }
 
 local IDItems = {
@@ -620,6 +623,7 @@ function SWEP:PlaceTrap()
 		
 		self.Trap = ent
 		
+		ent:SetModel(self.WorldModel)
 		self:SetNWBool("PlacedTrap", true)
 	elseif IsValid(self.Trap) then
 		local tr = hg.eyeTrace(ply)
