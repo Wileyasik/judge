@@ -202,11 +202,21 @@ function SWEP:DrawWeaponSelection( x, y, wide, tall, alpha )
 		self.WepSelectIcon2:SetInt("$flags", 32)
 		self.IconEdited = true
 	end
-	if self.WepSelectIcon2box then
-		surface.DrawTexturedRect( x + wide/2 - (wide/1.95)/2, y,  wide/1.95 , wide/1.95 )
-	else
-		surface.DrawTexturedRect( x, y,  wide , wide/2)
+	local maxWide = wide
+	local maxTall = self.WepSelectIcon2box and wide / 1.95 or wide / 2
+	local iconWide = self.WepSelectIcon2:Width()
+	local iconTall = self.WepSelectIcon2:Height()
+	if iconWide <= 0 or iconTall <= 0 then
+		render.PopFilterMin()
+		render.PopFilterMag()
+		return
 	end
+	local scale = math.min(maxWide / iconWide, maxTall / iconTall)
+	local drawWide = iconWide * scale
+	local drawTall = iconTall * scale
+
+	-- Fit the source material into the existing icon area without changing its aspect ratio.
+	surface.DrawTexturedRect( x + (maxWide - drawWide) / 2, y + (maxTall - drawTall) / 2, drawWide, drawTall )
 
 	render.PopFilterMin()
 	render.PopFilterMag()

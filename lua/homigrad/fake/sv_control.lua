@@ -276,10 +276,7 @@ hook.Add("Fake", "Contorl", function(ply, ragdoll)
 		ragdoll.otrubCollapseStart = ply.otrubCollapseStart
 	end
 	
-	ragdoll._slideActive = false
-	ragdoll._slideStartTime = nil
-	ragdoll._slideDir = nil
-	ragdoll._slideCooldown = nil
+	hg.ClearRagdollSlideState(ragdoll)
 	
 	local plyVel = ply:GetVelocity()
 	ragdoll._slideEntrySpeed = Vector(plyVel.x, plyVel.y, 0):Length()
@@ -380,6 +377,7 @@ local models_female = {
 
 local vector_zero = Vector(0,0,0)
 local vector_usehull = Vector(6, 6, 6)
+local slideFrictionBones = {13, 14, 12, 9}
 
 local hg_shitty_fake = CreateConVar("hg_shitty_fake", "1", FCVAR_ARCHIVE + FCVAR_NOTIFY, "enable shitty fake", 0, 1)
 
@@ -389,6 +387,39 @@ local speedupbones = {
 }
 
 local vecfive = Vector(5,5,5)
+
+local function restoreSlideMaterials(ragdoll)
+	if not ragdoll._slideMaterialSet then return end
+
+	for _, fNum in ipairs(slideFrictionBones) do
+		local phys = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, fNum))
+		if IsValid(phys) and ragdoll._origMaterials and ragdoll._origMaterials[fNum] then
+			phys:SetMaterial(ragdoll._origMaterials[fNum])
+		end
+	end
+
+	ragdoll._origMaterials = nil
+	ragdoll._slideMaterialSet = false
+end
+
+local function clearSlideState(ragdoll, cooldown)
+	restoreSlideMaterials(ragdoll)
+	ragdoll._slideActive = false
+	ragdoll._slideStartTime = nil
+	ragdoll._slideDir = nil
+	ragdoll.isSliding = false
+
+	if cooldown then
+		ragdoll._slideCooldown = CurTime() + cooldown
+	end
+end
+
+function hg.ClearRagdollSlideState(ragdoll)
+	if not IsValid(ragdoll) then return end
+	clearSlideState(ragdoll)
+	ragdoll._slideCooldown = nil
+	ragdoll.isDropkicking = false
+end
 
 local player_GetHumans = player.GetHumans
 
@@ -475,7 +506,7 @@ hook.Add("Think", "Fake", function()
 					local name = ragdoll:GetBoneName(bone)
 
 					if IsValid(physobj) then
-						local bone_impulse = ply.HitBones and ply.HitBones[bonename] or CurTime()
+						local bone_impulse = ply.HitBones and ply.HitBones[name] or CurTime()
 						local amt_impulse = (2 - math.Clamp(bone_impulse - CurTime(),0,2)) / 2
 						
 						local p = {}
@@ -1288,23 +1319,22 @@ hook.Add("Think", "Fake", function()
 					local falling = curVel.z < -80
 
 					local dirDot = 0
-					if horizontalSpeed > 1 then
+					if ragdoll._slideDir and horizontalSpeed > 1 then
 						dirDot = ragdoll._slideDir:GetNormalized():Dot(horizontalVel:GetNormalized())
 					end
 
 					if horizontalSpeed < slideMinKeepSpeed or slideTime > slideMaxDuration or not onGround or falling or dirDot < -0.1 then
-						ragdoll._slideActive = false
-						ragdoll._slideStartTime = nil
-						ragdoll._slideDir = nil
-						ragdoll._slideCooldown = CurTime() + slideCooldown
-						ragdoll.isSliding = false
+						clearSlideState(ragdoll, slideCooldown)
 					end
 				end
 
 				if not ragdoll._slideActive and checkSpeed >= slideMinStartSpeed and not ragdoll._slideCooldown and onGround then
 					ragdoll._slideActive = true
 					ragdoll._slideStartTime = CurTime()
-					local dir = horizontalVel:LengthSqr() > 1 and horizontalVel:GetNormalized() or entryDir
+					local eyeForward = angles:Forward()
+					local fallbackDir = Vector(eyeForward.x, eyeForward.y, 0)
+					if fallbackDir:LengthSqr() <= 1 then fallbackDir = Vector(1, 0, 0) end
+					local dir = horizontalVel:LengthSqr() > 1 and horizontalVel:GetNormalized() or (entryDir:LengthSqr() > 1 and entryDir:GetNormalized() or fallbackDir:GetNormalized())
 					ragdoll._slideDir = dir
 
 					ragdoll.isSliding = true
@@ -1342,11 +1372,10 @@ hook.Add("Think", "Fake", function()
 					ragdoll.isSliding = true
 
 					local slidePhys = {0, 1}
-					local frictionBones = {13, 14, 12, 9}
 
 					if not ragdoll._slideMaterialSet then
 						ragdoll._origMaterials = {}
-						for _, fNum in ipairs(frictionBones) do
+						for _, fNum in ipairs(slideFrictionBones) do
 							local phys = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, fNum))
 							if IsValid(phys) then
 								ragdoll._origMaterials[fNum] = phys:GetMaterial()
@@ -1392,22 +1421,10 @@ hook.Add("Think", "Fake", function()
 						org.stamina.subadd = org.stamina.subadd + 0.08
 					end
 				else
-					if ragdoll._slideMaterialSet then
-						local frictionBones = {13, 14, 12, 9}
-						for _, fNum in ipairs(frictionBones) do
-							local phys = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, fNum))
-							if IsValid(phys) and ragdoll._origMaterials and ragdoll._origMaterials[fNum] then
-								phys:SetMaterial(ragdoll._origMaterials[fNum])
-							end
-						end
-						ragdoll._origMaterials = nil
-						ragdoll._slideMaterialSet = false
-					end
+					restoreSlideMaterials(ragdoll)
 					
 					if ragdoll._slideActive then
-						ragdoll._slideActive = false
-						ragdoll._slideStartTime = nil
-						ragdoll._slideDir = nil
+						clearSlideState(ragdoll)
 					end
 					
 					ragdoll.isSliding = false
@@ -1460,7 +1477,7 @@ hook.Add("Think", "Fake", function()
 				end
 			else
 				if IsValid(ragdoll) then
-					ragdoll.isSliding = false
+					clearSlideState(ragdoll)
 					ragdoll.isDropkicking = false
 				end
 			end
@@ -1544,7 +1561,15 @@ hook.Add("Ragdoll Collide", "SlideDamage", function(ragdoll, data)
 	end
 
 	local speed = data.OurOldVelocity:Length()
-	local dmg = isDropkick and math.Clamp(speed / 15, 8, 35) or math.Clamp(speed / 25, 2, 20)
+	local attackerPhys = ragdoll:GetPhysicsObject()
+	local attackerSpeed = IsValid(attackerPhys) and attackerPhys:GetVelocity():Length() or ragdoll:GetVelocity():Length()
+
+	if isDropkick then
+		speed = math.max(speed, attackerSpeed)
+		if speed < 260 then return end
+	end
+
+	local dmg = isDropkick and math.Clamp((speed - 180) / 8, 12, 60) or math.Clamp(speed / 25, 2, 20)
 
 	local targetPly = hg.RagdollOwner(hitEnt) or (hitEnt:IsPlayer() and hitEnt)
 	if not IsValid(targetPly) then
@@ -1566,15 +1591,19 @@ hook.Add("Ragdoll Collide", "SlideDamage", function(ragdoll, data)
 		dmgInfo:SetDamageForce(data.OurOldVelocity:GetNormalized() * dmg * 50)
 
 		local hitgroup = HITGROUP_GENERIC
-		if boneName:find("Foot") then
-			hitgroup = HITGROUP_LEFTLEG
-		elseif boneName:find("Calf") then
-			hitgroup = HITGROUP_LEFTLEG
-		elseif boneName:find("Thigh") then
+		if boneName:find("R_Foot") or boneName:find("R_Calf") or boneName:find("R_Thigh") then
+			hitgroup = HITGROUP_RIGHTLEG
+		elseif boneName:find("L_Foot") or boneName:find("L_Calf") or boneName:find("L_Thigh") then
 			hitgroup = HITGROUP_LEFTLEG
 		end
 
 		hook.Run("HomigradDamage", targetPly, dmgInfo, hitgroup, hg.GetCurrentCharacter(targetPly), dmg)
+
+		if isDropkick and targetPly.organism then
+			local speedMul = math.Clamp((speed - 260) / 420, 0, 1)
+			targetPly.organism.painadd = targetPly.organism.painadd + 8 + speedMul * 22
+			targetPly.organism.shock = math.min((targetPly.organism.shock or 0) + 8 + speedMul * 32, 95)
+		end
 	end
 
 	if hg_fake_stamina:GetBool() and ply.organism then
