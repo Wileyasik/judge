@@ -481,7 +481,7 @@ function SWEP:ThinkAdd()
 	end
 end
 
-SWEP.spoon = "models/weapons/arc9/darsu_eft/skobas/m67_skoba.mdl"
+SWEP.spoon = "models/weapons/m67_skoba.mdl"
 
 function SWEP:CreateSpoon(entownr)
 	local entasd
@@ -749,4 +749,4 @@ function SWEP:Reload()
 		self.TrappingRN = true
 		self:PlayAnim("trapplace")
 	end
-end
+end

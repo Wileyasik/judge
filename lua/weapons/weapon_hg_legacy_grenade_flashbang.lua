@@ -22,4 +22,4 @@ SWEP.ENT = "ent_hg_grenade_flashbang"
 SWEP.offsetVec = Vector(3, -2.5, -1)
 SWEP.offsetAng = Angle(160, 0, 0)
 SWEP.ModelScale = 0.8
-SWEP.spoon = "models/weapons/arc9/darsu_eft/skobas/m18_skoba.mdl"
+SWEP.spoon = "models/weapons/m67_skoba.mdl"

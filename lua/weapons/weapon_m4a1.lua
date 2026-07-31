@@ -88,6 +88,9 @@ SWEP.ARC9Parts = {
 	},
 }
 
+SWEP.ARC9DefaultLHIKPart = "handguard"
+SWEP.ARC9DefaultLHIKSourceModel = "models/weapons/mods/handguard_ar15_colt_car15_skinny_lower.mdl"
+
 SWEP.FakePos = Vector(-12, 2.52, 7.5)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.AttachmentPos = Vector(-9, 0, 0)
@@ -273,10 +276,10 @@ SWEP.DistSound = "weapons/darsu_eft/m4a1/fire_new/tx15_fire_outdoor_close.wav"
 
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"supressor5", Vector(0, 0, 0), {}},
-		[2] = {"supressor6", Vector(0, 0, 0), {}},
-		[3] = {"supressor15", Vector(1.3, 0, 0), {}},
-		["mount"] = Vector(-0.5, 0.1, 0),
+		[1] = {"supressor5", Vector(-0.4, 0, 0), {}},
+		[2] = {"supressor6", Vector(-0.3, 0, 0), {}},
+		[3] = {"supressor15", Vector(1, 0, 0), {}},
+		["mount"] = Vector(-0.5, 0.05, 0),
 	},
 	sight = {
 		["mountType"] = {"picatinny", "ironsight"},

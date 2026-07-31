@@ -99,6 +99,7 @@ function SWEP:PrimarySpread()
 			angrand2[3] = -angrand2[2] * 1
 			local mulhuy = GetGlobalBool("FullRealismMode",false) and 10 or 1
 			mul = mul * (self.attachments and self.attachments.grip and not table.IsEmpty(self.attachments.grip) and hg.attachments.grip[self.attachments.grip[1]].recoilReduction or 1)
+			mul = mul * self:GetAttachmentRecoilMul()
 			
 			local huyang = angrand2 * mul / 2 * mulhuy
 			huyang[3] = 0

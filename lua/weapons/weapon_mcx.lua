@@ -46,6 +46,9 @@ SWEP.ARC9Parts = {
 	},
 }
 
+SWEP.ARC9DefaultLHIKPart = "handguard"
+SWEP.ARC9DefaultLHIKSourceModel = "models/weapons/mods/handguard_mcx_sig_gen1_12inch.mdl"
+
 SWEP.FakePos = Vector(-13, 2.52, 7.5)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.AttachmentPos = Vector(0, 0, 0)

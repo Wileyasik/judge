@@ -4,7 +4,62 @@ local angZero = Angle(0, 0, 0)
 hg.attachments = hg.attachments or {}
 SWEP.availableAttachments = {}
 local hg_random_atts = ConVarExists("hg_random_atts") and GetConVar("hg_random_atts") or CreateConVar("hg_random_atts", 0, FCVAR_SERVER_CAN_EXECUTE, "Toggle random attachments on weapon spawn", 0, 1)
+
+local function muzzleCalibersForWeapon(wep)
+	local ammo = wep.Primary and wep.Primary.Ammo
+	local calibers = {}
+	if ammo == "5.45x39 mm" then calibers["545"] = true end
+	if ammo == "7.62x39 mm" or (isstring(ammo) and string.find(ammo, ".366", 1, true)) then calibers["762x39"] = true end
+	if ammo == "5.56x45 mm" then calibers["556"] = true end
+	if ammo == "7.62x51 mm" or ammo == "7.62x54 mm" or ammo == "7.62x54R mm" or ammo == ".300 Blackout" then calibers["762x51"] = true end
+	local class = wep.GetClass and wep:GetClass() or wep.ClassName
+	if class == "weapon_nl545" then calibers["556"] = true end
+	if class == "weapon_mk47" then calibers["762x51"] = true end
+	return calibers
+end
+
+function SWEP:SetupMuzzleAttachments()
+	local slot = self.availableAttachments and self.availableAttachments.barrel
+	if not istable(slot) or not hg.attachments.barrel then return end
+	if self.DisableMuzzleDevices then return end
+
+	local calibers = muzzleCalibersForWeapon(self)
+	local present = {}
+	for _, entry in pairs(slot) do
+		if istable(entry) and isstring(entry[1]) then present[entry[1]] = true end
+	end
+
+	local standard
+	for id, definition in pairs(hg.attachments.barrel) do
+		if not istable(definition.calibers) then continue end
+		local compatible
+		for caliber in pairs(calibers) do
+			if definition.calibers[caliber] then compatible = true break end
+		end
+		if not compatible then continue end
+		if definition.standard and not standard then standard = id end
+		if not definition.standard and not present[id] then
+			slot[#slot + 1] = {id, Vector(0, 0, 0), {}}
+			present[id] = true
+		end
+	end
+
+	if standard then slot.empty = {standard, Vector(0, 0, 0), {}} end
+end
+
+function SWEP:UpdateAttachmentModifiers()
+	self.BaseErgonomics = self.BaseErgonomics or self.Ergonomics or 1
+	local barrel = self:GetAttachmentInfo("barrel")
+	self.Ergonomics = self.BaseErgonomics * (barrel and barrel.ergonomicsMul or 1)
+end
+
+function SWEP:GetAttachmentRecoilMul()
+	local barrel = self:GetAttachmentInfo("barrel")
+	return barrel and barrel.recoilMul or 1
+end
+
 function SWEP:ClearAttachments()
+	self:SetupMuzzleAttachments()
 	self.attachments = {
 		barrel = {},
 		sight = {},
@@ -25,6 +80,7 @@ function SWEP:ClearAttachments()
 			hg.SetAttachment(self.attachments,att,self:GetClass())
 		end
 	end
+	self:UpdateAttachmentModifiers()
 
 	if SERVER then timer.Simple(0.2, function() self:SetNetVar("attachments",self.attachments) end) end
 	self:CallOnRemove("removeAtt", function()
@@ -44,6 +100,7 @@ end
 function hg.ClearAttachments(wep)
 	local self = weapons.Get(wep)
 	local tbl = {}
+	if self.SetupMuzzleAttachments then self:SetupMuzzleAttachments() end
 
 	tbl.attachments = {
 		barrel = {},
@@ -282,8 +339,21 @@ if CLIENT then
 		return false
 	end
 end
+
+local mount3ScopeCorrections = {
+	optic2 = Vector(0, -1.5, 1.4),
+	optic5 = Vector(0, -1.5, 1.4),
+	optic6 = Vector(0, -1.5, 1.4),
+	optic19 = Vector(0, -1.3, 1.4),
+	optic21 = Vector(0, -1.3, 1.4),
+	optic23 = Vector(0, -1.3, 1.4),
+}
+
 function SWEP:Attachment_Transform(model,pos,ang,plc,att,attdata,available)
-	local mountBone = available[plc] and available[plc]["mountBone"]
+	local slot = available[plc]
+	local overrides = self.HGAttachmentTransformOverrides
+	local override = overrides and overrides[plc] and overrides[plc][att[1]]
+	local mountBone = override and override.bone or not override and slot and slot["mountBone"]
 	if mountBone then
 		local weaponModel = self:GetWM()
 		local bone = IsValid(weaponModel) and weaponModel:LookupBone(mountBone)
@@ -294,21 +364,35 @@ function SWEP:Attachment_Transform(model,pos,ang,plc,att,attdata,available)
 		end
 	end
 
-	local slotMount = Vector(0, 0, 0)
-	if att[2] and isvector(att[2]) then slotMount:Add(att[2]) end
-	if available[plc] and isvector(available[plc]["mount"]) then slotMount:Add(available[plc]["mount"]) end
-	if available[plc] and istable(available[plc]["mount"]) and isvector(available[plc]["mount"][attdata.mountType]) then
-		slotMount:Add(available[plc]["mount"][attdata.mountType])
+	local entryOffset = override and override.offset or att[2]
+	local mountOffset = override and override.mount
+	if not isvector(mountOffset) and slot then
+		mountOffset = isvector(slot.mount) and slot.mount or istable(slot.mount) and slot.mount[attdata.mountType]
 	end
-	slotMount:Rotate(ang)
-	slotMount:Add(pos)
+	local slotAngle = override and override.ang
+	if not isangle(slotAngle) and slot then
+		slotAngle = isangle(slot.mountAngle) and slot.mountAngle or istable(slot.mountAngle) and slot.mountAngle[attdata.mountType]
+	end
+
+	local mountPos = Vector(0, 0, 0)
+	if isvector(entryOffset) then mountPos:Add(entryOffset) end
+	if isvector(mountOffset) then mountPos:Add(mountOffset) end
+	mountPos:Rotate(ang)
+	mountPos:Add(pos)
 
 	vecadd:Zero()
-	if att[2] and isvector(att[2]) then vecadd:Add(att[2]) end
-	if available[plc] and available[plc]["mount"] and isvector(available[plc]["mount"]) then vecadd:Add(available[plc]["mount"]) end
-	if available[plc] and istable(available[plc]["mount"]) and available[plc]["mount"][attdata.mountType] and isvector(available[plc]["mount"][attdata.mountType]) then vecadd:Add(available[plc]["mount"][attdata.mountType]) end
+	if isvector(entryOffset) then vecadd:Add(entryOffset) end
+	local activeMount = self.attachments and self.attachments.mount
+	local dovetail = attdata.mountType == "dovetail" or istable(activeMount) and activeMount.mountType == "dovetail"
+	if plc == "sight" and not dovetail and isnumber(att.sightSlide) then vecadd.x = vecadd.x + math.Clamp(att.sightSlide, -1, 3) end
+	if isvector(mountOffset) then vecadd:Add(mountOffset) end
 	if attdata.offset and isvector(attdata.offset) then vecadd:Add(attdata.offset) end
-	local addAng = attdata[3] + (available[plc] and (isangle(available[plc]["mountAngle"]) and available[plc]["mountAngle"] or istable(available[plc]["mountAngle"]) and available[plc]["mountAngle"][attdata.mountType] or angZero) or angZero)
+	local mount3Correction = plc == "sight"
+		and istable(activeMount)
+		and activeMount[1] == "mount3"
+		and mount3ScopeCorrections[att[1]]
+	if mount3Correction then vecadd:Add(mount3Correction) end
+	local addAng = attdata[3] + (slotAngle or angZero)
 
 	vecadd:Rotate(ang)
 	vecadd:Add(pos)
@@ -323,7 +407,7 @@ function SWEP:Attachment_Transform(model,pos,ang,plc,att,attdata,available)
 	self.attachmentMenuTransforms[plc] = {
 		id = att[1],
 		frame = FrameNumber(),
-		mountPos = Vector(slotMount.x, slotMount.y, slotMount.z),
+		mountPos = Vector(mountPos.x, mountPos.y, mountPos.z),
 		pos = Vector(vecadd.x, vecadd.y, vecadd.z),
 		ang = Angle(ang.p, ang.y, ang.r)
 	}
@@ -348,25 +432,32 @@ function SWEP:Attachment_Transform(model,pos,ang,plc,att,attdata,available)
 	local addred = string.find(att[1], "supressor") and 5 * self.dmgStack2 / 30 or 0
 	render.SetColorModulation(1 + addred,1,1)
 	local previewFrame = hg.attachmentsMenuPanel
-	local hiddenByPreview = IsValid(previewFrame) and previewFrame.previewPlacement == plc
+	local hiddenByPreview = IsValid(previewFrame) and (previewFrame.previewPlacement == plc or plc == "mount" and IsValid(previewFrame.previewAdapter))
 	if not hiddenByPreview and ((IsValid(self:GetOwner()) and attdata.norenderWhenDrop) or not attdata.norenderWhenDrop) then
 		model:DrawModel()
 	end
 	render.SetColorModulation(1,1,1)
 
+	local mountKey = "mountex_" .. plc
+	local mount = self.modelAtt[mountKey]
+	if IsValid(mount) and (not attdata.mount or mount:GetModel() != attdata.mount) then
+		mount:Remove()
+		self.modelAtt[mountKey] = nil
+		mount = nil
+	end
+
 	if attdata.mount then
-		if not IsValid(self.modelAtt["mountex"]) then
-			self.modelAtt["mountex"] = ClientsideModel(attdata.mount)
-			self.modelAtt["mountex"]:SetNoDraw(true)
+		if not IsValid(mount) then
+			mount = ClientsideModel(attdata.mount)
+			mount:SetNoDraw(true)
+			self.modelAtt[mountKey] = mount
 		end
 
-		local mount = self.modelAtt["mountex"]
-		
 		local pos = vecZero
-		pos:Set(attdata.mountVec)
+		pos:Set(attdata.mountVec or vector_origin)
 		pos:Rotate(model:GetAngles())
 		pos:Add(model:GetPos())
-		local _, ang = LocalToWorld(vecZero, attdata.mountAng, vecZero, model:GetAngles())
+		local _, ang = LocalToWorld(vecZero, attdata.mountAng or angle_zero, vecZero, model:GetAngles())
 		mount:SetRenderOrigin(pos)
 		mount:SetRenderAngles(ang)
 		mount:SetPos(pos)
@@ -946,6 +1037,8 @@ if CLIENT then
 		local slot = wep.availableAttachments and wep.availableAttachments[placement]
 		if not slot then return false end
 		local explicit = findExplicitEntry(slot, id) != nil
+		local adapter = placement == "sight" and wep.availableAttachments.mount and wep.availableAttachments.mount[definition.mountType]
+		if adapter then return true end
 		if not slot.mountType and not definition.mountType then return explicit end
 		return mountTypesMatch(slot.mountType, definition.mountType)
 	end
@@ -1144,6 +1237,14 @@ if CLIENT then
 		frame.previewModel:SetPos(pos)
 		frame.previewModel:SetAngles(ang)
 		frame.previewModel:SetupBones()
+		if IsValid(frame.previewAdapter) and frame.previewAdapterID then
+			local adapterPos, adapterAng = getSlotAnchor(frame.weapon, "mount", frame.previewAdapterID, frame.previewAdapter)
+			if adapterPos and adapterAng then
+				frame.previewAdapter:SetPos(adapterPos)
+				frame.previewAdapter:SetAngles(adapterAng)
+				frame.previewAdapter:SetupBones()
+			end
+		end
 
 		local _, definition = getAttachmentDefinition(frame.previewID)
 		if IsValid(frame.previewMount) and definition then
@@ -1165,6 +1266,7 @@ if CLIENT then
 		local frame = hg.attachmentsMenuPanel
 		if not IsValid(frame) or not IsValid(frame.previewModel) then return end
 		local models = {frame.previewModel}
+		if IsValid(frame.previewAdapter) then models[#models + 1] = frame.previewAdapter end
 		if IsValid(frame.previewMount) then models[#models + 1] = frame.previewMount end
 		if IsValid(frame.previewHolo) then models[#models + 1] = frame.previewHolo end
 		halo.Add(models, color_white, 1, 1, 1, true, true)
@@ -1270,9 +1372,12 @@ if CLIENT then
 			self.hiddenMagazineColor = nil
 			self.hiddenMagazineRenderMode = nil
 			if IsValid(self.previewModel) then self.previewModel:Remove() end
+			if IsValid(self.previewAdapter) then self.previewAdapter:Remove() end
 			if IsValid(self.previewMount) then self.previewMount:Remove() end
 			if IsValid(self.previewHolo) then self.previewHolo:Remove() end
 			self.previewModel = nil
+			self.previewAdapter = nil
+			self.previewAdapterID = nil
 			self.previewMount = nil
 			self.previewHolo = nil
 			self.previewPlacement = nil
@@ -1295,6 +1400,18 @@ if CLIENT then
 			if definition.bBonemerge and IsValid(self.weapon:GetWM()) then
 				model:SetParent(self.weapon:GetWM())
 				model:AddEffects(EF_BONEMERGE)
+			end
+			if placement == "sight" and definition.mountType then
+				local adapterEntry = self.weapon.availableAttachments.mount and self.weapon.availableAttachments.mount[definition.mountType]
+				local adapterID = istable(adapterEntry) and adapterEntry[1]
+				local adapterDefinition = adapterID and hg.attachments.mount and hg.attachments.mount[adapterID]
+				if adapterDefinition and isstring(adapterDefinition[2]) and adapterDefinition[2] != "" then
+					self.previewAdapter = ClientsideModel(adapterDefinition[2])
+					if IsValid(self.previewAdapter) then
+						self.previewAdapter:SetNoDraw(false)
+						self.previewAdapterID = adapterID
+					end
+				end
 			end
 			if isstring(definition.mount) and definition.mount != "" then
 				self.previewMount = ClientsideModel(definition.mount)
@@ -1343,18 +1460,44 @@ if CLIENT then
 			local section = self.slotSections[placement]
 			if not IsValid(section) then return end
 			if IsValid(section.cards) then section.cards:Remove() end
-
-			local cards = vgui.Create("DIconLayout", section)
-			section.cards = cards
-			cards:SetPos(0, 44)
-			cards:SetSize(section:GetWide(), section:GetTall() - 44)
-			cards:SetSpaceX(8)
-			cards:SetSpaceY(8)
-
+			if IsValid(section.sightSlider) then section.sightSlider:Remove() end
+			if self.weapon.SetupMuzzleAttachments then self.weapon:SetupMuzzleAttachments() end
 			local attachments = getWeaponAttachments(self.weapon)
 			local installed = attachments[placement]
 			local installedID = installed and installed[1]
+			local installedDefinition = installedID and hg.attachments[placement] and hg.attachments[placement][installedID]
+			local activeMount = attachments.mount
+			local dovetail = installedDefinition and installedDefinition.mountType == "dovetail" or istable(activeMount) and activeMount.mountType == "dovetail"
+			local hasSight = placement == "sight" and installedID and installedID != "empty" and not dovetail
+
+			local scroll = vgui.Create("DScrollPanel", section)
+			section.cards = scroll
+			scroll:SetPos(0, hasSight and 72 or 44)
+			scroll:SetSize(section:GetWide(), section:GetTall() - (hasSight and 72 or 44))
+			local cards = vgui.Create("DIconLayout", scroll)
+			cards:Dock(TOP)
+			cards:SetWide(section:GetWide() - 12)
+			cards:SetSpaceX(8)
+			cards:SetSpaceY(8)
+
 			local slot = self.weapon.availableAttachments[placement]
+
+			if hasSight then
+				local slider = vgui.Create("DNumSlider", section)
+				section.sightSlider = slider
+				slider:SetPos(4, 43)
+				slider:SetSize(section:GetWide() - 8, 28)
+				slider:SetText("Sight X")
+				slider:SetMinMax(-1, 3)
+				slider:SetDecimals(1)
+				slider:SetValue(math.Clamp(tonumber(installed.sightSlide) or 0, -1, 3))
+				slider.OnValueChanged = function(_, value)
+					value = math.Clamp(value, -1, 3)
+					installed.sightSlide = value
+					frame.pendingSightSlide = value
+					frame.pendingSightSlideAt = RealTime() + 0.15
+				end
+			end
 
 			local function addCard(id, count, isInstalled)
 				local card = cards:Add("DButton")
@@ -1413,10 +1556,20 @@ if CLIENT then
 			if installedID and installedID != "empty" then addCard(installedID, nil, true) end
 
 			local choices = {}
-			for id, count in pairs(getInventoryCounts()) do
+			local choiceIDs = {}
+			local inventory = getInventoryCounts()
+			local sandbox = engine.ActiveGamemode() == "sandbox"
+			local candidates = sandbox and hg.attachments[placement] or inventory
+			for id in pairs(candidates or {}) do
 				local candidatePlacement, definition = getAttachmentDefinition(id)
-				if candidatePlacement == placement and isCompatible(self.weapon, placement, id, definition) then
-					choices[#choices + 1] = {id = id, count = count}
+				if not definition.standard and candidatePlacement == placement and isCompatible(self.weapon, placement, id, definition) then
+					choices[#choices + 1] = {id = id, count = sandbox and nil or inventory[id]}
+					choiceIDs[id] = true
+				end
+			end
+			for id, definition in pairs(hg.attachments[placement] or {}) do
+				if definition.standard and id != installedID and not choiceIDs[id] and isCompatible(self.weapon, placement, id, definition) then
+					choices[#choices + 1] = {id = id}
 				end
 			end
 			table.sort(choices, function(a, b)
@@ -1427,6 +1580,7 @@ if CLIENT then
 			if IsValid(slotButton) then slotButton.moduleCount = #choices + (installedID and installedID != "empty" and 1 or 0) end
 
 			cards:InvalidateLayout(true)
+			cards:SizeToChildren(false, true)
 		end
 
 		function frame:RefreshTbl()
@@ -1468,6 +1622,16 @@ if CLIENT then
 
 		frame:RefreshTbl()
 
+		function frame:SendPendingSightSlide()
+			if self.pendingSightSlide == nil then return end
+			local value = self.pendingSightSlide
+			self.pendingSightSlide = nil
+			self.pendingSightSlideAt = nil
+			net.Start("ZB_AttachSightSlide")
+			net.WriteFloat(value)
+			net.SendToServer()
+		end
+
 		function frame:Think()
 			if not IsValid(self.weapon) or lply:GetActiveWeapon() != self.weapon or not lply:Alive() then
 				self:Close()
@@ -1484,6 +1648,7 @@ if CLIENT then
 			end
 			updatePreviewTransform(self)
 			self:UpdateManagedMagazineVisibility()
+			if self.pendingSightSlideAt and RealTime() >= self.pendingSightSlideAt then self:SendPendingSightSlide() end
 
 		end
 
@@ -1492,6 +1657,7 @@ if CLIENT then
 		end
 
 		function frame:OnRemove()
+			self:SendPendingSightSlide()
 			self:ClearPreview()
 			if hg.attachmentsMenuPanel == self then hg.attachmentsMenuPanel = nil end
 			if IsValid(self.weapon) and self.inspectSequence and self.weapon.seq == self.inspectSequence and not self.weapon.reload then

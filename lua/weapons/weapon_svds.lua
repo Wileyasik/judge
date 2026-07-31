@@ -106,6 +106,7 @@ SWEP.Primary.Damage = 70
 SWEP.Primary.Force = 70
 SWEP.Primary.Sound = {"weapons/darsu_eft/svds/svd_fire_close.ogg", 85, 100, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/svds/svd_fire_close_silenced.ogg", 65, 100, 100}
+SWEP.DisableMuzzleDevices = true
 SWEP.availableAttachments = {
 	barrel = {
 		[1] = {"supressor9", Vector(0, 0, 0), {}},
@@ -202,4 +203,3 @@ function SWEP:DrawPost()
 		wep:ManipulateBonePosition(70, Vector(-1.8 * self.shooanim, 0, 0), false)
 	end
 end
-

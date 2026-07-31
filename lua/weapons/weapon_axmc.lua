@@ -1,5 +1,6 @@
 --ByLazzy
-SWEP.Base = "weapon_mxlr"
+SWEP.Base = "homigrad_base"
+SWEP.ManualCycle = true
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "AI AXMC"
@@ -13,7 +14,7 @@ SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_ai_axmc.mdl"
 SWEP.WorldModelReal = "models/weapons/c_ai_axmc.mdl"
 
-SWEP.FakePos = Vector(-9, 2.6, 6)
+SWEP.FakePos = Vector(-13, 2.6, 7.5)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
 SWEP.AttachmentPos = Vector(-0, 0.1, 0)
@@ -74,7 +75,7 @@ SWEP.FakeVPShouldUseHand = false
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_ai_axmc.png")
 SWEP.IconOverride = "entities/arc9_eft_ai_axmc.png"
 
-SWEP.LocalMuzzlePos = Vector(38.5, -1.675, 3.15)
+SWEP.LocalMuzzlePos = Vector(34.5, -1.65, 4.6)
 SWEP.LocalMuzzleAng = Angle(0, 0, 0)
 SWEP.WeaponEyeAngles = Angle(-0.7, 0.1, 0)
 
@@ -98,7 +99,7 @@ SWEP.Primary.Spread = 0
 -- Звуки выстрела
 SWEP.Primary.Sound = {"weapons/darsu_eft/axmc/aiax_outdoor_close.ogg", 85, 100, 100} 
 SWEP.SupressedSound = {"weapons/darsu_eft/axmc/aiax_outdoor_silenced_close.ogg", 65, 100, 100}
-SWEP.Primary.Wait = 0.25
+SWEP.Primary.Wait = 0.15
 SWEP.NumBullet = 1
 
 SWEP.availableAttachments = {
@@ -117,6 +118,8 @@ SWEP.StartAtt = {"optic5"}
 
 SWEP.AnimShootMul = 3
 SWEP.AnimShootHandMul = 10
+SWEP.AnimDraw = 0.4
+SWEP.reloadCoolDown = 0
 SWEP.DeploySnd = {"homigrad/weapons/draw_hmg.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/hmg_holster.mp3", 55, 100, 110}
 SWEP.HoldType = "rpg"

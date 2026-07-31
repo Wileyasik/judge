@@ -171,7 +171,7 @@ SWEP.PPSMuzzleEffect = "muzzleflash_SR25"
 SWEP.CustomShell = "762x51"
 SWEP.ShellEject = "EjectBrass_762"
 
-SWEP.LocalMuzzlePos = Vector(25.4, -1.75, 4.2)
+SWEP.LocalMuzzlePos = Vector(25, -1.75, 4.2)
 SWEP.LocalMuzzleAng = Angle(0, 0, 0)
 SWEP.WeaponEyeAngles = Angle(0, 0, 0)
 
@@ -186,6 +186,7 @@ SWEP.ScrappersSlot = "Primary"
 SWEP.DistSound = "weapons/darsu_eft/sa58/fire_new/fal_outdoor_close_loop3.wav"
 
 SWEP.StartAtt = {"optic6", "grip7"}
+SWEP.DisableMuzzleDevices = true
 SWEP.availableAttachments = {
 	barrel = {
 		[1] = {"supressor9", Vector(0, 0, 0), {}},

@@ -1,5 +1,18 @@
 --ByLazzy
 SWEP.Base = "weapon_m4super"
+SWEP.ManualCycle = true
+SWEP.ShotgunTubeReload = true
+SWEP.ShotgunManualCycle = true
+SWEP.ShotgunCycleAnim = "cycle"
+SWEP.ShotgunCycleTime = 1.0
+SWEP.ShotgunReloadStartAnim = "start"
+SWEP.ShotgunReloadStartTime = 1.3
+SWEP.ShotgunReloadStartLoadsShell = true
+SWEP.ShotgunReloadInsertAnim = "insert"
+SWEP.ShotgunReloadInsertTime = 1.0
+SWEP.ShotgunReloadFinishAnim = "finish"
+SWEP.ShotgunReloadFinishTime = 1.3
+SWEP.ShotgunEmptyReloadNeedsCycle = true
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "MR-133"
@@ -99,7 +112,7 @@ SWEP.AnimList = {
     ["holster"] = "holster",
     ["ready"] = "ready0",
     ["fire"] = "fire",
-    ["cycle"] = "pump2",
+    ["cycle"] = "pump1",
     ["inspect"] = "look",
     
     ["start"] = "reload_start2",
@@ -124,7 +137,7 @@ SWEP.AnimsEvents = {
     ["fire"] = {
         [0] = function(self) self:EmitSound(path .. "mr133_trigger.wav") end,
     },
-    ["pump2"] = { 
+    ["pump1"] = { 
         [0.08] = function(self) self:EmitSound(path .. "mr133_pump_in_fast.ogg") end,
         [0.15] = function(self) self:EmitSound(path .. "pump_jam_extract.ogg") end, 
         [0.28] = function(self) self:EmitSound(path .. "mr133_pump_out_fast.ogg") end,
@@ -136,7 +149,7 @@ SWEP.AnimsEvents = {
     },
     ["reload_loop2"] = { 
         [0.2] = function(self) self:EmitSound(path .. "mr133_shell_pickup.ogg") end,
-        [0.5] = function(self) self:EmitSound(path .. "mr133_magcover.ogg") end,
+        [0.6] = function(self) self:EmitSound(path .. "mr133_magcover.ogg") end,
         [0.71] = function(self) self:EmitSound(path .. "mr133_shell_in_port.ogg") end,
     },
 }
@@ -164,7 +177,7 @@ SWEP.FakeEjectBrassATT = "2"
 
 function SWEP:AllowedInspect()
     if not self:CanUse() then return end
-    if self.isReloading then return end
+    if self:IsShotgunBusy() then return end
     if self:Clip1() < self.Primary.ClipSize then return end
     if self.drawBullet == false then return end
     return true
@@ -237,8 +250,8 @@ function SWEP:Reload(time)
                 net.WriteFloat(CurTime() - 10)
             net.Broadcast()
         end, false, true)
-        self.reloadCoolDown = CurTime() + 1.4
-        self.Primary.Next = CurTime() + 1.4
+		self.reloadCoolDown = CurTime() + 1.3
+		self.Primary.Next = CurTime() + 1.3
         return
     end
 
@@ -298,4 +311,12 @@ function SWEP:PrimaryShootPost()
 		if self.Primary and (self.Primary.Next or 0) > CurTime() then return end
 		self:PlayAnim("idle", 1, not self.NoIdleLoop)
 	end)
+end
+
+function SWEP:Reload()
+    self:ShotgunReload()
+end
+
+function SWEP:CanPrimaryAttack()
+    return self:ShotgunCanPrimaryAttack()
 end

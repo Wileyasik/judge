@@ -21,7 +21,7 @@ SWEP.ENT = "ent_hg_grenade_hl2grenade"
 
 SWEP.offsetVec = Vector(3.5, -2, 0)
 SWEP.offsetAng = Angle(180, 0, 0)
-SWEP.spoon = "models/weapons/arc9/darsu_eft/skobas/m18_skoba.mdl"
+SWEP.spoon = "models/weapons/m67_skoba.mdl"
 
 function SWEP:PickupFunc(ply)
     local wep = ply:GetWeapon(self:GetClass())

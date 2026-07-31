@@ -1,5 +1,5 @@
 --ByLAZZY
-SWEP.Base = "weapon_mxlr"
+SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "AVT-40"
@@ -13,13 +13,16 @@ SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl" -- Необходимо зам
 SWEP.WorldModelFake = "models/weapons/c_svt.mdl"
 
 
-SWEP.FakePos = Vector(-15, 1, 4)
+SWEP.FakePos = Vector(-15, 2, 5)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
-SWEP.AttachmentPos = Vector(3.5,-0.2,-0.05)
+SWEP.AttachmentPos = Vector(0.5,0.25,-0.05)
 SWEP.AttachmentAng = Angle(0,0,0)
 
-SWEP.FakeBodyGroups = "02111011111"
+SWEP.FakeBodyGroups = "02121011111"
+SWEP.FakeBodyGroupsPresets = {
+	"02121011111"
+}
 SWEP.CantFireFromCollision = true
 
 
@@ -73,7 +76,7 @@ SWEP.FakeVPShouldUseHand = false
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_svt.png")
 SWEP.IconOverride = "entities/arc9_eft_svt.png"
 
-SWEP.LocalMuzzlePos = Vector(29.848,-0.027,2.552)
+SWEP.LocalMuzzlePos = Vector(33.35, -2.2, 2.35)
 SWEP.LocalMuzzleAng = Angle(0,0,0)
 SWEP.WeaponEyeAngles = Angle(0,0,0)
 
@@ -84,6 +87,12 @@ SWEP.ScrappersSlot = "Primary"
 SWEP.weaponInvCategory = 1
 SWEP.ShellEject = "ShotgunShellEject"
 SWEP.AutomaticDraw = false
+SWEP.AnimDraw = 0.4
+SWEP.reloadCoolDown = 0
+SWEP.RHPos = Vector(3, -5, 3)
+SWEP.RHAng = Angle(0, -5, 90)
+SWEP.LHPos = Vector(15, -1, -3)
+SWEP.LHAng = Angle(-110, -90, -90)
 SWEP.UseCustomWorldModel = true
 SWEP.ViewPunchDiv = 115
 
@@ -103,9 +112,7 @@ SWEP.Primary.Wait = 0.075
 SWEP.NumBullet = 1
 
 SWEP.availableAttachments = {
-    barrel = {
-        [1] = {"supressor1", Vector(-5, 1, 0.2), {}},
-    },
+    barrel = false,
     sight = {
         ["mountType"] = {"dovetail",},
         ["mount"] = Vector(-35, 2.2, 0.),
@@ -117,7 +124,7 @@ SWEP.AnimShootHandMul = 10
 SWEP.DeploySnd = {"homigrad/weapons/draw_hmg.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/hmg_holster.mp3", 55, 100, 110}
 SWEP.HoldType = "rpg"
-SWEP.ZoomPos = Vector(-3, -3.3, 3.126)
+SWEP.ZoomPos = Vector(0, -2.2464, 3.7272)
 SWEP.RHandPos = Vector(-8, -2, 6)
 SWEP.LHandPos = Vector(6, -3, 1)
 SWEP.Ergonomics = 0.85
@@ -293,5 +300,3 @@ end
 function SWEP:CanPrimaryAttack()
     return not (self:GetNetVar("shootgunReload", 0) > CurTime())
 end
-
-

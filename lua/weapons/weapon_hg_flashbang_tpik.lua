@@ -146,6 +146,6 @@ SWEP.SpoonSounds = {
 	[2] = {"m9/m9_fp.wav", 70, 200, true}
 }
 
-SWEP.spoon = "models/weapons/arc9/darsu_eft/skobas/m18_skoba.mdl"
+SWEP.spoon = "models/weapons/m67_skoba.mdl"
 
 SWEP.CoolDown = 0

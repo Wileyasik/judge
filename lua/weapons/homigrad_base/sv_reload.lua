@@ -12,7 +12,13 @@ function SWEP:Reload(time)
 	local org = self:GetOwner().organism
 	self.StaminaReloadMul = (org and ((2 - (self:GetOwner().organism.stamina[1] / 180)) + ((org.pain / 40) + (org.larm / 3) + (org.rarm / 5)) - (1 - math.Clamp(org.recoilmul or 1,0.45,1.4))) or 1)
 	self.StaminaReloadMul = math.Clamp(self.StaminaReloadMul,0.65,1.5)
-	self.StaminaReloadTime = self.ReloadTime * self.StaminaReloadMul
+	local magazine = self:GetAttachmentInfo("magwell")
+	local baseCapacity = self.BaseMagazineCapacity or self.Primary.DefaultClip or self.Primary.ClipSize
+	local magazineCapacity = magazine and magazine.capacity or self.Primary.ClipSize
+	local extraCapacity = baseCapacity > 0 and math.max(magazineCapacity / baseCapacity - 1, 0) or 0
+	local magazineReloadMul = 1 + extraCapacity * (self.MagazineReloadCapacityPenalty or 0.35)
+	self.MagazineReloadMul = magazineReloadMul
+	self.StaminaReloadTime = self.ReloadTime * self.StaminaReloadMul * magazineReloadMul
 	self.StaminaReloadTime = (self.StaminaReloadTime + (self:Clip1() > 0 and -self.StaminaReloadTime/3 or 0 ))
 	self.reload = self.LastReload + self.StaminaReloadTime
 	self.dwr_reverbDisable = true
@@ -22,6 +28,7 @@ function SWEP:Reload(time)
 		net.WriteInt(self:Clip1(),10)
 		net.WriteFloat(self.StaminaReloadTime)
 		net.WriteFloat(self.StaminaReloadMul)
+		net.WriteFloat(self.MagazineReloadMul)
 	net.Broadcast()
 end
 

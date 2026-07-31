@@ -1,4 +1,16 @@
 SWEP.Base = "weapon_m4super"
+SWEP.ManualCycle = true
+SWEP.ShotgunTubeReload = true
+SWEP.ShotgunManualCycle = true
+SWEP.ShotgunCycleAnim = "cycle"
+SWEP.ShotgunCycleTime = 1.0
+SWEP.ShotgunReloadStartAnim = "start"
+SWEP.ShotgunReloadStartTime = 1.0
+SWEP.ShotgunReloadInsertAnims = {"loop0", "loop1", "loop2", "loop3", "loop4", "loop5"}
+SWEP.ShotgunReloadInsertTime = 0.8
+SWEP.ShotgunReloadFinishAnim = "finish"
+SWEP.ShotgunReloadFinishTime = 1.0
+SWEP.ShotgunEmptyReloadNeedsCycle = true
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "Mossberg 590A1"
@@ -15,7 +27,7 @@ SWEP.WorldModelReal = "models/weapons/c_m590_2.mdl"
 SWEP.FakePos = Vector(-11, 3, 6.5)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "muzzle"
-SWEP.AttachmentPos = Vector(2, 0, 0)
+SWEP.AttachmentPos = Vector(41.5, -2.2, 3.85)
 SWEP.AttachmentAng = Angle(0, 0, 0)
 SWEP.FakeBodyGroups = "11221111"
 SWEP.CantFireFromCollision = true
@@ -35,7 +47,7 @@ SWEP.FakeVPShouldUseHand = false
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_m590.png")
 SWEP.IconOverride = "entities/arc9_eft_m590.png"
 
-SWEP.LocalMuzzlePos = Vector(25, -1.3, 4.098)
+SWEP.LocalMuzzlePos = Vector(30, -1.28, 4.5)
 SWEP.LocalMuzzleAng = Angle(0.2, -0.0, 0)
 SWEP.WeaponEyeAngles = Angle(-0.7, 0.1, 0)
 
@@ -116,23 +128,23 @@ SWEP.AnimsEvents = {
     },
     ["reload_start0"] = {
         [0.2] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_shell_pickup.ogg") end,
-        [0.5] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_magcover.ogg") end,
-        [0.71] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_shell_in_port.ogg") end,
+        [0.6] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_magcover.ogg") end,
+        [0.71] = function(self) self:EmitSound("wweapons/darsu_eft/m590/mr133_shell_in_mag2.ogg") end,
     },
     ["reload_loop0"] = {
-        [0.05] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_shell_in_port.ogg") end,
+        [0.05] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_shell_in_mag2.ogg") end,
     },
     ["reload_loop1"] = {
         [0.05] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_shell_in_mag2.ogg") end,
     },
     ["reload_loop2"] = {
-        [0.05] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_shell_in_port.ogg") end,
+        [0.05] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_shell_in_mag2.ogg") end,
     },
     ["reload_loop3"] = {
         [0.05] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_shell_in_mag2.ogg") end,
     },
     ["reload_loop4"] = {
-        [0.05] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_shell_in_port.ogg") end,
+        [0.05] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_shell_in_mag2.ogg") end,
     },
     ["reload_loop5"] = {
         [0.05] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_shell_in_mag2.ogg") end,
@@ -234,7 +246,7 @@ function SWEP:Reload(time)
     if not self:CanUse() then return end
     if self.reloadCoolDown > CurTime() then return end
     if self.Primary.Next > CurTime() then return end
-    if self.isReloading then return end
+    if self:IsShotgunBusy() then return end
     local ply = self:GetOwner()
     if ply.organism and (ply.organism.larmamputated or ply.organism.rarmamputated) then return end
 
@@ -250,8 +262,8 @@ function SWEP:Reload(time)
                 net.WriteFloat(CurTime() - 10)
             net.Broadcast()
         end, false, true)
-        self.reloadCoolDown = CurTime() + 1.1
-        self.Primary.Next = CurTime() + 1.1
+		self.reloadCoolDown = CurTime() + 1.0
+		self.Primary.Next = CurTime() + 1.0
         return
     end
 
@@ -288,22 +300,11 @@ end
 
 function SWEP:ReloadEnd() end
 
-SWEP.InspectAnimLH = { Vector(0, 0, 0) }
-SWEP.InspectAnimLHAng = { Angle(0, 0, 0) }
-SWEP.InspectAnimRH = { Vector(0, 0, 0) }
-SWEP.InspectAnimRHAng = { Angle(0, 0, 0) }
-SWEP.InspectAnimWepAng = {
-    Angle(0, 0, 0),
-    Angle(-5, 9, 5),
-    Angle(-5, 9, 14),
-    Angle(-5, 9, 16),
-    Angle(-6, 10, 15),
-    Angle(-5, 9, 16),
-    Angle(-10, 15, -15),
-    Angle(-2, 22, -15),
-    Angle(0, 25, -32),
-    Angle(0, 24, -45),
-    Angle(0, 22, -55),
-    Angle(0, 20, -56),
-    Angle(0, 0, 0)
-}
+function SWEP:Reload()
+    self:ShotgunReload()
+end
+
+function SWEP:CanPrimaryAttack()
+    return self:ShotgunCanPrimaryAttack()
+end
+

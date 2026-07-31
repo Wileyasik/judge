@@ -53,6 +53,9 @@ SWEP.ARC9Parts = {
 	},
 }
 
+SWEP.ARC9DefaultLHIKPart = "handguard"
+SWEP.ARC9DefaultLHIKSourceModel = "models/weapons/mods/handguard_ar15_cgnl_ar15_105_inch.mdl"
+
 SWEP.FakePos = Vector(-12, 2.52, 7.5)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.AttachmentPos = Vector(5.8, 0, 0)
@@ -152,7 +155,7 @@ SWEP.ReloadHold = nil
 SWEP.FakeVPShouldUseHand = false
 
 SWEP.FakeMagDropBone = 50
-SWEP.MagModel = "models/weapons/arc9/darsu_eft/mods/mag_ak_magpul_pmag_30_ak_akm_gen_m3_762x39_30.mdl"
+SWEP.MagModel = "models/weapons/mods/mag_ak_magpul_pmag_30_ak_akm_gen_m3_762x39_30.mdl"
 
 SWEP.HeldMagModel = "models/weapons/mods/mag_ak74_magpul_pmag_30_ak74_gen_m3_545x39_30.mdl"
 SWEP.HeldMagBone = "mod_magazine"
@@ -222,7 +225,7 @@ SWEP.availableAttachments = {
 		[1] = {"supressor5", Vector(0, 0, 0), {}},
 		[2] = {"supressor6", Vector(0, 0, 0), {}},
 		[3] = {"supressor15", Vector(1.3, 0, 0), {}},
-		["mount"] = Vector(-1, 0, 0),
+		["mount"] = Vector(-0.64, 0, 0),
 	},
 	sight = {
 		["mountType"] = {"picatinny"},

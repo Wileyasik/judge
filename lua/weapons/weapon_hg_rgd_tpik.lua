@@ -50,7 +50,7 @@ SWEP.AutoSwitchTo = false
 SWEP.AutoSwitchFrom = false
 SWEP.DrawAmmo = false
 SWEP.DrawCrosshair = false
-SWEP.spoon = "models/weapons/arc9/darsu_eft/skobas/rgd5_skoba.mdl"
+SWEP.spoon = "models/weapons/m67_skoba.mdl"
 
 SWEP.AnimList = {
     -- self:PlayAnim( anim,time,cycling,callback,reverse,sendtoclient )

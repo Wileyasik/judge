@@ -225,6 +225,9 @@ SWEP.HeldHandguardBone = "mod_reciever"
 SWEP.HeldHandguardOffsetPos = Vector(0, -0.26, 1)
 SWEP.HeldHandguardOffsetAng = Angle(0, 0, 0)
 
+SWEP.ARC9DefaultLHIKPart = "handguard"
+SWEP.ARC9DefaultLHIKSourceModel = "models/weapons/mods/handguard_ar15_sai_qd_rail_long.mdl"
+
 SWEP.HeldHandguard1Model = "models/weapons/mods/handguard_ar15_colt_m16a2_std_lower.mdl"
 SWEP.HeldHandguard1Bone = "mod_reciever"
 SWEP.HeldHandguard1OffsetPos = Vector(0, -1.1, 1)
@@ -273,10 +276,10 @@ SWEP.DistSound = "weapons/darsu_eft/m4a1/fire_new/tx15_fire_outdoor_close.wav"
 
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"supressor5", Vector(0, 0, 0), {}},
-		[2] = {"supressor6", Vector(0, 0, 0), {}},
-		[3] = {"supressor15", Vector(1.3, 0, 0), {}},
-		["mount"] = Vector(-0.5, 0.1, 0),
+		[1] = {"supressor5", Vector(-0.5, 0, 0), {}},
+		[2] = {"supressor6", Vector(-0.3, 0, 0), {}},
+		[3] = {"supressor15", Vector(-0.2, 0, 0), {}},
+		["mount"] = Vector(-0.29, 0.07, 0),
 	},
 	magwell = {
 		["mountType"] = {"stanag_556_60", "stanag_556_100"},

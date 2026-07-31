@@ -53,6 +53,9 @@ SWEP.ARC9Parts = {
 	},
 }
 
+SWEP.ARC9DefaultLHIKPart = "handguard"
+SWEP.ARC9DefaultLHIKSourceModel = "models/weapons/mods/handguard_ar15_jp_rsass.mdl"
+
 SWEP.FakePos = Vector(-14, 2.52, 7.5)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.AttachmentPos = Vector(8.6, 0.2 , -0)
@@ -225,11 +228,11 @@ SWEP.DistSound = "weapons/darsu_eft/rsass/rsass_fire_close5.ogg.wav"
 
 SWEP.StartAtt = {"optic5"}
 SWEP.availableAttachments = {
-	barrel = {
+		barrel = {
 		[1] = {"supressor9", Vector(0, 0, 0), {}},
 		[2] = {"supressor16", Vector(0, 0, 0), {}},
-		[3] = {"supressor15", Vector(1.3, 0, 0), {}},
-		["mount"] = Vector(-2.5, -0.1, 0),
+		[3] = {"supressor15", Vector(1, 0, 0), {}},
+		["mount"] = Vector(-0.5, -0.05, 0),
 	},
 	sight = {
 		["mountType"] = {"picatinny"},

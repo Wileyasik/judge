@@ -1,4 +1,16 @@
 SWEP.Base = "weapon_m4super"
+SWEP.ManualCycle = false
+SWEP.ShotgunTubeReload = true
+SWEP.ShotgunManualCycle = false
+SWEP.ShotgunCycleAnim = "cycle"
+SWEP.ShotgunCycleTime = 1
+SWEP.ShotgunReloadStartAnim = "fistful_start"
+SWEP.ShotgunReloadStartTime = 0.7
+SWEP.ShotgunReloadInsertAnims = {"fistful1", "fistful2", "fistful3", "fistful4", "fistful5"}
+SWEP.ShotgunReloadInsertTime = 0.6
+SWEP.ShotgunReloadFinishAnim = "fistful_end"
+SWEP.ShotgunReloadFinishTime = 0.75
+SWEP.ShotgunEmptyReloadNeedsCycle = false
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "M3 Super 90"
@@ -268,6 +280,14 @@ end
 
 function SWEP:CanPrimaryAttack()
     return not self.isReloading
+end
+
+function SWEP:Reload()
+	self:ShotgunReload()
+end
+
+function SWEP:CanPrimaryAttack()
+	return self:ShotgunCanPrimaryAttack()
 end
 
 -- ============================================

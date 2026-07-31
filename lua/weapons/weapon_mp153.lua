@@ -1,5 +1,14 @@
 --ByLAZZY
 SWEP.Base = "weapon_m4super"
+SWEP.ShotgunTubeReload = true
+SWEP.ShotgunManualCycle = false
+SWEP.ShotgunReloadStartAnim = "start"
+SWEP.ShotgunReloadStartTime = 1.0
+SWEP.ShotgunReloadInsertAnim = "insert"
+SWEP.ShotgunReloadInsertTime = 1.0
+SWEP.ShotgunReloadFinishAnim = "finish"
+SWEP.ShotgunReloadFinishTime = 1.0
+SWEP.ShotgunEmptyReloadNeedsCycle = false
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "MR-153"
@@ -141,7 +150,7 @@ SWEP.AnimsEvents = {
     },
     ["reload_loop2"] = {
         [0.2] = function(self) self:EmitSound(path .. "mr133_shell_pickup.ogg") end,
-        [0.5] = function(self) self:EmitSound(path .. "mr133_magcover.ogg") end,
+        [0.6] = function(self) self:EmitSound(path .. "mr133_magcover.ogg") end,
         [0.71] = function(self) self:EmitSound(path .. "mr133_shell_in_port.ogg") end,
     },
     ["reload_end"] = {
@@ -233,7 +242,7 @@ function SWEP:Reload(time)
     if not self:CanUse() then return end
     if self.reloadCoolDown > CurTime() then return end
     if self.Primary.Next > CurTime() then return end
-    if self.isReloading then return end
+    if self:IsShotgunBusy() then return end
     local ply = self:GetOwner()
     if ply.organism and (ply.organism.larmamputated or ply.organism.rarmamputated) then return end
 
@@ -306,4 +315,12 @@ function SWEP:PrimaryShootPost()
 		if self.Primary and (self.Primary.Next or 0) > CurTime() then return end
 		self:PlayAnim("idle", 1, not self.NoIdleLoop)
 	end)
+end
+
+function SWEP:Reload()
+    self:ShotgunReload()
+end
+
+function SWEP:CanPrimaryAttack()
+    return self:ShotgunCanPrimaryAttack()
 end

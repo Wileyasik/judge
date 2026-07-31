@@ -1,4 +1,5 @@
-SWEP.Base = "weapon_mxlr"
+SWEP.Base = "homigrad_base"
+SWEP.ManualCycle = true
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "DVL-10"
@@ -18,7 +19,7 @@ SWEP.IconOverride = "entities/arc9_eft_dvl10.png"
 SWEP.FakePos = Vector(-11, 2.6, 6)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
-SWEP.AttachmentPos = Vector(-8.5, 0, 0)
+SWEP.AttachmentPos = Vector(-8.5, 0.5, -0.02)
 SWEP.AttachmentAng = Angle(0, 0, 0)
 SWEP.FakeBodyGroups = "121121"
 SWEP.CantFireFromCollision = true
@@ -101,7 +102,7 @@ if CLIENT then
 end
 
 
-SWEP.LocalMuzzlePos = Vector(40, -0.66, 3.8)
+SWEP.LocalMuzzlePos = Vector(33, -1.65, 2.75)
 SWEP.LocalMuzzleAng = Angle(1, -0.2, 0)
 SWEP.WeaponEyeAngles = Angle(-0.7, 0.1, 0)
 
@@ -111,6 +112,12 @@ SWEP.ScrappersSlot = "Primary"
 SWEP.weaponInvCategory = 1
 SWEP.ShellEject = "ShotgunShellEject"
 SWEP.AutomaticDraw = false
+SWEP.AnimDraw = 0.4
+SWEP.reloadCoolDown = 0
+SWEP.RHPos = Vector(3, -5, 3)
+SWEP.RHAng = Angle(0, -5, 90)
+SWEP.LHPos = Vector(15, -1, -3)
+SWEP.LHAng = Angle(-110, -90, -90)
 SWEP.UseCustomWorldModel = true
 
 SWEP.Primary.ClipSize = 10
@@ -128,13 +135,14 @@ SWEP.NumBullet = 1
 SWEP.SetSupressor = true
 SWEP.SupressorOnly = true
 
+SWEP.DisableMuzzleDevices = true
 SWEP.availableAttachments = {
     barrel = {
         [1] = {"supressor8", Vector(7.3, 0.1, 0), {}},
     },
     sight = {
         ["mountType"] = {"picatinny"},
-        ["mount"] = {picatinny = Vector(-25, 1.9, 0)}
+        ["mount"] = {picatinny = Vector(-25, 1.45, 0.02)}
     },
 }
 

@@ -35,7 +35,7 @@ SWEP.Primary.Wait = 0
 SWEP.OpenBolt = true
 
 SWEP.FakePos = Vector(-14, 1.75, 3)
-SWEP.FakeAng = Angle(0, 0, 2.5)
+SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.AttachmentPos = Vector(0,-0.2,0)
 SWEP.AttachmentAng = Angle(0,0,0)
 SWEP.FakeAttachment = "1"

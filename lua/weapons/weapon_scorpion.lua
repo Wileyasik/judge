@@ -32,6 +32,9 @@ SWEP.ARC9Parts = {
 	},
 }
 
+SWEP.ARC9DefaultLHIKPart = "handguard"
+SWEP.ARC9DefaultLHIKSourceModel = "models/weapons/mods/cz_scorpion_handguard_carbine.mdl"
+
 SWEP.FakePos = Vector(-13, 2.0, 7)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.AttachmentPos = Vector(5.5, 0, 0)

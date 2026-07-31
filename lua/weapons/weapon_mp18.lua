@@ -1,4 +1,4 @@
-SWEP.Base = "weapon_m4super"
+SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "MP-18"
@@ -38,7 +38,7 @@ SWEP.FakeVPShouldUseHand = false
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_mp18.png")
 SWEP.IconOverride = "entities/arc9_eft_mp18.png"
 
-SWEP.LocalMuzzlePos = Vector(20, -0.66, 7)
+SWEP.LocalMuzzlePos = Vector(27.92, -1.8, 4.15)
 SWEP.LocalMuzzleAng = Angle(1, -0.2, 0)
 SWEP.WeaponEyeAngles = Angle(-0.7, 0.1, 0)
 
@@ -49,6 +49,12 @@ SWEP.ScrappersSlot = "Primary"
 SWEP.weaponInvCategory = 1
 SWEP.ShellEject = "ShotgunShellEject" -- Можно оставить, но MP-18 выбрасывает гильзу при переломе
 SWEP.AutomaticDraw = false
+SWEP.AnimDraw = 0.4
+SWEP.reloadCoolDown = 0
+SWEP.RHPos = Vector(3, -5, 3)
+SWEP.RHAng = Angle(0, -5, 90)
+SWEP.LHPos = Vector(15, -1, -3)
+SWEP.LHAng = Angle(-110, -90, -90)
 SWEP.UseCustomWorldModel = true
 
 -- Характеристики

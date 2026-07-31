@@ -9,7 +9,7 @@ SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
-SWEP.WorldModelFake = "models/weapons/arc9/darsu_eft/c_m4a1.mdl"
+SWEP.WorldModelFake = "models/weapons/c_m4a1.mdl"
 SWEP.CanCustomize = true
 SWEP.CustomizeCategory = "M4"
 
@@ -124,6 +124,9 @@ end
 
 SWEP.ReloadHold = nil
 SWEP.FakeVPShouldUseHand = false
+
+SWEP.ARC9DefaultLHIKPart = "handguard"
+SWEP.ARC9DefaultLHIKSourceModel = "models/weapons/mods/handguard_ar15_adar_wood_v1.mdl"
 
 SWEP.HeldReceiverModel = "models/weapons/mods/reciever_ar15_adar_2-15_std.mdl"
 SWEP.HeldReceiverBone = "mod_reciever"

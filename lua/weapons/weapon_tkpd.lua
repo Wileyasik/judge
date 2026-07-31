@@ -1,5 +1,5 @@
 --ByLAZZY
-SWEP.Base = "weapon_m4super"
+SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "TKPD"
@@ -83,6 +83,12 @@ SWEP.ScrappersSlot = "Primary"
 SWEP.weaponInvCategory = 1
 SWEP.ShellEject = "ShotgunShellEject"
 SWEP.AutomaticDraw = false
+SWEP.AnimDraw = 0.4
+SWEP.reloadCoolDown = 0
+SWEP.RHPos = Vector(3, -5, 3)
+SWEP.RHAng = Angle(0, -5, 90)
+SWEP.LHPos = Vector(15, -1, -3)
+SWEP.LHAng = Angle(-110, -90, -90)
 SWEP.UseCustomWorldModel = true
 SWEP.ViewPunchDiv = 115
 

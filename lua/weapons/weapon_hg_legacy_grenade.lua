@@ -44,7 +44,7 @@ SWEP.offsetAng = Angle(145, 0, 0)
 SWEP.ModelScale = 1
 SWEP.NoTrap = false
 
-SWEP.spoon = "models/weapons/arc9/darsu_eft/skobas/m18_skoba.mdl"
+SWEP.spoon = "models/weapons/m67_skoba.mdl"
 
 function SWEP:DrawWorldModel()
 	self.model = IsValid(self.model) and self.model or ClientsideModel(self.WorldModel)
@@ -198,7 +198,7 @@ local function createSpoon(self,entownr)
 		entasd:SetAngles(hand:GetAngles())
 		entasd:Spawn()
 		entasd:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
-		if self.spoon == "models/weapons/arc9/darsu_eft/skobas/m18_skoba.mdl" then
+		if self.spoon == "models/weapons/m67_skoba.mdl" then
 			entasd:SetMaterial("models/shiny")
 			entasd:SetColor(clr)
 		end
@@ -212,7 +212,7 @@ local function createSpoon(self,entownr)
 		entasd:SetAngles(self:GetAngles())
 		entasd:Spawn()
 		entasd:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
-		if self.spoon == "models/weapons/arc9/darsu_eft/skobas/m18_skoba.mdl" then
+		if self.spoon == "models/weapons/m67_skoba.mdl" then
 			entasd:SetMaterial("models/shiny")
 			entasd:SetColor(clr)
 		end

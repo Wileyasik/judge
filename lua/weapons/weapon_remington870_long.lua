@@ -1,5 +1,17 @@
 --ents.Reg(nil,"weapon_m4super")
 SWEP.Base = "weapon_m4super"
+SWEP.ManualCycle = true
+SWEP.ShotgunTubeReload = true
+SWEP.ShotgunManualCycle = true
+SWEP.ShotgunCycleAnim = "cycle"
+SWEP.ShotgunCycleTime = 1
+SWEP.ShotgunReloadStartAnim = "start"
+SWEP.ShotgunReloadStartTime = 1
+SWEP.ShotgunReloadInsertAnim = "insert"
+SWEP.ShotgunReloadInsertTime = 1
+SWEP.ShotgunReloadFinishAnim = "finish"
+SWEP.ShotgunReloadFinishTime = 1
+SWEP.ShotgunEmptyReloadNeedsCycle = true
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "Long Barrel Remington 870"
@@ -322,6 +334,14 @@ end
 
 function SWEP:CanPrimaryAttack()
 	return not (self:GetNetVar("shootgunReload",0) > CurTime())
+end
+
+function SWEP:Reload()
+	self:ShotgunReload()
+end
+
+function SWEP:CanPrimaryAttack()
+	return self:ShotgunCanPrimaryAttack()
 end
 
 

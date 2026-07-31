@@ -53,7 +53,7 @@ SWEP.AutoSwitchTo = false
 SWEP.AutoSwitchFrom = false
 SWEP.DrawAmmo = false
 SWEP.DrawCrosshair = false
-SWEP.spoon = "models/weapons/arc9/darsu_eft/skobas/rgd5_skoba.mdl"
+SWEP.spoon = "models/weapons/m67_skoba.mdl"
 
 SWEP.AnimsEvents = {
 	["draw"] = {
@@ -163,8 +163,6 @@ SWEP.SpoonSounds = {
 	[2] = {"weapons/darsu_eft/grenades/gren_fuze1.ogg", 70, 200, true}
 }
 --self:EmitSound("snds_jack_gmod/flamethrower_ignite_try.wav",65)
-
-
 
 
 

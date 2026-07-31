@@ -1,5 +1,5 @@
 --ByLAZZY
-SWEP.Base = "weapon_mxlr"
+SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "SVT-40"
@@ -84,6 +84,12 @@ SWEP.ScrappersSlot = "Primary"
 SWEP.weaponInvCategory = 1
 SWEP.ShellEject = "ShotgunShellEject"
 SWEP.AutomaticDraw = false
+SWEP.AnimDraw = 0.4
+SWEP.reloadCoolDown = 0
+SWEP.RHPos = Vector(3, -5, 3)
+SWEP.RHAng = Angle(0, -5, 90)
+SWEP.LHPos = Vector(15, -1, -3)
+SWEP.LHAng = Angle(-110, -90, -90)
 SWEP.UseCustomWorldModel = true
 SWEP.ViewPunchDiv = 115
 
@@ -103,9 +109,7 @@ SWEP.Primary.Wait = 0.25
 SWEP.NumBullet = 1
 
 SWEP.availableAttachments = {
-    barrel = {
-        [1] = {"supressor1", Vector(-5, 1, 0.2), {}},
-    },
+    barrel = false,
     sight = {
         ["mountType"] = {"dovetail",},
         ["mount"] = Vector(-35, 2.2, 0.),
@@ -293,4 +297,3 @@ end
 function SWEP:CanPrimaryAttack()
     return not (self:GetNetVar("shootgunReload", 0) > CurTime())
 end
-

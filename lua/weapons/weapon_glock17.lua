@@ -122,7 +122,7 @@ end
 
 SWEP.FakeMagDropBone = "mod_magazine"
 
-SWEP.WepSelectIcon2 = Material("vgui/hud/rc9_eft_glock17.png")
+SWEP.WepSelectIcon2 = Material("entities/arc9_eft_glock17.png")
 SWEP.IconOverride = "entities/arc9_eft_glock17.png"
 
 SWEP.CustomShell = "9x19"

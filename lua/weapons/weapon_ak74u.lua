@@ -9,7 +9,7 @@ SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
-SWEP.WorldModelFake = "models/weapons/arc9/darsu_eft/c_aks74u.mdl"
+SWEP.WorldModelFake = "models/weapons/c_aks74u.mdl"
 SWEP.CanCustomize = true
 SWEP.CustomizeCategory = "AK"
 
@@ -46,6 +46,9 @@ SWEP.ARC9Parts = {
 	},
 }
 
+SWEP.ARC9DefaultLHIKPart = "handguard"
+SWEP.ARC9DefaultLHIKSourceModel = "models/weapons/mods/aksu_hg_std.mdl"
+
 SWEP.FakePos = Vector(-13, 2.52, 7.5)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.AttachmentPos = Vector(-1, 0, 0)
@@ -64,7 +67,7 @@ SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
 SWEP.ViewPunchDiv = 70
 
 SWEP.FakeMagDropBone = 50
-SWEP.MagModel = "models/weapons/arc9/darsu_eft/mods/mag_ak74_izhmash_6l23_545x39_30.mdl"
+SWEP.MagModel = "models/weapons/mods/mag_ak74_izhmash_6l23_545x39_30.mdl"
 
 local path = "weapons/darsu_eft/ak/"
 
@@ -189,6 +192,9 @@ SWEP.Primary.SoundEmpty = {"weapons/newakm/akmm_empty.wav", 75, 100, 105, CHAN_W
 SWEP.Primary.Wait = 0.085
 SWEP.ReloadTime = 3
 
+SWEP.ARC9DefaultLHIKPart = "handguard"
+SWEP.ARC9DefaultLHIKSourceModel = "models/weapons/mods/ak_hg_ak74_std_plum.mdl"
+
 SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1"
 
 SWEP.CustomShell = "762x39"
@@ -216,9 +222,14 @@ SWEP.availableAttachments = {
 		["mount"] = Vector(-1, 0, 0),
 	},
 	sight = {
-		["mountType"] = {"picatinny", "dovetail"},
-		["mount"] = {["dovetail"] = Vector(-13, -0.25, 1.8), ["picatinny"] = Vector(-15, 0, 1.5)},
+		["mountType"] = {"dovetail", "picatinny"},
+		["mount"] = {["dovetail"] = Vector(-13, -0.25, 1.8),  ["picatinny"] = Vector(-13, 0, 2.35)},
 		["mountAngle"] = Angle(0,0,90)
+	},
+	mount = {
+		mountAngle = Angle(0, 90, 0),
+		["picatinny"] = {"mount3", Vector(-14, 0.85, 0.3), {}, mountType = "picatinny"},
+		["dovetail"] = {"empty", Vector(0, 0, 0), {}, mountType = "dovetail"},
 	},
 	magwell = {
 		["mountType"] = {"ak_545_60", "ak_545"},
@@ -571,6 +582,7 @@ if CLIENT then
 
 	function SWEP:OnRemove()
 		self:BC_RemoveDroppedModels()
+		self:CleanupARC9DefaultLHIKSource()
 		if IsValid(self.HeldReceiverCSModel) then self.HeldReceiverCSModel:Remove() end
 		if IsValid(self.HeldMagCSModel) then self.HeldMagCSModel:Remove() end
 		if IsValid(self.HeldHandguardCSModel) then self.HeldHandguardCSModel:Remove() end

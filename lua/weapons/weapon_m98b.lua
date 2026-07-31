@@ -1,4 +1,5 @@
 SWEP.Base = "weapon_m4super"
+SWEP.ManualCycle = true
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "Barrett M98B"

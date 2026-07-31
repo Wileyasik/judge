@@ -25,6 +25,9 @@ SWEP.ARC9Parts = {
 	},
 }
 
+SWEP.ARC9DefaultLHIKPart = "weapon"
+SWEP.ARC9DefaultLHIKUseWorldModel = true
+
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_aek971.png")
 SWEP.IconOverride = "entities/arc9_eft_aek971.png"
 
@@ -146,9 +149,14 @@ SWEP.availableAttachments = {
 		["mount"] = Vector(-1, 0, 0),
 	},
 	sight = {
-		["mountType"] = {"picatinny", "dovetail"},
-		["mount"] = {["dovetail"] = Vector(-22, -0.3, 2.5), ["picatinny"] = Vector(-15, 0, 1.5)},
+		["mountType"] = {"dovetail", "picatinny"},
+		["mount"] = {["dovetail"] = Vector(-22, -0.25, 1.8),  ["picatinny"] = Vector(-21, 0, 2.35)},
 		["mountAngle"] = Angle(0,0,90)
+	},
+	mount = {
+		mountAngle = Angle(0, 90, 0),
+		["picatinny"] = {"mount3", Vector(-22, 0.85, 0.3), {}, mountType = "picatinny"},
+		["dovetail"] = {"empty", Vector(0, 0, 0), {}, mountType = "dovetail"},
 	},
 	grip = {
 		["mount"] = {["picatinny"] = Vector(3.3, 1.35, -1.015)},
@@ -443,6 +451,7 @@ if CLIENT then
 
 	function SWEP:OnRemove()
 		self:BC_RemoveDroppedModels()
+		self:CleanupARC9DefaultLHIKSource()
 		if IsValid(self.HeldMagCSModel) then self.HeldMagCSModel:Remove() end
 	end
 end

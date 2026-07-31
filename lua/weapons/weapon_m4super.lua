@@ -107,7 +107,6 @@ end
 
 SWEP.reloadCoolDown = 0
 if SERVER then
-	util.AddNetworkString("hgwep draw")
 	function SWEP:Reload(time)
 		if not self:CanUse() then return end
 		local ply = self:GetOwner()
@@ -180,18 +179,6 @@ else
 		--self:GetOwner():SetAnimation(PLAYER_RELOAD)
 	end
 
-	net.Receive("hgwep draw", function()
-		local self = net.ReadEntity()
-		local drawBullet = net.ReadBool()
-		local time = net.ReadFloat()
-		if self and self.Primary then
-			self.Primary = self.Primary or {}
-			self.AnimStart_Draw = time
-			self.drawBullet = drawBullet
-			--if self.Draw then self:Draw() end
-			self.Primary.Next = time + (self.AnimDraw or 0) + self.Primary.Wait
-		end
-	end)
 end
 
 SWEP.Chocking = true

@@ -1,5 +1,17 @@
 --ByLazzy
 SWEP.Base = "weapon_m4super"
+SWEP.ManualCycle = true
+SWEP.ShotgunTubeReload = true
+SWEP.ShotgunManualCycle = true
+SWEP.ShotgunCycleAnim = "cycle"
+SWEP.ShotgunCycleTime = 1.0
+SWEP.ShotgunReloadStartAnim = "start"
+SWEP.ShotgunReloadStartTime = 1.0
+SWEP.ShotgunReloadInsertAnims = {"loop0", "loop1", "loop2", "loop3", "loop4", "loop5"}
+SWEP.ShotgunReloadInsertTime = 0.8
+SWEP.ShotgunReloadFinishAnim = "finish"
+SWEP.ShotgunReloadFinishTime = 1.0
+SWEP.ShotgunEmptyReloadNeedsCycle = true
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "M870"
@@ -16,7 +28,7 @@ SWEP.WorldModelReal = "models/weapons/c_m870_2.mdl"
 SWEP.FakePos = Vector(-10, 3.6, 6.2)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
-SWEP.AttachmentPos = Vector(-8.5, 0, 0)
+SWEP.AttachmentPos = Vector(5.5, 0.11, 0)
 SWEP.AttachmentAng = Angle(0, 0, 0)
 SWEP.FakeBodyGroups = "043402001"
 SWEP.CantFireFromCollision = true
@@ -46,7 +58,7 @@ SWEP.FakeVPShouldUseHand = false
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_m870.png")
 SWEP.IconOverride = "entities/arc9_eft_m870.png"
 
-SWEP.LocalMuzzlePos = Vector(27.739, -0.09, 4)
+SWEP.LocalMuzzlePos = Vector(35.6, -0.65, 4.4)
 SWEP.LocalMuzzleAng = Angle(0.2, -0.0, 0)
 SWEP.WeaponEyeAngles = Angle(-0.7, 0.1, 0)
 
@@ -96,7 +108,7 @@ SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
 SWEP.holsteredPos = Vector(4, 8, -6)
 SWEP.holsteredAng = Angle(210, 0, 180)
 
--- ÑÏÈÑÎÊ ÀÍÈÌÀÖÈÉ
+-- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 SWEP.AnimList = {
     ["idle"] = "idle",
     ["draw"] = "draw",
@@ -126,36 +138,40 @@ SWEP.AnimsEvents = {
         [0.2] = function(self) self:EmitSound(path .. "mr133_shell_pickup.ogg") end,
         [0.8] = function(self) self:EmitSound(path .. "mr133_magcover.ogg") end,
     },
+    ["reload_start_empty0"] = {
+        [0.2] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_shell_pickup.ogg") end,
+        [0.8] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_magcover.ogg") end,
+    },
     ["reload_start0"] = {
-        [0.2] = function(self) self:EmitSound(path .. "mr133_shell_pickup.ogg") end,
-        [0.5] = function(self) self:EmitSound(path .. "mr133_magcover.ogg") end,
-        [0.71] = function(self) self:EmitSound(path .. "mr133_shell_in_port.ogg") end,
+        [0.2] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_shell_pickup.ogg") end,
+        [0.6] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_magcover.ogg") end,
+        [0.71] = function(self) self:EmitSound("wweapons/darsu_eft/m590/mr133_shell_in_mag2.ogg") end,
     },
     ["reload_loop0"] = {
-        [0.05] = function(self) self:EmitSound(path .. "mr133_shell_in_port.ogg") end,
+        [0.05] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_shell_in_mag2.ogg") end,
     },
     ["reload_loop1"] = {
-        [0.05] = function(self) self:EmitSound(path .. "mr133_shell_in_mag2.ogg") end,
+        [0.05] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_shell_in_mag2.ogg") end,
     },
     ["reload_loop2"] = {
-        [0.05] = function(self) self:EmitSound(path .. "mr133_shell_in_port.ogg") end,
+        [0.05] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_shell_in_mag2.ogg") end,
     },
     ["reload_loop3"] = {
-        [0.05] = function(self) self:EmitSound(path .. "mr133_shell_in_mag2.ogg") end,
+        [0.05] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_shell_in_mag2.ogg") end,
     },
     ["reload_loop4"] = {
-        [0.05] = function(self) self:EmitSound(path .. "mr133_shell_in_port.ogg") end,
+        [0.05] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_shell_in_mag2.ogg") end,
     },
     ["reload_loop5"] = {
-        [0.05] = function(self) self:EmitSound(path .. "mr133_shell_in_mag2.ogg") end,
+        [0.05] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_shell_in_mag2.ogg") end,
     },
     ["reload_end"] = {
-        [0.1] = function(self) self:EmitSound(path .. "mr133_magcover.ogg") end,
+        [0.1] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_magcover.ogg") end,
     },
     ["pump2"] = {
-        [0.08] = function(self) self:EmitSound(path .. "rem870_pump_in.ogg") end,
-        [0.15] = function(self) self:EmitSound(path .. "pump_jam_extract.ogg") end,
-        [0.28] = function(self) self:EmitSound(path .. "rem870_pump_out.ogg") end,
+        [0.05] = function(self) self:EmitSound(path .. "rem870_pump_in.ogg") end,
+        [0.12] = function(self) self:EmitSound(path .. "pump_jam_extract.ogg") end,
+        [0.24] = function(self) self:EmitSound(path .. "rem870_pump_out.ogg") end,
     },
     ["ready0"] = {
         [0.01] = function(self) self:EmitSound(path .. "mr133_draw.ogg") end,
@@ -246,7 +262,7 @@ function SWEP:Reload(time)
     if not self:CanUse() then return end
     if self.reloadCoolDown > CurTime() then return end
     if self.Primary.Next > CurTime() then return end
-    if self.isReloading then return end
+    if self:IsShotgunBusy() then return end
     local ply = self:GetOwner()
     if ply.organism and (ply.organism.larmamputated or ply.organism.rarmamputated) then return end
 
@@ -262,8 +278,8 @@ function SWEP:Reload(time)
                 net.WriteFloat(CurTime() - 10)
             net.Broadcast()
         end, false, true)
-        self.reloadCoolDown = CurTime() + 1.1
-        self.Primary.Next = CurTime() + 1.1
+		self.reloadCoolDown = CurTime() + 1.0
+		self.Primary.Next = CurTime() + 1.0
         return
     end
 
@@ -287,7 +303,7 @@ function SWEP:CanPrimaryAttack()
 end
 
 -- ============================================
--- ÎÑÌÎÒÐ
+-- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 -- ============================================
 
 function SWEP:AllowedInspect()
@@ -300,3 +316,10 @@ end
 
 function SWEP:ReloadEnd() end
 
+function SWEP:Reload()
+    self:ShotgunReload()
+end
+
+function SWEP:CanPrimaryAttack()
+    return self:ShotgunCanPrimaryAttack()
+end

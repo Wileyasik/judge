@@ -9,7 +9,7 @@ SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
-SWEP.WorldModelFake = "models/weapons/c_mp5.mdl"
+SWEP.WorldModelFake = "models/weapons/arc9/darsu_eft/c_mp5.mdl"
 SWEP.CanCustomize = true
 SWEP.CustomizeCategory = "MP5"
 

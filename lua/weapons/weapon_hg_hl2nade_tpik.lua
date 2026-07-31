@@ -175,6 +175,6 @@ function SWEP:AddStep()
     end
 end
 
-SWEP.spoon = "models/weapons/arc9/darsu_eft/skobas/m18_skoba.mdl"
+SWEP.spoon = "models/weapons/m67_skoba.mdl"
 
 SWEP.CoolDown = 0

@@ -63,7 +63,8 @@ SWEP.ARC9Parts = {
 		bonemerge = false,
 		bone = "mod_stock",
 		pos = Vector(0, -9, 0),
-		ang = Angle(0, -90, 0)
+		ang = Angle(0, -90, 0),
+		bodygroups = {[1] = 1}
 	},
 	handguard = {
 		model = "models/weapons/mods/handguard_416_hk_quad_rail_extended.mdl",
@@ -73,6 +74,9 @@ SWEP.ARC9Parts = {
 		ang = Angle(0, 0, 0)
 	},
 }
+
+SWEP.ARC9DefaultLHIKPart = "handguard"
+SWEP.ARC9DefaultLHIKSourceModel = "models/weapons/mods/handguard_ar15_sai_qd_rail_long.mdl"
 
 SWEP.FakePos = Vector(-12, 2.52, 7.5)
 SWEP.FakeAng = Angle(0, 0, 0)
@@ -249,10 +253,10 @@ SWEP.DistSound = "weapons/darsu_eft/m4a1/fire_new/tx15_fire_outdoor_close.wav"
 
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"supressor5", Vector(0, 0, 0), {}},
-		[2] = {"supressor6", Vector(0, 0, 0), {}},
-		[3] = {"supressor15", Vector(1.3, 0, 0), {}},
-		["mount"] = Vector(-0.5, 0.1, 0),
+		[1] = {"supressor5", Vector(-0.5, 0, 0), {}},
+		[2] = {"supressor6", Vector(-0.5, 0, 0), {}},
+		[3] = {"supressor15", Vector(-0.5, 0, 0), {}},
+		["mount"] = Vector(-0.25, 0.05, 0),
 	},
 	sight = {
 		["mountType"] = {"picatinny"},
@@ -448,6 +452,10 @@ function SWEP:DrawPost()
 		if IsValid(self.HeldBarrelCSModel) then self.HeldBarrelCSModel:SetNoDraw(true) end
 	end
 	if IsValid(self.HeldBarrelCSModel) then
+		for bodygroupID, value in pairs(self.ARC9Parts.barrel.bodygroups or {}) do
+			self.HeldBarrelCSModel:SetBodygroup(bodygroupID, value)
+		end
+
 		local boneID = wm:LookupBone(self.HeldBarrelBone)
 		if boneID then
 			local boneMatrix = wm:GetBoneMatrix(boneID)

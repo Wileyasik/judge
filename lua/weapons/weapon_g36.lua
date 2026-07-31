@@ -175,10 +175,10 @@ SWEP.DistSound = "weapons/darsu_eft/g36/g36_dist.wav"
 
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"supressor5", Vector(0, 0, 0), {}},
-		[2] = {"supressor6", Vector(0, 0, 0), {}},
-		[3] = {"supressor15", Vector(1.3, 0, 0), {}},
-		["mount"] = Vector(-1, 0.1, 0),
+		[1] = {"supressor5", Vector(-0.5, 0, 0), {}},
+		[2] = {"supressor6", Vector(-0.5, 0, 0), {}},
+		[3] = {"supressor15", Vector(-0.5, 0, 0), {}},
+		["mount"] = Vector(-0.38, 0.05, 0),
 	},
 	sight = {
 		["mountType"] = {"picatinny"},

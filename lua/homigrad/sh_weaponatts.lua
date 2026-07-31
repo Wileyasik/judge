@@ -328,6 +328,7 @@ hg.attachments.sight = {
 		valid = true,
 	},
 	["optic0"] = {
+		stablereticle = true,
 		"sight", --встроенный
 		"",
 		Angle(0, 0, 0),
@@ -465,7 +466,7 @@ hg.attachments.sight = {
 		blackoutsize = 3700,
 		sizeperekrestie = 3200,
 		perekrestieSize = true,
-		stableReticle = false,
+		stableReticle = true,
 		mount = "models/weapons/arc9/darsu_eft/mods/mount_all_geissele_super_precision.mdl",
 		mountVec = Vector(-3, 0, -1.6),
 		mountAng = Angle(0, 0, 0),
@@ -1562,7 +1563,7 @@ hg.attachments.mount = {
 		}
 	},
 	["mount2"] = {"mount", "models/weapons/arc9/darsu_eft/mods/mount_all_larue_picatinny_raiser_qd_lt101.mdl", Angle(0, -0, -90), {}},
-	["mount3"] = {"mount", "models/weapons/arc9_eft_shared/atts/mounts/mount_dovetail_pilad.mdl", Angle(90, 0, -90), {}},
+	["mount3"] = {"mount", "models/weapons/mods/mount_dovetail_caa_xd_rgl.mdl", Angle(0, 0, -0), {}},
 	["mount4"] = {"mount", "models/weapons/arc9/darsu_eft/mods/tac_pistol_um3.mdl", Angle(0, 0, 90), {}}
 }
 
@@ -1620,6 +1621,9 @@ hg.attachments.barrel = {
 		Angle(0, 0, 0),
 		{},
 		offset = Vector(0, 0, 0),
+		mount = "models/weapons/mods/muzzle_ar15_surefire_sf3p_flash_hider_556x45.mdl",
+		mountVec = Vector(0, 0, 0),
+		mountAng = Angle(0, 0, 0),
 		PhysModel = "models/hunter/plates/plate025.mdl",
 		PhysPos = Vector(1, 0, 0.35),
 		PhysAng = Angle(0, 0, 0),
@@ -1629,7 +1633,10 @@ hg.attachments.barrel = {
 		"barrel", "models/weapons/mods/silencer_sdqd_griffin_m4sd_k_silencer_556x45.mdl",
 		Angle(0, 0, 0),
 		{},
-		offset = Vector(0, 0, 0),
+		offset = Vector(0.5, 0, 0),
+		mount = "models/weapons/mods/muzzle_ar15_griffin_gatelok_hammer_comp_556x45.mdl",
+		mountVec = Vector(0, 0, 0),
+		mountAng = Angle(0, 0, 0),
 		PhysModel = "models/hunter/plates/plate025.mdl",
 		PhysPos = Vector(1, 0, 0.35),
 		PhysAng = Angle(0, 0, 0),
@@ -1663,6 +1670,9 @@ hg.attachments.barrel = {
 		{},
 		modelscale = 1,
 		offset = Vector(-1.5,0.1,0),
+		mount = "models/weapons/mods/muzzle_all_sig_qd_muzzle_base_762x51.mdl",
+		mountVec = Vector(0, 0, 0),
+		mountAng = Angle(0, 0, 0),
 		PhysModel = "models/hunter/plates/plate025.mdl",
 		PhysPos = Vector(1, 0, 0.35),
 		PhysAng = Angle(0, 0, 0),
@@ -1673,6 +1683,9 @@ hg.attachments.barrel = {
 		Angle(0, 0, 0),
 		{},
 		offset = Vector(0, 0, 0),
+		mount = "models/weapons/mods/muzzle_ar15_kac_qd_compensator_556x45.mdl",
+		mountVec = Vector(0, 0, 0),
+		mountAng = Angle(0, 0, 0),
 		PhysModel = "models/hunter/plates/plate025.mdl",
 		PhysPos = Vector(1, 0, 0.35),
 		PhysAng = Angle(0, 0, 0),
@@ -1694,6 +1707,9 @@ hg.attachments.barrel = {
 		"barrel", "models/weapons/mods/silencer_12g_hexagon_12k.mdl",
 		Angle(0, 0, 0), {},
 		offset = Vector(0, 0, 0),
+		mount = "models/weapons/mods/muzzle_12g_silencerco_salvo_adaper_12g.mdl",
+		mountVec = Vector(0, 0, 0),
+		mountAng = Angle(0, 0, 0),
 		PhysModel = "models/hunter/plates/plate025.mdl",
 		PhysPos = Vector(1, 0, 0.35),
 		PhysAng = Angle(0, 0, 0),
@@ -1704,25 +1720,177 @@ hg.attachments.barrel = {
 		Angle(0, 0, -90),
 		{},
 		offset = Vector(0, 0, 0),
+		mount = "models/weapons/mods/muzzle_12g_silencerco_salvo_adaper_12g.mdl",
+		mountVec = Vector(0, 0, 0),
+		mountAng = Angle(0, 0, 0),
 		PhysModel = "models/hunter/plates/plate025.mdl",
 		PhysPos = Vector(1, 0, 0.35),
 		PhysAng = Angle(0, 0, 0),
 		valid = true,
 	},
 	-- other
-	["supressor14"] = {"barrel", "models/atts/homemadesuppressor/plastic_bottle_1.mdl", Angle(-90, 0, 0), {}, modelscale = 0.75, offset = Vector(11.5,-0.5,-0.1),},
+	["supressor14"] = {"barrel", "models/weapons/csgo/atts/silencer_clothwrapped.mdl", Angle(-90, 0, 0), {}, modelscale = 0.75, offset = Vector(11.5,-0.5,-0.1),},
 	["supressor15"] = {
 		"barrel", "models/weapons/mods/silencer_wave_dd_wave_qd_supressor_multi.mdl",
 		Angle(0, 0, 0),
 		{},
 		modelscale = 1,
 		offset = Vector(-1.5,0.1,0),
+		mount = "models/weapons/arc9/darsu_eft/mods/muzzle_ar15_awc_psr_muzzle_brake_556x45.mdl",
+		mountVec = Vector(0, 0, 0),
+		mountAng = Angle(0, 0, 0),
 		PhysModel = "models/hunter/plates/plate025.mdl",
 		PhysPos = Vector(1, 0, 0.35),
 		PhysAng = Angle(0, 0, 0),
 		valid = true,
+	},
+
+	-- Standard muzzle devices
+	["muzzle_std_545"] = {
+		"barrel", "models/weapons/mods/muzzle_ak74_izhmash_ak74m_std_545x39.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["545"] = true }, standard = true,
+	},
+	["muzzle_std_762x39"] = {
+		"barrel", "models/weapons/mods/muzzle_ak_izhmash_akml_762x39.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["762x39"] = true }, standard = true,
+	},
+	["muzzle_std_556"] = {
+		"barrel", "models/weapons/mods/muzzle_ar15_colt_usgi_a2_556x45.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["556"] = true }, standard = true,
+	},
+	["muzzle_std_762x51"] = {
+		"barrel", "models/weapons/mods/muzzle_ar10_cmmg_sv_brake_compensator_762x51.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["762x51"] = true }, standard = true,
+	},
+
+	-- 5.45x39 muzzle devices
+	["muzzle_545_recoil_1"] = {
+		"barrel", "models/weapons/mods/muzzle_ak74_jmac_rrd_4c_multi.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["545"] = true }, recoilMul = 0.8, ergonomicsMul = 0.9,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
+	},
+	["muzzle_545_recoil_2"] = {
+		"barrel", "models/weapons/mods/muzzle_ak_zenit_dtk1_762x39_545x39.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["545"] = true }, recoilMul = 0.84, ergonomicsMul = 0.93,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
+	},
+	["muzzle_545_ergo_1"] = {
+		"barrel", "models/weapons/mods/muzzle_ak74_srvv_mbr_jet_545_545x39.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["545"] = true }, recoilMul = 1.08, ergonomicsMul = 1.08,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
+	},
+	["muzzle_545_ergo_2"] = {
+		"barrel", "models/weapons/mods/muzzle_ak_hexagon_reactor_muzzle_brake_545x39.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["545"] = true }, recoilMul = 1.12, ergonomicsMul = 1.1,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
+	},
+	["muzzle_545_flash_1"] = {
+		"barrel", "models/weapons/mods/muzzle_ak74_arsenal_4_piece_flash_hider_762x39.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["545"] = true }, ergonomicsMul = 0.92, muzzleFlashMul = 0.25, reducedMuzzleEffect = true,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
+	},
+	["muzzle_545_flash_2"] = {
+		"barrel", "models/weapons/mods/muzzle_ak_srvv_mbrfhmb_762_762x39.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["545"] = true }, ergonomicsMul = 0.95, muzzleFlashMul = 0.35, reducedMuzzleEffect = true,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
+	},
+
+	-- 7.62x39 and .366 TKM muzzle devices
+	["muzzle_762x39_recoil_1"] = {
+		"barrel", "models/weapons/mods/muzzle_ak_jmac_rrd_4c_762x39.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["762x39"] = true }, recoilMul = 0.8, ergonomicsMul = 0.9,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
+	},
+	["muzzle_762x39_recoil_2"] = {
+		"barrel", "models/weapons/mods/muzzle_ak_vector_vr_05t_762x39.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["762x39"] = true }, recoilMul = 0.84, ergonomicsMul = 0.93,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
+	},
+	["muzzle_762x39_ergo_1"] = {
+		"barrel", "models/weapons/mods/muzzle_ak_spike_tactical_ak_dynacomp_762x39.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["762x39"] = true }, recoilMul = 1.08, ergonomicsMul = 1.08,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
+	},
+	["muzzle_762x39_ergo_2"] = {
+		"barrel", "models/weapons/mods/muzzle_base_lantac_blast_mitigation_device_762x51.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["762x39"] = true }, recoilMul = 1.12, ergonomicsMul = 1.1,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
+	},
+	["muzzle_762x39_flash_1"] = {
+		"barrel", "models/weapons/mods/muzzle_ak74_arsenal_4_piece_flash_hider_762x39.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["762x39"] = true }, ergonomicsMul = 0.92, muzzleFlashMul = 0.25, reducedMuzzleEffect = true,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
+	},
+	["muzzle_762x39_flash_2"] = {
+		"barrel", "models/weapons/mods/muzzle_ak_srvv_mbrfhmb_762_762x39.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["762x39"] = true }, ergonomicsMul = 0.95, muzzleFlashMul = 0.35, reducedMuzzleEffect = true,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
+	},
+
+	-- 5.56x45 muzzle devices
+	["muzzle_556_recoil_1"] = {
+		"barrel", "models/weapons/mods/muzzle_ar15_alientech_gubich_muzzle_brake_556x45.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["556"] = true }, recoilMul = 0.8, ergonomicsMul = 0.9,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
+	},
+	["muzzle_556_recoil_2"] = {
+		"barrel", "models/weapons/mods/muzzle_ar15_allen_engineering_spr_brake_556x45.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["556"] = true }, recoilMul = 0.84, ergonomicsMul = 0.93,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
+	},
+	["muzzle_556_ergo_1"] = {
+		"barrel", "models/weapons/mods/muzzle_ar15_nordic_corvette_compensator_556x45.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["556"] = true }, recoilMul = 1.08, ergonomicsMul = 1.08,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
+	},
+	["muzzle_556_ergo_2"] = {
+		"barrel", "models/weapons/mods/muzzle_ar15_bulletec_st_6012_muzzle_brake_556x45.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["556"] = true }, recoilMul = 1.12, ergonomicsMul = 1.1,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
+	},
+	["muzzle_556_flash_1"] = {
+		"barrel", "models/weapons/mods/muzzle_ar15_noveske_kx3_556x45.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["556"] = true }, ergonomicsMul = 0.92, muzzleFlashMul = 0.25, reducedMuzzleEffect = true,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
+	},
+	["muzzle_556_flash_2"] = {
+		"barrel", "models/weapons/mods/muzzle_ar15_bulletec_st_6012_muzzle_brake_556x45.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["556"] = true }, ergonomicsMul = 0.95, muzzleFlashMul = 0.35, reducedMuzzleEffect = true,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
+	},
+
+	-- 7.62x51, 7.62x54 and .300 Blackout muzzle devices
+	["muzzle_762x51_recoil_1"] = {
+		"barrel", "models/weapons/mods/muzzle_ar10_2a_x3_titanium_compensator_762x51.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["762x51"] = true }, recoilMul = 0.8, ergonomicsMul = 0.9,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
+	},
+	["muzzle_762x51_recoil_2"] = {
+		"barrel", "models/weapons/mods/muzzle_ar10_fortis_red_brake_762x51.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["762x51"] = true }, recoilMul = 0.84, ergonomicsMul = 0.93,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
+	},
+	["muzzle_762x51_ergo_1"] = {
+		"barrel", "models/weapons/mods/muzzle_ar10_odin_works_atlas_7_muzzle_brake_762x51.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["762x51"] = true }, recoilMul = 1.08, ergonomicsMul = 1.08,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
+	},
+	["muzzle_762x51_ergo_2"] = {
+		"barrel", "models/weapons/mods/muzzle_ar10_surefire_warden_direct_thread_blast_regulator_762x51.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["762x51"] = true }, recoilMul = 1.12, ergonomicsMul = 1.1,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
+	},
+	["muzzle_762x51_flash_1"] = {
+		"barrel", "models/weapons/mods/muzzle_base_lantac_blast_mitigation_device_762x51.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["762x51"] = true }, ergonomicsMul = 0.92, muzzleFlashMul = 0.25, reducedMuzzleEffect = true,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
+	},
+	["muzzle_762x51_flash_2"] = {
+		"barrel", "models/weapons/mods/muzzle_sa58_ds_arms_3_prong_trident_flash_hider_762x51.mdl", Angle(0, 0, 0), {},
+		offset = Vector(0, 0, 0), calibers = { ["762x51"] = true }, ergonomicsMul = 0.95, muzzleFlashMul = 0.35, reducedMuzzleEffect = true,
+		PhysModel = "models/hunter/plates/plate025.mdl", PhysPos = Vector(1, 0, 0.35), PhysAng = Angle(0, 0, 0), valid = true,
 	}
-}
+	}
 
 hg.attachments.grip = {
 	["grip1"] = {
@@ -1739,6 +1907,7 @@ hg.attachments.grip = {
 		PhysAng = Angle(180, 180, 90),
 		LHandPos = Vector(-2.3,1.8,-3.2),
 		LHandAng = Angle(-20,-15,14),
+		arc9LHIK = true,
 		hold = "grip_hold",
 		valid = true,
 	}, -- models/weapons/arc9/darsu_eft/mods/fg_ash12.mdl
@@ -1819,7 +1988,7 @@ hg.attachments.grip = {
 		valid = true,
 	},
 	["grip7"] = {
-		"grip", "models/weapons/mods/fg_sturmgriff.mdl", Angle(180, 180, 90), {},
+		"grip", "models/weapons/mods/fg_sturmgriff.mdl", Angle(90, 180, 90), {},
 		offset = Vector(-17, -1.3, 0),
 		holdtype = "smg",
 		mountType = "picatinny",
@@ -1833,7 +2002,7 @@ hg.attachments.grip = {
 		valid = true,
 	},
 	["grip8"] = {
-		"grip", "models/weapons/mods/fg_rk5.mdl", Angle(180, 180, 90), {},
+		"grip", "models/weapons/mods/fg_cobra.mdl", Angle(180, 180, 90), {},
 		offset = Vector(-17, -1.3, 0),
 		holdtype = "smg",
 		mountType = "picatinny",
@@ -1913,6 +2082,7 @@ hg.attachments.grip = {
 		PhysAng = Angle(180, 180, 90),
 		LHandPos = Vector(-3.6, 4, -1.5),
 		LHandAng = Angle(-5, -10, 50),
+		arc9LHIK = true,
 		hold = "grip_hold",
 		valid = true,
 	},
@@ -1927,6 +2097,7 @@ hg.attachments.grip = {
 		PhysAng = Angle(180, 180, 90),
 		LHandPos = Vector(-4.6, 1.5, -2.5),
 		LHandAng = Angle(5, 0, -0),
+		arc9LHIK = true,
 		hold = "grip_hold",
 		valid = true,
 	},
@@ -2276,6 +2447,45 @@ hg.attachments.magwell = {
 		weaponManagedModel = true,
 		valid = true,
 	},
+	["mag8"] = {
+		"magwell",
+		"models/weapons/mods/mag_ak74_izhmash_saiga_545_std_545x39_10.mdl",
+		Angle(0, 0, 0),
+		{},
+		mountType = "ak_545_60",
+		capacity = 10,
+		ammotype = "5.45x39 mm",
+		reload = "reload10rnd",
+		reload_empty = "reload10rnd_empty",
+		weaponManagedModel = true,
+		valid = true,
+	},
+	["mag9"] = {
+		"magwell",
+		"models/weapons/mods/mag_ak_custom_sawed_off_762x39_10.mdl",
+		Angle(0, 0, 0),
+		{},
+		mountType = "ak_762",
+		capacity = 10,
+		ammotype = "7.62x39 mm",
+		reload = "reload10rnd",
+		reload_empty = "reload10rnd_empty",
+		weaponManagedModel = true,
+		valid = true,
+	},
+	["mag11"] = {
+		"magwell",
+		"models/weapons/mods/mag_stanag_magpul_pmag_gen_m3_556x45_10.mdl",
+		Angle(0, -90, 0),
+		{},
+		mountType = "stanag_556_60",
+		capacity = 10,
+		ammotype = "5.56x45 mm",
+		reload = "reload6",
+		reload_empty = "reload_empty6",
+		weaponManagedModel = true,
+		valid = true,
+	},
 }
 hg.attachments.agsmag = {
 	["agsmag0"] = {
@@ -2316,6 +2526,34 @@ local attNames = {
 	["supressor14"] = "Homemade Suppressor",
 	["supressor15"] = "SilencerCo Hybrid 46 Multi",
 	["supressor16"] = "KAC QDC/PRS 7.62x51",
+	["muzzle_std_545"] = "Ижмаш 6П20 0-20 5.45x39",
+	["muzzle_std_762x39"] = "Ижмаш АКМЛ 7.62x39",
+	["muzzle_std_556"] = "Colt USGI A2 5.56x45",
+	["muzzle_std_762x51"] = "CMMG SV 7.62x51",
+	["muzzle_545_recoil_1"] = "JMac RRD-4C 5.45x39",
+	["muzzle_545_recoil_2"] = "Зенит ДТК-1 5.45x39",
+	["muzzle_545_ergo_1"] = "SRVV MBR Jet 5.45x39",
+	["muzzle_545_ergo_2"] = "Hexagon Reactor 5.45x39",
+	["muzzle_545_flash_1"] = "Arsenal 4-Piece 5.45x39",
+	["muzzle_545_flash_2"] = "SRVV MBR FHMB 5.45x39",
+	["muzzle_762x39_recoil_1"] = "JMac RRD-4C 7.62x39",
+	["muzzle_762x39_recoil_2"] = "Vector VR-05T 7.62x39",
+	["muzzle_762x39_ergo_1"] = "Spike Tactical Dynacomp 7.62x39",
+	["muzzle_762x39_ergo_2"] = "Lantac BMD 7.62x39",
+	["muzzle_762x39_flash_1"] = "Arsenal 4-Piece 7.62x39",
+	["muzzle_762x39_flash_2"] = "SRVV MBR FHMB 7.62x39",
+	["muzzle_556_recoil_1"] = "AlienTech Gubich 5.56x45",
+	["muzzle_556_recoil_2"] = "Allen Engineering SPR 5.56x45",
+	["muzzle_556_ergo_1"] = "Nordic Corvette 5.56x45",
+	["muzzle_556_ergo_2"] = "Bulletec ST-6012 5.56x45",
+	["muzzle_556_flash_1"] = "Noveske KX3 5.56x45",
+	["muzzle_556_flash_2"] = "Bulletec ST-6012 Flash 5.56x45",
+	["muzzle_762x51_recoil_1"] = "2A X3 Titanium 7.62x51",
+	["muzzle_762x51_recoil_2"] = "Fortis RED 7.62x51",
+	["muzzle_762x51_ergo_1"] = "Odin Works Atlas-7 7.62x51",
+	["muzzle_762x51_ergo_2"] = "SureFire Warden 7.62x51",
+	["muzzle_762x51_flash_1"] = "Lantac BMD 7.62x51",
+	["muzzle_762x51_flash_2"] = "DS Arms Trident 7.62x51",
 
 	-- Holographic sights
 	["holo1"] = "EOTech 552",
@@ -2384,7 +2622,7 @@ local attNames = {
 	["grip5"] = "Magpul M-LOK AFG",
 	["grip6"] = "Magpul RVG",
 	["grip7"] = "Sturmgriff Vertical Grip",
-	["grip8"] = "Zenit RK-5",
+	["grip8"] = "Strike Industries Cobra",
 	["grip9"] = "Pillau P-2",
 	["grip11"] = "Osovets P-2",
 	["grip12"] = "VTCA Uvg",
@@ -2403,6 +2641,9 @@ local attNames = {
 	["mag5"] = "X Products X-47 7.62x39 50-round drum",
 	["mag6"] = "Molot RPK 7.62x39 75-round drum",
 	["mag7"] = "Beta C-Mag 5.56x45 100-round drum",
+	["mag8"] = "Izhmash Saiga 5.45x39 10-round magazine",
+	["mag9"] = "Custom AK 7.62x39 10-round magazine",
+	["mag11"] = "Magpul PMAG Gen M3 5.56x45 10-round magazine",
 }
 
 local attachmentsIcons = {
@@ -2489,15 +2730,15 @@ local attachmentsIcons = {
 	["laser5"] = "entities/laser.png",
 
 	-- Grips
-	["grip1"] = "entities/eft_attachments/foregrips/rk2.png",
-	["grip2"] = "entities/eft_attachments/foregrips/ash12.png",
-	["grip3"] = "entities/mlokafg.png",
+	["grip1"] = "entities/rk1.png",
+	["grip2"] = "entities/ash12.png",
+	["grip3"] = "entities/afg.png",
 	["grip4"] = "entities/kac.png",
 	["grip5"] = "entities/mlokafg.png",
 	["grip6"] = "entities/rvg.png",
 	["grip7"] = "entities/sturm.png",
-	["grip8"] = "entities/rk5.png",
-	["grip9"] = "entities/rtm.png",
+	["grip8"] = "entities/cobra.png",
+	["grip9"] = "entities/pillau2.png",
 	["grip11"] = "entities/oso.png",
 	["grip12"] = "entities/uvg.png",
 	["grip13"] = "entities/cqr.png",
@@ -2513,7 +2754,6 @@ local attachmentsIcons = {
 	["mag5"] = "entities/762x47.png",
 	["mag6"] = "entities/762molot75.png",
 	["mag7"] = "entities/balls.png",
-	["mag8"] = "entities/eft_mag_drum545.png",
 }
 
 local attCategoryNames = {

@@ -143,7 +143,7 @@ SWEP.ItemsBones = {
 }
 
 
-SWEP.spoon = "models/weapons/arc9/darsu_eft/skobas/rgd5_skoba.mdl"
+SWEP.spoon = "models/weapons/m67_skoba.mdl"
 
 SWEP.SpoonSounds = {
 	[1] = {"snd_jack_spoonfling.ogg", 65},

@@ -1,4 +1,5 @@
-SWEP.Base = "weapon_mxlr"
+SWEP.Base = "homigrad_base"
+SWEP.ManualCycle = true
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "Orsis T-5000"
@@ -32,6 +33,7 @@ SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
 SWEP.ViewPunchDiv = 30
 
 SWEP.FakeMagDropBone = 50
+SWEP.MagModel = "models/weapons/mods/mag_tkpd_10_dropped.mdl"
 
 if CLIENT then
 	local vector_full = Vector(1, 1, 1)
@@ -82,6 +84,12 @@ SWEP.ScrappersSlot = "Primary"
 SWEP.weaponInvCategory = 1
 SWEP.ShellEject = "ShotgunShellEject"
 SWEP.AutomaticDraw = false
+SWEP.AnimDraw = 0.4
+SWEP.reloadCoolDown = 0
+SWEP.RHPos = Vector(3, -5, 3)
+SWEP.RHAng = Angle(0, -5, 90)
+SWEP.LHPos = Vector(15, -1, -3)
+SWEP.LHAng = Angle(-110, -90, -90)
 SWEP.UseCustomWorldModel = true
 
 SWEP.Primary.ClipSize = 5
@@ -97,6 +105,7 @@ SWEP.SupressedSound = {"weapons/darsu_eft/t5000/t5000_fire_silenced_indoor_close
 SWEP.Primary.Wait = 0.25
 SWEP.NumBullet = 1
 
+SWEP.DisableMuzzleDevices = true
 SWEP.availableAttachments = {
     barrel = {
 		[1] = {"supressor9", Vector(0, 0, 0), {}},

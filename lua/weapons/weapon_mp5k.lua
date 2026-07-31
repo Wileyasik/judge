@@ -25,6 +25,13 @@ SWEP.ARC9Parts = {
 	},
 }
 
+SWEP.ARC9DefaultLHIKPart = "integrated_handguard"
+SWEP.ARC9DefaultLHIKSourceModel = "models/weapons/mods/handguard_mp5_k_lhik.mdl"
+SWEP.ARC9DefaultLHIKBone = "mod_reciever"
+SWEP.ARC9DefaultLHIKPos = Vector(0, -5, 1.8)
+SWEP.ARC9DefaultLHIKAng = Angle(0, 0, 0)
+SWEP.ARC9DefaultLHIKFullArm = false
+
 SWEP.FakePos = Vector(-11, 2.0, 7.5)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.AttachmentPos = Vector(-1.5, 0, 0)
@@ -185,13 +192,6 @@ SWEP.IconOverride = "entities/arc9_eft_mp5k.png"
 SWEP.weight = 2.8
 SWEP.ScrappersSlot = "Primary"
 
-SWEP.StartAtt = {"grip2"}
-SWEP.availableAttachments = {
-	grip = {
-		["mount"] = {["picatinny"] = Vector(14.9, 0.7, 0)},
-		["mountType"] = {"picatinny"},
-	},
-}
 
 SWEP.RHandPos = Vector(0, -1, 0)
 SWEP.LHandPos = Vector(7, -2, -2)

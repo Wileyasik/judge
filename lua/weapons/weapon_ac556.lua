@@ -50,7 +50,7 @@ SWEP.FakeEmptyReloadSounds = {
 }
 
 
-SWEP.MagModel = "models/weapons/arc9/darsu_eft/mods/mag_stanag_magpul_pmag_gen_m3_556x45_10.mdl"
+SWEP.MagModel = "models/weapons/mods/mag_stanag_magpul_pmag_gen_m3_556x45_10.mdl"
 SWEP.lmagpos = Vector(0,0,0)
 SWEP.lmagang = Angle(0,0,0)
 SWEP.lmagpos2 = Vector(0,0,1)
@@ -397,4 +397,3 @@ SWEP.InspectAnimWepAng = {
 	Angle(0,0,0),
 	Angle(0,0,0)
 }
-

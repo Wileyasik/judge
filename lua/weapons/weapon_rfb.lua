@@ -177,10 +177,10 @@ SWEP.DistSound = "weapons/darsu_eft/rfb/rfb_fire_close.ogg"
 SWEP.StartAtt = {"optic7"}
 SWEP.availableAttachments = {
 		barrel = {
-		[1] = {"supressor9", Vector(0, 0, 0), {}},
-		[2] = {"supressor16", Vector(0, 0, 0), {}},
-		[3] = {"supressor15", Vector(0, 0, 0), {}},
-		["mount"] = Vector(0.3, 0, 0),
+		[1] = {"supressor9", Vector(1.5, 0, 0), {}},
+		[2] = {"supressor16", Vector(1.5, 0, 0), {}},
+		[3] = {"supressor15", Vector(1.5, 0, 0), {}},
+		["mount"] = Vector(-1.2, 0.05, 0),
 	},
 	sight = {
 		["mountType"] = {"picatinny"},

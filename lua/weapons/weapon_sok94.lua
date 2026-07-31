@@ -15,7 +15,7 @@ SWEP.Primary.Force = 30
 
 SWEP.CustomShell = "366tkm"
 
-SWEP.MagModel = "models/weapons/arc9/darsu_eft/mods/mag_ak_custom_sawed_off_762x39_10.mdl"
+SWEP.MagModel = "models/weapons/mods/mag_ak_custom_sawed_off_762x39_10.mdl"
 
 SWEP.AnimList = {
 	["idle"] = "idle",

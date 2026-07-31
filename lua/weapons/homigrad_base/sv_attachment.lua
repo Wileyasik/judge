@@ -13,6 +13,7 @@ local attachsounds = {
 util.AddNetworkString("ZB_AttachAdd")
 util.AddNetworkString("ZB_AttachRemove")
 util.AddNetworkString("ZB_AttachDrop")
+util.AddNetworkString("ZB_AttachSightSlide")
 net.Receive("ZB_AttachAdd", function(len, ply)
 	local att = net.ReadString()
 	local wep = ply:GetActiveWeapon()
@@ -25,7 +26,7 @@ function hg.AddAttachment(ply,wep,att)
 
 	if not IsValid(wep) or not wep.attachments or att == "" then return end
 	if not IsValid(ply) then return end
-	if not table.HasValue(ply.inventory.Attachments, att) then return end --oops :(
+	local sandbox = engine.ActiveGamemode() == "sandbox"
 	if ply.organism.larmamputated or ply.organism.rarmamputated then return end -- зубами
 
 	if att and istable(att) then
@@ -61,7 +62,12 @@ function hg.AddAttachment(ply,wep,att)
 	end
 
 	if not placement then return end
-	if not (table.IsEmpty(wep.attachments[placement]) or wep.attachments[placement][1] == "empty") then
+	local attachmentData = hg.attachments[placement][att]
+	local freeAttachment = sandbox or attachmentData.standard
+	if not freeAttachment and not table.HasValue(ply.inventory.Attachments, att) then return end --oops :(
+	local installed = wep.attachments[placement]
+	local installedData = installed and hg.attachments[placement][installed[1]]
+	if not (table.IsEmpty(installed) or installed[1] == "empty" or installedData and installedData.standard) then
 		ply:ChatPrint("There is no space for this attachment.")
 		return
 	end
@@ -77,11 +83,12 @@ function hg.AddAttachment(ply,wep,att)
 	--if not i then ply:ChatPrint("You cant place this attachment on this weapon.") return end
 	local mountType = wep.availableAttachments[placement] and wep.availableAttachments[placement]["mountType"]
 	local mountType2 = hg.attachments[placement][att] and hg.attachments[placement][att].mountType
+	local adapter = placement == "sight" and wep.availableAttachments.mount and wep.availableAttachments.mount[mountType2]
 	if not wep.availableAttachments[placement] then return end
 	
-	if not wep.availableAttachments[placement][i] and not (mountType or mountType2) then return end
-	local mounts = istable(mountType) and table.HasValue(mountType, hg.attachments[placement][att].mountType) or mountType == mountType2
-	
+	if not i and not (mountType or mountType2 or adapter) then return end
+	local mounts = i or adapter or (istable(mountType) and table.HasValue(mountType, mountType2) or mountType == mountType2)
+
 	if not mounts then
 		return
 	end
@@ -90,13 +97,14 @@ function hg.AddAttachment(ply,wep,att)
 	wep:AttachAnim()
 	timer.Simple(0.5,function()
 		if wep:IsValid() then
-			if not table.HasValue(ply.inventory.Attachments, att) then return end
+			if not freeAttachment and not table.HasValue(ply.inventory.Attachments, att) then return end
 				
-			table.RemoveByValue(ply.inventory.Attachments, att)
+			if not freeAttachment then table.RemoveByValue(ply.inventory.Attachments, att) end
 			
 			ply:SetNetVar("Inventory", ply.inventory)
 
 			wep.attachments[placement] = i and wep.availableAttachments[placement][i] or {att, {}}
+			wep:UpdateAttachmentModifiers()
 
 			wep:SyncAtts()
 			wep:EmitSound(attachsounds[math.random(#attachsounds)], 40)
@@ -141,16 +149,18 @@ function hg.AddAttachmentForce(ply,wep,att)
 	--if not i then ply:ChatPrint("You cant place this attachment on this weapon.") return end
 	local mountType = wep.availableAttachments[placement] and wep.availableAttachments[placement]["mountType"]
 	local mountType2 = hg.attachments[placement][att] and hg.attachments[placement][att].mountType
+	local adapter = placement == "sight" and wep.availableAttachments.mount and wep.availableAttachments.mount[mountType2]
 	if not wep.availableAttachments[placement] then return end
 	
-	if not wep.availableAttachments[placement][i] and not (mountType or mountType2) then return end
-	local mounts = istable(mountType) and table.HasValue(mountType, hg.attachments[placement][att].mountType) or mountType == mountType2
+	if not i and not (mountType or mountType2 or adapter) then return end
+	local mounts = i or adapter or (istable(mountType) and table.HasValue(mountType, mountType2) or mountType == mountType2)
 	
 	if not mounts then
 		return
 	end
 
 	wep.attachments[placement] = i and wep.availableAttachments[placement][i] or {att, {}}
+	wep:UpdateAttachmentModifiers()
 	timer.Simple(.1,function()
 		if wep:IsValid() then
 			wep:SyncAtts()
@@ -179,7 +189,10 @@ net.Receive("ZB_AttachRemove", function(len, ply)
 	if wep.attachments[placement][1] != att then return end
 	if table.IsEmpty(wep.attachments[placement]) or wep.attachments[placement][1] == "empty" then return end
 	if wep.availableAttachments[placement].cannotremove then return end
-	ply.inventory.Attachments[#ply.inventory.Attachments + 1] = att
+	local attachmentData = hg.attachments[placement][att]
+	local standard = attachmentData and attachmentData.standard
+	local sandbox = engine.ActiveGamemode() == "sandbox"
+	if not sandbox and not standard then ply.inventory.Attachments[#ply.inventory.Attachments + 1] = att end
 	local i
 	for n, atta in pairs(wep.availableAttachments[placement]) do
 		i = istable(atta) and atta[1] == "empty" and n or i
@@ -189,7 +202,8 @@ net.Receive("ZB_AttachRemove", function(len, ply)
 	timer.Simple(0.5, function()
 		if IsValid(wep) then
 			if wep.attachments[placement][1] != att then return end
-			wep.attachments[placement] = i and wep.availableAttachments[placement][i] or {}
+			wep.attachments[placement] = placement == "barrel" and {} or (i and wep.availableAttachments[placement][i] or wep.availableAttachments[placement].empty or {})
+			wep:UpdateAttachmentModifiers()
 			ply:SetNetVar("Inventory",ply.inventory)
 			wep:SyncAtts()
 			wep:EmitSound(attachsounds[math.random(#attachsounds)], 40)
@@ -218,6 +232,25 @@ net.Receive("ZB_AttachDrop", function(len, ply)
 		if IsValid(attEnt) then table.RemoveByValue(ply.inventory.Attachments, att) end
 		ply:SetNetVar("Inventory",ply.inventory)
 	end
+end)
+
+net.Receive("ZB_AttachSightSlide", function(_, ply)
+	local wep = ply:GetActiveWeapon()
+	if not IsValid(wep) or wep:GetOwner() != ply or not wep.attachments then return end
+	local sight = wep.attachments.sight
+	if not istable(sight) or not sight[1] or sight[1] == "empty" then return end
+	local sightData = hg.attachments.sight and hg.attachments.sight[sight[1]]
+	local mount = wep.attachments.mount
+	if sightData and sightData.mountType == "dovetail" or istable(mount) and mount.mountType == "dovetail" then return end
+
+	local slide = math.Clamp(net.ReadFloat(), -1, 3)
+	wep.attachments.sight = {
+		sight[1],
+		isvector(sight[2]) and Vector(sight[2].x, sight[2].y, sight[2].z) or sight[2],
+		sight[3],
+		sightSlide = slide,
+	}
+	wep:SyncAtts()
 end)
 
 util.AddNetworkString("sync_atts")

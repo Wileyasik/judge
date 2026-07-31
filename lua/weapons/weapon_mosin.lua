@@ -1,4 +1,5 @@
-SWEP.Base = "weapon_m4super"
+SWEP.Base = "homigrad_base"
+SWEP.ManualCycle = true
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "Mosin-Nagant M38"
@@ -49,6 +50,11 @@ SWEP.ScrappersSlot = "Primary"
 SWEP.weaponInvCategory = 1
 SWEP.ShellEject = "RifleShellEject"
 SWEP.AutomaticDraw = false
+SWEP.AnimDraw = 0.4
+SWEP.reloadCoolDown = 0
+SWEP.RHAng = Angle(0, -5, 90)
+SWEP.LHPos = Vector(15, -1, -3)
+SWEP.LHAng = Angle(-110, -90, -90)
 SWEP.UseCustomWorldModel = false
 SWEP.Primary.ClipSize = 5
 SWEP.Primary.DefaultClip = 5
@@ -69,6 +75,7 @@ sound.Add({
 
 SWEP.Primary.Sound = {"Mosin-Nagant_Shoot", 80, 90, 110}
 SWEP.SupressedSound = {"mosin/mosin_suppressed_fp.wav", 80, 90, 100}
+SWEP.DisableMuzzleDevices = true
 SWEP.availableAttachments = {
 	barrel = {
 		[1] = {"supressor1", Vector(25.55,1,-0.5), {}},
@@ -84,6 +91,8 @@ SWEP.availableAttachments = {
 }
 SWEP.RHPos = Vector(0, -11, 2)
 SWEP.Primary.Wait = 0.25
+SWEP.Primary.Damage = 16
+SWEP.Primary.Force = 12
 SWEP.NumBullet = 1
 SWEP.AnimShootMul = 1
 SWEP.AnimShootHandMul = 1

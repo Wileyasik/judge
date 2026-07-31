@@ -833,6 +833,9 @@ function SWEP:FireBullet()
 	bullet.Damage = bullet.Damage * (self.Supressor and 0.9 or 1) * (self.DamageMultiplier or 1)
 
 	local baseSpread = (ammotype.Spread or self.Primary.Spread or 0) * 3
+	if self.ShotgunTubeReload and self.ShotgunManualCycle then
+		baseSpread = baseSpread * (self.ShotgunSpreadMul or 1 / 3)
+	end
 	local accuracyMul = 1
 	if isply then
 		if isnumber(baseSpread) then baseSpread = math.max(baseSpread, 0.00075) end
@@ -968,9 +971,13 @@ function SWEP:FireBullet()
 
 		local mul = self.MuzzleMul or 1
 		mul = mul * (self.Supressor and 0.25 or 1)
+		local muzzle = self:GetAttachmentInfo("barrel")
+		mul = mul * (muzzle and muzzle.muzzleFlashMul or 1)
+		local reducedMuzzleFlash = self.Supressor or muzzle and muzzle.reducedMuzzleEffect
+		if reducedMuzzleFlash then mul = math.max(mul, 0.08) end
 
 		if mul > 0 then
-			if not self.Supressor then 
+			if not reducedMuzzleFlash then
 				ParticleEffect(self.PPSMuzzleEffect, pos, ang, self)
 			else
 				ParticleEffect(self.PPSMuzzleEffectSuppress, pos, ang, self)

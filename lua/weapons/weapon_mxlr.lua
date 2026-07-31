@@ -1,5 +1,6 @@
 --ByLAZZY
-SWEP.Base = "weapon_m4super"
+SWEP.Base = "homigrad_base"
+SWEP.ManualCycle = true
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "MXLR"
@@ -48,6 +49,12 @@ SWEP.ScrappersSlot = "Primary"
 SWEP.weaponInvCategory = 1
 SWEP.ShellEject = "ShotgunShellEject"
 SWEP.AutomaticDraw = false
+SWEP.AnimDraw = 0.4
+SWEP.reloadCoolDown = 0
+SWEP.RHPos = Vector(3, -5, 3)
+SWEP.RHAng = Angle(0, -5, 90)
+SWEP.LHPos = Vector(15, -1, -3)
+SWEP.LHAng = Angle(-110, -90, -90)
 SWEP.UseCustomWorldModel = true
 SWEP.Primary.ClipSize = 5
 SWEP.Primary.DefaultClip = 5
@@ -59,12 +66,7 @@ SWEP.Primary.Sound = {"weapons/darsu_eft/mxlr/marlin_outdoor_close_3.ogg", 80, 9
 SWEP.SupressedSound = {"mosin/mosin_suppressed_fp.wav", 65, 90, 100}
 
 SWEP.availableAttachments = {
-    barrel = {
-		[1] = {"supressor9", Vector(0, 0, 0), {}},
-		[2] = {"supressor16", Vector(0, 0, 0), {}},
-		[3] = {"supressor15", Vector(0, 0, 0), {}},
-		["mount"] = Vector(1, -0.1, 0),
-	},
+    barrel = false,
     sight = {
         ["mountType"] = "picatinny",
         ["mount"] = Vector(-26, 1, 0.05),
@@ -72,6 +74,8 @@ SWEP.availableAttachments = {
 }
 
 SWEP.Primary.Wait = 0.25
+SWEP.Primary.Damage = 16
+SWEP.Primary.Force = 12
 SWEP.NumBullet = 2
 SWEP.AnimShootMul = 1
 SWEP.AnimShootHandMul = 1
@@ -470,4 +474,3 @@ end
 function SWEP:CanPrimaryAttack()
     return not (self:GetNetVar("shootgunReload", 0) > CurTime())
 end
-

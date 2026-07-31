@@ -139,6 +139,9 @@ if CLIENT then
 	}
 end
 
+SWEP.ARC9DefaultLHIKPart = "handguard"
+SWEP.ARC9DefaultLHIKSourceModel = "models/weapons/mods/handguard_fal_ds_arms_belgian.mdl"
+
 SWEP.HeldHandguardModel = "models/weapons/mods/handguard_fal_ds_arms_belgian.mdl"
 SWEP.HeldHandguardBone = "mod_handguard"
 SWEP.HeldHandguardOffsetPos = Vector(0, 0, 0)

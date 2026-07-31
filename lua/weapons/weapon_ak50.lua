@@ -1,5 +1,5 @@
 --ByLazzy
-SWEP.Base = "weapon_tkpd"
+SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "AK-50"
@@ -13,10 +13,10 @@ SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl" -- Оставил как ес�
 SWEP.WorldModelFake = "models/weapons/c_ak50.mdl"
 SWEP.WorldModelReal = "models/weapons/c_ak50.mdl"
 
-SWEP.FakePos = Vector(-24, 1, 8)
+SWEP.FakePos = Vector(-24, 2, 9)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
-SWEP.AttachmentPos = Vector(3.5,-0.2,-0.05)
+SWEP.AttachmentPos = Vector(1,-2,-0.05)
 SWEP.AttachmentAng = Angle(0,0,0)
 
 SWEP.FakeBodyGroups = "0111111"
@@ -107,7 +107,7 @@ end
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_ak50.png")
 SWEP.IconOverride = "entities/arc9_eft_ak50.png"
 
-SWEP.LocalMuzzlePos = Vector(32.708,-3.5,5.639)
+SWEP.LocalMuzzlePos = Vector(23, -1.3, 5.9)
 SWEP.LocalMuzzleAng = Angle(0,-0.029,0)
 SWEP.WeaponEyeAngles = Angle(0,0,0)
 
@@ -117,6 +117,12 @@ SWEP.ScrappersSlot = "Primary"
 SWEP.weaponInvCategory = 1
 SWEP.ShellEject = "RifleShellEject"
 SWEP.AutomaticDraw = false
+SWEP.AnimDraw = 0.4
+SWEP.reloadCoolDown = 0
+SWEP.RHPos = Vector(3, -5, 3)
+SWEP.RHAng = Angle(0, -5, 90)
+SWEP.LHPos = Vector(15, -1, -3)
+SWEP.LHAng = Angle(-110, -90, -90)
 SWEP.UseCustomWorldModel = true
 SWEP.ViewPunchDiv = 115
 
@@ -138,7 +144,7 @@ SWEP.NumBullet = 1
 SWEP.availableAttachments = {
 	sight = {
 		["mountType"] = {"picatinny"},
-		["mount"] = {["picatinny"] = Vector(-21.5, 1.4, 0.05)},
+		["mount"] = {["picatinny"] = Vector(-34, 2.7, 0.05)},
 	},
 	barrel = false,
 	underbarrel = false,
@@ -153,7 +159,7 @@ SWEP.AnimShootHandMul = 3
 SWEP.DeploySnd = {"homigrad/weapons/draw_hmg.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/hmg_holster.mp3", 55, 100, 110}
 SWEP.HoldType = "rpg"
-SWEP.ZoomPos = Vector(-9, -3.2, 10.1617)
+SWEP.ZoomPos = Vector(0, -1.2888, 9.0264)
 SWEP.RHandPos = Vector(-12, -2, 4)
 SWEP.LHandPos = Vector(6, 1, -2)
 SWEP.Ergonomics = 0.75

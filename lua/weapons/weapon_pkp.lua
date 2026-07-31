@@ -167,14 +167,21 @@ end
 
 SWEP.availableAttachments = {
 	sight = {
-		["mountType"] = "dovetail",
+		["mountType"] = {"dovetail", "picatinny"},
 		["mountBone"] = "mod_scope",
-		["mount"] = Vector(0.8, 1.5, 2.9),
+		["mount"] = {["dovetail"] = Vector(0.8, 1.5, 2.9), ["picatinny"] = Vector(-1.35, -0.5, 3)},
 		["mountAngle"] = Angle(0, -90, 90),
 	},
-	barrel = {
-		[1] = {"supressor15", Vector(-1, 0.2, 0), {}},
-		["mount"] = Vector(-0.5, 0.4, 0.2),
+	mount = {
+		mountAngle = Angle(0, 0, 0),
+		["mountBone"] = "mod_scope",
+		["picatinny"] = {"mount3", Vector(-0.5, 0.5, 1), {}, mountType = "picatinny"},
+		["dovetail"] = {"empty", Vector(0, 0, 0), {}, mountType = "dovetail"},
+	},
+	grip = {
+		["mount"] = {["picatinny"] = Vector(-1, -0.85, 0)},
+		["mountType"] = {"picatinny"},
+		["mountAngle"] = Angle(0,0,0)
 	},
 	underbarrel = {
 		["mount"] = Vector(-1, -0.6, -2),

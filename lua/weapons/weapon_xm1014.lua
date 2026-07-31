@@ -1,5 +1,14 @@
 --ents.Reg(nil,"weapon_m4super")
 SWEP.Base = "weapon_m4super"
+SWEP.ShotgunTubeReload = true
+SWEP.ShotgunManualCycle = false
+SWEP.ShotgunReloadStartAnim = "start"
+SWEP.ShotgunReloadStartTime = 1
+SWEP.ShotgunReloadInsertAnim = "insert"
+SWEP.ShotgunReloadInsertTime = 1
+SWEP.ShotgunReloadFinishAnim = "finish"
+SWEP.ShotgunReloadFinishTime = 1
+SWEP.ShotgunEmptyReloadNeedsCycle = false
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "XM-1014"
@@ -276,6 +285,14 @@ end
 
 function SWEP:CanPrimaryAttack()
 	return not (self:GetNetVar("shootgunReload",0) > CurTime())
+end
+
+function SWEP:Reload()
+	self:ShotgunReload()
+end
+
+function SWEP:CanPrimaryAttack()
+	return self:ShotgunCanPrimaryAttack()
 end
 
 

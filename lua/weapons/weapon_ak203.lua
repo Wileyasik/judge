@@ -44,7 +44,7 @@ SWEP.FakeEmptyReloadSounds = {
 	[1.01] = "weapons/universal/uni_crawl_l_04.wav",
 }
 
-SWEP.MagModel = "models/weapons/arc9/darsu_eft/mods/mag_ak_magpul_pmag_30_ak_akm_gen_m3_762x39_30.mdl"
+SWEP.MagModel = "models/weapons/mods/mag_ak_magpul_pmag_30_ak_akm_gen_m3_762x39_30.mdl"
 SWEP.lmagpos = Vector(0,0,0)
 SWEP.lmagang = Angle(0,0,0)
 SWEP.lmagpos2 = Vector(0,0,1)

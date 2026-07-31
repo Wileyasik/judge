@@ -6,4 +6,4 @@ ENT.Model = "models/weapons/floppa/incendiary/w_m18_thrown.mdl"
 ENT.timeToBoom = 1.5
 ENT.ishggrenade = true
 
-ENT.spoon = "models/weapons/arc9/darsu_eft/skobas/m67_skoba.mdl"
+ENT.spoon = "models/weapons/m67_skoba.mdl"

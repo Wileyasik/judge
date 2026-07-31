@@ -53,6 +53,9 @@ SWEP.ARC9Parts = {
 	},
 }
 
+SWEP.ARC9DefaultLHIKPart = "handguard"
+SWEP.ARC9DefaultLHIKSourceModel = "models/weapons/mods/handguard_ar10_kac_urx4_14_5_inch.mdl"
+
 SWEP.FakePos = Vector(-13, 2.52, 7.5)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.AttachmentPos = Vector(10, 0, -0)
@@ -223,11 +226,11 @@ SWEP.DistSound = "weapons/darsu_eft/sr25/sr25_fire_outdoor_distant.wav"
 
 SWEP.StartAtt = {"optic2"}
 SWEP.availableAttachments = {
-	barrel = {
+		barrel = {
 		[1] = {"supressor9", Vector(0, 0, 0), {}},
 		[2] = {"supressor16", Vector(0, 0, 0), {}},
-		[3] = {"supressor15", Vector(1.3, 0, 0), {}},
-		["mount"] = Vector(-2.5, -0.1, 0),
+		[3] = {"supressor15", Vector(1, 0, 0), {}},
+		["mount"] = Vector(-0.7, 0.05, 0),
 	},
 	sight = {
 		["mountType"] = {"picatinny"},

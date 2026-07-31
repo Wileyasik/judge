@@ -63,6 +63,9 @@ SWEP.ARC9Parts = {
 	},
 }
 
+SWEP.ARC9DefaultLHIKPart = "handguard"
+SWEP.ARC9DefaultLHIKSourceModel = "models/weapons/mods/handguard_ar10_kac_sr25_urx_2_125_inch.mdl"
+
 SWEP.FakePos = Vector(-13, 2.52, 7.5)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.AttachmentPos = Vector(9, 0, -0)
@@ -204,7 +207,7 @@ SWEP.HeldStock1OffsetAng = Angle(0, -90, 0)
 
 SWEP.HeldSuppressorModel = "models/weapons/mods/silencer_base_kac_sr25_mk11_suppressor_762x51.mdl"
 SWEP.HeldSuppressorBone = "weapon"
-SWEP.HeldSuppressorOffsetPos = Vector(0, -25, -0.1)
+SWEP.HeldSuppressorOffsetPos = Vector(0, -25, 0.05)
 SWEP.HeldSuppressorOffsetAng = Angle(0, -90, 0)
 SWEP.HeldSuppressorSkin = 1
 

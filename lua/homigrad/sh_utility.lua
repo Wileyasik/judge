@@ -634,6 +634,7 @@ local IsValid = IsValid
 --\\ Render Override
 	hg.renderOverride = function(self, ent, flags)
 		if bit.band(flags, STUDIO_RENDER) != STUDIO_RENDER then return end
+		if IsValid(RENDERING_SCOPE) and self == RENDERING_SCOPE:GetOwner() then return end
 		--if self == lply and !selfdraw then return end
 		--debug.Trace()
 		if !self.shouldTransmit then return end

@@ -70,10 +70,10 @@ if CLIENT then
 			ent:SetClip1(ammo)
 			ent.reload = nil
 			ent.countevent = nil
-			ent:ReloadEnd()
+			if not ent.ShotgunTubeReload then ent:ReloadEnd() end
 			ent.FakeSoundPlayed = nil
 			ent.FakeEventPlayed = nil
-			if ammo > 0 then ent.drawBullet = true end
+			if ammo > 0 and not ent.ShotgunTubeReload then ent.drawBullet = true end
 		end
 	end)
 end
@@ -407,7 +407,8 @@ function SWEP:ReloadSounds(time)
 		local snd = sound_tbl[time]
 
 		if snd and self.FakeSoundPlayed ~= snd then
-			self:GetOwner():EmitSound( snd, 60, math.random(98,102), 0.5, CHAN_AUTO )
+			local pitch = math.Clamp(math.random(98, 102) / (self.MagazineReloadMul or 1), 50, 255)
+			self:GetOwner():EmitSound(snd, 60, pitch, 0.5, CHAN_AUTO)
 			self.FakeSoundPlayed = snd
 
 			if table.maxn(self.FakeReloadSounds) < time then
@@ -422,7 +423,8 @@ function SWEP:ReloadSounds(time)
 	local floortime2 = math.floor(time * (#sounds))
 
 	if sounds and sounds[floortime2] and self.SndReloadCD != floortime2 and sounds[floortime2] != "none" and (SERVER or self:IsLocal()) then
-		self:GetOwner():EmitSound( sounds[floortime2], 60, math.random(98,102), 0.5, CHAN_AUTO )
+		local pitch = math.Clamp(math.random(98, 102) / (self.MagazineReloadMul or 1), 50, 255)
+		self:GetOwner():EmitSound(sounds[floortime2], 60, pitch, 0.5, CHAN_AUTO)
 		self.SndReloadCD = floortime2
 	end
 end
@@ -440,6 +442,7 @@ net.Receive("hgwep reload", function()
 	if self and self.SetClip1 then self:SetClip1(net.ReadInt(10)) end
 	self.StaminaReloadTime = net.ReadFloat()
 	self.StaminaReloadMul = net.ReadFloat()
+	self.MagazineReloadMul = net.ReadFloat()
 	if self.Reload then self:Reload(time) end
 end)
 

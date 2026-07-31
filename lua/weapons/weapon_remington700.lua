@@ -1,5 +1,6 @@
 --ByLAZZY
-SWEP.Base = "weapon_mxlr"
+SWEP.Base = "homigrad_base"
+SWEP.ManualCycle = true
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "Remington M700"
@@ -47,6 +48,12 @@ SWEP.ScrappersSlot = "Primary"
 SWEP.weaponInvCategory = 1
 SWEP.ShellEject = "ShotgunShellEject"
 SWEP.AutomaticDraw = false
+SWEP.AnimDraw = 0.4
+SWEP.reloadCoolDown = 0
+SWEP.RHPos = Vector(3, -5, 3)
+SWEP.RHAng = Angle(0, -5, 90)
+SWEP.LHPos = Vector(15, -1, -3)
+SWEP.LHAng = Angle(-110, -90, -90)
 SWEP.UseCustomWorldModel = true
 SWEP.Primary.ClipSize = 5
 SWEP.Primary.DefaultClip = 5
@@ -59,6 +66,7 @@ SWEP.Primary.Spread = 0
 SWEP.Primary.Sound = {"weapons/darsu_eft/m700/rem700_outdoor_close1.ogg", 80, 90, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/m700/rem700_outdoor_silenced_close.ogg", 65, 90, 100}
 
+SWEP.DisableMuzzleDevices = true
 SWEP.availableAttachments = {
     barrel = {
 		[1] = {"supressor9", Vector(0, 0, 0), {}},

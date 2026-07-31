@@ -49,8 +49,8 @@ SWEP.SupressedSound = {"weapons/darsu_eft/glock/glock17_close_silenced.ogg", 65,
 SWEP.Primary.ClipSize = 30
 SWEP.Primary.DefaultClip = 30
 
-SWEP.WepSelectIcon2 = Material("entities/arc9_eft_glock17.png")
-SWEP.IconOverride = "entities/arc9_eft_glock17.png"
+SWEP.WepSelectIcon2 = Material("entities/sam.png")
+SWEP.IconOverride = "entities/sam.png"
 
 SWEP.SetSupressor = true
 SWEP.SupressorOnly = true

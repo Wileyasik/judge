@@ -1,4 +1,5 @@
 SWEP.Base = "weapon_m4super"
+SWEP.ManualCycle = true
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "TOZ-106"
@@ -359,4 +360,3 @@ function SWEP:AllowedInspect()
     if self.drawBullet == false then return end
     return true
 end
-

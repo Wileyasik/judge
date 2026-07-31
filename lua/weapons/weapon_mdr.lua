@@ -175,7 +175,7 @@ SWEP.availableAttachments = {
 		[1] = {"supressor5", Vector(0, 0, 0), {}},
 		[2] = {"supressor6", Vector(0, 0, 0), {}},
 		[3] = {"supressor15", Vector(1.3, 0, 0), {}},
-		["mount"] = Vector(-0.5, 0, 0),
+		["mount"] = Vector(-0.45, 0, 0),
 	},
 	sight = {
 		["mountType"] = {"picatinny"},

@@ -32,6 +32,9 @@ SWEP.ARC9Parts = {
 	},
 }
 
+SWEP.ARC9DefaultLHIKPart = "handguard"
+SWEP.ARC9DefaultLHIKSourceModel = "models/weapons/mods/handguard_fal_vltor_casv_fas.mdl"
+
 SWEP.FakePos = Vector(-13, 2.52, 7.5)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.AttachmentPos = Vector(-1, 0, 0)
@@ -186,10 +189,10 @@ SWEP.DistSound = "weapons/darsu_eft/sa58/fire_new/fal_outdoor_close_loop3.wav"
 
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"supressor9", Vector(0, 0, 0), {}},
-		[2] = {"supressor16", Vector(0, 0, 0), {}},
-		[3] = {"supressor15", Vector(1.3, 0, 0), {}},
-		["mount"] = Vector(0.1, 0, 0),
+		[1] = {"supressor9", Vector(1, 0, 0), {}},
+		[2] = {"supressor16", Vector(0.2, 0, 0), {}},
+		[3] = {"supressor15", Vector(0.2, 0, 0), {}},
+		["mount"] = Vector(-0.8, 0, 0),
 	},
 	sight = {
 		["mountType"] = {"picatinny"},

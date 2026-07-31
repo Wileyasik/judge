@@ -106,6 +106,7 @@ SWEP.Primary.Damage = 65
 SWEP.Primary.Force = 65
 SWEP.Primary.Sound = {"weapons/darsu_eft/svds/svd_fire_close.ogg", 85, 100, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/svds/svd_fire_close_silenced.ogg", 65, 100, 100}
+SWEP.DisableMuzzleDevices = true
 SWEP.availableAttachments = {
 	barrel = {
 		[1] = {"supressor9", Vector(0, 0, 0), {}},
@@ -114,22 +115,15 @@ SWEP.availableAttachments = {
 		["mount"] = Vector(-3.4, -0, 0),
 	},
 	sight = {
-		["mountType"] = {"picatinny", "dovetail"},
-		["mount"] = {["dovetail"] = Vector(-30.5, 2, -0.45), ["picatinny"] = Vector(-31, 2.35, -0.2)},
+		["mountType"] = {"dovetail", "picatinny"},
+		["mount"] = {["dovetail"] = Vector(-33, 1, -0), ["picatinny"] = Vector(-33, 2, -0.1)},
+		["mountAngle"] = Angle(0,0,0),
 	},
+
 	mount = {
-		["picatinny"] = {
-			"mount3",
-			Vector(-28, -0.3, -1.3),
-			{},
-			["mountType"] = "picatinny",
-		},
-		["dovetail"] = {
-			"empty",
-			Vector(0, 0, 0),
-			{},
-			["mountType"] = "dovetail",
-		},
+		mountAngle = Angle(90, 90, 0),
+		["picatinny"] = {"mount3", Vector(-34, 0, -1), {}, mountType = "picatinny"},
+		["dovetail"] = {"empty", Vector(1, 0, 0), {}, mountType = "dovetail"},
 	},
 }
 

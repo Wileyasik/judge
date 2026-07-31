@@ -10,25 +10,25 @@ Shells["556x45"] = {m = "models/shells/fhell_556.mdl", s = "Shell"}
 Shells["762x39"] = {m = "models/shells/fhell_762x39.mdl", s = "Shell"}
 Shells["366tkm"] = {m = "models/weapons/arccw/uc_shells/366tkm.mdl", s = "Shell", vCustomScale = 0.6} -- models/weapons/arccw/uc_shells/366tkm.mdl
 Shells["762x51"] = {m = "models/shells/fhell_762x51.mdl", s = "Shell"}
-Shells["762x54"] = {m = "models/weapons/arc9/darsu_eft/shells/762x54r.mdl", s = "Shell"}
+Shells["762x54"] = {m = "models/weapons/shells/762x54r.mdl", s = "Shell"}
 Shells[".338Lapua"] = {m = "models/shells/shell_338mag.mdl", s = "Shell"}
-Shells["12x70"] = {m = "models/weapons/arc9/darsu_eft/shells/patron_12x70_shell.mdl", s = "12Guage"}
+Shells["12x70"] = {m = "models/weapons/shells/patron_12x70_shell.mdl", s = "12Guage"}
 Shells["Pulse"] = {m = "models/weapons/arccw/irifleshell.mdl", s = "12Guage"}
 Shells["10mm"] = {m = "models/shells/fhell_10mm.mdl", s = "Shell"}
 Shells["mc51len"] = {m = "models/shells/fhell_mc51.mdl"}
 Shells["m249len"] = {m = "models/shells/fhell_m249.mdl"}
 Shells["m60len"] = {m = "models/shells/fhell_m60.mdl"}
-Shells["12x70beanbag"] = {m = "models/weapons/arc9/darsu_eft/shells/patron_12x70_slug_grizzly_40_shell.mdl", s = "12Guage"}
-Shells["12x70slug"] = {m = "models/weapons/arc9/darsu_eft/shells/patron_12x70_slug_poleva_3_shell.mdl", s = "12Guage"}
-Shells["ags_shell"] = {m = "models/weapons/arc9/darsu_eft/shells/40x46_m716.mdl", s = "12Guage", vCustomPhys = Vector(1,1,1)}
-Shells["12x70blank"] = {m = "models/weapons/arc9/darsu_eft/shells/patron_12x70_slug_poleva_6u_shell.mdl", s = "12Guage"}
+Shells["12x70beanbag"] = {m = "models/weapons/shells/patron_12x70_slug_grizzly_40_shell.mdl", s = "12Guage"}
+Shells["12x70slug"] = {m = "models/weapons/shells/patron_12x70_slug_poleva_3_shell.mdl", s = "12Guage"}
+Shells["ags_shell"] = {m = "models/weapons/shells/40x46_m716.mdl", s = "12Guage", vCustomPhys = Vector(1,1,1)}
+Shells["12x70blank"] = {m = "models/weapons/shells/patron_12x70_slug_poleva_6u_shell.mdl", s = "12Guage"}
 Shells[".22lr"] = {m = "models/weapons/arccw/uc_shells/22lr.mdl", s = "Shell"}
-Shells["23x75sh10"] = {m = "models/weapons/arc9/darsu_eft/shells/patron_23x75_sh10.mdl", s = "12Guage"}
-Shells["23x75sh25"] = {m = "models/weapons/arc9/darsu_eft/shells/patron_23x75_sh25.mdl", s = "12Guage"}
-Shells["23x75barricade"] = {m = "models/weapons/arc9/darsu_eft/shells/patron_23x75_bar.mdl", s = "12Guage"}
-Shells["23x75zvezda"] = {m = "models/weapons/arc9/darsu_eft/shells/patron_23x75_zvezda.mdl", s = "12Guage"}
-Shells["23x75waver"] = {m = "models/weapons/arc9/darsu_eft/shells/patron_23x75_waver.mdl", s = "12Guage"}
-Shells["20/70"] = {m = "models/weapons/arc9/darsu_eft/shells/patron_23x75_sh10.mdl", s = "12Guage", vCustomScale = 0.75}
+Shells["23x75sh10"] = {m = "models/weapons/shells/patron_23x75_sh10.mdl", s = "12Guage"}
+Shells["23x75sh25"] = {m = "models/weapons/shells/patron_23x75_sh25.mdl", s = "12Guage"}
+Shells["23x75barricade"] = {m = "models/weapons/shells/patron_23x75_bar.mdl", s = "12Guage"}
+Shells["23x75zvezda"] = {m = "models/weapons/shells/patron_23x75_zvezda.mdl", s = "12Guage"}
+Shells["23x75waver"] = {m = "models/weapons/shells/patron_23x75_waver.mdl", s = "12Guage"}
+Shells["20/70"] = {m = "models/weapons/shells/patron_23x75_sh10.mdl", s = "12Guage", vCustomScale = 0.75}
 
 hg_shelles = hg_shelles or {}
 local gamemod = engine.ActiveGamemode()

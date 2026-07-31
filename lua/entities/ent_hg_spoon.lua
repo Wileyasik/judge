@@ -10,6 +10,11 @@ ENT.PhysicsSounds = true
 
 function ENT:Initialize()
 	self:PhysicsInit(SOLID_VPHYSICS)
+
+	if not IsValid(self:GetPhysicsObject()) then
+		self:PhysicsInitBox(self:OBBMins(), self:OBBMaxs())
+	end
+
 	self:SetMoveType(MOVETYPE_VPHYSICS)
 	self:SetSolid(SOLID_VPHYSICS)
 	self:SetCollisionGroup(COLLISION_GROUP_WEAPON)

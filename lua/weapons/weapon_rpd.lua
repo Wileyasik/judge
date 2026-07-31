@@ -222,10 +222,16 @@ SWEP.RecoilMul = 0.3
 
 SWEP.availableAttachments = {
 	sight = {
-		["mountType"] = "dovetail",
+		["mountType"] = {"dovetail", "picatinny"},
 		["mountBone"] = "mod_scope",
-		["mount"] = Vector(0.8, 1.5, 2.5),
+		["mount"] = {["dovetail"] = Vector(0.8, 1.5, 2.9), ["picatinny"] = Vector(-1.35, -0.5, 3)},
 		["mountAngle"] = Angle(0, -90, 90),
+	},
+	mount = {
+		mountAngle = Angle(0, 0, 0),
+		["mountBone"] = "mod_scope",
+		["picatinny"] = {"mount3", Vector(-0.5, 0.5, 1), {}, mountType = "picatinny"},
+		["dovetail"] = {"empty", Vector(0, 0, 0), {}, mountType = "dovetail"},
 	},
 }
 

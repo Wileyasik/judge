@@ -1,5 +1,6 @@
 -- каряк сделан барой.. пулл реквест до того как стал известен
 SWEP.Base = "weapon_m4super"
+SWEP.ManualCycle = true
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "Karabiner 98k"

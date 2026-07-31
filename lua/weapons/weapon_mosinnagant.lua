@@ -1,5 +1,6 @@
 --ByLAZZY
-SWEP.Base = "weapon_mxlr"
+SWEP.Base = "homigrad_base"
+SWEP.ManualCycle = true
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "Mosin"
@@ -12,17 +13,13 @@ SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"  -- ИСПРАВЛЕНО
 SWEP.WorldModelFake = "models/weapons/c_mosin.mdl"
 
-SWEP.FakePos = Vector(-12, 2.6, 6)
+SWEP.FakePos = Vector(-14, 4, 7.5)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
 SWEP.AttachmentPos = Vector(-0.2, 0.2, 0.1)
 SWEP.AttachmentAng = Angle(0, 0, 0)
 SWEP.FakeBodyGroups = "11110123"
 SWEP.CantFireFromCollision = true
-
-SWEP.FakeBodyGroupsPresets = {
-    "11110123"
-}
 
 SWEP.MagModel = "models/weapons/upgrades/w_magazine_m1a1_30.mdl"
 SWEP.FakeReloadEvents = {}
@@ -36,7 +33,7 @@ SWEP.FakeVPShouldUseHand = false
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_mosin_sniper.png")
 SWEP.IconOverride = "entities/arc9_eft_mosin_sniper.png"
 
-SWEP.LocalMuzzlePos = Vector(38.9, -1.78, 3.75)
+SWEP.LocalMuzzlePos = Vector(36.8, -0.4, 5)
 SWEP.LocalMuzzleAng = Angle(0, -0, 0)
 SWEP.WeaponEyeAngles = Angle(-0.7, 0.1, 0)
 
@@ -47,6 +44,10 @@ SWEP.ScrappersSlot = "Primary"
 SWEP.weaponInvCategory = 1
 SWEP.ShellEject = "ShotgunShellEject"
 SWEP.AutomaticDraw = false
+SWEP.AnimDraw = 0.4
+SWEP.reloadCoolDown = 0
+SWEP.RHAng = Angle(0, -5, 90)
+SWEP.LHAng = Angle(-110, -90, -90)
 SWEP.UseCustomWorldModel = true
 SWEP.Primary.ClipSize = 5
 SWEP.Primary.DefaultClip = 5
@@ -59,6 +60,7 @@ SWEP.Primary.Spread = 0
 SWEP.Primary.Sound = {"weapons/darsu_eft/mosin/mosin_outdoor_close1.ogg", 80, 90, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/mosin/mosin_outdoor_silenced_close1.ogg", 65, 90, 100}
 
+SWEP.DisableMuzzleDevices = true
 SWEP.availableAttachments = {
     barrel = {
 		[1] = {"supressor9", Vector(0, 0, 0), {}},
@@ -79,7 +81,7 @@ SWEP.AnimShootHandMul = 10
 SWEP.DeploySnd = {"homigrad/weapons/draw_hmg.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/hmg_holster.mp3", 55, 100, 110}
 SWEP.HoldType = "rpg"
-SWEP.ZoomPos = Vector(0, -1.8432, 4.741)
+SWEP.ZoomPos = Vector(0, -0.4272, 6.192)
 SWEP.RHandPos = Vector(0, 0, -1)
 SWEP.LHandPos = Vector(7, 0, -2)
 SWEP.Ergonomics = 0.9
@@ -340,25 +342,7 @@ end
 function SWEP:AnimHoldPost()
 end
 
-function SWEP:ModelCreated(model)
-    model:SetBodyGroups(self:GetRandomBodygroups() or "11110123")
-end
-
-function SWEP:PostSetupDataTables()
-    self:NetworkVar("String", 0, "RandomBodygroups")
-    if CLIENT then
-        self:NetworkVarNotify("RandomBodygroups", self.OnVarChanged)
-    end
-end
-
-function SWEP:OnVarChanged(name, old, new)
-    if not IsValid(self:GetWM()) then return end
-    if istable(new) then local normalized = {}; for i = 1, #new do normalized[i] = tostring(new[i]) end; new = table.concat(normalized, "") elseif not isstring(new) then return end
-    self:GetWM():SetBodyGroups(new)
-end
-
 function SWEP:InitializePost()
-    local randomPreset = table.Random(self.FakeBodyGroupsPresets); if istable(randomPreset) then randomPreset = table.Random(randomPreset) end; if isstring(randomPreset) then self:SetRandomBodygroups(randomPreset) end
     self.AnimStart_Insert = 0
     self.AnimStart_Draw = 0
 end

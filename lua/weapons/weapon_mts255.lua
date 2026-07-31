@@ -21,7 +21,7 @@ SWEP.WorldModelReal = "models/weapons/c_mts255.mdl"
 SWEP.FakePos = Vector(-14, 3.6, 6.2)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
-SWEP.AttachmentPos = Vector(-8.5, 0, 0)
+SWEP.AttachmentPos = Vector(-0, 0, 0.3)
 SWEP.AttachmentAng = Angle(0, 0, 0)
 SWEP.ViewPunchDiv = 425
 
@@ -35,7 +35,7 @@ SWEP.FakeVPShouldUseHand = false
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_mts255.png")
 SWEP.IconOverride = "entities/arc9_eft_mts255.png"
 
-SWEP.LocalMuzzlePos = Vector(27.739, 0.09, 5.098)
+SWEP.LocalMuzzlePos = Vector(29.31, -0.7, 4.5)
 SWEP.LocalMuzzleAng = Angle(0.2, 0, 0)
 SWEP.WeaponEyeAngles = Angle(-0.7, 0.1, 0)
 
@@ -63,7 +63,7 @@ SWEP.Primary.Wait = 0.4
 
 local path = "weapons/darsu_eft/mts255/"
 
--- Длительности анимаций (в секундах) — меняй тут
+-- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ) пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
 SWEP.AnimDurations = {
     ["fistful_start__0"]    = 1.25,
     ["sg_reload_start1__0"] = 3.25,
@@ -362,7 +362,7 @@ function SWEP:Reload(time)
         self.reloadToLoad    = toLoad
 
         if clip == 0 then
-            -- ПОЛНАЯ ПЕРЕЗАРЯДКА
+            -- пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             local targetStep = math.min(toLoad, 5)
 
             local fistfulDur = self.AnimDurations["fistful_start__0"] or 1.25
@@ -377,7 +377,7 @@ function SWEP:Reload(time)
             end, false, true)
 
         else
-            -- ВЫБОРОЧНАЯ ПЕРЕЗАРЯДКА
+            -- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             local firstIndex = clip
             local lastIndex  = math.min(clip + toLoad - 1, 4)
 

@@ -10,6 +10,22 @@ SWEP.ReloadSound = "weapons/smg1/smg1_reload.wav"
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/m14/handling/m14_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.1
 SWEP.Primary.Next = 0
+SWEP.ManualCycle = false
+
+if SERVER then
+	util.AddNetworkString("hgwep draw")
+else
+	net.Receive("hgwep draw", function()
+		local wep = net.ReadEntity()
+		local drawBullet = net.ReadBool()
+		local time = net.ReadFloat()
+		if not IsValid(wep) or not wep.Primary then return end
+
+		wep.AnimStart_Draw = time
+		wep.drawBullet = drawBullet
+	end)
+end
+
 SWEP.Secondary.ClipSize = -1
 SWEP.Secondary.DefaultClip = -1
 SWEP.Secondary.Automatic = false
@@ -117,6 +133,7 @@ function SWEP:Initialize()
 	self:Initialize_Reload()
 	self:SetClip1(self.Primary.DefaultClip)
 	self:Draw()
+	self:Initialize_Shotgun()
 
 	self.AdditionalPos = Vector(0,0,0)
 	self.AdditionalPos2 = Vector(0,0,0)
@@ -246,6 +263,7 @@ if CLIENT then
 			end
 
 			ent.attachments = var
+			if ent.UpdateAttachmentModifiers then ent:UpdateAttachmentModifiers() end
 		end
 	end)
 else
@@ -292,6 +310,8 @@ end
 
 hg.weaponsDead = hg.weaponsDead or {}
 function SWEP:OnRemove()
+	self:ShotgunCancel()
+	self:CleanupARC9DefaultLHIKSource()
 	if SERVER then
 		table.RemoveByValue(hg.weapons,self)
 
@@ -459,6 +479,7 @@ local CantDoIt = {
 }
 --qol lmao
 function SWEP:CanPrimaryAttack()
+	if not self:ShotgunCanPrimaryAttack() then return false end
 	local owner = self:GetOwner()
 	if !IsValid(owner) then return end
 
@@ -521,11 +542,18 @@ function SWEP:Shoot(override)
 	
 	self:PrimaryShoot()
 	self:PrimaryShootPost()
+	self:ShotgunAfterShot()
+	if self.ManualCycle then
+		-- Manual actions are gated by the empty chamber until their cycle callback.
+		-- Primary.Wait must not delay the player's ability to begin that cycle.
+		primary.Next = CurTime()
+	end
 end
 
 function SWEP:PrimaryAttack(broadcast)
 	if CLIENT and not IsFirstTimePredicted() then return end
 	if CLIENT and not self:IsClient() then return end
+	if CLIENT and self.ShotgunTubeReload and not broadcast then return end
 	if self:KeyDown(IN_USE) and !IsValid(self:GetOwner().FakeRagdoll) then return false end
 	
 	local huy = self:Shoot() ~= false
@@ -534,7 +562,7 @@ function SWEP:PrimaryAttack(broadcast)
 		net.Start("hgwep shoot", true)
 		net.WriteEntity(self)
 		net.WriteBool(huy)
-		net.WriteBool(broadcast)
+		net.WriteBool(broadcast or self.ShotgunTubeReload)
 		net.Broadcast()
 	end
 end
@@ -1068,6 +1096,7 @@ end
 
 function SWEP:Step()
 	self:CoreStep()
+	self:Step_Shotgun()
 end
 
 local CurTime = CurTime
@@ -2133,6 +2162,143 @@ end
 
 local veczero = Vector(0, 0, 0)
 SWEP.anglefinger = Angle()
+
+if CLIENT then
+	local arc9GripArmBones = {
+		"ValveBiped.Bip01_L_UpperArm",
+		"ValveBiped.Bip01_L_Forearm"
+	}
+
+	local arc9GripPoseBones = {
+		"ValveBiped.Bip01_L_Hand",
+		"ValveBiped.Bip01_L_Finger4",
+		"ValveBiped.Bip01_L_Finger41",
+		"ValveBiped.Bip01_L_Finger42",
+		"ValveBiped.Bip01_L_Finger3",
+		"ValveBiped.Bip01_L_Finger31",
+		"ValveBiped.Bip01_L_Finger32",
+		"ValveBiped.Bip01_L_Finger2",
+		"ValveBiped.Bip01_L_Finger21",
+		"ValveBiped.Bip01_L_Finger22",
+		"ValveBiped.Bip01_L_Finger1",
+		"ValveBiped.Bip01_L_Finger11",
+		"ValveBiped.Bip01_L_Finger12",
+		"ValveBiped.Bip01_L_Finger0",
+		"ValveBiped.Bip01_L_Finger01",
+		"ValveBiped.Bip01_L_Finger02"
+	}
+	local arc9GripFullArmBones = table.Add(table.Copy(arc9GripArmBones), arc9GripPoseBones)
+
+	function SWEP:ApplyARC9GripPose(target, source, weight, fullArm)
+		weight = math.Clamp(weight or 0, 0, 1)
+		if not IsValid(target) or not IsValid(source) or weight <= 0 then return false end
+
+		local sourceHand = source:LookupBone(arc9GripPoseBones[1])
+		local targetHand = target:LookupBone(arc9GripPoseBones[1])
+		if not sourceHand or not targetHand then return false end
+		if fullArm then
+			for _, name in ipairs(arc9GripArmBones) do
+				if not source:LookupBone(name) or not target:LookupBone(name) then return false end
+			end
+		end
+
+		source:SetupBones()
+
+		local bones = fullArm and arc9GripFullArmBones or arc9GripPoseBones
+		for index, name in ipairs(bones) do
+			local sourceBone = source:LookupBone(name)
+			local targetBone = target:LookupBone(name)
+			if not sourceBone or not targetBone then continue end
+
+			local sourceMatrix = source:GetBoneMatrix(sourceBone)
+			local targetMatrix = target:GetBoneMatrix(targetBone)
+			if not sourceMatrix or not targetMatrix then continue end
+
+			local matrix = Matrix()
+			matrix:SetTranslation(LerpVector(weight, targetMatrix:GetTranslation(), sourceMatrix:GetTranslation()))
+			matrix:SetAngles(LerpAngle(weight, targetMatrix:GetAngles(), sourceMatrix:GetAngles()))
+
+			if index == 1 or (fullArm and index <= #arc9GripArmBones + 1) then
+				hg.bone_apply_matrix(target, targetBone, matrix)
+			else
+				target:SetBoneMatrix(targetBone, matrix)
+			end
+		end
+
+		return true
+	end
+
+	function SWEP:GetARC9DefaultLHIKSource()
+		local wm = self:GetWM()
+		if not IsValid(wm) then return end
+		if self.ARC9DefaultLHIKUseWorldModel then
+			wm:SetupBones()
+			return wm
+		end
+
+		local partName = self.ARC9DefaultLHIKPart
+		local partData = partName and self.ARC9Parts and self.ARC9Parts[partName]
+		local modelPath = self.ARC9DefaultLHIKSourceModel or (partData and partData.model)
+		if not isstring(modelPath) then return end
+
+		local source = self.ARC9DefaultLHIKModel
+		if IsValid(source) and self._ARC9DefaultLHIKModelPath ~= modelPath then
+			source:Remove()
+			source = nil
+		end
+
+		if not IsValid(source) then
+			source = ClientsideModel(modelPath, RENDERGROUP_BOTH)
+			if not IsValid(source) then return end
+
+			source:SetNoDraw(true)
+			self.ARC9DefaultLHIKModel = source
+			self._ARC9DefaultLHIKModelPath = modelPath
+		end
+
+		local boneName = self.ARC9DefaultLHIKBone or (partData and partData.bone) or ""
+		local bone = wm:LookupBone(boneName)
+		local boneMatrix = bone and wm:GetBoneMatrix(bone)
+		if not boneMatrix then return end
+
+		local pos, ang = LocalToWorld(
+			self.ARC9DefaultLHIKPos or (partData and partData.pos) or vector_origin,
+			self.ARC9DefaultLHIKAng or (partData and partData.ang) or angle_zero,
+			boneMatrix:GetTranslation(),
+			boneMatrix:GetAngles()
+		)
+
+		source:SetPos(pos)
+		source:SetAngles(ang)
+		if partData and partData.skin ~= nil then source:SetSkin(partData.skin) end
+		if partData and isstring(partData.bodygroups) then source:SetBodyGroups(partData.bodygroups) end
+		source:SetupBones()
+
+		return source
+	end
+
+	function SWEP:CleanupARC9DefaultLHIKSource()
+		if IsValid(self.ARC9DefaultLHIKModel) then self.ARC9DefaultLHIKModel:Remove() end
+		self.ARC9DefaultLHIKModel = nil
+		self._ARC9DefaultLHIKModelPath = nil
+	end
+end
+
+if SERVER then
+	function SWEP:CleanupARC9DefaultLHIKSource()
+	end
+end
+
+function SWEP:GetARC9ReloadLHIKWeight()
+	if not self.reload then return 1 end
+
+	local duration = self.StaminaReloadTime or self.ReloadTime or 1
+	local blendTime = duration * (self.ARC9ReloadLHIKFraction or 0.3)
+	local remaining = math.max(self.reload - CurTime() - 0.05, 0)
+	local weight = 1 - math.Clamp(remaining / math.max(blendTime, 0.001), 0, 1)
+	return math.ease.InOutSine(weight)
+end
+
 function SWEP:SetHandPos(noset)
 	self.addvec = self.addvec or veczero
 	self.rhandik = self.setrhik
@@ -2292,35 +2458,58 @@ function SWEP:SetHandPos(noset)
 		//rhmat = self:GetWM():GetBoneMatrix(self:GetWM():LookupBone("ValveBiped.Bip01_R_Hand"))
 	end
 
-	if self:HasAttachment("grip") and hg.CanUseLeftHand(ply) and self.lhandik then
-		local huy = (not self.reload or self.reload - CurTime() <= 0.3) and not ply.suiciding
-
+	if self:HasAttachment("grip") then
 		local model = self:GetAttachmentModel("grip")
-		
 		local inf = self:GetAttachmentInfo("grip")
-		if not inf.ShouldtUseLHand then
-			if inf and inf.LHandPos and IsValid(model) then
-				local infpos, infang = inf.LHandPos, inf.LHandAng
-				vec2, ang2 = LocalToWorld(infpos, infang, model:GetPos(), model:GetAngles())
-			end
+		local reloadLHIKWeight = self:GetARC9ReloadLHIKWeight()
+		local usePose = not ply.suiciding and (not self.reload or reloadLHIKWeight > 0)
+		self.lerphand = LerpFT(self.ARC9LHIKTransitionSpeed or 0.04, self.lerphand or 0, usePose and 0 or 1)
+		if self.reload then self.lerphand = math.min(self.lerphand, 1 - reloadLHIKWeight) end
 
-			self.lerphand = LerpFT(0.1, self.lerphand or 0, huy and 0 or 1)
-
-			local newmat = ent:GetBoneMatrix(lh)
-			local oldpos, oldang = newmat:GetTranslation(), newmat:GetAngles()
-			lhmat:SetTranslation(LerpVector(self.lerphand, (vec2 or vector_origin) + (addvec2 or vector_origin), (oldpos or vector_origin)))
-			lhmat:SetAngles(LerpAngle(self.lerphand, (ang2 or angle_zero), (oldang or angle_zero)))
-
-			hg.bone_apply_matrix(ent, lh, lhmat)
-
-			if self.lerphand < 0.1  then
-				local hold = self.hold_type or (self:IsPistolHoldType() and "pistol_hold2" or "ak_hold")
-				if (not self.reload or self.reload - CurTime() <= 0.3) and self.attachments.grip and #self.attachments.grip ~= 0 then
-					hold = hg.attachments.grip[self.attachments.grip[1]].hold
+		if hg.CanUseLeftHand(ply) and self.lhandik then
+			if not inf.ShouldtUseLHand then
+				if inf and inf.LHandPos and IsValid(model) then
+					local infpos, infang = inf.LHandPos, inf.LHandAng
+					vec2, ang2 = LocalToWorld(infpos, infang, model:GetPos(), model:GetAngles())
 				end
 
-				hg.set_hold(ent, hold)
+				local newmat = ent:GetBoneMatrix(lh)
+				local oldpos, oldang = newmat:GetTranslation(), newmat:GetAngles()
+				lhmat:SetTranslation(LerpVector(self.lerphand, (vec2 or vector_origin) + (addvec2 or vector_origin), (oldpos or vector_origin)))
+				lhmat:SetAngles(LerpAngle(self.lerphand, (ang2 or angle_zero), (oldang or angle_zero)))
+
+				hg.bone_apply_matrix(ent, lh, lhmat)
+
+				if self.lerphand < 0.1  then
+					local hold = self.hold_type or (self:IsPistolHoldType() and "pistol_hold2" or "ak_hold")
+					if not self.reload and self.attachments.grip and #self.attachments.grip ~= 0 then
+						hold = hg.attachments.grip[self.attachments.grip[1]].hold
+					end
+
+					hg.set_hold(ent, hold)
+				end
+
+				if CLIENT and inf.arc9LHIK ~= false and self.ApplyARC9GripPose then
+					local weight = self.reload and reloadLHIKWeight or 1 - self.lerphand
+					self:ApplyARC9GripPose(ent, model, weight)
+				end
 			end
+		end
+	end
+
+	if CLIENT and self.ARC9DefaultLHIKPart and not self:HasAttachment("grip") then
+		local reloadLHIKWeight = self:GetARC9ReloadLHIKWeight()
+		local usePose = hg.CanUseLeftHand(ply)
+			and self.lhandik
+			and not ply.suiciding
+			and (not self.reload or reloadLHIKWeight > 0)
+
+		self.ARC9DefaultLHIKWeight = LerpFT(self.ARC9LHIKTransitionSpeed or 0.04, self.ARC9DefaultLHIKWeight or 0, usePose and 1 or 0)
+		if self.reload then self.ARC9DefaultLHIKWeight = math.max(self.ARC9DefaultLHIKWeight, reloadLHIKWeight) end
+		local source = self:GetARC9DefaultLHIKSource()
+		if IsValid(source) then
+			local weight = self.reload and reloadLHIKWeight or self.ARC9DefaultLHIKWeight
+			self:ApplyARC9GripPose(ent, source, weight, self.ARC9DefaultLHIKFullArm)
 		end
 	end
 

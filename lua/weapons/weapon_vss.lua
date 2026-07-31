@@ -178,9 +178,15 @@ SWEP.DistSound = "weapons/darsu_eft/vss/vss_dist.wav"
 
 SWEP.availableAttachments = {
 	sight = {
-		["mountType"] = {"dovetail"},
-		["mount"] = {["dovetail"] = Vector(-21, -0.4, 1.8)},
+		["mountType"] = {"dovetail", "picatinny"},
+		["mount"] = {["dovetail"] = Vector(-20, -0.4, 1.8), ["picatinny"] = Vector(-20, 0.05, 2)},
 		["mountAngle"] = Angle(0,0,90),
+	},
+
+	mount = {
+		mountAngle = Angle(0, 90, 0),
+		["picatinny"] = {"mount3", Vector(-20.5, 0.9, -0.1), {}, mountType = "picatinny"},
+		["dovetail"] = {"empty", Vector(1, 0, 0), {}, mountType = "dovetail"},
 	},
 }
 
