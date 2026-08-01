@@ -2998,7 +2998,7 @@ local ammoents = {
 	},
 	["grenade_vog25"] = {
 		Icon = "vgui/hud/ahuetzcity",
-		Model = "models/weapons/arc9/darsu_eft/vog25.mdl",
+		Model = "models/weapons/vog25.mdl",
 		Count = 6
 	},
 	["pulse"] = {

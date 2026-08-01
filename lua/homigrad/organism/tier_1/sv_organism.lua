@@ -1088,12 +1088,12 @@ concommand.Add("hg_fixdislocation", function(ply, cmd, args)
 	end
 end)
 
-local function hg_ResolveDislocationPatient(target, fixer)
+local function hg_ResolveDislocationPatient(target)
 	if not IsValid(target) then return nil end
-	if target:IsPlayer() then return target end
-	if IsValid(target.organism) and IsValid(target.organism.owner) then return target.organism.owner end
+	if target:IsPlayer() then return target, target end
+	if target.organism and IsValid(target.organism.owner) then return target.organism.owner, target end
 	local plyref = target:GetNWEntity("ply")
-	if IsValid(plyref) then return plyref end
+	if IsValid(plyref) and plyref:IsPlayer() then return plyref, target end
 	return nil
 end
 
@@ -1101,9 +1101,10 @@ net.Receive("hg_dislocation_minigame_pain", function(len, ply)
 	if not IsValid(ply) or not ply:Alive() then return end
 
 	local target = net.ReadEntity()
-	local patient = hg_ResolveDislocationPatient(target, ply)
+	local patient, interactionEnt = hg_ResolveDislocationPatient(target)
 
 	if IsValid(patient) and patient:IsPlayer() and patient != ply then
+		if ply:GetPos():DistToSqr(interactionEnt:GetPos()) > 200 * 200 then return end
 		local org = patient.organism
 		if not org then return end
 
@@ -1125,11 +1126,9 @@ net.Receive("hg_dislocation_minigame_success", function(len, ply)
 	if not IsValid(ply) or not ply:Alive() then return end
 
 	local target = net.ReadEntity()
-	local patient = hg_ResolveDislocationPatient(target, ply) or ply
-
-	if patient != ply and (not IsValid(patient) or not patient:IsPlayer() or patient == ply or ply:GetPos():Distance(patient:GetPos()) > 200) then
-		patient = ply
-	end
+	local patient, interactionEnt = hg_ResolveDislocationPatient(target)
+	if not IsValid(patient) or not patient:IsPlayer() then return end
+	if patient != ply and ply:GetPos():DistToSqr(interactionEnt:GetPos()) > 200 * 200 then return end
 
 	local org = patient.organism
 	if not org then return end

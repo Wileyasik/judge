@@ -15,8 +15,17 @@ local OPTIONS_FADE_IN     = 1.0
 local TRANSITION_DURATION = 0.6
 local DOUBLE_CLICK_WINDOW = 0.5
 
+local DEATH_MESSAGES = {
+    { title = "Deceased.", desc = "You are no longer a witness to the world." },
+    { title = "No Responce.", desc = "Your body remains. You do not." },
+    { title = "Gone.", desc = "The world continues without your testimony." },
+    { title = "Expired.", desc = "All signs of breath has left you." },
+    { title = "Terminated.", desc = "Your perspective has been permanently interrupted." },
+    { title = "Silenced.", desc = "Nothing answers from inside the body." },
+}
+
 local DEATH_SOUNDS = {
-    [0] = "rem_brutaldeath.mp3",
+    [0] = "death_ost.mp3",
 }
 
 -- server convar values yesss
@@ -93,6 +102,7 @@ local deathCamPos   = Vector(0, 0, 0)
 local deathCamAng   = Angle(0, 0, 0)
 local deathPos      = Vector(0, 0, 0)
 local ragdollEnt    = nil
+local deathMessage  = DEATH_MESSAGES[1]
 local matWhite      = Material("models/debug/debugwhite")
 
 local deathSoundChannels = {}
@@ -105,6 +115,7 @@ local transitionFired     = false
 
 local prevReloadDown = false
 local prevJumpDown   = false
+local prevSkipDown   = false
 
 local compatActive     = false
 local compatActiveTime = 0
@@ -165,6 +176,103 @@ local function DoRespawn()
     net.SendToServer()
 end
 
+local function StopDeathSounds()
+    for _, station in ipairs(deathSoundChannels) do
+        if IsValid(station) then
+            station:Stop()
+        end
+    end
+    deathSoundChannels = {}
+    keepSoundAlive = false
+end
+
+local function RestoreRagdoll()
+    if IsValid(ragdollEnt) then
+        ragdollEnt:SetNoDraw(false)
+        local headBone = ragdollEnt:LookupBone("ValveBiped.Bip01_Head1")
+        if headBone then
+            ragdollEnt:ManipulateBoneScale(headBone, Vector(1, 1, 1))
+        end
+    end
+end
+
+local function GetRagdollHeadPos(ent)
+    if not IsValid(ent) then return deathPos + Vector(0, 0, STAGE_1_LOOK_HEIGHT) end
+
+    local headBone = ent:LookupBone("ValveBiped.Bip01_Head1")
+    if headBone then
+        local matrix = ent:GetBoneMatrix(headBone)
+        if matrix then
+            return matrix:GetTranslation()
+        end
+    end
+
+    return ent:GetPos() + Vector(0, 0, 45)
+end
+
+local function MakeRagdollHeadVisible(ent)
+    if not IsValid(ent) then return end
+
+    local headBone = ent:LookupBone("ValveBiped.Bip01_Head1")
+    if headBone then
+        ent:ManipulateBoneScale(headBone, Vector(1, 1, 1))
+    end
+end
+
+local function FindDeathRagdoll(ply)
+    if not IsValid(ply) then return nil end
+
+    if IsValid(ply.FakeRagdoll) then
+        return ply.FakeRagdoll
+    end
+
+    local nwRagdoll = ply.GetNWEntity and ply:GetNWEntity("RagdollDeath") or nil
+    if IsValid(nwRagdoll) then
+        return nwRagdoll
+    end
+
+    local deathRagdoll = ply:GetRagdollEntity()
+    if IsValid(deathRagdoll) then
+        return deathRagdoll
+    end
+
+    local bestRagdoll = nil
+    local bestDist = math.huge
+    for _, ent in ipairs(ents.FindByClass("prop_ragdoll")) do
+        if ent:GetModel() == ply:GetModel() then
+            local dist = ent:GetPos():DistToSqr(deathPos)
+            if dist < 100000 and dist < bestDist then
+                bestRagdoll = ent
+                bestDist = dist
+            end
+        end
+    end
+
+    return bestRagdoll
+end
+
+local function SkipDeathScene()
+    local ply = LocalPlayer()
+    if not IsValid(ply) then return end
+
+    isDead = false
+    hasSpawned = false
+    stage2Started = false
+    inTransition = false
+    inSpectator = false
+    autoCompatTriggered = false
+    compatActive = false
+    compatTriggered = false
+    RestoreRagdoll()
+    ragdollEnt = nil
+    ply:SetDSP(0)
+    ply:ConCommand("soundfade 0 1")
+    StopDeathSounds()
+    ReleaseAuthority()
+    net.Start("DeathEffect_CompatUnblock")
+    net.SendToServer()
+end
+
 local function EnterSpectator()
     inSpectator  = true
     freecamPos   = Vector(deathCamPos.x, deathCamPos.y, deathCamPos.z)
@@ -214,40 +322,24 @@ local function CinematicDeathTracker()
             compatActive = false
             ReleaseAuthority()
 
-            if IsValid(ragdollEnt) then
-                ragdollEnt:SetNoDraw(false)
-            end
+            RestoreRagdoll()
             ragdollEnt = nil
 
             ply:SetDSP(0)
             ply:ConCommand("soundfade 0 1")
-
-            for _, station in ipairs(deathSoundChannels) do
-                if IsValid(station) then
-                    station:Stop()
-                end
-            end
-            deathSoundChannels = {}
+            StopDeathSounds()
         end
 
         return
     end
 
-    if isDead and input.IsButtonDown(KEY_BACKSPACE) then
-        isDead = false
-        hasSpawned = false
-        ReleaseAuthority()
-        ply:SetDSP(0)
-        ply:ConCommand("soundfade 0 1")
-        if IsValid(ragdollEnt) then
-            ragdollEnt:SetNoDraw(false)
-        end
-        if IsValid(deathSoundChannel) then
-            deathSoundChannel:Stop()
-            deathSoundChannel = nil
-        end
+    local skipDown = input.IsButtonDown(KEY_BACKSPACE) or SafeKeyDown(jumpKeyCode)
+    if isDead and skipDown and not prevSkipDown then
+        SkipDeathScene()
+        prevSkipDown = true
         return
     end
+    prevSkipDown = skipDown
 
     if ply:Alive() and not hasSpawned then
         hasSpawned = true
@@ -268,7 +360,10 @@ local function CinematicDeathTracker()
         ragdollEnt       = ply:GetRagdollEntity()
         prevReloadDown   = false
         prevJumpDown     = false
+        prevSkipDown     = input.IsButtonDown(KEY_BACKSPACE) or SafeKeyDown(jumpKeyCode)
         prevSpecReloadDown = false
+        deathMessage     = DEATH_MESSAGES[math.random(#DEATH_MESSAGES)]
+        MakeRagdollHeadVisible(ragdollEnt)
 
         local plyPos = ply:GetPos()
         deathPos     = plyPos
@@ -312,20 +407,12 @@ local function CinematicDeathTracker()
         compatActive   = false
         ReleaseAuthority() 
         
-        if IsValid(ragdollEnt) then
-            ragdollEnt:SetNoDraw(false)
-        end
+        RestoreRagdoll()
         ragdollEnt = nil
 
         ply:SetDSP(0)
         ply:ConCommand("soundfade 0 1")
-
-        for _, station in ipairs(deathSoundChannels) do
-            if IsValid(station) then
-                station:Stop()
-            end
-        end
-        deathSoundChannels = {}
+        StopDeathSounds()
     end
 
     if isDead and not stage2Started then
@@ -383,6 +470,8 @@ local function CinematicDeathTracker()
                 end
             end
         end
+
+        MakeRagdollHeadVisible(ragdollEnt)
     end
 
     if inTransition and not transitionFired then
@@ -482,7 +571,7 @@ local function BuildDeathView(fov)
         )
     else
         if IsValid(ragdollEnt) then
-            local targetPos = ragdollEnt:GetPos() + Vector(0, 0, 15)
+            local targetPos = GetRagdollHeadPos(ragdollEnt)
             local targetAng = (targetPos - deathCamPos):Angle()
             deathCamAng = LerpAngle(FrameTime() * 4, deathCamAng, targetAng)
 
@@ -587,13 +676,17 @@ local function CinematicDeathBackground()
         local textFadeIn = math.Clamp(stageElapsed / DEATH_TEXT_FADE_IN, 0, 1)
         local textAlpha = math.floor(textFadeIn * overlayAlpha * (1 - fadeProgress))
         local shake = 5 * (1 - textFadeIn)
-        local text = "Deceased."
-        local desc = "You are no longer a witness to the world."
+        local text = deathMessage.title
+        local desc = deathMessage.desc
         local slide = 1 - ((1 - textFadeIn) ^ 3)
         local textX = Lerp(slide, -650, 70) + math.sin(CurTime() * 95) * shake
         local textY = sh / 2 - 60 + math.cos(CurTime() * 110) * shake
         draw.SimpleText(text, "DeathEffect_HG_Large", textX, textY, Color(0, 0, 0, textAlpha), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
         draw.SimpleText(desc, "DeathEffect_HG_Desc", textX + 6, textY + 85, Color(0, 0, 0, textAlpha), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+
+        local hint = "press [SPACE] or [BACKSPACE] to skip"
+        local hintAlpha = math.floor(textFadeIn * overlayAlpha * 0.45)
+        draw.SimpleText(hint, "DeathEffect_Hint", sw / 2, sh - 36, Color(0, 0, 0, hintAlpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     end
 
 end

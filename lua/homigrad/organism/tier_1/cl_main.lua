@@ -87,11 +87,37 @@ surface.CreateFont("RemDeathStateFont", {
 local remDeathStateColor = Color(255, 255, 255, 0)
 local remDeathStateStation
 local remDeathStateLoading
+local remDeathStateSounds = {"rem_deathstatefull.mp3", "incap1.mp3", "incap2.mp3"}
+local brainRotStation
+local brainRotLoading
+local nextBrainRotRoll = 0
+local brainRotEnd = 0
 local remHeartStopped = false
 local remFibrillationStation
 local remFibrillationLoading
 local remFibrillationStopping
 local remHeartStopLoading
+local seizureStation
+local seizureLoading
+local seizureStopping
+
+local MUSIC_VOLUME = 0.75
+local BRAINROT_VOLUME = 0.45
+
+local function PlayStationRandom(station, volume)
+	station:SetVolume(volume or 1)
+	local startTime = 0
+	local length
+	if station.GetLength and station.SetTime then
+		length = station:GetLength()
+		if isnumber(length) and length > 3 then
+			startTime = math.Rand(0, math.max(length - 1, 0))
+			station:SetTime(startTime)
+		end
+	end
+	station:Play()
+	return startTime, length
+end
 
 local function PlayRemHeartStopSound(uncon)
 	if remHeartStopLoading then return end
@@ -112,18 +138,96 @@ local function PlayRemDeathStateSound()
 	if remDeathStateLoading then return end
 
 	remDeathStateLoading = true
-	sound.PlayFile("sound/rem_deathstatefull.mp3", "noplay", function(station)
+	sound.PlayFile("sound/" .. remDeathStateSounds[math.random(#remDeathStateSounds)], "noplay", function(station)
 		remDeathStateLoading = nil
 		if not IsValid(station) then return end
 		if not LocalPlayer():Alive() then station:Stop() return end
 		remDeathStateStation = station
 		station:EnableLooping(true)
-		station:SetVolume(1)
-		station:Play()
+		PlayStationRandom(station, MUSIC_VOLUME)
 	end)
 end
 
 net.Receive("rem_deathstate_sound", PlayRemDeathStateSound)
+
+local function GetBrainLobeDamage(org)
+	return (org.brainFrontal or 0) + (org.brainParietal or 0) + (org.brainTemporal or 0) + (org.brainOccipital or 0)
+end
+
+local function TryPlayBrainRotSound(org)
+	if not org or GetBrainLobeDamage(org) <= 0 then return end
+	if brainRotLoading or IsValid(brainRotStation) then return end
+	if CurTime() < nextBrainRotRoll then return end
+
+	nextBrainRotRoll = CurTime() + 30
+	if math.random(4) ~= 1 then return end
+
+	brainRotLoading = true
+	sound.PlayFile("sound/brainrot.mp3", "noplay", function(station)
+		brainRotLoading = nil
+		if not IsValid(station) then return end
+		local ply = LocalPlayer()
+		local currentOrg = IsValid(ply) and ply:Alive() and (ply.new_organism or ply.organism)
+		if not currentOrg or GetBrainLobeDamage(currentOrg) <= 0 then station:Stop() return end
+		brainRotStation = station
+		local startTime, length = PlayStationRandom(station, BRAINROT_VOLUME)
+		brainRotEnd = isnumber(length) and CurTime() + math.max(length - startTime, 0) or CurTime() + 180
+	end)
+end
+
+local function UpdateBrainRotSound(org)
+	if not IsValid(brainRotStation) then return end
+	if not org or GetBrainLobeDamage(org) <= 0 then
+		brainRotStation:Stop()
+		brainRotStation = nil
+		brainRotEnd = 0
+		return
+	end
+	if brainRotStation.GetState and brainRotStation:GetState() == GMOD_CHANNEL_STOPPED then brainRotStation = nil brainRotEnd = 0 return end
+	if brainRotEnd > 0 and CurTime() >= brainRotEnd then brainRotStation = nil brainRotEnd = 0 end
+end
+
+local function StartSeizureSound(org)
+	if not org or not org.seizureActive then return end
+	if IsValid(seizureStation) then
+		seizureStopping = nil
+		seizureStation:Play()
+		if seizureStation.ChangeVolume then seizureStation:ChangeVolume(MUSIC_VOLUME, 0.4) else seizureStation:SetVolume(MUSIC_VOLUME) end
+		return
+	end
+	if seizureLoading then return end
+
+	seizureLoading = true
+	sound.PlayFile("sound/seizure.mp3", "noplay", function(station)
+		seizureLoading = nil
+		if not IsValid(station) then return end
+		local ply = LocalPlayer()
+		local currentOrg = IsValid(ply) and ply:Alive() and (ply.new_organism or ply.organism)
+		if not currentOrg or not currentOrg.seizureActive then station:Stop() return end
+		seizureStation = station
+		seizureStopping = nil
+		station:EnableLooping(true)
+		PlayStationRandom(station, MUSIC_VOLUME)
+	end)
+end
+
+local function StopSeizureSound()
+	if not IsValid(seizureStation) or seizureStopping then return end
+	seizureStopping = true
+	if seizureStation.ChangeVolume then
+		seizureStation:ChangeVolume(0, 1)
+		timer.Simple(1.05, function()
+			if not seizureStopping or not IsValid(seizureStation) then return end
+			seizureStation:Stop()
+			seizureStation = nil
+			seizureStopping = nil
+		end)
+	else
+		seizureStation:Stop()
+		seizureStation = nil
+		seizureStopping = nil
+	end
+end
 
 local function StartRemFibrillationSound()
 	if IsValid(remFibrillationStation) then
@@ -176,6 +280,9 @@ hook.Add("Think", "RemCardiacSounds", function()
 	if heartstop and not remHeartStopped then PlayRemHeartStopSound(org.otrub) end
 	remHeartStopped = heartstop
 	if fibrillation then StartRemFibrillationSound() else StopRemFibrillationSound() end
+	TryPlayBrainRotSound(org)
+	UpdateBrainRotSound(org)
+	if org and org.seizureActive then StartSeizureSound(org) else StopSeizureSound() end
 end)
 
 hook.Add("Think", "RemDeathStateSoundStop", function()
@@ -250,6 +357,10 @@ local curscreen = 1
 local switch = false
 local file_Delete = file.Delete
 hg.alivecntr = hg.alivecntr or 0
+local nextSeizureMemory = 0
+local seizureMemory
+local seizureMemoryEnd = 0
+local wasSeizureActive = false
 
 local function remove_imgs()
 	if file.Exists("dreams", "DATA") then
@@ -320,7 +431,7 @@ hook.Add("radialOptions", "DislocatedJoint", function()
 		local tbl = {
 			function()
 			lply.tried_fixing_limb = CurTime() + 0.5
-			if hg.StartDislocationMinigame then hg.StartDislocationMinigame(1, target) else RunConsoleCommand("hg_fixdislocation", 1, 1) end
+			if hg.StartDislocationMinigame then hg.StartDislocationMinigame(1, ent) else RunConsoleCommand("hg_fixdislocation", 1, 1) end
 		end,
 		"Fix "..(IsValid(target) and target:GetPlayerName() or ent:GetPlayerName()).."'s dislocation (leg)",
 		[5] = Material("radialmenu/broken.png", "smooth mips")
@@ -353,7 +464,7 @@ hook.Add("radialOptions", "DislocatedJoint2", function()
 		local tbl = {
 			function()
 			lply.tried_fixing_limb = CurTime() + 0.5
-			if hg.StartDislocationMinigame then hg.StartDislocationMinigame(2, target) else RunConsoleCommand("hg_fixdislocation", 2, 1) end
+			if hg.StartDislocationMinigame then hg.StartDislocationMinigame(2, ent) else RunConsoleCommand("hg_fixdislocation", 2, 1) end
 		end,
 		"Fix "..(IsValid(target) and target:GetPlayerName() or ent:GetPlayerName()).."'s dislocation (arm)",
 		[5] = Material("radialmenu/broken.png", "smooth mips")
@@ -386,7 +497,7 @@ hook.Add("radialOptions", "DislocatedJaw", function()
 		local tbl = {
 			function()
 			lply.tried_fixing_limb = CurTime() + 0.5
-			if hg.StartDislocationMinigame then hg.StartDislocationMinigame(3, target) else RunConsoleCommand("hg_fixdislocation", 3, 1) end
+			if hg.StartDislocationMinigame then hg.StartDislocationMinigame(3, ent) else RunConsoleCommand("hg_fixdislocation", 3, 1) end
 		end,
 		"Fix "..(IsValid(target) and target:GetPlayerName() or ent:GetPlayerName()).."'s dislocation (jaw)",
 		[5] = Material("radialmenu/broken.png", "smooth mips")
@@ -475,6 +586,103 @@ local hg_potatopc
 local old = false
 local tinnitusSoundFactor
 local hg_gopro = ConVarExists("hg_gopro") and GetConVar("hg_gopro") or CreateClientConVar("hg_gopro", "0", true, false, "Toggle GoPro-like first-person camera view", 0, 1)
+
+local function CaptureMemoryScreen()
+	if gui.IsGameUIVisible() or gui.IsConsoleVisible() or IsValid(vgui.GetHoveredPanel()) then return end
+	local data = render.Capture({
+		format = "jpeg",
+		x = 0,
+		y = 0,
+		w = ScrW(),
+		h = ScrH(),
+		quality = 1
+	})
+	if not data then return end
+
+	local name = "dreams/dream"..hg.alivecntr.."_seizure_"..(#screens + 1)..".jpeg"
+	if not file.Exists("dreams", "DATA") then file.CreateDir("dreams") end
+	file.Write(name, data)
+	timer.Simple(0, function()
+		screens[#screens + 1] = Material("data/"..name)
+	end)
+end
+
+local function DrawSeizureMemory(org)
+	if not org or not org.seizureActive or #screens == 0 then
+		seizureMemory = nil
+		seizureMemoryEnd = 0
+		return
+	end
+
+	local time = CurTime()
+	if (not seizureMemory or time > seizureMemoryEnd) and time >= nextSeizureMemory then
+		nextSeizureMemory = time + math.Rand(2.5, 6)
+		seizureMemory = screens[math.random(#screens)]
+		seizureMemoryEnd = time + math.Rand(0.45, 1.15)
+	end
+
+	if not seizureMemory or time > seizureMemoryEnd then return end
+	if seizureMemory.IsError and seizureMemory:IsError() then return end
+
+	local life = math.Clamp((seizureMemoryEnd - time) / 1.15, 0, 1)
+	local flicker = 0.55 + math.abs(math.sin(time * 34)) * 0.45
+	local alpha = math.Clamp(life * 155 * flicker, 0, 180)
+	local jitter = 8 * (1 - life)
+
+	surface.SetDrawColor(255, 255, 255, alpha)
+	surface.SetMaterial(seizureMemory)
+	surface.DrawTexturedRect(-jitter, -jitter, ScrW() + jitter * 2, ScrH() + jitter * 2)
+end
+
+local function DrawScreenFillShape(x, y, radius, segments, roughness, timeOffset)
+	local poly = {}
+	local time = CurTime() + (timeOffset or 0)
+
+	for i = 0, segments do
+		local part = i / segments
+		local ang = math.rad(part * -360)
+		local wave = math.sin(part * math.pi * 5 + time * 1.8) * 0.34 + math.sin(part * math.pi * 9 - time * 1.25) * 0.28 + math.sin(part * math.pi * 15 + time * 2.35) * 0.22 + math.sin(part * math.pi * 23 - time * 1.6) * 0.16
+		local edgeRadius = radius * (1 + wave * roughness)
+		poly[#poly + 1] = {x = x + math.sin(ang) * edgeRadius, y = y + math.cos(ang) * edgeRadius}
+	end
+
+	draw.NoTexture()
+	surface.DrawPoly(poly)
+end
+
+local function DrawIncapacitatedDeathFade(deathStateEnd)
+	local remaining = math.max(deathStateEnd - CurTime(), 0)
+	local fade = math.Clamp((25 - remaining) / 25, 0, 1)
+	local finalFade = math.Clamp((6 - remaining) / 6, 0, 1)
+	local shine = finalFade * (0.65 + math.abs(math.sin(CurTime() * 9)) * 0.35)
+	local sw, sh = ScrW(), ScrH()
+	local radius = math.ease.InOutSine(fade) * math.sqrt(sw * sw + sh * sh) / 2
+
+	DrawBloom(0.35 + finalFade * 0.45, 0.8 + finalFade * 2.8, 7, 7, 2, 1, 1, 1, 1)
+	surface.SetDrawColor(255, 255, 255, math.Clamp((fade ^ 1.35) * 175 + shine * 35, 0, 255))
+	DrawScreenFillShape(sw / 2, sh / 2, radius * 1.04, 320, 0.24 * (1 - finalFade * 0.35), 0)
+	surface.SetDrawColor(255, 255, 255, math.Clamp((fade ^ 1.35) * 110 + shine * 25, 0, 255))
+	DrawScreenFillShape(sw / 2, sh / 2, radius * 0.99, 320, 0.31 * (1 - finalFade * 0.3), 4.7)
+	surface.SetDrawColor(255, 255, 255, math.Clamp((fade ^ 1.35) * 80 + shine * 20, 0, 255))
+	DrawScreenFillShape(sw / 2, sh / 2, radius * 0.94, 320, 0.38 * (1 - finalFade * 0.25), 9.2)
+
+	if finalFade > 0 then
+		surface.SetDrawColor(255, 255, 255, math.Clamp(finalFade * 180 + shine * 75, 0, 255))
+		DrawScreenFillShape(sw / 2, sh / 2, radius * (0.88 + shine * 0.12), 320, 0.2 * (1 - finalFade * 0.45), 13.5)
+	end
+end
+
+local function DrawIncapacitatedDeathText(seconds, deathStateEnd)
+	local remaining = math.max(deathStateEnd - CurTime(), 0)
+	local fade = math.Clamp((25 - remaining) / 25, 0, 1)
+	local radius = math.ease.InOutSine(fade) * math.sqrt(ScrW() * ScrW() + ScrH() * ScrH()) / 2
+	local textDark = math.Clamp((radius - 12) / 80, 0, 1)
+	local textValue = math.floor(255 * (1 - textDark))
+	local textColor = Color(textValue, textValue, textValue, remDeathStateColor.a)
+
+	draw.SimpleText("You are incapacitated, You will die in " .. seconds, "RemDeathStateFont", ScrW() / 2, ScrH() / 2, textColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+end
+
 hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 	local spect = IsValid(lply:GetNWEntity("spect")) and lply:GetNWEntity("spect")
 	local organism = lply:Alive() and lply.organism or (viewmode == 1 and IsValid(spect) and spect.organism) or {}
@@ -523,7 +731,10 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 	local concussionNausea = org.nausea or 0
 	local concussionTinnitus = org.concussion_tinnitus or 0
 	local deathStateEnd = new_organism.deathStateEnd or org.deathStateEnd
+	local seizureActive = org.seizureActive or new_organism.seizureActive or false
 	if deathStateEnd and deathStateEnd <= 0 then deathStateEnd = nil end
+	if seizureActive and not wasSeizureActive then timer.Simple(0, CaptureMemoryScreen) end
+	wasSeizureActive = seizureActive
 	tinnitusSoundFactor = Lerp(FrameTime()*2.5,tinnitusSoundFactor or 0, math.min(math.max( lply.tinnitus and (lply.tinnitus - CurTime()) or 0, 0)*7.5,120))
 	local tinnitusSoundFactor2 = tinnitusSoundFactor + (hook.Run("ModifyTinnitusFactor", tinnitusSoundFactor) or 0)
 
@@ -531,7 +742,6 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 		local seconds = math.max(math.ceil(deathStateEnd - CurTime()), 0)
 		remDeathStateColor.a = math.Clamp((25 - (deathStateEnd - CurTime())) / 2, 0, 1) * 255
 		PlayRemDeathStateSound()
-		draw.SimpleText("You are incapacitated, You will die in " .. seconds, "RemDeathStateFont", ScrW() / 2, ScrH() / 2, remDeathStateColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 	elseif IsValid(remDeathStateStation) then
 		remDeathStateStation:Stop()
 		remDeathStateStation = nil
@@ -570,6 +780,10 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 		else
 			lply:SetDSP((lply.suiciding and lply:Alive()) and 130 or normaldsp)
 		end
+	end
+
+	if lply:Alive() and (otrub or new_organism.otrub) and incapacitated and deathStateEnd then
+		DrawIncapacitatedDeathFade(deathStateEnd)
 	end
 
 	if not alive then
@@ -766,8 +980,10 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 		parsed:Draw( ScrW()/2, ScrH()/1.1, TEXT_ALIGN_CENTER, nil, nil, TEXT_ALIGN_CENTER )
 		
 		render.PopFilterMag()
-		render.PopFilterMin()--]]
+			render.PopFilterMin()--]]
 	end
+
+	DrawSeizureMemory(org)
 	
 	if IsValid(ent) and ent.Blinking and lply:Alive() then
 		surface.SetDrawColor(0,0,0,255)
@@ -776,6 +992,10 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 			//surface.DrawRect(-1,-1,ScrW()+1,ent.Blinking * ScrH())
 			//surface.DrawRect(-1,ScrH() + 1,ScrW()+1,-ent.Blinking * ScrH())
 		end
+	end
+	if lply:Alive() and (otrub or new_organism.otrub) and incapacitated and deathStateEnd then
+		local seconds = math.max(math.ceil(deathStateEnd - CurTime()), 0)
+		DrawIncapacitatedDeathText(seconds, deathStateEnd)
 	end
 end)
 

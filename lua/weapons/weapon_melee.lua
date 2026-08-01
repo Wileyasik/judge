@@ -411,7 +411,7 @@ if CLIENT then
 
     SWEP.Current = 1
 
-	function SWEP:DrawWorldModel2()
+	function SWEP:DrawWorldModel2(prepareOnly)
 		local owner = self:GetOwner()
         
         if not IsValid(self.worldModel) then
@@ -424,13 +424,14 @@ if CLIENT then
         if not IsValid(owner) and (not self.shouldTransmit or self.NotSeen) then return end
 
 		local WorldModel = self.worldModel
+        local updatePose = self.MeleePoseFrame ~= FrameNumber()
         
         self.worldModel:SetModelScale(self.modelscale2)
         local ent = hg.GetCurrentCharacter(owner)
 
         local inuse = self:InUse()
 
-        if IsValid(owner) then
+        if updatePose and IsValid(owner) then
             if not self.cycling then
                 local dtime = SysTime() - (self.lasthuyhuy or SysTime())
                 self.lasthuyhuy = SysTime()
@@ -470,7 +471,7 @@ if CLIENT then
 			WorldModel:SetRenderAngles(ang)
             WorldModel:SetPos(pos)
             WorldModel:SetAngles(ang)
-		else
+        elseif updatePose then
             if WorldModel:GetModel() ~= self.WorldModel then WorldModel:SetModel(self.WorldModel) end
 			
             WorldModel:SetRenderOrigin(self:GetPos())
@@ -479,9 +480,11 @@ if CLIENT then
             WorldModel:SetAngles(self:GetAngles())
 		end
 
-        WorldModel:SetupBones()
+        if updatePose then
+            WorldModel:SetupBones()
+        end
         
-        if IsValid(owner) and !inuse then
+        if updatePose and IsValid(owner) and !inuse then
             local bon = ent:LookupBone("ValveBiped.Bip01_R_Hand")
             if not bon then return end
             local mat = ent:GetBoneMatrix(bon)
@@ -515,9 +518,15 @@ if CLIENT then
             end
         end
 
-        if self.CustomWorldModelBones then
+        if updatePose and self.CustomWorldModelBones then
             self:CustomWorldModelBones(WorldModel)
         end
+
+        if updatePose then
+            self.MeleePoseFrame = FrameNumber()
+        end
+
+        if prepareOnly then return end
 
         local drawWorldModelReal = not self.WorldModelExchange or (self.ShouldDrawWorldModelReal and self:ShouldDrawWorldModelReal())
         if drawWorldModelReal then
@@ -566,6 +575,10 @@ if CLIENT then
             ClearDecalToEnt(IsValid(self.worldModel2) and self.worldModel2 or self.worldModel, self:EntIndex())
         end
 	end
+
+    function SWEP:PrepareMeleeWorldModel()
+        self:DrawWorldModel2(true)
+    end
 end
 
 local addAng = Angle()
@@ -711,7 +724,7 @@ function SWEP:ModelAnim(model, pos, ang)
     local vel = ent:GetVelocity()
     local vellen = vel:Length()
 
-    local vellenlerp = self.velocityAdd and self.velocityAdd:Length() or vellen
+    local vellenlerp = vellen * 0.01
 
     if !tr then return end
 
@@ -724,15 +737,6 @@ function SWEP:ModelAnim(model, pos, ang)
 	
 	self.walkTime = self.walkTime + walk * dtime * 7 * game.GetTimeScale() * (owner:OnGround() and 1 or 0)
     
-    self.velocityAdd = self.velocityAdd or Vector()
-    self.velocityAddVel = self.velocityAddVel or Vector()
-
-    //vel.z = vel.z + ((owner:IsFlagSet(FL_ANIMDUCKING) and !owner:IsFlagSet(FL_DUCKING)) and (100) or (!owner:IsFlagSet(FL_ANIMDUCKING) and owner:IsFlagSet(FL_DUCKING)) and (-100) or 0)
-    self.velocityAddVel = LerpFT(0.9, self.velocityAddVel * 0.99, -vel * 0.01)
-    self.velocityAddVel[3] = self.velocityAddVel[3]
-
-    self.velocityAdd = LerpFT(0.03, self.velocityAdd, self.velocityAddVel)
-
 	local huy = self.walkTime
 	
 	local x, y = math.cos(huy) * math.sin(huy) * walk + math.cos(CurTime() * 5) * walk * math.sin(CurTime() * 2) * 0.5, math.sin(huy) * walk * 1 + math.sin(CurTime() * 5) * walk * math.cos(CurTime() * 4) * 0.5
@@ -801,20 +805,12 @@ function SWEP:ModelAnim(model, pos, ang)
         addAng.z = -x * 2// * vellenlerp * 0.3
         addAng.y = -y * 2// * vellenlerp * 0.3
 
-        addPos.y = addPos.y - angle_difference.y * 2
-        addAng.y = addAng.y + angle_difference.y * 4
-
-        addPos.z = addPos.z + angle_difference.p * 2
-        addAng.p = addAng.p + angle_difference.p * 4
-
         addAng.p = addAng.p + math.cos(CurTime() * 2) * 1
 
         //addPos.z = addPos.z + eyeAng[1] * 0.05
         addPos.x = addPos.x + eyeAng[1] * 0.05
 
-        local veldot = self.velocityAdd:Dot(eyeAng:Right())
-        
-        addAng.r = addAng.r - veldot * 5 + math.cos(CurTime() * 5) * walk * 2 - angle_difference.y * 2
+        addAng.r = addAng.r + math.cos(CurTime() * 5) * walk * 2
 
         //addAng.p = addAng.p + math.cos(CurTime() * 2) * 1
 
@@ -849,7 +845,7 @@ function SWEP:ModelAnim(model, pos, ang)
         addAng:Add(self.SuicideCutAng * animpos)
     end
 
-    local pos, ang = LocalToWorld(hpos + addPos + self.lerpedAddPos, hang + addAng + self.lerpedAddAng, tr.StartPos + self.velocityAdd, eyeAng)
+    local pos, ang = LocalToWorld(hpos + addPos + self.lerpedAddPos, hang + addAng + self.lerpedAddAng, tr.StartPos, eyeAng)
 
 	self.timetick2 = SysTime()
 
@@ -880,36 +876,11 @@ local host_timescale = game.GetTimeScale
 
 function SWEP:Camera(eyePos, eyeAng, view, vellen)
     //self:SetHandPos()
-    self:DrawWorldModel2()
-
-    local WorldModel = self.worldModel
-
-    if not IsValid(WorldModel) then return end
-
-    local camBone = (WorldModel:LookupBone(self.FakeViewBobBone) or (self.FakeVPShouldUseHand and WorldModel:LookupBone("ValveBiped.Bip01_R_Hand") or WorldModel:LookupBone("Weapon"))) or WorldModel:LookupBone("ValveBiped.Bip01_R_Hand")
-    
-    if camBone then
-        local matrix = WorldModel:GetBoneMatrix(camBone)
-
-        if matrix then
-            local gAngles = matrix:GetAngles()
-            local _,gAngles = WorldToLocal(vector_origin, gAngles, eyePos, eyeAng)
-            self.OldAngPunch = self.OldAngPunch or gAngles
-            local punch = ( self.OldAngPunch - gAngles ) / (self.ViewPunchDiv or 120)
-            
-            self.punch = punch
-
-            //ViewPunch2( -punch )
-            ViewPunch( punch )
-            
-            self.OldAngPunch = gAngles
-        end
-    end
 
     local owner = self:GetOwner()
     if not owner.InVehicle then return end
 
-    view.origin = eyePos - (angle_difference_localvec * 150) - (position_difference * 0.5)
+    view.origin = eyePos
     view.angles = eyeAng
     
     local lpos = self.lastAddPos or vector_origin
@@ -1637,6 +1608,9 @@ function SWEP:Attack(owner, ent, vellen, attacktype, inattackLength)
     --if self:IsEntSoft(eyetr.Entity) then return eyetr end
     
     local trace
+    local bestWorldTrace
+    local bestOtherTrace
+    local floorCombat = ent ~= owner or IsValid(owner.FakeRagdoll) or IsValid(owner.OldRagdoll)
 
     local amt = 6
 
@@ -1665,18 +1639,42 @@ function SWEP:Attack(owner, ent, vellen, attacktype, inattackLength)
         end
         tr.filter = (secondary and self.MultiDmg2 or charge and self.MultiDmgCharge or self.MultiDmg1) and {owner, ent} or self.HitEnts
 
-        local size = 0.15
-
-        tr.mins = -Vector(size, size, size)
-        tr.maxs = Vector(size, size, size)
-
         local clashTrace = self:FindMeleeClash(owner, ent, attacktype, inattackLength, tr)
 
         if clashTrace then
             return clashTrace
         end
 
-        trace = util.TraceLine(tr)
+        local lineTrace = util.TraceLine(tr)
+        trace = lineTrace
+
+        if not self:IsEntSoft(lineTrace.Entity) then
+            local size = self.AttackSize or 5
+            local hullTr = {
+                start = tr.start + vector_up * size,
+                endpos = tr.endpos + vector_up * size,
+                filter = tr.filter,
+                mask = tr.mask,
+                collisiongroup = tr.collisiongroup,
+                mins = Vector(-size, -size, -size),
+                maxs = Vector(size, size, size)
+            }
+            local hullTrace = util.TraceHull(hullTr)
+
+            if not hullTrace.StartSolid and not hullTrace.AllSolid then
+                if self:IsEntSoft(hullTrace.Entity) or not lineTrace.Hit and hullTrace.Hit then
+                    trace = hullTrace
+                end
+            end
+
+            if shouldDrawHull then
+                DrawMeleeAttackHull(hullTr, hullTrace)
+            end
+        end
+
+        if floorCombat and trace.HitWorld and trace.HitNormal.z > 0.7 and trace.HitPos:DistToSqr(tr.start) < 64 then
+            trace = nil
+        end
 
         if shouldDrawHull then
             DrawMeleeAttackHull(tr, trace)
@@ -1689,8 +1687,16 @@ function SWEP:Attack(owner, ent, vellen, attacktype, inattackLength)
         //    owner:SetVelocity(vec)
         //end
 
-        if self:IsEntSoft(trace.Entity) then
+		if trace and self:IsEntSoft(trace.Entity) then
 			break
+		elseif trace and trace.HitWorld then
+			if not bestWorldTrace or trace.Fraction < bestWorldTrace.Fraction then
+				bestWorldTrace = trace
+			end
+		elseif trace and trace.Hit then
+			if not bestOtherTrace or trace.Fraction < bestOtherTrace.Fraction then
+				bestOtherTrace = trace
+			end
 		end
     end
 
@@ -1705,7 +1711,8 @@ function SWEP:Attack(owner, ent, vellen, attacktype, inattackLength)
         debugoverlay.Sphere(eyetr.StartPos, 1, 0.05, col, true)
     end
 
-    return trace
+    if trace and self:IsEntSoft(trace.Entity) then return trace end
+    return bestOtherTrace or bestWorldTrace or trace
 end
 
 local bluntDecals, bluntDecalsRand = {}, 1

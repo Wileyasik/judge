@@ -259,7 +259,7 @@ function SWEP:ModelAnim(model, pos, ang)
 	local vel = ent:GetVelocity()
 	local vellen = vel:Length()
 
-	local vellenlerp = self.velocityAdd and self.velocityAdd:Length() or vellen
+	local vellenlerp = vellen * 0.01
 
 	if !tr then return end
 
@@ -269,14 +269,6 @@ function SWEP:ModelAnim(model, pos, ang)
 	local walk = math_Clamp(self.walkLerped / 200, 0, 1)
 
 	self.walkTime = self.walkTime + walk * FrameTime() * 1 * game.GetTimeScale() * (owner:OnGround() and 1 or 0)
-
-	self.velocityAdd = self.velocityAdd or Vector()
-	self.velocityAddVel = self.velocityAddVel or Vector()
-
-	self.velocityAddVel = LerpFT(0.9, self.velocityAddVel * 0.99, -vel * 0.01)
-	self.velocityAddVel[3] = self.velocityAddVel[3]
-
-	self.velocityAdd = LerpFT(0.03, self.velocityAdd, self.velocityAddVel)
 
 	local huy = self.walkTime
 
@@ -295,20 +287,12 @@ function SWEP:ModelAnim(model, pos, ang)
 		addAng.z = -x * 2// * vellenlerp * 0.3
 		addAng.y = -y * 2// * vellenlerp * 0.3
 
-		addPos.y = addPos.y - angle_difference.y * 2
-		addAng.y = addAng.y + angle_difference.y * 4
-
-		addPos.z = addPos.z + angle_difference.p * 2
-		addAng.p = addAng.p + angle_difference.p * 4
-
 		addAng.p = addAng.p + math.cos(CurTime() * 2) * 1
 
 		//addPos.z = addPos.z + eyeAng[1] * 0.05
 		addPos.x = addPos.x + eyeAng[1] * 0.05
 
-		local veldot = self.velocityAdd:Dot(tr.Normal:Angle():Right())
-
-		addAng.r = addAng.r - veldot * 5 + math.cos(CurTime() * 5) * walk * 2
+		addAng.r = addAng.r + math.cos(CurTime() * 5) * walk * 2
 
 		//addAng.p = addAng.p + math.cos(CurTime() * 2) * 1
 
@@ -325,7 +309,7 @@ function SWEP:ModelAnim(model, pos, ang)
 	local hpos = (self.HoldPos or vector_origin) + vechuy
 	local hang = (self.HoldAng or angle_zero)
 
-	local pos, ang = LocalToWorld(hpos + addPos, hang + addAng, tr.StartPos + self.velocityAdd, eyeAng)
+	local pos, ang = LocalToWorld(hpos + addPos, hang + addAng, tr.StartPos, eyeAng)
 
 	return pos, ang
 end
@@ -352,7 +336,7 @@ function SWEP:Camera(eyePos, eyeAng, view, vellen)
 	eyePos = eyePos - eyeAng:Up() * x * 0.5
 	eyePos = eyePos - eyeAng:Right() * y * 0.5
 
-	view.origin = (eyePos - (angle_difference_localvec * 150) - (position_difference * 0.5))
+	view.origin = eyePos
 
 	return view
 end
