@@ -1,14 +1,14 @@
 if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_melee"
-SWEP.PrintName = "Kukri"
+SWEP.PrintName = "Taiga"
 SWEP.Instructions = "A machete is a broad blade used either as an agricultural implement similar to an axe, or in combat like a long-bladed knife.\n\nLMB to attack.\nRMB to block."
 SWEP.Category = "Weapons - Melee"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 
-SWEP.WorldModel = "models/weapons/w_knife_t.mdl"
+SWEP.WorldModel = "models/weapons/arc9/darsu_eft/w_melee_taiga.mdl"
 SWEP.WorldModelReal = "models/weapons/tfa_nmrih/v_me_machete.mdl"
-SWEP.WorldModelExchange = "models/weapons/w_melee_kukri.mdl"
+SWEP.WorldModelExchange = "models/weapons/arc9/darsu_eft/w_melee_taiga.mdl"
 SWEP.ViewModel = ""
 SWEP.modelscale = 1.1
 
@@ -130,8 +130,8 @@ SWEP.AnimList = {
 }
 
 if CLIENT then
-	SWEP.WepSelectIcon = Material("entities/arc9_eft_melee_kukri.png")
-	SWEP.IconOverride = "entities/arc9_eft_melee_kukri.png"
+	SWEP.WepSelectIcon = Material("entities/arc9_eft_melee_taiga.png")
+	SWEP.IconOverride = "entities/arc9_eft_melee_taiga.png"
 	SWEP.BounceWeaponIcon = false
 end
 

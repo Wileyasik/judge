@@ -229,7 +229,7 @@ SWEP.lengthSub = 25
 SWEP.handsAng = Angle(7, 2, 0)
 SWEP.DistSound = "weapons/newakm/akmm_dist.wav"
 
-SWEP.StartAtt = {"grip4"}
+SWEP.StartAtt = {"grip4", "stock_ak12_std"}
 SWEP.availableAttachments = {
 	barrel = {
 		[1] = {"supressor3", Vector(0, 0, 0), {}},
@@ -254,6 +254,12 @@ SWEP.availableAttachments = {
 	},
 	magwell = {
 		["mountType"] = {"ak_545_60", "ak_545"},
+	},
+	stock = {
+		[1] = {"stock_ak12_std", Vector(0, 0, 0), {}},
+		["mountType"] = "ak12_stock",
+		["mountBone"] = "mod_reciever",
+		["mount"] = Vector(-0.7, 3, -0.66),
 	},
 }
 
@@ -287,9 +293,19 @@ function SWEP:DrawPost()
 		local partData = self.ARC9Parts and self.ARC9Parts[partName]
 		if not istable(partData) then return end
 
-		local modelPath = partName == "magazine" and self:GetActiveMagazineModel(partData.model, "held") or partData.model
-		if not isstring(modelPath) or modelPath == "" then return end
+		local modelPath = partData.model
+		if partName == "magazine" then
+			modelPath = self:GetActiveMagazineModel(modelPath, "held")
+		elseif partName == "stock" then
+			modelPath = self:GetActiveStockModel(modelPath)
+		end
 		local model = self.HeldARC9PartModels[partName]
+		if not isstring(modelPath) or modelPath == "" then
+			if IsValid(model) then model:Remove() end
+			self.HeldARC9PartModels[partName] = nil
+			self.HeldARC9PartPaths[partName] = nil
+			return
+		end
 		if IsValid(model) and self.HeldARC9PartPaths[partName] ~= modelPath then
 			model:Remove()
 			model = nil
@@ -367,8 +383,19 @@ if CLIENT then
 
 		for partName, partData in pairs(self.ARC9Parts) do
 			if not istable(partData) or not isstring(partData.model) or partData.model == "" then continue end
-			local modelPath = partName == "magazine" and self:GetActiveMagazineModel(partData.model, "world") or partData.model
+			local modelPath = partData.model
+			if partName == "magazine" then
+				modelPath = self:GetActiveMagazineModel(modelPath, "world")
+			elseif partName == "stock" then
+				modelPath = self:GetActiveStockModel(modelPath)
+			end
 			local model = self.BC_DroppedPartModels[partName]
+			if modelPath == "" then
+				if IsValid(model) then model:Remove() end
+				self.BC_DroppedPartModels[partName] = nil
+				self.BC_DroppedPartPaths[partName] = nil
+				continue
+			end
 
 			if IsValid(model) and self.BC_DroppedPartPaths[partName] ~= modelPath then
 				model:Remove()

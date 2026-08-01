@@ -1,21 +1,19 @@
 if SERVER then AddCSLuaFile() end
 
 SWEP.Base = "weapon_combatknife"
-SWEP.PrintName = "Ritual"
-SWEP.Instructions = "A poisoned ritual knife.\n\nLMB to attack.\nR + LMB to change attack mode.\nRMB to block."
+SWEP.PrintName = "6X5 Bayonet"
+SWEP.Instructions = "LMB to attack.\nR + LMB to change attack mode.\nR to inspect.\nRMB to block."
 SWEP.Category = "Weapons - Melee"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 
-SWEP.WorldModel = "models/weapons/w_melee_ritual.mdl"
-SWEP.WorldModelExchange = "models/weapons/w_melee_ritual.mdl"
-SWEP.DroppedWorldModel = "models/weapons/w_melee_ritual.mdl"
-SWEP.modelscale = 1
+SWEP.WorldModel = "models/weapons/arc9/darsu_eft/w_melee_6x5.mdl"
+SWEP.WorldModelExchange = "models/weapons/arc9/darsu_eft/w_melee_6x5.mdl"
+SWEP.DroppedWorldModel = "models/weapons/arc9/darsu_eft/w_melee_6x5.mdl"
+SWEP.modelscale = 1.15
 SWEP.basebone = 76
-SWEP.weaponPos = Vector(2.6, 1.1, 4)
+SWEP.weaponPos = Vector(2.6, 1.2, 3.3)
 SWEP.weaponAng = Angle(-15, 180, 180)
-
-SWEP.poisoned2 = 2
 
 function SWEP:Reload()
     local owner = self:GetOwner()
@@ -63,7 +61,7 @@ function SWEP:Think()
 end
 
 if CLIENT then
-	SWEP.WepSelectIcon = Material("entities/arc9_eft_melee_cultist.png")
-	SWEP.IconOverride = "entities/arc9_eft_melee_cultist.png"
+	SWEP.WepSelectIcon = Material("entities/arc9_eft_melee_6x5.png")
+	SWEP.IconOverride = "entities/arc9_eft_melee_6x5.png"
 	SWEP.BounceWeaponIcon = false
 end

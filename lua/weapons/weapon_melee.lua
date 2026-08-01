@@ -458,7 +458,11 @@ if CLIENT then
                 WorldModel:SetCycle(timing)
             end
 
-            if WorldModel:GetModel() ~= self.WorldModelReal then WorldModel:SetModel(self.WorldModelReal) end
+            local worldModelReal = self.GetWorldModelReal and self:GetWorldModelReal() or self.WorldModelReal
+            if WorldModel:GetModel() ~= worldModelReal then WorldModel:SetModel(worldModelReal) end
+            if self.CustomWorldModelRealAnim then
+                self:CustomWorldModelRealAnim(WorldModel)
+            end
             
             local pos, ang = self:ModelAnim(WorldModel)
 
@@ -511,11 +515,16 @@ if CLIENT then
             end
         end
 
-        if not self.WorldModelExchange then
+        if self.CustomWorldModelBones then
+            self:CustomWorldModelBones(WorldModel)
+        end
+
+        local drawWorldModelReal = not self.WorldModelExchange or (self.ShouldDrawWorldModelReal and self:ShouldDrawWorldModelReal())
+        if drawWorldModelReal then
             WorldModel:DrawModel()
         end
 
-        if IsValid(self.worldModel) and self.WorldModelExchange then
+        if IsValid(self.worldModel) and self.WorldModelExchange and not drawWorldModelReal then
             if not IsValid(self.worldModel2) then
                 self.worldModel2 = ClientsideModel(self.WorldModelExchange)
                 self.worldModel2:SetNoDraw(true)
@@ -1787,6 +1796,10 @@ function SWEP:BehindAttack(ent)
     return self:IsEntSoft(ent) and ent:IsPlayer() and IsValid(owner) and (owner:GetAimVector():Dot(ent:GetAimVector()) > math.cos(math.rad(45)))
 end
 
+function SWEP:GetBehindAttackDamageMul(ent, attacktype)
+    return self:BehindAttack(ent) and 2 or 1
+end
+
 function SWEP:PunchPlayer(ent, attacktype, trnormal, dmg)
     if ent:IsPlayer() or ent:IsRagdoll() then 
         local ply = hg.RagdollOwner(ent) or ent
@@ -3047,7 +3060,7 @@ function SWEP:CustomThink()
 
             ent:PrecacheGibs()
 
-            mul = mul * (self:BehindAttack(ent) and 2 or 1)
+            mul = mul * self:GetBehindAttackDamageMul(ent, 1)
             blockMul, blockState = self:BlockingLogic(ent, mul, false, trace)
             mul = mul * blockMul
 
@@ -3214,7 +3227,7 @@ function SWEP:CustomThink()
                 ent:SetVelocity(vec)
             end
 
-            mul = mul * (self:BehindAttack(ent) and 2 or 1)
+            mul = mul * self:GetBehindAttackDamageMul(ent, 2)
             blockMul, blockState = self:BlockingLogic(ent, mul, true, trace)
             mul = mul * blockMul
 
@@ -3392,7 +3405,7 @@ function SWEP:CustomThink()
 
             ent:PrecacheGibs()
 
-            mul = mul * (self:BehindAttack(ent) and 2 or 1)
+            mul = mul * self:GetBehindAttackDamageMul(ent, 3)
             blockMul, blockState = self:BlockingLogic(ent, mul, 3, trace)
             mul = mul * blockMul
 
@@ -3634,17 +3647,23 @@ function SWEP:PrimaryAttack()
     self.SwingSpeed = 0
     self.SwingLastAng = nil
     self.SwingLastTime = nil
-    self:PlayAnim("attack", self.AnimTime1 / mul,false,nil,false,false)
+    local attackAnim = self.GetPrimaryAttackAnim and self:GetPrimaryAttackAnim() or "attack"
+    local attackAnimTime = attackAnim == "backstab" and (self.BackstabAnimTime or self.AnimTime1) or self.AnimTime1
+    self:PlayAnim(attackAnim, attackAnimTime / mul,false,nil,false,false)
     self:SetAttackType(1)
     self:SetLastAttack(CurTime() + self.AttackTime / mul)
     self:SetAttackTime(self:GetLastAttack() + (self.AttackTimeLength / mul))
     self:SetAttackLength(self.AttackLen1)
     local riposte = (self.RiposteUntil or 0) > CurTime() and (self.BlockRiposteSpeedMul or 0.7) or 1
-    self:SetAttackWait((self.WaitTime1 * riposte) / mul)
+    local attackWait = self.WaitTime1 * riposte
+    if attackAnim == "backstab" then
+        attackWait = math.max(attackAnimTime - self.AttackTime, 0)
+    end
+    self:SetAttackWait(attackWait / mul)
     if riposte < 1 then self.RiposteUntil = 0 end
     self:SetInAttack(true)
-    self.lastattack = CurTime() + self.Attack2Time / mul
-    self.attackwait = self.WaitTime2 / mul
+    self.lastattack = CurTime() + self.AttackTime / mul
+    self.attackwait = attackWait / mul
     if CLIENT and not self:IsLocal() and ply.AnimRestartGesture then
         self:GetOwner():AnimRestartGesture(GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_HL2MP_GESTURE_RANGE_ATTACK_SLAM, true)
     end
@@ -4373,7 +4392,7 @@ function SWEP:NPCThink()
 			timer.Create(timerId, (self.AttackTime + 0.1) or 0.4, 1, function()
 				if IsValid(self) and IsValid(npc) and npc:Alive() and IsValid(trEnt) then
 					local mul = 1
-					mul = mul * (self:BehindAttack(trEnt) and 2 or 1)
+					mul = mul * self:GetBehindAttackDamageMul(trEnt, 1)
 					local blockMul, blockState = self:BlockingLogic(trEnt, mul, false, trace)
 					mul = mul * blockMul
 					if blockState == "block" or blockState == "parry" then return end

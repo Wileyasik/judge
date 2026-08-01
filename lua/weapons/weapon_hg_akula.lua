@@ -82,23 +82,59 @@ SWEP.WaitTime1 = 0.1
 SWEP.AnimTime2 = 0.6
 SWEP.WaitTime2 = 0.6
 
+
+SWEP.InspectTime = 4
 SWEP.AnimList = {
     ["idle"] = "idle",
     ["deploy"] = "draw",
     ["attack"] = "fire2",
     ["attack2"] = "fire1",
-
+    ["inspect"] = "inspect",
 }
 
-
-
 function SWEP:Reload()
-    if SERVER then
-        if self:GetOwner():KeyPressed(IN_ATTACK) then
+    local owner = self:GetOwner()
+    if not IsValid(owner) then return end
+
+    if owner:KeyDown(IN_ATTACK) then
+        self.InspectPending = false
+
+        if SERVER and owner:KeyPressed(IN_ATTACK) then
             self:SetNetVar("mode", not self:GetNetVar("mode"))
-            self:GetOwner():ChatPrint("Changed mode to "..(self:GetNetVar("mode") and "slash." or "stab."))
+            owner:ChatPrint("Changed mode to "..(self:GetNetVar("mode") and "slash." or "stab."))
         end
+
+        return
     end
+
+    if owner:KeyPressed(IN_RELOAD) then
+        self.InspectPending = true
+    end
+end
+
+function SWEP:Think()
+    weapons.GetStored("weapon_melee").CustomThink(self)
+
+    local owner = self:GetOwner()
+    if not IsValid(owner) then return end
+
+    if self.InspectPending and owner:KeyDown(IN_ATTACK) then
+        self.InspectPending = false
+        return
+    end
+
+    if not self.InspectPending or not owner:KeyReleased(IN_RELOAD) then return end
+    self.InspectPending = false
+    if (self:GetLastAttack() + self:GetAttackWait()) > CurTime() then return end
+
+    local inspectTime = self.InspectTime or 2.5
+    self.InspectStart = CurTime()
+    self.InspectEnd = CurTime() + inspectTime
+    self:SetLastAttack(CurTime())
+    self:SetAttackWait(inspectTime)
+    self.lastattack = CurTime()
+    self.attackwait = inspectTime
+    self:PlayAnim("inspect", inspectTime, false, nil, false, true)
 end
 
 function SWEP:CanPrimaryAttack()

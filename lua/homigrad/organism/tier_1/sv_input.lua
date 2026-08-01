@@ -892,7 +892,12 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	if dmgInfo:GetInflictor().poisoned2 and dmgInfo:IsDamageType(DMG_SLASH) then
 		org.poison4 = CurTime()
 
-		dmgInfo:GetInflictor().poisoned2 = nil
+		local inflictor = dmgInfo:GetInflictor()
+		if isnumber(inflictor.poisoned2) and inflictor.poisoned2 > 1 then
+			inflictor.poisoned2 = inflictor.poisoned2 - 1
+		else
+			inflictor.poisoned2 = nil
+		end
 	end
 	
 	local organs = hg.organism.GetHitBoxOrgans(ent:GetModel(), ent)

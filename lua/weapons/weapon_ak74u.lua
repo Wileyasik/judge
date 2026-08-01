@@ -44,6 +44,13 @@ SWEP.ARC9Parts = {
 		pos = Vector(0.65, -9.6, -0.8),
 		ang = Angle(0, 0, 0)
 	},
+	stock_mount = {
+		model = "models/weapons/mods/ak_stock_zenit_pt1_lock.mdl",
+		bonemerge = false,
+		bone = "weapon",
+		pos = Vector(0.65, -9.6, -0.8),
+		ang = Angle(0, 0, 0)
+	},
 }
 
 SWEP.ARC9DefaultLHIKPart = "handguard"
@@ -216,6 +223,7 @@ SWEP.ScrappersSlot = "Primary"
 
 SWEP.DistSound = "weapons/newakm/akmm_dist.wav"
 
+SWEP.StartAtt = {"stock_aks74u_std"}
 SWEP.availableAttachments = {
 	barrel = {
 		[1] = {"supressor3", Vector(0, 0, 0), {}},
@@ -235,6 +243,12 @@ SWEP.availableAttachments = {
 	},
 	magwell = {
 		["mountType"] = {"ak_545_60", "ak_545"},
+	},
+	stock = {
+		[1] = {"stock_aks74u_std", Vector(0, 0, 0), {}},
+		["mountType"] = "ak_stock",
+		["mountBone"] = "weapon",
+		["mount"] = Vector(0.65, -9.6, -0.8),
 	},
 }
 
@@ -346,8 +360,13 @@ function SWEP:DrawPost()
 	end
 
 	-- Stock
-	if not IsValid(self.HeldStockCSModel) then
-		self.HeldStockCSModel = ClientsideModel(self.HeldStockModel, RENDERGROUP_BOTH)
+	local heldStockModel = self:GetActiveStockModel(self.HeldStockModel)
+	if IsValid(self.HeldStockCSModel) and self.HeldStockCSModelPath ~= heldStockModel then
+		self.HeldStockCSModel:Remove()
+	end
+	if heldStockModel ~= "" and not IsValid(self.HeldStockCSModel) then
+		self.HeldStockCSModel = ClientsideModel(heldStockModel, RENDERGROUP_BOTH)
+		self.HeldStockCSModelPath = heldStockModel
 		if IsValid(self.HeldStockCSModel) then self.HeldStockCSModel:SetNoDraw(true) end
 	end
 	if IsValid(self.HeldStockCSModel) then
@@ -365,6 +384,7 @@ function SWEP:DrawPost()
 			end
 		end
 	end
+	self:DrawActiveHeldStockMount(wm, self.HeldStockBone, self.HeldStockOffsetPos, self.HeldStockOffsetAng)
 end
 
 
@@ -418,10 +438,23 @@ if CLIENT then
 			if not istable(partData) or not isstring(partData.model) or partData.model == "" then
 				continue
 			end
-			local modelPath = partName == "magazine" and self:GetActiveMagazineModel(partData.model, "world") or partData.model
+			local modelPath = partData.model
+			if partName == "magazine" then
+				modelPath = self:GetActiveMagazineModel(modelPath, "world")
+			elseif partName == "stock" then
+				modelPath = self:GetActiveStockModel(modelPath)
+			elseif partName == "stock_mount" then
+				modelPath = self:GetActiveStockMountModel("")
+			end
 
 			local model = self.BC_DroppedPartModels[partName]
 			local oldPath = self.BC_DroppedPartPaths[partName]
+			if modelPath == "" then
+				if IsValid(model) then model:Remove() end
+				self.BC_DroppedPartModels[partName] = nil
+				self.BC_DroppedPartPaths[partName] = nil
+				continue
+			end
 
 			if IsValid(model) and oldPath ~= modelPath then
 				model:Remove()
@@ -590,6 +623,7 @@ if CLIENT then
 		if IsValid(self.HeldHandguardCSModel) then self.HeldHandguardCSModel:Remove() end
 		if IsValid(self.HeldPistolgripCSModel) then self.HeldPistolgripCSModel:Remove() end
 		if IsValid(self.HeldStockCSModel) then self.HeldStockCSModel:Remove() end
+		if IsValid(self.HeldStockMountCSModel) then self.HeldStockMountCSModel:Remove() end
 	end
 end
 

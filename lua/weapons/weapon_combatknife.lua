@@ -7,7 +7,7 @@ SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.Slot = 1
 
-SWEP.Weight = 0
+SWEP.Weight = 0.4
 SWEP.AutoSwitchTo = false
 SWEP.AutoSwitchFrom = false
 
@@ -74,16 +74,21 @@ SWEP.ViewPunch2 = Angle(0,1,0)
 SWEP.AttackSize = 5
 
 SWEP.basebone = 76
-SWEP.noreverse = true
+SWEP.noreverse = false
 
 SWEP.weaponPos = Vector(-1,0,0)
-SWEP.weaponAng = Angle(90,-90,0)
+SWEP.weaponAng = Angle(180,-190,0)
 SWEP.AnimList = {
     ["idle"] = "idle",
     ["deploy"] = "draw_short",
     ["attack"] = "melee_01",
     ["attack2"] = "melee_02",
+    ["backstab"] = "backstab_02",
+    ["inspect"] = "lookat01",
 }
+
+SWEP.BackstabDamageMul = 3
+SWEP.BackstabAnimTime = 3
 
 if CLIENT then
 	SWEP.WepSelectIcon = Material("entities/arc9_cod2019_m7_bayonet.png")
@@ -118,14 +123,51 @@ SWEP.basebone = 1
 
 
 SWEP.CanSuicide = true
+SWEP.InspectTime = 4
 
 function SWEP:Reload()
-    if SERVER then
-        if self:GetOwner():KeyPressed(IN_ATTACK) then
+    local owner = self:GetOwner()
+    if not IsValid(owner) then return end
+
+    if owner:KeyDown(IN_ATTACK) then
+        self.InspectPending = false
+
+        if SERVER and owner:KeyPressed(IN_ATTACK) then
             self:SetNetVar("mode", not self:GetNetVar("mode"))
-            self:GetOwner():ChatPrint("Changed mode to "..(self:GetNetVar("mode") and "slash." or "stab."))
+            owner:ChatPrint("Changed mode to "..(self:GetNetVar("mode") and "slash." or "stab."))
         end
+
+        return
     end
+
+    if owner:KeyPressed(IN_RELOAD) then
+        self.InspectPending = true
+    end
+end
+
+function SWEP:Think()
+    weapons.GetStored("weapon_melee").CustomThink(self)
+
+    local owner = self:GetOwner()
+    if not IsValid(owner) then return end
+
+    if self.InspectPending and owner:KeyDown(IN_ATTACK) then
+        self.InspectPending = false
+        return
+    end
+
+    if not self.InspectPending or not owner:KeyReleased(IN_RELOAD) then return end
+    self.InspectPending = false
+    if (self:GetLastAttack() + self:GetAttackWait()) > CurTime() then return end
+
+    local inspectTime = self.InspectTime or 2.5
+    self.InspectStart = CurTime()
+    self.InspectEnd = CurTime() + inspectTime
+    self:SetLastAttack(CurTime())
+    self:SetAttackWait(inspectTime)
+    self.lastattack = CurTime()
+    self.attackwait = inspectTime
+    self:PlayAnim("inspect", inspectTime, false, nil, false, true)
 end
 
 function SWEP:CustomBlockAnim(addPosLerp, addAngLerp)
@@ -135,6 +177,21 @@ function SWEP:CustomBlockAnim(addPosLerp, addAngLerp)
     addAngLerp.r = addAngLerp.r + (self:GetBlocking() and 20 or 0)
     addAngLerp.y = addAngLerp.y + (self:GetBlocking() and 60 or 0)
     return true
+end
+
+function SWEP:CustomWorldModelBones(model)
+    if self.WorldModelExchange then return end
+
+    local bone = model:LookupBone("Weapon")
+    if not bone then return end
+
+    local matrix = model:GetBoneMatrix(bone)
+    if not matrix then return end
+
+    local pos, ang = LocalToWorld(self.weaponPos or vector_origin, self.weaponAng or angle_zero, matrix:GetTranslation(), matrix:GetAngles())
+    matrix:SetTranslation(pos)
+    matrix:SetAngles(ang)
+    model:SetBoneMatrix(bone, matrix)
 end
 
 function SWEP:GetLHIKStateOffset()
@@ -202,6 +259,33 @@ function SWEP:CanPrimaryAttack()
     end
 end
 
+function SWEP:GetBackstabTarget()
+    local owner = self:GetOwner()
+    if not IsValid(owner) then return end
+
+    local character = hg.GetCurrentCharacter(owner)
+    local trace = hg.eyeTrace(owner, self.AttackLen1 or 40, character)
+    if not trace then return end
+
+    local target = hg.RagdollOwner(trace.Entity) or trace.Entity
+    if IsValid(target) and self:BehindAttack(target) then
+        return target
+    end
+end
+
+function SWEP:GetPrimaryAttackAnim()
+    return IsValid(self:GetBackstabTarget()) and "backstab" or "attack"
+end
+
+function SWEP:GetBehindAttackDamageMul(ent, attacktype)
+    local target = hg.RagdollOwner(ent) or ent
+    if attacktype == 1 and IsValid(target) and self:BehindAttack(target) then
+        return self.BackstabDamageMul or 3
+    end
+
+    return weapons.GetStored("weapon_melee").GetBehindAttackDamageMul(self, target, attacktype)
+end
+
 function SWEP:CanSecondaryAttack()
     if not self.allowsec then return false end
     self.Attack2HitFlesh = "knife/NEWRapierSlash"..math.random(1, 6)..".wav"
@@ -210,7 +294,8 @@ end
 
 function SWEP:DrawWorldModel2()
     local oldExchange = self.WorldModelExchange
-    self.WorldModelExchange = not IsValid(self:GetOwner()) and self.DroppedWorldModel or false
-    self.BaseClass.DrawWorldModel2(self)
+    self.WorldModelExchange = not IsValid(self:GetOwner()) and self.DroppedWorldModel or oldExchange
+    local meleeBase = weapons.GetStored("weapon_melee")
+    meleeBase.DrawWorldModel2(self)
     self.WorldModelExchange = oldExchange
 end

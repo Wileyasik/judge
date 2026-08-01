@@ -45,7 +45,14 @@ SWEP.ARC9Parts = {
 		ang = Angle(0, 0, 0)
 	},
 	stock = {
-		model = "models/weapons/mods/ak_stock_uas_ak_p.mdl",
+		model = "models/weapons/mods/stock_ak_zenit_pt3.mdl",
+		bonemerge = false,
+		bone = "weapon",
+		pos = Vector(0.65, -9.6, -0.8),
+		ang = Angle(0, 0, 0)
+	},
+	stock_mount = {
+		model = "models/weapons/mods/ak_stock_zenit_pt1_lock.mdl",
 		bonemerge = false,
 		bone = "weapon",
 		pos = Vector(0.65, -9.6, -0.8),
@@ -184,10 +191,15 @@ SWEP.HeldPistolgripBone = "weapon"
 SWEP.HeldPistolgripOffsetPos = Vector(0, -12.3, -1.3)
 SWEP.HeldPistolgripOffsetAng = Angle(0, 0, 0)
 
-SWEP.HeldStockModel = "models/weapons/mods/ak_stock_uas_ak_p.mdl"
+SWEP.HeldStockModel = "models/weapons/mods/stock_ak_zenit_pt3.mdl"
 SWEP.HeldStockBone = "weapon"
 SWEP.HeldStockOffsetPos = Vector(0.65, -9.6, -0.8)
 SWEP.HeldStockOffsetAng = Angle(0, 0, 0)
+
+SWEP.HeldStockMountModel = "models/weapons/mods/ak_stock_zenit_pt1_lock.mdl"
+SWEP.HeldStockMountBone = "weapon"
+SWEP.HeldStockMountOffsetPos = Vector(0.65, -9.6, -0.8)
+SWEP.HeldStockMountOffsetAng = Angle(0, 0, 0)
 
 SWEP.weaponInvCategory = 1
 SWEP.CustomEjectAngle = Angle(0, 0, 90)
@@ -228,6 +240,7 @@ SWEP.ScrappersSlot = "Primary"
 
 SWEP.DistSound = "weapons/newakm/akmm_dist.wav"
 
+SWEP.StartAtt = {"stock_ak_zenit_pt3"}
 SWEP.availableAttachments = {
 	barrel = {
 		[1] = {"supressor3", Vector(0, 0, 0), {}},
@@ -252,6 +265,12 @@ SWEP.availableAttachments = {
 	},
 	magwell = {
 		["mountType"] = {"ak_545_60", "ak_545"},
+	},
+	stock = {
+		[1] = {"stock_ak_zenit_pt3", Vector(0, 0, 0), {}},
+		["mountType"] = "ak_stock",
+		["mountBone"] = "weapon",
+		["mount"] = Vector(0.65, -9.6, -0.8),
 	},
 }
 
@@ -384,8 +403,11 @@ function SWEP:DrawPost()
 	end
 
 	-- Stock
-	if not IsValid(self.HeldStockCSModel) then
-		self.HeldStockCSModel = ClientsideModel(self.HeldStockModel, RENDERGROUP_BOTH)
+	local heldStockModel = self:GetActiveStockModel(self.HeldStockModel)
+	if IsValid(self.HeldStockCSModel) and self.HeldStockCSModelPath ~= heldStockModel then self.HeldStockCSModel:Remove() end
+	if heldStockModel ~= "" and not IsValid(self.HeldStockCSModel) then
+		self.HeldStockCSModel = ClientsideModel(heldStockModel, RENDERGROUP_BOTH)
+		self.HeldStockCSModelPath = heldStockModel
 		if IsValid(self.HeldStockCSModel) then self.HeldStockCSModel:SetNoDraw(true) end
 	end
 	if IsValid(self.HeldStockCSModel) then
@@ -401,6 +423,28 @@ function SWEP:DrawPost()
 				self.HeldStockCSModel:SetupBones()
 				self.HeldStockCSModel:DrawModel()
 			end
+		end
+	end
+
+	-- Stock mount
+	local heldStockMountModel = self:GetActiveStockMountModel(self.HeldStockMountModel)
+	if IsValid(self.HeldStockMountCSModel) and self.HeldStockMountCSModelPath ~= heldStockMountModel then self.HeldStockMountCSModel:Remove() end
+	if heldStockMountModel ~= "" and not IsValid(self.HeldStockMountCSModel) then
+		self.HeldStockMountCSModel = ClientsideModel(heldStockMountModel, RENDERGROUP_BOTH)
+		self.HeldStockMountCSModelPath = heldStockMountModel
+		if IsValid(self.HeldStockMountCSModel) then self.HeldStockMountCSModel:SetNoDraw(true) end
+	end
+	if IsValid(self.HeldStockMountCSModel) then
+		local boneID = wm:LookupBone(self.HeldStockMountBone)
+		local boneMatrix = boneID and wm:GetBoneMatrix(boneID)
+		if boneMatrix then
+			local lpos, lang = LocalToWorld(self.HeldStockMountOffsetPos, self.HeldStockMountOffsetAng, boneMatrix:GetTranslation(), boneMatrix:GetAngles())
+			self.HeldStockMountCSModel:SetRenderOrigin(lpos)
+			self.HeldStockMountCSModel:SetRenderAngles(lang)
+			self.HeldStockMountCSModel:SetPos(lpos)
+			self.HeldStockMountCSModel:SetAngles(lang)
+			self.HeldStockMountCSModel:SetupBones()
+			self.HeldStockMountCSModel:DrawModel()
 		end
 	end
 end
@@ -456,10 +500,23 @@ if CLIENT then
 			if not istable(partData) or not isstring(partData.model) or partData.model == "" then
 				continue
 			end
-			local modelPath = partName == "magazine" and self:GetActiveMagazineModel(partData.model, "world") or partData.model
+			local modelPath = partData.model
+			if partName == "magazine" then
+				modelPath = self:GetActiveMagazineModel(modelPath, "world")
+			elseif partName == "stock" then
+				modelPath = self:GetActiveStockModel(modelPath)
+			elseif partName == "stock_mount" then
+				modelPath = self:GetActiveStockMountModel(modelPath)
+			end
 
 			local model = self.BC_DroppedPartModels[partName]
 			local oldPath = self.BC_DroppedPartPaths[partName]
+			if modelPath == "" then
+				if IsValid(model) then model:Remove() end
+				self.BC_DroppedPartModels[partName] = nil
+				self.BC_DroppedPartPaths[partName] = nil
+				continue
+			end
 
 			if IsValid(model) and oldPath ~= modelPath then
 				model:Remove()
@@ -628,6 +685,7 @@ if CLIENT then
 		if IsValid(self.HeldHandguardCSModel) then self.HeldHandguardCSModel:Remove() end
 		if IsValid(self.HeldPistolgripCSModel) then self.HeldPistolgripCSModel:Remove() end
 		if IsValid(self.HeldStockCSModel) then self.HeldStockCSModel:Remove() end
+		if IsValid(self.HeldStockMountCSModel) then self.HeldStockMountCSModel:Remove() end
 	end
 end
 

@@ -51,6 +51,13 @@ SWEP.ARC9Parts = {
 		pos = Vector(0.65, -9.6, -0.8),
 		ang = Angle(0, 0, 0)
 	},
+	stock_mount = {
+		model = "models/weapons/mods/ak_stock_zenit_pt1_lock.mdl",
+		bonemerge = false,
+		bone = "weapon",
+		pos = Vector(0.65, -9.6, -0.8),
+		ang = Angle(0, 0, 0)
+	},
 }
 
 SWEP.ARC9DefaultLHIKPart = "handguard"
@@ -249,7 +256,7 @@ SWEP.availableAttachments = {
 	},
 	stock = {
 		[1] = {"stock_ak74_std", Vector(0, 0, 0), {}},
-		["mountType"] = "ak74_stock",
+		["mountType"] = "ak_stock",
 		["mountBone"] = "weapon",
 		["mount"] = Vector(0.65, -9.6, -0.8),
 	},
@@ -308,6 +315,8 @@ function SWEP:DrawPost()
 			modelPath = self:GetActiveMagazineModel(modelPath, "held")
 		elseif partName == "stock" then
 			modelPath = self:GetActiveStockModel(modelPath)
+		elseif partName == "stock_mount" then
+			modelPath = self:GetActiveStockMountModel(modelPath)
 		end
 		local model = self.HeldARC9PartModels[partName]
 		if not isstring(modelPath) or modelPath == "" then
@@ -418,6 +427,8 @@ if CLIENT then
 				modelPath = self:GetActiveMagazineModel(modelPath, "world")
 			elseif partName == "stock" then
 				modelPath = self:GetActiveStockModel(modelPath)
+			elseif partName == "stock_mount" then
+				modelPath = self:GetActiveStockMountModel(modelPath)
 			end
 
 			local model = self.BC_DroppedPartModels[partName]
