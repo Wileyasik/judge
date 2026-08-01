@@ -34,6 +34,7 @@ SWEP.Primary.Spread = Vector(0.01, 0.01, 0.01)
 SWEP.Primary.Force = 12
 SWEP.Primary.Sound = {"sound/weapons/darsu_eft/mr43/mr43_fire_indoor_close1.wav", 80, 100, 75}
 SWEP.Primary.Wait = 0
+SWEP.ReloadTime = 3
 SWEP.OpenBolt = true
 
 function SWEP:ModelCreated(model)

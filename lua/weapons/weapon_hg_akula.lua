@@ -39,7 +39,7 @@ SWEP.SuicidePunchAng = Angle(5, -15, 0)
 SWEP.BreakBoneMul = 0.20
 SWEP.AttackPos = Vector(0,0,0)
 SWEP.AttackingPos = Vector(0,0,0)
-SWEP.AttackLen1 = 40
+SWEP.AttackLen1 = 65
 
 SWEP.weaponPos = Vector(0.7,-0,0.2)
 SWEP.weaponAng = Angle(80,130,-140)
@@ -75,9 +75,9 @@ function SWEP:Initialize()
     self:InitAdd()
 end
 
-SWEP.AttackTime = 0.3
+SWEP.AttackTime = 0.4
 SWEP.AnimTime1 = 0.7
-SWEP.WaitTime1 = 0.1
+SWEP.WaitTime1 = 0.2
 
 SWEP.AnimTime2 = 0.6
 SWEP.WaitTime2 = 0.6

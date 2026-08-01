@@ -187,7 +187,7 @@ SWEP.SwingAng = -5
 SWEP.SwingAng2 = 0
 
 function SWEP:CanPrimaryAttack()
-    self.DamageType = DMG_SLASH
+    self.DamageType = DMG_CLUB
     self.AttackHit = "Canister.ImpactHard"
     self.Attack2Hit = "Canister.ImpactHard"
     return true

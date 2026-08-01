@@ -47,9 +47,9 @@ SWEP.ARC9Parts = {
 }
 
 SWEP.ARC9DefaultLHIKPart = "handguard"
-SWEP.ARC9DefaultLHIKSourceModel = "models/weapons/mods/ak12_hg_lhik.mdl"
+SWEP.ARC9DefaultLHIKSourceModel = "models/weapons/mods/ak_hg_sag_mk3.mdl"
 SWEP.ARC9DefaultLHIKBone = "weapon"
-SWEP.ARC9DefaultLHIKPos = Vector(0, -19.2, 0.7)
+SWEP.ARC9DefaultLHIKPos = Vector(0, -26, 0.7)
 SWEP.ARC9DefaultLHIKAng = Angle(0, 0, 0)
 
 SWEP.FakePos = Vector(-13, 2.52, 7.5)
