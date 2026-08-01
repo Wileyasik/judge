@@ -157,6 +157,10 @@ local IsValid, math_Clamp = IsValid, math.Clamp
 
 		ent:SetupBones()
 
+		if IsValid(wep) and wep.PrepareMeleeWorldModel then
+			wep:PrepareMeleeWorldModel()
+		end
+
 		hg.MainTPIKFunction(ent, ply, wep)
 
 		if IsValid(ply.OldRagdoll) then

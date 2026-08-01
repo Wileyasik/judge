@@ -13,6 +13,10 @@ function PANEL:Init()
     self.limbType = 1
     self.failures = 0
     self.targetPly = nil
+    self.holdProgress = 0
+    self.dangerTime = 0
+    self.failCooldown = 0
+    self.targetMoveTime = math.Rand(0, math.pi * 2)
     
     self.ghostX = ScrW() * 0.5
     self.ghostY = ScrH() * 0.5
@@ -31,7 +35,6 @@ function PANEL:Init()
     self.boneWidth = 400
     self.boneHeight = 160
     
-    -- Randomize start state
     self.boneX = self.boneX + math.random(-200, 200)
     self.boneY = self.boneY + math.random(-100, 100)
 end
@@ -64,6 +67,12 @@ function PANEL:Paint(w, h)
     surface.SetDrawColor(255, 255, 255, 255)
     surface.SetMaterial(matMove)
     surface.DrawTexturedRectRotated(drawX, drawY, self.boneWidth, self.boneHeight, 0)
+
+    local barW, barH = 260, 10
+    surface.SetDrawColor(50, 50, 50, 230)
+    surface.DrawRect(w * 0.5 - barW * 0.5, h * 0.15, barW, barH)
+    surface.SetDrawColor(180, 220, 180, 255)
+    surface.DrawRect(w * 0.5 - barW * 0.5, h * 0.15, barW * math.Clamp(self.holdProgress / 2.5, 0, 1), barH)
 end
 
 function PANEL:Logic()
@@ -79,6 +88,13 @@ function PANEL:Logic()
 
     local mx, my = gui.MouseX(), gui.MouseY()
     local dt = FrameTime()
+    self.failCooldown = math.max(self.failCooldown - dt, 0)
+    self.targetMoveTime = self.targetMoveTime + dt
+
+    local moveWidth = math.max(ScrW() * 0.22, 100)
+    local moveHeight = math.max(ScrH() * 0.16, 60)
+    self.ghostX = ScrW() * 0.5 + math.sin(self.targetMoveTime * 0.32) * moveWidth
+    self.ghostY = ScrH() * 0.5 + math.sin(self.targetMoveTime * 0.45) * moveHeight
     
     local mouseSpeed = math.sqrt((mx - self.lastMouseX)^2 + (my - self.lastMouseY)^2) / dt
     self.lastMouseX = mx
@@ -107,28 +123,41 @@ function PANEL:Logic()
         self.boneX = Lerp(dt * 10, self.boneX, targetX)
         self.boneY = Lerp(dt * 10, self.boneY, targetY)
         
-        if mouseSpeed > 150 then
-            self.shakeIntensity = math.min(self.shakeIntensity + dt * 50, 20)
-            
-            if self.shakeIntensity > 10 and math.random() < 0.05 then
+        if mouseSpeed > 220 then
+            self.shakeIntensity = math.min(self.shakeIntensity + dt * 45, 20)
+            self.dangerTime = self.dangerTime + dt
+
+            if self.dangerTime > 0.3 and self.failCooldown <= 0 then
                 self:Fail()
+                return
             end
         else
-            self.shakeIntensity = math.max(self.shakeIntensity - dt * 20, 0)
+            self.shakeIntensity = math.max(self.shakeIntensity - dt * 15, 0)
+            self.dangerTime = math.max(self.dangerTime - dt * 2, 0)
         end
         
         local dist = math.sqrt((self.boneX - self.ghostX)^2 + (self.boneY - self.ghostY)^2)
-        if dist < 30 and self.shakeIntensity < 5 then
-            self:Win()
+        if dist < 32 then
+            self.holdProgress = self.holdProgress + dt
+            if self.holdProgress >= 2.5 then
+                self:Win()
+            end
+        else
+            self.holdProgress = math.max(self.holdProgress - dt * 2, 0)
         end
     else
-        self.shakeIntensity = 0
+        self.shakeIntensity = math.max(self.shakeIntensity - dt * 25, 0)
+        self.dangerTime = 0
+        self.holdProgress = math.max(self.holdProgress - dt * 2, 0)
     end
 end
 
 function PANEL:Fail()
     self.isDragging = false
     self.failures = self.failures + 1
+    self.holdProgress = 0
+    self.dangerTime = 0
+    self.failCooldown = 0.5
     
     net.Start("hg_dislocation_minigame_pain")
     if IsValid(self.targetPly) then

@@ -10,7 +10,7 @@ local function updatePlayer(ply)
     if not hg.achievements.SqlActive then
         hg.achievements.achievements_data.player_achievements[steamID64] = {}
         return
-    end 
+    end
 
 	local query = mysql:Select("hg_achievements")
 		query:Select("achievements")
@@ -24,17 +24,23 @@ local function updatePlayer(ply)
 					updateQuery:Where("steamid", steamID64)
 				updateQuery:Execute()
 
-                hg.achievements.achievements_data.player_achievements[steamID64] = util.JSONToTable(result[1].achievements)
+				local loaded = util.JSONToTable(result[1].achievements) or {}
+				local current = hg.achievements.achievements_data.player_achievements[steamID64] or {}
+				for key, value in pairs(current) do
+					loaded[key] = value
+				end
+				hg.achievements.achievements_data.player_achievements[steamID64] = loaded
 
                 --PrintTable(hg.achievements.achievements_data.player_achievements[steamID64])
 			else
+				local current = hg.achievements.achievements_data.player_achievements[steamID64] or {}
 				local insertQuery = mysql:Insert("hg_achievements")
 					insertQuery:Insert("steamid", steamID64)
 					insertQuery:Insert("steam_name", name)
-					insertQuery:Insert("achievements", util.TableToJSON({}))
+					insertQuery:Insert("achievements", util.TableToJSON(current))
 				insertQuery:Execute()
 
-				hg.achievements.achievements_data.player_achievements[steamID64] = {}
+				hg.achievements.achievements_data.player_achievements[steamID64] = current
 			end
 		end)
 	query:Execute()
@@ -128,20 +134,33 @@ end
 
 local function isAchievementCompleted(ply, key, val)
     local ach = hg.achievements.achievements_data.created_achevements[key]
-    return val >= ach.needed_value and (hg.achievements.achievements_data.player_achievements[ply:SteamID64()][key].value or 0) < val
+    if not ach then return false end
+
+    local oldValue = hg.achievements.achievements_data.player_achievements[ply:SteamID64()][key].value or ach.start_value
+    return val >= ach.needed_value and oldValue < ach.needed_value
 end
 
 util.AddNetworkString("hg_NewAchievement")
 
 function hg.achievements.SetPlayerAchievement(ply, key, val)
     --print("Triggered achievement for player " .. ply:Name() .. " ; " .. ply:SteamID() .. ": " .. (key or "none") .. ", value " .. (val or "none"))
+    if not IsValid(ply) or not ply:IsPlayer() then return false end
+
+    local ach = hg.achievements.GetAchievementInfo(key)
+    if not ach then
+        ErrorNoHalt("Unknown achievement key: " .. tostring(key) .. "\n")
+        return false
+    end
+
+    val = tonumber(val)
+    if not val then return false end
+
     local steamID = ply:SteamID64()
     hg.achievements.achievements_data.player_achievements[steamID] = hg.achievements.achievements_data.player_achievements[steamID] or {}
     local playerAchievements = hg.achievements.achievements_data.player_achievements[steamID]
     playerAchievements[key] = playerAchievements[key] or {}
 
     if isAchievementCompleted(ply, key, val) then
-        local ach = hg.achievements.achievements_data.created_achevements[key]
         net.Start("hg_NewAchievement")
             net.WriteString(ach.name)
             net.WriteString(ach.img)
@@ -149,13 +168,24 @@ function hg.achievements.SetPlayerAchievement(ply, key, val)
     end
 
     playerAchievements[key].value = val
+    return true
 end
 
 function hg.achievements.AddPlayerAchievement(ply, key, val)
-    local ach = hg.achievements.GetPlayerAchievement(ply, key)
-    local ach_info = hg.achievements.GetAchievementInfo(key)
+    if not IsValid(ply) or not ply:IsPlayer() then return false end
 
-    hg.achievements.SetPlayerAchievement(ply, key, math.Approach(ach.value or ach_info.start_value, ach_info.needed_value, val))
+    val = tonumber(val)
+    if not val or val < 0 then return false end
+
+    local ach_info = hg.achievements.GetAchievementInfo(key)
+    if not ach_info then
+        ErrorNoHalt("Unknown achievement key: " .. tostring(key) .. "\n")
+        return false
+    end
+
+    local ach = hg.achievements.GetPlayerAchievement(ply, key)
+
+    return hg.achievements.SetPlayerAchievement(ply, key, math.Approach(ach.value or ach_info.start_value, ach_info.needed_value, val))
 end
 
 util.AddNetworkString("req_ach")
@@ -179,7 +209,7 @@ end)
     -- kill everyone
     hg.achievements.CreateAchievementType("killemall",1,0,"Kill everyone being a traitor and win the round\nplayers on the server should be more than 9.","Kill Em All", nil, false)
     -- russian roulette
-    hg.achievements.CreateAchievementType("deadlygambling",10,0,"Survive 10 games of Russian roulette in one life.","Deadly Gambling", nil, true)
+    hg.achievements.CreateAchievementType("deadlygambling",10,0,"Pull the trigger of an empty revolver 10 times in one life.","Deadly Gambling", nil, true)
     -- lobotomized kill
     hg.achievements.CreateAchievementType("lobotomygaming",1,0,"Kill the traitor while having brain damage","Hydrogen bomb vs Lobotomized patient", nil, false)
     -- hot potato
@@ -194,7 +224,11 @@ end)
     hg.achievements.CreateAchievementType("meet_wiley", 1, 0, "Meet player with SteamID STEAM_0:0:601135498.", "Meet Wiley", nil, false)
     hg.achievements.CreateAchievementType("meet_lazzy", 1, 0, "Meet player with SteamID STEAM_0:1:458217437.", "Meet Lazzy", nil, false)
     hg.achievements.CreateAchievementType("slayersword_pickup", 1, 0, "Pick up weapon_hg_slayersword.", "How did you pick it up..", nil, false)
-    hg.achievements.CreateAchievementType("whole_team_is_here", 1, 0, "Meet all of Wiley's best friends in one server session.", "Whole team is here!", nil, false)
+    hg.achievements.CreateAchievementType("whole_team_is_here", 1, 0, "Meet all of Wiley's best friends on the server at the same time.", "Whole team is here!", nil, false)
+    hg.achievements.CreateAchievementType("butterfingers", 1, 0, "Lose a limb and pretend everything is fine.", "Butterfingers", nil, false)
+    hg.achievements.CreateAchievementType("human_bowling", 1, 0, "Knock somebody down with a flying ragdoll.", "Human Bowling", nil, false)
+    hg.achievements.CreateAchievementType("professional_looter", 1, 0, "Check something that does not belong to you. Evidence is temporary.", "Professional Looter", nil, false)
+    hg.achievements.CreateAchievementType("this_is_fine", 1, 0, "Catch fire. Remain optimistic.", "This Is Fine", nil, false)
 
     //hg.init_ach = true
 //end
@@ -203,20 +237,21 @@ local roundply = 0
 
 hook.Add("ZB_StartRound","hg_killemall_Acchivment",function()
     roundply = 0
-    for k,v in player.Iterator() do
-        roundply = roundply + 1
-    end
+	for _, ply in player.Iterator() do
+		ply.TraitorKills = 0
+		if ply:Alive() then roundply = roundply + 1 end
+	end
 end)
 
 hook.Add("ZB_TraitorWinOrNot","hg_killemall_Acchivment",function(ply,winner)
     --if gmod.GetGamemode() ~= "zcity" then return end
 
-    if winner == 1 and (ply.TraitorKills or 0 >= roundply - 1) and roundply >= 10 then
+    if IsValid(ply) and winner == 1 and (ply.TraitorKills or 0) >= roundply - 1 and roundply >= 10 then
         hg.achievements.SetPlayerAchievement(ply,"killemall",1)
     end
 end)
 
-hook.Add("PlayerDeath", "hg_killemall_Acchivment", function(ply)
+hook.Add("PlayerDeath", "hg_killemall_Acchivment", function(ply, inflictor, attacker)
     hg.achievements.AddPlayerAchievement(ply, "deadinside", 1)
 
     local ach = hg.achievements.GetPlayerAchievement(ply,"deadlygambling")
@@ -225,13 +260,13 @@ hook.Add("PlayerDeath", "hg_killemall_Acchivment", function(ply)
     end
 
     if ply.isTraitor then
-        if IsValid(ply.ZBestAttacker) and ply != ply.ZBestAttacker then
-            if ply.ZBestAttacker:Alive() and ply.ZBestAttacker.organism.brain >= 0.1 then
-                hg.achievements.SetPlayerAchievement(ply.ZBestAttacker, "lobotomygaming", 1)
+        if IsValid(attacker) and attacker:IsPlayer() and ply ~= attacker then
+            if attacker:Alive() and attacker.organism and attacker.organism.brain >= 0.1 then
+                hg.achievements.SetPlayerAchievement(attacker, "lobotomygaming", 1)
             end
-            
-            if IsValid(ply.ZBestInflictor) and ply.ZBestInflictor.ishggrenade and ply.ZBestInflictor.owner2 == ply and IsValid(ply.ZBestInflictor.owner) then
-                hg.achievements.SetPlayerAchievement(ply.ZBestInflictor.owner, "hotpotato", 1)
+
+            if IsValid(inflictor) and inflictor.ishggrenade and inflictor.owner2 == ply and IsValid(inflictor.owner) and inflictor.owner ~= ply then
+                hg.achievements.SetPlayerAchievement(inflictor.owner, "hotpotato", 1)
             end
         end
 
@@ -240,23 +275,29 @@ hook.Add("PlayerDeath", "hg_killemall_Acchivment", function(ply)
         return
     end
 
-    if IsValid(ply.ZBestAttacker) and ply.ZBestAttacker.isTraitor then
-        ply.ZBestAttacker.TraitorKills = (ply.ZBestAttacker.TraitorKills or 0) + 1
+    if IsValid(attacker) and attacker:IsPlayer() and attacker ~= ply and attacker.isTraitor then
+        attacker.TraitorKills = (attacker.TraitorKills or 0) + 1
     end
 end)
 
-hook.Add("PlayerSilentDeath","hg_illbeback_Acchivment",function(ply)
+hook.Add("PlayerSilentDeath","hg_killemall_Acchivment",function(ply)
     if ply.isTraitor then ply.TraitorKills = 0 return end
 end)
 
 hook.Add("HomigradDamage","hg_illbeback_Acchivment",function(ply, dmgInfo, hitgroup, ent, harm, hitBoxs)
     --if gmod.GetGamemode() ~= "zcity" then return end
-    if not ply:IsPlayer() then return end
-    if (dmgInfo:IsDamageType(128) or dmgInfo:IsDamageType(DMG_BULLET)) and hitgroup == HITGROUP_HEAD then
-        hg.achievements.AddPlayerAchievement(ply, "headmagnet", 1)
-    end
-    if (dmgInfo:IsDamageType(128) or dmgInfo:IsDamageType(DMG_BULLET)) and hitgroup == HITGROUP_HEAD and hg.achievements.GetPlayerAchievement(ply,"illbeback")["value"] ~= 3 then
-        hg.achievements.SetPlayerAchievement(ply,"illbeback",1)
+    if not IsValid(ply) or not ply:IsPlayer() then return end
+    if not dmgInfo:IsDamageType(DMG_BULLET) or hitgroup ~= HITGROUP_HEAD then return end
+
+    timer.Simple(0, function()
+        if IsValid(ply) and ply:Alive() then
+            hg.achievements.AddPlayerAchievement(ply, "headmagnet", 1)
+        end
+    end)
+
+    local value = hg.achievements.GetPlayerAchievement(ply, "illbeback").value or 0
+    if value == 0 then
+        hg.achievements.SetPlayerAchievement(ply, "illbeback", 1)
         ply.illbeback = CurTime() + 10
     end
 end)
@@ -265,7 +306,8 @@ hook.Add("HG_OnOtrub","hg_illbeback_Acchivment",function(ply)
     if ply:IsRagdoll() then
         ply = hg.RagdollOwner(ply)
     end
-    if hg.achievements.GetPlayerAchievement(ply,"illbeback")["value"] == 1 and ply.illbeback > CurTime() then
+    if not IsValid(ply) then return end
+    if hg.achievements.GetPlayerAchievement(ply,"illbeback")["value"] == 1 and (ply.illbeback or 0) > CurTime() then
         hg.achievements.SetPlayerAchievement(ply,"illbeback",2)
     end
 end)
@@ -319,11 +361,11 @@ hook.Add("HG_PlayerSay","burgerking",function(ply, txtTbl, txt)
 
     if bking["sir"] and bking["please"] and bking["calm down"] then
         hg.achievements.SetPlayerAchievement(ply,"bking",1)
-		ply:PS_AddItem("burger king crown")
+		if ply.PS_AddItem then ply:PS_AddItem("burger king crown") end
     end
 end)
 
-hook.Add("ZB_TraitorWinOrNot", "hg_roundsplayed_achievement", function(ply, winner)
+hook.Add("ZB_EndRound", "hg_roundsplayed_achievement", function()
     for _, target in player.Iterator() do
         if IsValid(target) then
             hg.achievements.AddPlayerAchievement(target, "veteran", 1)
@@ -420,4 +462,41 @@ hook.Add("WeaponEquip", "hg_slayersword_pickup_achievement", function(wep, ply)
     if wep:GetClass() ~= "weapon_hg_slayersword" then return end
 
     hg.achievements.SetPlayerAchievement(ply, "slayersword_pickup", 1)
+end)
+
+hook.Add("KeyPress", "hg_deadlygambling_achievement", function(ply, key)
+    if key ~= IN_ATTACK or not ply:Alive() then return end
+
+    local wep = ply:GetActiveWeapon()
+    if not IsValid(wep) or wep:GetHoldType() ~= "revolver" or wep:GetMaxClip1() <= 0 or wep:Clip1() > 0 then return end
+    if (ply.achievementDryFireCooldown or 0) > CurTime() then return end
+
+    ply.achievementDryFireCooldown = CurTime() + 0.5
+    hg.achievements.AddPlayerAchievement(ply, "deadlygambling", 1)
+end)
+
+hook.Add("OnAmputateLimb", "hg_butterfingers_achievement", function(org)
+    local ply = org and org.owner
+    if IsValid(ply) and ply:IsPlayer() then
+        hg.achievements.SetPlayerAchievement(ply, "butterfingers", 1)
+    end
+end)
+
+hook.Add("ZC_SomeoneGetFallBy", "hg_human_bowling_achievement", function(attacker, victim)
+    if IsValid(attacker) and attacker:IsPlayer() and IsValid(victim) and attacker ~= victim then
+        hg.achievements.SetPlayerAchievement(attacker, "human_bowling", 1)
+    end
+end)
+
+hook.Add("ZB_InventoryChecked", "hg_professional_looter_achievement", function(ply, ent)
+    if IsValid(ply) and ply:IsPlayer() and IsValid(ent) and ent ~= ply then
+        hg.achievements.SetPlayerAchievement(ply, "professional_looter", 1)
+    end
+end)
+
+hook.Add("vFireEntityStartedBurning", "hg_this_is_fine_achievement", function(ent)
+    local ply = IsValid(ent) and ent:IsRagdoll() and hg.RagdollOwner(ent) or ent
+    if IsValid(ply) and ply:IsPlayer() then
+        hg.achievements.SetPlayerAchievement(ply, "this_is_fine", 1)
+    end
 end)

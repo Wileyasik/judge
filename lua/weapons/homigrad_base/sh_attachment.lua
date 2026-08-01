@@ -107,6 +107,9 @@ function SWEP:ClearAttachments()
 				self.modelAtt[atta] = nil
 			end
 		end
+		if IsValid(self.HeldStockMountCSModel) then self.HeldStockMountCSModel:Remove() end
+		self.HeldStockMountCSModel = nil
+		self.HeldStockMountCSModelPath = nil
 	end)
 
 	return self.attachments
@@ -200,9 +203,49 @@ function SWEP:GetActiveMagazineModel(fallback, role)
 end
 
 function SWEP:GetActiveStockModel(fallback)
+	local previewFrame = CLIENT and hg.attachmentsMenuPanel
+	if IsValid(previewFrame) and previewFrame.weapon == self and previewFrame.previewPlacement == "stock" then return "" end
 	local data = self:GetAttachmentInfo("stock")
 	if data then return data[2] or fallback end
 	return self.availableAttachments and self.availableAttachments.stock and "" or fallback
+end
+
+function SWEP:GetActiveStockMountModel(fallback)
+	local previewFrame = CLIENT and hg.attachmentsMenuPanel
+	if IsValid(previewFrame) and previewFrame.weapon == self and previewFrame.previewPlacement == "stock" then return "" end
+	local data = self:GetAttachmentInfo("stock")
+	if data then return data.stockMountModel or "" end
+	return self.availableAttachments and self.availableAttachments.stock and "" or fallback
+end
+
+function SWEP:DrawActiveHeldStockMount(wm, boneName, offsetPos, offsetAng)
+	if not CLIENT or not IsValid(wm) then return end
+
+	local modelPath = self:GetActiveStockMountModel("")
+	if IsValid(self.HeldStockMountCSModel) and self.HeldStockMountCSModelPath != modelPath then
+		self.HeldStockMountCSModel:Remove()
+		self.HeldStockMountCSModel = nil
+	end
+	if modelPath == "" then return end
+
+	if not IsValid(self.HeldStockMountCSModel) then
+		self.HeldStockMountCSModel = ClientsideModel(modelPath, RENDERGROUP_BOTH)
+		self.HeldStockMountCSModelPath = modelPath
+		if IsValid(self.HeldStockMountCSModel) then self.HeldStockMountCSModel:SetNoDraw(true) end
+	end
+	if not IsValid(self.HeldStockMountCSModel) then return end
+
+	local boneID = wm:LookupBone(boneName or "weapon")
+	local boneMatrix = boneID and wm:GetBoneMatrix(boneID)
+	if not boneMatrix then return end
+
+	local pos, ang = LocalToWorld(offsetPos or vector_origin, offsetAng or angle_zero, boneMatrix:GetTranslation(), boneMatrix:GetAngles())
+	self.HeldStockMountCSModel:SetRenderOrigin(pos)
+	self.HeldStockMountCSModel:SetRenderAngles(ang)
+	self.HeldStockMountCSModel:SetPos(pos)
+	self.HeldStockMountCSModel:SetAngles(ang)
+	self.HeldStockMountCSModel:SetupBones()
+	self.HeldStockMountCSModel:DrawModel()
 end
 
 function SWEP:GetMagazineReloadAnimation(empty)
@@ -382,6 +425,10 @@ local mount3ScopeCorrections = {
 	optic19 = Vector(0, -1.3, 1.4),
 	optic21 = Vector(0, -1.3, 1.4),
 	optic23 = Vector(0, -1.3, 1.4),
+}
+
+local mount3PreviewCorrections = {
+	holo17 = Vector(0, 0, 1.4),
 }
 
 function SWEP:Attachment_Transform(model,pos,ang,plc,att,attdata,available)
@@ -1003,7 +1050,7 @@ if CLIENT then
 		magwell = "MAGAZINE"
 	}
 	local slotSides = {sight = 1, stock = 1, barrel = -1, underbarrel = -1, grip = -1, magwell = -1}
-	local slotRows = {sight = 0.3, stock = 0.52, underbarrel = 0.14, barrel = 0.345, grip = 0.55, magwell = 0.755}
+	local slotRows = {sight = 0.14, stock = 0.52, underbarrel = 0.14, barrel = 0.345, grip = 0.55, magwell = 0.755}
 	local slotAnchorBones = {
 		magwell = {"mod_magazine"}
 	}
@@ -1016,6 +1063,7 @@ if CLIENT then
 	local menuText = Color(235, 235, 235)
 	local menuMuted = Color(145, 150, 152)
 	local attachmentLineColor = Color(255, 255, 255)
+	local previewColor = Color(85, 190, 215)
 	local attachmentFont = "Mx437 IBM PS/55 re."
 
 	local function getMenuAccent()
@@ -1316,6 +1364,15 @@ if CLIENT then
 			end
 		end
 		if definition and isvector(definition.offset) then offset:Add(definition.offset) end
+		local activeMount = getWeaponAttachments(wep).mount
+		if previewID and definition and wep.availableAttachments.mount then
+			activeMount = wep.availableAttachments.mount[definition.mountType] or activeMount
+		end
+		local mount3Correction = placement == "sight"
+			and istable(activeMount)
+			and activeMount[1] == "mount3"
+			and (mount3ScopeCorrections[installedID] or mount3PreviewCorrections[installedID])
+		if mount3Correction then offset:Add(mount3Correction) end
 
 		offset:Rotate(ang)
 		pos:Add(offset)
@@ -1394,14 +1451,66 @@ if CLIENT then
 		end
 	end
 
+	local function getPreviewModels(frame)
+		local models = {}
+		local added = {}
+		local function add(model)
+			if IsValid(model) and not added[model] then
+				models[#models + 1] = model
+				added[model] = true
+			end
+		end
+
+		add(frame.previewModel)
+		add(frame.previewAdapter)
+		add(frame.previewMount)
+		add(frame.previewHolo)
+		local modelAttachments = IsValid(frame.weapon) and frame.weapon.modelAtt
+		if modelAttachments then
+			add(modelAttachments.mount)
+			add(modelAttachments.mountex_sight)
+		end
+		return models
+	end
+
 	hook.Add("PreDrawHalos", "HG_AttachmentMenuPreview", function()
 		local frame = hg.attachmentsMenuPanel
 		if not IsValid(frame) or not IsValid(frame.previewModel) then return end
-		local models = {frame.previewModel}
-		if IsValid(frame.previewAdapter) then models[#models + 1] = frame.previewAdapter end
-		if IsValid(frame.previewMount) then models[#models + 1] = frame.previewMount end
-		if IsValid(frame.previewHolo) then models[#models + 1] = frame.previewHolo end
-		halo.Add(models, color_white, 1, 1, 1, true, true)
+		local models = getPreviewModels(frame)
+		halo.Add(models, previewColor, 1, 1, 1, true, true)
+	end)
+
+	hook.Add("PostDrawEffects", "HG_AttachmentMenuPreviewHatch", function()
+		local frame = hg.attachmentsMenuPanel
+		if not IsValid(frame) or not IsValid(frame.previewModel) then return end
+		local models = getPreviewModels(frame)
+
+		render.ClearStencil()
+		render.SetStencilEnable(true)
+		render.SetStencilWriteMask(255)
+		render.SetStencilTestMask(255)
+		render.SetStencilReferenceValue(1)
+		render.SetStencilCompareFunction(STENCIL_ALWAYS)
+		render.SetStencilPassOperation(STENCIL_REPLACE)
+		render.SetStencilFailOperation(STENCIL_KEEP)
+		render.SetStencilZFailOperation(STENCIL_KEEP)
+		render.SetBlend(0)
+		for _, model in ipairs(models) do
+			if IsValid(model) then model:DrawModel() end
+		end
+		render.SetBlend(1)
+
+		render.SetStencilCompareFunction(STENCIL_EQUAL)
+		render.SetStencilPassOperation(STENCIL_KEEP)
+		cam.Start2D()
+			surface.SetDrawColor(previewColor.r, previewColor.g, previewColor.b, 105)
+			local spacing = 10
+			local offset = math.floor(RealTime() * 18) % spacing
+			for x = -ScrH() + offset, ScrW(), spacing do
+				surface.DrawLine(x, ScrH(), x + ScrH(), 0)
+			end
+		cam.End2D()
+		render.SetStencilEnable(false)
 	end)
 
 	CreateMenu = function()
@@ -1460,6 +1569,8 @@ if CLIENT then
 				local worldPos = getSlotAnchor(self.weapon, placement)
 				local screenX, screenY = projectForView(worldPos, view, w, h)
 				if not screenX or screenX < minX or screenX > maxX or screenY < minY or screenY > maxY then continue end
+				screenX = math.floor(screenX + 0.5)
+				screenY = math.floor(screenY + 0.5)
 				local bx, by = button.section:GetPos()
 				local targetX = math.Clamp(bx + (button.side == 1 and 0 or button:GetWide()), minX, maxX)
 				local targetY = math.Clamp(by + button:GetTall() * 0.5, minY, maxY)
@@ -1469,8 +1580,11 @@ if CLIENT then
 				surface.DrawOutlinedRect(screenX - 9, screenY - 9, 18, 18, 2)
 				drawSelectorCorners(screenX - 10, screenY - 10, 20, 20, attachmentLineColor, 220)
 				surface.SetDrawColor(255, 255, 255, 210)
-				surface.DrawLine(screenX - 4, screenY, screenX + 4, screenY)
-				surface.DrawLine(screenX, screenY - 4, screenX, screenY + 4)
+				surface.DrawRect(screenX - 6, screenY - 1, 5, 2)
+				surface.DrawRect(screenX + 2, screenY - 1, 5, 2)
+				surface.DrawRect(screenX - 1, screenY - 6, 2, 5)
+				surface.DrawRect(screenX - 1, screenY + 2, 2, 5)
+				surface.DrawRect(screenX - 1, screenY - 1, 2, 2)
 				surface.DrawRect(targetX - 2, targetY - 2, 4, 4)
 			end
 			render.SetScissorRect(0, 0, 0, 0, false)
@@ -1623,15 +1737,22 @@ if CLIENT then
 			local activeMount = attachments.mount
 			local dovetail = installedDefinition and installedDefinition.mountType == "dovetail" or istable(activeMount) and activeMount.mountType == "dovetail"
 			local hasSight = placement == "sight" and installedID and installedID != "empty" and not dovetail
+			local baseHeight = section.baseHeight or section:GetTall()
+			section:SetTall(baseHeight + (hasSight and 32 or 0))
 
 			local scroll = vgui.Create("DScrollPanel", section)
 			section.cards = scroll
 			scroll:SetPos(0, hasSight and 72 or 44)
-			scroll:SetSize(section:GetWide(), section:GetTall() - (hasSight and 72 or 44))
+			scroll:SetSize(section:GetWide() - 3, section:GetTall() - (hasSight and 72 or 44) - 4)
 			local scrollBar = scroll:GetVBar()
-			scrollBar:SetWide(4)
+			scrollBar:SetWide(8)
 			scrollBar:SetHideButtons(true)
-			scrollBar.Paint = function(_, w, h) surface.SetDrawColor(10, 10, 10, 132) surface.DrawRect(0, 0, w, h) end
+			scrollBar.Paint = function(_, w, h)
+				surface.SetDrawColor(5, 5, 5, 210)
+				surface.DrawRect(0, 0, w, h)
+				surface.SetDrawColor(255, 255, 255, 35)
+				surface.DrawOutlinedRect(0, 0, w, h, 1)
+			end
 			scrollBar.btnGrip.Paint = function(self, w, h)
 				local accent = getMenuAccent()
 				surface.SetDrawColor(accent.r, accent.g, accent.b, self:IsHovered() and 160 or 80)
@@ -1639,7 +1760,8 @@ if CLIENT then
 			end
 			local cards = vgui.Create("DIconLayout", scroll)
 			cards:Dock(TOP)
-			cards:SetWide(section:GetWide() - 12)
+			cards:DockMargin(8, 4, 4, 8)
+			cards:SetWide(section:GetWide() - 24)
 			cards:SetSpaceX(8)
 			cards:SetSpaceY(8)
 
@@ -1648,24 +1770,42 @@ if CLIENT then
 				and {"underbarrel", "gp25"} or {placement}
 
 			if hasSight then
-				local slider = vgui.Create("DNumSlider", section)
-				section.sightSlider = slider
-				slider:SetPos(4, 43)
-				slider:SetSize(section:GetWide() - 8, 28)
-				slider:SetText("Sight X")
-				slider:SetMinMax(-1, 3)
-				slider:SetDecimals(1)
-				slider:SetValue(math.Clamp(tonumber(installed.sightSlide) or 0, -1, 3))
-				if IsValid(slider.Label) then
-					slider.Label:SetFont("HG_Attachment_Small")
-					slider.Label:SetTextColor(menuText)
+				local sliderPanel = vgui.Create("DPanel", section)
+				section.sightSlider = sliderPanel
+				sliderPanel:SetPos(8, 42)
+				sliderPanel:SetSize(section:GetWide() - 24, 30)
+				sliderPanel.value = math.Clamp(tonumber(installed.sightSlide) or 0, -1, 3)
+				sliderPanel.Paint = function(self, w, h)
+					drawAttachmentText("SIGHT X", "HG_Attachment_Small", 0, h * 0.5, menuText, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+					drawAttachmentText(string.format("%+.1f", self.value), "HG_Attachment_Count", w, h * 0.5, menuText, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+					surface.SetDrawColor(255, 255, 255, 115)
+					surface.DrawRect(66, h - 7, w - 112, 1)
+					for index = 0, 4 do
+						local x = 66 + (w - 112) * index / 4
+						surface.DrawRect(math.floor(x), h - 10, 1, 7)
+					end
 				end
-				if IsValid(slider.TextArea) then
-					slider.TextArea:SetFont("HG_Attachment_Small")
-					slider.TextArea:SetTextColor(menuText)
+
+				local slider = vgui.Create("DSlider", sliderPanel)
+				slider:SetPos(62, 6)
+				slider:SetSize(sliderPanel:GetWide() - 104, 20)
+				slider:SetLockY(0.5)
+				slider:SetTrapInside(true)
+				slider:SetSlideX((sliderPanel.value + 1) / 4)
+				slider.Paint = function() end
+				if IsValid(slider.Knob) then
+					slider.Knob:SetSize(9, 14)
+					slider.Knob.Paint = function(self, w, h)
+						surface.SetDrawColor(0, 0, 0, 230)
+						surface.DrawRect(0, 0, w, h)
+						surface.SetDrawColor(255, 255, 255, self:IsHovered() and 255 or 210)
+						surface.DrawOutlinedRect(0, 0, w, h, 1)
+						if self:IsHovered() then surface.DrawRect(2, 2, w - 4, h - 4) end
+					end
 				end
-				slider.OnValueChanged = function(_, value)
-					value = math.Clamp(value, -1, 3)
+				slider.OnValueChanged = function(_, x)
+					local value = math.Round(math.Clamp(x, 0, 1) * 40) / 10 - 1
+					sliderPanel.value = value
 					installed.sightSlide = value
 					frame.pendingSightSlide = value
 					frame.pendingSightSlideAt = RealTime() + 0.15
@@ -1679,9 +1819,9 @@ if CLIENT then
 				local cardInstalled = attachments[cardPlacement]
 				local cardInstalledID = cardInstalled and cardInstalled[1]
 				local card = cards:Add("DButton")
-				card:SetSize(74, 74)
+				card:SetSize(96, 110)
 				card:SetText("")
-				card.nameLines = getCardNameLines(id, 68)
+				card.nameLines = getCardNameLines(id, 88)
 				card.Paint = function(button, w, h)
 					local accent = getMenuAccent()
 					button.hover = Lerp(FrameTime() * 14, button.hover or 0, button:IsHovered() and 1 or 0)
@@ -1717,8 +1857,8 @@ if CLIENT then
 					local icon = vgui.Create("DImage", card)
 					icon:SetImage(iconPath)
 					icon:SetKeepAspect(true)
-					icon:SetSize(46, 30)
-					icon:SetPos(22, 10)
+					icon:SetSize(76, 76)
+					icon:SetPos(14, 5)
 					icon:SetMouseInputEnabled(false)
 				end
 
@@ -1798,8 +1938,9 @@ if CLIENT then
 			frame.slotButtons[placement] = button
 			button.section = section
 			button.side = slotSides[placement] or (index % 2 == 0 and -1 or 1)
-			local sectionWidth = math.Clamp(ScrW() * 0.235, 290, 450)
-			local sectionHeight = math.Clamp(ScrH() * 0.195, 185, 225)
+			local sectionWidth = 436
+			local sectionHeight = math.Clamp(ScrH() * 0.3, 230, 280)
+			section.baseHeight = sectionHeight
 			section:SetSize(sectionWidth, sectionHeight)
 			section:SetPos(button.side == 1 and ScrW() + 20 or -sectionWidth - 20, ScrH() * 0.5)
 			section.Paint = function(_, w, h)
@@ -1815,6 +1956,10 @@ if CLIENT then
 				surface.DrawOutlinedRect(0, 0, w, h, 1)
 				surface.SetDrawColor(255, 255, 255, 16)
 				surface.DrawOutlinedRect(2, 2, w - 4, h - 4, 1)
+				surface.SetDrawColor(0, 0, 0, 150)
+				surface.DrawRect(w - 12, 42, 9, h - 46)
+				surface.SetDrawColor(255, 255, 255, 24)
+				surface.DrawOutlinedRect(w - 12, 42, 9, h - 46, 1)
 			end
 			button:SetSize(sectionWidth, 38)
 			button:SetPos(0, 0)
