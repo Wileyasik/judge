@@ -71,7 +71,9 @@ SWEP.ViewPunchDiv = 70
 
 SWEP.AnimsEvents = {
 	["inspect"] = {
-		[0.01] = function(self) self:EmitSound("weapons/universal/uni_crawl_l_03.wav") end,
+		[0.01] = function(self) self:EmitSound("arc9_eft_shared/weap_handon.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin9.ogg") end,
+		[0.8] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin6.ogg") end,
 	},
 	["reload545"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/ak/akm_magout_metal.ogg") end,
@@ -214,8 +216,8 @@ for i = 1, 30 do
 	SWEP.Spray[i] = Angle(-0.0, 0, 0) * 1
 end
 
-SWEP.WepSelectIcon2 = Material("entities/arc9_eft_ak74.png")
-SWEP.IconOverride = "entities/arc9_eft_ak74.png"
+SWEP.WepSelectIcon2 = Material("entities/arc9_eft_ak12.png")
+SWEP.IconOverride = "entities/arc9_eft_ak12.png"
 
 SWEP.Ergonomics = 0.85
 SWEP.WorldPos = Vector(4, -0.8, -0.5)

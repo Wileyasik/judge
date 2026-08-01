@@ -1464,6 +1464,41 @@ hg.attachments.sight = {
 		end,
 		valid = true,
 	},
+	["optic24"] = {
+		"sight",
+		"models/weapons/mods/scope_torrey_t12w.mdl",
+		Angle(0, 0, -90),
+		{},
+		offset = Vector(-1, 0.9, 0),
+		offsetView = Vector(-1, 0, 10),
+		mountType = "pistolmount",
+		scopemat = Material("decals/scope.png"),
+		mat = Material("effects/arc9/rt"),
+		perekrestie = Material("vgui/arc9_eft_shared/reticles/grid.png"),
+		localScopePos = Vector(7, 0, 1.65),
+		scope_blackout = 1200,
+		rot = 0,
+		FOVMin = 20,
+		FOVMax = 20,
+		FOVScoped = 40,
+		blackoutsize = 40000,
+		sizeperekrestie = 1600,
+		perekrestieSize = false,
+		stableReticle = true,
+		thermal = true,
+		thermalPalette = "blue_red",
+		PhysModel = "models/hunter/plates/plate025.mdl",
+		PhysPos = Vector(1, 0, 0),
+		PhysAng = Angle(0, 90, 0),
+
+		sightFunction = function(self)
+			self:DoRT()
+		end,
+
+		transformFunction = function(self, model, vecadd, ang)
+		end,
+		valid = true,
+	},
 	["ironsight1"] = {
 		"sight",
 		"models/weapons/arc9_eft_shared/atts/ironsight/eft_rearsight_mbus.mdl",
@@ -1729,14 +1764,14 @@ hg.attachments.barrel = {
 		valid = true,
 	},
 	-- other
-	["supressor14"] = {"barrel", "models/weapons/csgo/atts/silencer_clothwrapped.mdl", Angle(-90, 0, 0), {}, modelscale = 0.75, offset = Vector(11.5,-0.5,-0.1),},
+	["supressor14"] = {"barrel", "models/weapons/csgo/atts/silencer_clothwrapped.mdl", Angle(-90, 0, 0), {}, modelscale = 3, offset = Vector(11.5,-0.5,-0.1),},
 	["supressor15"] = {
 		"barrel", "models/weapons/mods/silencer_wave_dd_wave_qd_supressor_multi.mdl",
 		Angle(0, 0, 0),
 		{},
 		modelscale = 1,
 		offset = Vector(-1.5,0.1,0),
-		mount = "models/weapons/arc9/darsu_eft/mods/muzzle_ar15_awc_psr_muzzle_brake_556x45.mdl",
+		mount = "models/weapons/mods/muzzle_ar15_awc_psr_muzzle_brake_556x45.mdl",
 		mountVec = Vector(0, 0, 0),
 		mountAng = Angle(0, 0, 0),
 		PhysModel = "models/hunter/plates/plate025.mdl",
@@ -2196,6 +2231,27 @@ hg.attachments.grip = {
 	},
 }
 
+hg.attachments.gp25 = {
+	["gp25"] = {
+		"gp25",
+		"models/weapons/mods/gp25.mdl",
+		Angle(0, 0, -90),
+		{},
+		offset = Vector(-19, 1.1, -0.8),
+		offsetView = Vector(-3.2, 2.5, 0),
+		PhysModel = "models/hunter/plates/plate025.mdl",
+		PhysPos = Vector(1, 0, 0),
+		PhysAng = Angle(180, 180, 90),
+		mountType = "ak_gp25",
+		restrictatt = "grip",
+		arc9LHIK = true,
+		ShouldtUseLHand = false,
+		valid = true,
+		PrintName = "GP-25 Kostyor",
+		Icon = "entities/gp25real.png",
+	},
+}
+
 hg.attachments.underbarrel = {
 	["lasertaser0"] = { -- with 0 key attachment can't be seen in menus, removed, etc.
 		"underbarrel", -- integrated
@@ -2601,6 +2657,7 @@ local attNames = {
 	["optic21"] = "Schmidt & Bender PM II 1-8x24",
 	["optic22"] = "Armasight Vulcan MG35x NV",
 	["optic23"] = "SIG Sauer TANGO6T 1-6x24",
+	["optic24"] = "Torrey Pines Logic T12W Thermal Reflex Sight",
 
 	-- Iron sights
 	["ironsight1"] = "MBUS backiron and foreiron",
@@ -2632,6 +2689,7 @@ local attNames = {
 	["grip_ak74"] = "Standart Handle AK-74",
 	["grip1_ak74"] = "Grip Handle AK-74",
 	["grip_akdong"] = "AK-74 Dong Grip",
+	["gp25"] = "GP-25 Kostyor",
 
 	-- Magazines
 	["mag1"] = "Glock 9x19 50-round drum",
@@ -2672,8 +2730,38 @@ local attachmentsIcons = {
 	["supressor14"] = "scrappers/homemadesuppressor.png",
 	["supressor15"] = "entities/eft_attachments/muzzles/hybridslinecer.png",
 
+	-- Muzzle devices
+	["muzzle_std_545"] = "entities/eft_ak_attachments/muzzle/74.png",
+	["muzzle_std_762x39"] = "entities/eft_ak_attachments/muzzle/akml.png",
+	["muzzle_std_556"] = "entities/eft_ar15_attachments/muzzle/ar15_colt_usgi_a2_556x45_flash_hider.png",
+	["muzzle_std_762x51"] = "entities/eft_ar10_attachments/cmmgbrake.png",
+	["muzzle_545_recoil_1"] = "entities/eft_ak_attachments/muzzle/rrd4c.png",
+	["muzzle_545_recoil_2"] = "entities/eft_ak_attachments/muzzle/dtk1.png",
+	["muzzle_545_ergo_1"] = "entities/eft_ak_attachments/muzzle/srvvakm.png",
+	["muzzle_545_ergo_2"] = "entities/eft_ak_attachments/muzzle/reactor.png",
+	["muzzle_545_flash_1"] = "entities/eft_ar15_attachments/muzzle/ar15_noveske_kx3_556x45_flash_hider.png",
+	["muzzle_545_flash_2"] = "entities/eft_ak_attachments/muzzle/srvv.png",
+	["muzzle_762x39_recoil_1"] = "entities/eft_ak_attachments/muzzle/rrd4c.png",
+	["muzzle_762x39_recoil_2"] = "entities/eft_ak_attachments/muzzle/vr.png",
+	["muzzle_762x39_ergo_1"] = "entities/eft_ak_attachments/muzzle/dynacomp.png",
+	["muzzle_762x39_ergo_2"] = "entities/eft_ar10_attachments/bmd762.png",
+	["muzzle_762x39_flash_1"] = "entities/eft_ar15_attachments/muzzle/ar15_noveske_kx3_556x45_flash_hider.png",
+	["muzzle_762x39_flash_2"] = "entities/eft_ak_attachments/muzzle/srvvakm.png",
+	["muzzle_556_recoil_1"] = "entities/eft_ar15_attachments/muzzle/alien.png",
+	["muzzle_556_recoil_2"] = "entities/eft_ar15_attachments/muzzle/ar15_thunder_beast_arms_223cb_556x45_muzzle_brake.png",
+	["muzzle_556_ergo_1"] = "entities/eft_ar15_attachments/muzzle/ar15_nordic_components_corvette_556x45_compensator.png",
+	["muzzle_556_ergo_2"] = "entities/eft_ar15_attachments/muzzle/ar15_bulletec_st6012_556x45_muzzle_brake.png",
+	["muzzle_556_flash_1"] = "entities/eft_ar15_attachments/muzzle/ar15_noveske_kx3_556x45_flash_hider.png",
+	["muzzle_556_flash_2"] = "entities/eft_ar15_attachments/muzzle/ar15_bulletec_st6012_556x45_muzzle_brake.png",
+	["muzzle_762x51_recoil_1"] = "entities/eft_ar10_attachments/x3.png",
+	["muzzle_762x51_recoil_2"] = "entities/eft_ar10_attachments/fortis.png",
+	["muzzle_762x51_ergo_1"] = "entities/eft_ar10_attachments/atlas.png",
+	["muzzle_762x51_ergo_2"] = "entities/eft_ar10_attachments/dgn762b.png",
+	["muzzle_762x51_flash_1"] = "entities/eft_ar10_attachments/bmd762.png",
+	["muzzle_762x51_flash_2"] = "entities/eft_ar10_attachments/war.png",
+
 	-- Holographic sights
-	["holo1"] = "vgui/icons/sights_eotech",
+	["holo1"] = "entities/553.png",
 	["holo2"] = "entities/cobra1.png",
 	["holo3"] = "entities/eft_attachments/scopes/romeo8t.png",
 	["holo4"] = "entities/eft_attachments/scopes/mrs.png",
@@ -2711,13 +2799,14 @@ local attachmentsIcons = {
 	["optic13"] = "entities/ent_jack_gmod_ezarmor_pvs14nvm.png",
 	["optic14"] = "entities/spectrdrtan.png",
 	["optic15"] = "entities/reapir.png",
-	["optic16"] = "entities/utg.png",
+	["optic16"] = "entities/compact25.png",
 	["optic17"] = "entities/zeus.png",
 	["optic18"] = "entities/echo.png",
 	["optic19"] = "entities/30mmmarch.png",
-	["optic21"] = "entities/34mmpmii312x50.png",
+	["optic21"] = "entities/34mpmii312x50.png",
 	["optic22"] = "entities/vulcan.png",
 	["optic23"] = "entities/tango.png",
+	["optic24"] = "",
 
 	-- Iron sights
 	["ironsight1"] = "entities/eft_attachments/ironsights/mbus.png",
@@ -2754,6 +2843,10 @@ local attachmentsIcons = {
 	["mag5"] = "entities/762x47.png",
 	["mag6"] = "entities/762molot75.png",
 	["mag7"] = "entities/balls.png",
+	["mag8"] = "entities/545saiga.png",
+	["mag9"] = "entities/76210rnd.png",
+	["mag11"] = "entities/556x45_magpul_pmag_10_gen_m3_stanag_10round_magazine.png",
+	["gp25"] = "entities/eft_ak_attachments/gp25real.png",
 }
 
 local attCategoryNames = {

@@ -268,8 +268,9 @@ SWEP.AnimsEvents = {
     
     -- Look (осмотр)
     ["look"] = {
-        [0.2] = function(self) self:EmitSound("weapons/ak74/ak74_magout_rattle.wav") end,
-        [1.5] = function(self) self:EmitSound("weapons/ak74/ak74_magout_rattle.wav") end,
+        [0.01] = function(self) self:EmitSound("arc9_eft_shared/weap_handon.ogg") end,
+        [0.4] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin9.ogg") end,
+        [0.8] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin6.ogg") end,
     },
     ["look_empty"] = {
         [0.2] = function(self) self:EmitSound("weapons/ak74/ak74_magout_rattle.wav") end,

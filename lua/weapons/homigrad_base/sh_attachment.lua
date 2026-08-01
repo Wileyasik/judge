@@ -66,6 +66,7 @@ function SWEP:ClearAttachments()
 		mount = {},
 		grip = {},
 		underbarrel = {},
+		gp25 = {},
 		magwell = {},
 	}
 
@@ -108,6 +109,7 @@ function hg.ClearAttachments(wep)
 		mount = {},
 		grip = {},
 		underbarrel = {},
+		gp25 = {},
 		magwell = {},
 	}
 
@@ -313,10 +315,19 @@ if CLIENT then
 	local vecZero = Vector()
 	local posa = Vector()
 	local newview = Vector()
-	function SWEP:GetCameraOverride(view)
-		local info = self:GetAttachmentInfo("sight")
+	function SWEP:GetCameraOverride(view, baseZoomPos)
+		local info
+		local hasGP25 = self.HasGP25 and self:HasGP25()
+		local gp25Active = hasGP25 and self:IsGP25Active()
+		if hasGP25 then
+			self.GP25AimWeight = LerpFT(self.GP25AimTransitionSpeed or 0.04, self.GP25AimWeight or 0, gp25Active and 1 or 0)
+		end
+		if gp25Active or hasGP25 and (self.GP25AimWeight or 0) > 0.001 then
+			info = self:GetAttachmentInfo("gp25", "gp25")
+		end
+		info = info or self:GetAttachmentInfo("sight")
 		local sight = info and info.offsetView
-		if not info then
+		if not info and not (self.HasGP25 and self:HasGP25()) then
 			info = self:GetAttachmentInfo("underbarrel")
 			sight = info and info.offsetView
 		end
@@ -334,6 +345,9 @@ if CLIENT then
 				pos = info.viewFunction(self,model,pos)
 			end
 			
+			if info[1] == "gp25" and hasGP25 and baseZoomPos then
+				return LerpVector(self.GP25AimWeight or 0, baseZoomPos, pos)
+			end
 			return pos
 		end
 		return false
@@ -973,6 +987,8 @@ if CLIENT then
 	}
 	-- Value from 0 to 1: 0.5 pauses inspect at 50%, 0.2 at 20%, and so on.
 	local inspectFreezeFraction = 0.3
+	local inspectOpenSound = "arc9_eft_shared/weap_handon.ogg"
+	local inspectCloseSound = "arc9_eft_shared/weapon_generic_spin6.ogg"
 	local menuAccent = Color(210, 225, 230)
 	local menuMuted = Color(145, 155, 160)
 	local menuPanelColor = Color(10, 13, 15, 238)
@@ -1293,7 +1309,7 @@ if CLIENT then
 		frame.pendingUntil = 0
 		frame.availableSlots = {}
 		for _, placement in ipairs(slotOrder) do
-			if wep.availableAttachments[placement] then
+			if wep.availableAttachments[placement] or placement == "underbarrel" and wep.availableAttachments.gp25 then
 				frame.availableSlots[#frame.availableSlots + 1] = placement
 			end
 		end
@@ -1303,7 +1319,10 @@ if CLIENT then
 		if inspectSequence and IsValid(wm) and wm:LookupSequence(inspectSequence) >= 0 then
 			frame.inspectDuration = 5
 			frame.inspectStarted = CurTime()
+			wep.SuppressAnimEvents = true
 			wep:PlayAnim("inspect", frame.inspectDuration, false)
+			wep.SuppressAnimEvents = nil
+			wep:EmitSound(inspectOpenSound)
 			frame.inspectSequence = inspectSequence
 		end
 
@@ -1456,7 +1475,7 @@ if CLIENT then
 		end
 
 		function frame:BuildSlotCards(placement)
-			if self.previewPlacement == placement then self:ClearPreview() end
+			if self.previewPlacement == placement or placement == "underbarrel" and self.previewPlacement == "gp25" then self:ClearPreview() end
 			local section = self.slotSections[placement]
 			if not IsValid(section) then return end
 			if IsValid(section.cards) then section.cards:Remove() end
@@ -1481,6 +1500,8 @@ if CLIENT then
 			cards:SetSpaceY(8)
 
 			local slot = self.weapon.availableAttachments[placement]
+			local cardPlacements = placement == "underbarrel" and self.weapon.availableAttachments.gp25
+				and {"underbarrel", "gp25"} or {placement}
 
 			if hasSight then
 				local slider = vgui.Create("DNumSlider", section)
@@ -1499,7 +1520,12 @@ if CLIENT then
 				end
 			end
 
-			local function addCard(id, count, isInstalled)
+			local function addCard(id, count, isInstalled, cardPlacement)
+				cardPlacement = cardPlacement or placement
+				local cardSlot = self.weapon.availableAttachments[cardPlacement]
+				local cannotRemove = cardSlot and cardSlot.cannotremove
+				local cardInstalled = attachments[cardPlacement]
+				local cardInstalledID = cardInstalled and cardInstalled[1]
 				local card = cards:Add("DButton")
 				card:SetSize(68, 68)
 				card:SetText("")
@@ -1522,7 +1548,7 @@ if CLIENT then
 				end
 				card.OnCursorEntered = function(button)
 					frame.previewCard = button
-					frame:SetPreview(placement, id)
+					frame:SetPreview(cardPlacement, id)
 				end
 				card.OnCursorExited = function(button)
 					if frame.previewCard != button then return end
@@ -1531,7 +1557,7 @@ if CLIENT then
 				end
 
 				local iconPath = hg.attachmentsIcons[id]
-				if iconPath then
+				if isstring(iconPath) and iconPath ~= "" then
 					local icon = vgui.Create("DImage", card)
 					icon:SetImage(iconPath)
 					icon:SetSize(42, 30)
@@ -1540,44 +1566,56 @@ if CLIENT then
 				end
 
 				if isInstalled then
-					card:SetTooltip(slot.cannotremove and "This module cannot be removed" or "LMB: remove")
+					card:SetTooltip(cannotRemove and "This module cannot be removed" or "LMB: remove")
 					card.DoClick = function()
-						if not slot.cannotremove then frame:RunAttachmentAction("remove", id) end
+						if not cannotRemove then frame:RunAttachmentAction("remove", id) end
 					end
 				else
 					card:SetTooltip("LMB: equip  |  RMB: drop")
 					card.DoClick = function()
-						if not installedID or installedID == "empty" then frame:RunAttachmentAction("add", id) end
+						if not cardInstalledID or cardInstalledID == "empty" then frame:RunAttachmentAction("add", id) end
 					end
 					card.DoRightClick = function() frame:RunAttachmentAction("drop", id) end
 				end
 			end
 
-			if installedID and installedID != "empty" then addCard(installedID, nil, true) end
+			local installedCount = 0
+			for _, cardPlacement in ipairs(cardPlacements) do
+				local cardInstalled = attachments[cardPlacement]
+				local cardInstalledID = cardInstalled and cardInstalled[1]
+				if cardInstalledID and cardInstalledID != "empty" then
+					installedCount = installedCount + 1
+					addCard(cardInstalledID, nil, true, cardPlacement)
+				end
+			end
 
 			local choices = {}
 			local choiceIDs = {}
 			local inventory = getInventoryCounts()
 			local sandbox = engine.ActiveGamemode() == "sandbox"
-			local candidates = sandbox and hg.attachments[placement] or inventory
-			for id in pairs(candidates or {}) do
-				local candidatePlacement, definition = getAttachmentDefinition(id)
-				if not definition.standard and candidatePlacement == placement and isCompatible(self.weapon, placement, id, definition) then
-					choices[#choices + 1] = {id = id, count = sandbox and nil or inventory[id]}
-					choiceIDs[id] = true
+			for _, cardPlacement in ipairs(cardPlacements) do
+				local cardInstalled = attachments[cardPlacement]
+				local cardInstalledID = cardInstalled and cardInstalled[1]
+				local candidates = sandbox and hg.attachments[cardPlacement] or inventory
+				for id in pairs(candidates or {}) do
+					local candidatePlacement, definition = getAttachmentDefinition(id)
+					if definition and not definition.standard and id != cardInstalledID and candidatePlacement == cardPlacement and isCompatible(self.weapon, cardPlacement, id, definition) then
+						choices[#choices + 1] = {id = id, count = sandbox and nil or inventory[id], placement = cardPlacement}
+						choiceIDs[id] = true
+					end
 				end
-			end
-			for id, definition in pairs(hg.attachments[placement] or {}) do
-				if definition.standard and id != installedID and not choiceIDs[id] and isCompatible(self.weapon, placement, id, definition) then
-					choices[#choices + 1] = {id = id}
+				for id, definition in pairs(hg.attachments[cardPlacement] or {}) do
+					if definition.standard and id != cardInstalledID and not choiceIDs[id] and isCompatible(self.weapon, cardPlacement, id, definition) then
+						choices[#choices + 1] = {id = id, placement = cardPlacement}
+					end
 				end
 			end
 			table.sort(choices, function(a, b)
 				return (hg.attachmentslaunguage[a.id] or a.id) < (hg.attachmentslaunguage[b.id] or b.id)
 			end)
-			for _, choice in ipairs(choices) do addCard(choice.id, choice.count, false) end
+			for _, choice in ipairs(choices) do addCard(choice.id, choice.count, false, choice.placement) end
 			local slotButton = self.slotButtons[placement]
-			if IsValid(slotButton) then slotButton.moduleCount = #choices + (installedID and installedID != "empty" and 1 or 0) end
+			if IsValid(slotButton) then slotButton.moduleCount = #choices + installedCount end
 
 			cards:InvalidateLayout(true)
 			cards:SizeToChildren(false, true)
@@ -1662,6 +1700,7 @@ if CLIENT then
 			if hg.attachmentsMenuPanel == self then hg.attachmentsMenuPanel = nil end
 			if IsValid(self.weapon) and self.inspectSequence and self.weapon.seq == self.inspectSequence and not self.weapon.reload then
 				local weapon = self.weapon
+				weapon:EmitSound(inspectCloseSound)
 				local model = weapon:GetWM()
 				if IsValid(model) then model:SetCycle(inspectFreezeFraction) end
 				weapon.animtime = CurTime() + inspectFreezeFraction * self.inspectDuration

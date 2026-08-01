@@ -57,12 +57,6 @@ SWEP.SupressorOnly = true
 SWEP.StartAtt = {"holo16"}
 
 SWEP.availableAttachments = {
-	barrel = {
-		[1] = {"supressor2", Vector(0, 0, 0), {}},
-		[2] = {"supressor1", Vector(0, 0, 0), {}},
-		["mount"] = Vector(-0.5, 0, -0.05),
-		["mountAngle"] = Angle(0, 0, 180),
-	},
 	magwell = {
 		["mountType"] = "glock_mag",
 	},

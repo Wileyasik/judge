@@ -87,9 +87,12 @@ function SWEP:GetZoomPos(recoilZoomPos, view, eyePos)
 
 	local posZoom = LocalToWorld(zoomPos, angle_zero, pos, ang2)
 	
-	local override = self:GetCameraOverride(view)
+	local override = self:GetCameraOverride(view, posZoom)
 	if override then
 		posZoom = override
+	end
+	if self.GetGP25CameraKick then
+		posZoom = posZoom + ang2:Forward() * self:GetGP25CameraKick()
 	end
 	
 	local viewangs = self.prankang + view.angles
