@@ -2605,13 +2605,13 @@ end
 for id, data in pairs(hg.attachments.sight) do
 	if data.valid then
 		if string.StartWith(id, "optic") then
-			data.ergonomicsMul = data.thermal and 0.8 or data.nightvision and 0.82 or 0.86
+			data.ergonomicsMul = data.thermal and 0.9 or data.nightvision and 0.91 or 0.93
 		elseif string.StartWith(id, "holo") then
-			data.ergonomicsMul = 0.95
-		elseif string.StartWith(id, "ironsight") then
 			data.ergonomicsMul = 0.98
+		elseif string.StartWith(id, "ironsight") then
+			data.ergonomicsMul = 0.995
 		else
-			data.ergonomicsMul = 0.94
+			data.ergonomicsMul = 0.97
 		end
 	end
 end

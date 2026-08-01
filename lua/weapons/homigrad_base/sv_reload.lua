@@ -17,9 +17,8 @@ function SWEP:Reload(time)
 	local magazineCapacity = magazine and magazine.capacity or self.Primary.ClipSize
 	local extraCapacity = baseCapacity > 0 and math.max(magazineCapacity / baseCapacity - 1, 0) or 0
 	local magazineReloadMul = magazine and magazine.reloadTimeMul or 1 + extraCapacity * (self.MagazineReloadCapacityPenalty or 0.35)
-	local ergonomicsReloadMul = 1 / math.Clamp(self.Ergonomics or 1, 0.4, 1.6)
 	self.MagazineReloadMul = magazineReloadMul
-	self.StaminaReloadTime = self.ReloadTime * self.StaminaReloadMul * magazineReloadMul * ergonomicsReloadMul
+	self.StaminaReloadTime = self.ReloadTime * self.StaminaReloadMul * magazineReloadMul
 	self.StaminaReloadTime = (self.StaminaReloadTime + (self:Clip1() > 0 and -self.StaminaReloadTime/3 or 0 ))
 	self.reload = self.LastReload + self.StaminaReloadTime
 	self.dwr_reverbDisable = true
