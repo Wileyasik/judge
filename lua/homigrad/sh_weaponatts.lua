@@ -904,21 +904,21 @@ hg.attachments.sight = {
 		"sight",
 		"models/weapons/mods/optic_reapir.mdl",
 		Angle(0, 0, -90),
-		offset = Vector(0, -0.25, -0.04),
+		offset = Vector(0, -0, -0.04),
 		offsetView = Vector(-1.65, 0, 7),
 		{},
 		mountType = "picatinny",
 		scopemat = Material("decals/scope.png"),
 		mat = Material("effects/arc9/rt"),
 		perekrestie = Material("vgui/arc9_eft_shared/reticles/reap_ir_reticle.png"),
-		localScopePos = Vector(7, 0, 1.65),
+		localScopePos = Vector(14, 0, 1.65),
 		scope_blackout = 1200,
 		rot = 0,
 		FOVMin = 10,
 		FOVMax = 10,
 		FOVScoped = 40,
 		blackoutsize = 4000,
-		sizeperekrestie = 1600,
+		sizeperekrestie = 1650,
 		perekrestieSize = false,
 		stableReticle = true,
 		thermal = true,
@@ -1044,12 +1044,12 @@ hg.attachments.sight = {
 		FOVMin = 3,
 		FOVMax = 20,
 		FOVScoped = 40,
-		blackoutsize = 4000,
-		sizeperekrestie = 2700,
+		blackoutsize = 5000,
+		sizeperekrestie = 2100,
 		perekrestieSize = true,
 		stableReticle = true,
 		thermal = true,
-		mount = "models/weapons/mods/mount_reapir.mdl",
+		mount = "models/weapons/mods/mount_zeus_pro.mdl",
 		mountVec = Vector(-1.5, 0, 0),
 		mountAng = Angle(0, 0, 0),
 		PhysModel = "models/hunter/plates/plate025.mdl",
@@ -2543,6 +2543,39 @@ hg.attachments.magwell = {
 		valid = true,
 	},
 }
+hg.attachments.stock = {
+	["stock_ak74_std"] = {
+		"stock",
+		"models/weapons/mods/ak_stock_ak74_std_plastic.mdl",
+		Angle(0, 0, 0),
+		{},
+		mountType = "ak74_stock",
+		weaponManagedModel = true,
+		standard = true,
+		valid = true,
+	},
+	["stock_ak_evo"] = {
+		"stock",
+		"models/weapons/mods/ak_stock_evo.mdl",
+		Angle(0, 0, 0),
+		{},
+		mountType = "ak74_stock",
+		weaponManagedModel = true,
+		ergonomicsMul = 1.12,
+		valid = true,
+	},
+	["stock_ak_zhukov_s"] = {
+		"stock",
+		"models/weapons/mods/ak_stock_zhukov_s.mdl",
+		Angle(0, 0, 0),
+		{},
+		mountType = "ak74_stock",
+		weaponManagedModel = true,
+		recoilMul = 0.82,
+		ergonomicsMul = 0.95,
+		valid = true,
+	},
+}
 hg.attachments.agsmag = {
 	["agsmag0"] = {
 		"agsmag",
@@ -2567,6 +2600,9 @@ end
 
 local attNames = {
 	-- Suppressors
+	["stock_ak74_std"] = "Стандартный приклад АК-74",
+	["stock_ak_evo"] = "Эргономичный приклад AK-EVO",
+	["stock_ak_zhukov_s"] = "Приклад Magpul Zhukov-S",
 	["supressor1"] = "KAC AAC Illusion 9 9x19",
 	["supressor2"] = "SIG SRD-9 9x19",
 	["supressor3"] = "Спектехника ТГПА 5.45x39",
@@ -2847,6 +2883,9 @@ local attachmentsIcons = {
 	["mag9"] = "entities/76210rnd.png",
 	["mag11"] = "entities/556x45_magpul_pmag_10_gen_m3_stanag_10round_magazine.png",
 	["gp25"] = "entities/eft_ak_attachments/gp25real.png",
+	["stock_ak74_std"] = "",
+	["stock_ak_evo"] = "",
+	["stock_ak_zhukov_s"] = "",
 }
 
 local attCategoryNames = {
@@ -2854,6 +2893,7 @@ local attCategoryNames = {
 	["barrel"] = "Muzzles",
 	["underbarrel"] = "Underbarrel",
 	["magwell"] = "Magwells",
+	["stock"] = "Stocks",
 	["mount"] = "Mounts",
 	["grip"] = "Grips"
 }

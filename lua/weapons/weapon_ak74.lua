@@ -20,7 +20,7 @@ SWEP.ARC9Parts = {
 		model = "models/weapons/mods/ak_dc_ak74_std.mdl",
 		bonemerge = false,
 		bone = "weapon",
-		pos = Vector(0, -19, 1.5),
+		pos = Vector(0, -19.1, 1.5),
 		ang = Angle(0, 0, 0)
 	},
 	magazine = {
@@ -34,7 +34,7 @@ SWEP.ARC9Parts = {
 		model = "models/weapons/mods/ak_hg_ak74_std_plum.mdl",
 		bonemerge = false,
 		bone = "weapon",
-		pos = Vector(0, -19.41, 0.5),
+		pos = Vector(0, -19.4, 0.5),
 		ang = Angle(0, 0, 0)
 	},
 	pistolgrip = {
@@ -55,6 +55,7 @@ SWEP.ARC9Parts = {
 
 SWEP.ARC9DefaultLHIKPart = "handguard"
 SWEP.ARC9DefaultLHIKSourceModel = "models/weapons/mods/ak_hg_ak74_std_plum.mdl"
+SWEP.StartAtt = {"stock_ak74_std"}
 
 SWEP.FakePos = Vector(-13, 2.52, 7.5)
 SWEP.FakeAng = Angle(0, 0, 0)
@@ -167,7 +168,7 @@ SWEP.FakeVPShouldUseHand = false
 
 SWEP.HeldReceiverModel = "models/weapons/mods/ak_dc_ak74_std.mdl"
 SWEP.HeldReceiverBone = "weapon"
-SWEP.HeldReceiverOffsetPos = Vector(0, -19, 1.5)
+SWEP.HeldReceiverOffsetPos = Vector(0, -20, 1.5)
 SWEP.HeldReceiverOffsetAng = Angle(0, 0, 0)
 
 SWEP.HeldMagModel = "models/weapons/mods/mag_ak74_izhmash_6l23_plum_545x39_30.mdl"
@@ -246,6 +247,12 @@ SWEP.availableAttachments = {
 	magwell = {
 		["mountType"] = {"ak_545_60", "ak_545"},
 	},
+	stock = {
+		[1] = {"stock_ak74_std", Vector(0, 0, 0), {}},
+		["mountType"] = "ak74_stock",
+		["mountBone"] = "weapon",
+		["mount"] = Vector(0.65, -9.6, -0.8),
+	},
 }
 
 SWEP.RHandPos = Vector(0, -1, 0)
@@ -296,9 +303,19 @@ function SWEP:DrawPost()
 		local partData = self.ARC9Parts and self.ARC9Parts[partName]
 		if not istable(partData) then return end
 
-		local modelPath = partName == "magazine" and self:GetActiveMagazineModel(partData.model, "held") or partData.model
-		if not isstring(modelPath) or modelPath == "" then return end
+		local modelPath = partData.model
+		if partName == "magazine" then
+			modelPath = self:GetActiveMagazineModel(modelPath, "held")
+		elseif partName == "stock" then
+			modelPath = self:GetActiveStockModel(modelPath)
+		end
 		local model = self.HeldARC9PartModels[partName]
+		if not isstring(modelPath) or modelPath == "" then
+			if IsValid(model) then model:Remove() end
+			self.HeldARC9PartModels[partName] = nil
+			self.HeldARC9PartPaths[partName] = nil
+			return
+		end
 		if IsValid(model) and self.HeldARC9PartPaths[partName] ~= modelPath then
 			model:Remove()
 			model = nil
@@ -396,10 +413,21 @@ if CLIENT then
 			if not istable(partData) or not isstring(partData.model) or partData.model == "" then
 				continue
 			end
-			local modelPath = partName == "magazine" and self:GetActiveMagazineModel(partData.model, "world") or partData.model
+			local modelPath = partData.model
+			if partName == "magazine" then
+				modelPath = self:GetActiveMagazineModel(modelPath, "world")
+			elseif partName == "stock" then
+				modelPath = self:GetActiveStockModel(modelPath)
+			end
 
 			local model = self.BC_DroppedPartModels[partName]
 			local oldPath = self.BC_DroppedPartPaths[partName]
+			if not isstring(modelPath) or modelPath == "" then
+				if IsValid(model) then model:Remove() end
+				self.BC_DroppedPartModels[partName] = nil
+				self.BC_DroppedPartPaths[partName] = nil
+				continue
+			end
 
 			if IsValid(model) and oldPath ~= modelPath then
 				model:Remove()

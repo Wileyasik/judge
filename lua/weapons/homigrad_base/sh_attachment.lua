@@ -50,12 +50,14 @@ end
 function SWEP:UpdateAttachmentModifiers()
 	self.BaseErgonomics = self.BaseErgonomics or self.Ergonomics or 1
 	local barrel = self:GetAttachmentInfo("barrel")
-	self.Ergonomics = self.BaseErgonomics * (barrel and barrel.ergonomicsMul or 1)
+	local stock = self:GetAttachmentInfo("stock")
+	self.Ergonomics = self.BaseErgonomics * (barrel and barrel.ergonomicsMul or 1) * (stock and stock.ergonomicsMul or 1)
 end
 
 function SWEP:GetAttachmentRecoilMul()
 	local barrel = self:GetAttachmentInfo("barrel")
-	return barrel and barrel.recoilMul or 1
+	local stock = self:GetAttachmentInfo("stock")
+	return (barrel and barrel.recoilMul or 1) * (stock and stock.recoilMul or 1)
 end
 
 function SWEP:ClearAttachments()
@@ -68,6 +70,7 @@ function SWEP:ClearAttachments()
 		underbarrel = {},
 		gp25 = {},
 		magwell = {},
+		stock = {},
 	}
 
 	if SERVER then
@@ -111,6 +114,7 @@ function hg.ClearAttachments(wep)
 		underbarrel = {},
 		gp25 = {},
 		magwell = {},
+		stock = {},
 	}
 
 	if SERVER then
@@ -182,6 +186,12 @@ function SWEP:GetActiveMagazineModel(fallback, role)
 
 	local roleModel = role and data[role .. "Model"]
 	return roleModel or data[2] or fallback
+end
+
+function SWEP:GetActiveStockModel(fallback)
+	local data = self:GetAttachmentInfo("stock")
+	if data then return data[2] or fallback end
+	return self.availableAttachments and self.availableAttachments.stock and "" or fallback
 end
 
 function SWEP:GetMagazineReloadAnimation(empty)
@@ -972,16 +982,17 @@ if CLIENT then
 		return scroll
 	end
 
-	local slotOrder = {"sight", "barrel", "underbarrel", "grip", "magwell"}
+	local slotOrder = {"sight", "stock", "barrel", "underbarrel", "grip", "magwell"}
 	local slotNames = {
 		sight = "SCOPES",
+		stock = "STOCK",
 		barrel = "MUZZLE",
 		underbarrel = "UNDERBARREL",
 		grip = "FOREGRIP",
 		magwell = "MAGAZINE"
 	}
-	local slotSides = {sight = 1, barrel = -1, underbarrel = -1, grip = -1, magwell = -1}
-	local slotRows = {sight = 0.3, underbarrel = 0.14, barrel = 0.345, grip = 0.55, magwell = 0.755}
+	local slotSides = {sight = 1, stock = 1, barrel = -1, underbarrel = -1, grip = -1, magwell = -1}
+	local slotRows = {sight = 0.3, stock = 0.52, underbarrel = 0.14, barrel = 0.345, grip = 0.55, magwell = 0.755}
 	local slotAnchorBones = {
 		magwell = {"mod_magazine"}
 	}
