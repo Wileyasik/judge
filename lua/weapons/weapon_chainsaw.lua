@@ -1,4 +1,4 @@
-???if SERVER then AddCSLuaFile() end
+if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_melee"
 SWEP.PrintName = "Chainsaw"
 SWEP.Instructions = "chainsawbrrttt aysss, we wont need a description since remorse doesnt have it"

@@ -987,13 +987,8 @@ if CLIENT then
 	}
 	-- Value from 0 to 1: 0.5 pauses inspect at 50%, 0.2 at 20%, and so on.
 	local inspectFreezeFraction = 0.3
-<<<<<<< HEAD
 	local inspectOpenSound = "arc9_eft_shared/weap_handon.ogg"
 	local inspectCloseSound = "arc9_eft_shared/weapon_generic_spin6.ogg"
-	local menuAccent = Color(210, 225, 230)
-	local menuMuted = Color(145, 155, 160)
-	local menuPanelColor = Color(10, 13, 15, 238)
-=======
 	local fallbackAccent = Color(55, 55, 55)
 	local fallbackPanel = Color(10, 10, 10)
 	local menuText = Color(235, 235, 235)
@@ -1072,7 +1067,6 @@ if CLIENT then
 		end
 		return output
 	end
->>>>>>> aef1d8b07196f7efa7cb44de1af1e52c4f7695fb
 
 	surface.CreateFont("HG_Attachment_Title", {
 		font = attachmentFont,
