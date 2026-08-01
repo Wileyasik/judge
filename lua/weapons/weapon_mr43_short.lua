@@ -66,9 +66,6 @@ SWEP.AnimList = {
 }
 
 SWEP.AnimsEvents = {
-	["inspect"] = {
-		[0.01] = function(self) self:EmitSound("weapons/universal/uni_crawl_l_03.wav") end,
-	},
 	["reload"] = {
 		[0.10] = function(self) self:EmitSound(mr43_path .. "mr43_barrels_open.ogg") end,
 		[0.25] = function(self) self:EmitSound(mr43_path .. "mr43_ammo_unload_single1.ogg") end,
@@ -82,7 +79,9 @@ SWEP.AnimsEvents = {
 		[0.85] = function(self) self:EmitSound(mr43_path .. "mr43_barrels_close.ogg") end,
 	},
 	["look"] = {
-		[0.01] = function(self) self:EmitSound(mr43_path .. "mr43_inspect.ogg") end,
+		[0.01] = function(self) self:EmitSound("arc9_eft_shared/weap_handon.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin9.ogg") end,
+		[0.8] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin6.ogg") end,
 	},
 }
 
@@ -224,4 +223,3 @@ end
 function SWEP:GetAnimPos_Draw(time)
 	return 0
 end
-

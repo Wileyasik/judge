@@ -37,7 +37,9 @@ SWEP.AnimList = {
 
 SWEP.AnimsEvents = {
 	["inspect"] = {
-		[0.01] = function(self) self:EmitSound("weapons/universal/uni_crawl_l_03.wav") end,
+		[0.01] = function(self) self:EmitSound("arc9_eft_shared/weap_handon.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin9.ogg") end,
+		[0.8] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin6.ogg") end,
 	},
     ["reload"] = {
         [0.025] = function(self) self:EmitSound("weapons/darsu_eft/rhino/rhino_drum_out.ogg") end,
@@ -142,4 +144,3 @@ function SWEP:DrawPost()
 		wep:ManipulateBonePosition(54, Vector(0, 1.5 * self.shooanim, 0), false)
 	end
 end
-

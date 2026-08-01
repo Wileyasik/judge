@@ -30,8 +30,10 @@ SWEP.AttachmentAng = Angle(0,0,0)
 local math = math
 local math_random = math.random
 SWEP.AnimsEvents = {
-	["inspect"] = {
-		[0.01] = function(self) self:EmitSound("weapons/universal/uni_crawl_l_03.wav") end,
+	["inspect0"] = {
+		[0.01] = function(self) self:EmitSound("arc9_eft_shared/weap_handon.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin9.ogg") end,
+		[0.8] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin6.ogg") end,
 	},
 	["cycle0"] = {
 		[0.1] = function(self)

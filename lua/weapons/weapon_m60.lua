@@ -54,8 +54,9 @@ SWEP.AnimList = {
 
 SWEP.AnimsEvents = {
 	["inspect"] = {
-		[0.01] = function(self) self:EmitSound("weapons/darsu_eft/pkm/pk_gun_flip_3.ogg") end,
-		[0.4] = function(self) self:EmitSound("weapons/darsu_eft/pkm/pk_gun_flip_5.ogg") end,
+		[0.01] = function(self) self:EmitSound("arc9_eft_shared/weap_handon.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin9.ogg") end,
+		[0.8] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin6.ogg") end,
 	},
     ["reload"] = {
         [0.05] = function(self) self:EmitSound("weapons/darsu_eft/m60/m60_dust_open.ogg") end,

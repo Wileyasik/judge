@@ -17,6 +17,7 @@ AddCSLuaFile("sh_weaponsinv.lua")
 AddCSLuaFile("sh_ammo.lua")
 AddCSLuaFile("cl_shells.lua")
 AddCSLuaFile("sh_options.lua")
+AddCSLuaFile("sh_gp25.lua")
 
 include("sh_fake.lua")
 include("sh_anim.lua")
@@ -42,6 +43,7 @@ else
 	include("cl_camera.lua")
 	include("cl_optics.lua")
 end
+include("sh_gp25.lua")
 
 local hg_npcspreadmul = CreateConVar("hg_npcspreadmul", "1", FCVAR_ARCHIVE + FCVAR_SERVER_CAN_EXECUTE, "The more this value is, the less accurate are npcs", 0, 10)
 local hg_npcfireratemul = CreateConVar("hg_npcfireratemul", "1", FCVAR_ARCHIVE + FCVAR_SERVER_CAN_EXECUTE, "The more this value is, the more time is between each shot in the npc's burst", 0, 10)

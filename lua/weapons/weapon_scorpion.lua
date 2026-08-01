@@ -55,8 +55,10 @@ SWEP.ViewPunchDiv = 1800
 local path = "weapons/darsu_eft/scorpion/"
 
 SWEP.AnimsEvents = {
-	["inspect"] = {
-		[0.01] = function(self) self:EmitSound("weapons/universal/uni_crawl_l_03.wav") end,
+	["look"] = {
+		[0.01] = function(self) self:EmitSound("arc9_eft_shared/weap_handon.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin9.ogg") end,
+		[0.8] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin6.ogg") end,
 	},
 	["reload1"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/scorpion/ump_mag_out.ogg") end,

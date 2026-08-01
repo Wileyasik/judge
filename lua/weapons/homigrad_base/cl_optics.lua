@@ -147,8 +147,24 @@ end
 local thermalSensors = {
 	optic15 = CreateThermalSensor("optic15_640x480_60hz", 640, 480, 60),
 	optic17 = CreateThermalSensor("optic17_640x512_30hz", 640, 512, 30),
-	optic18 = CreateThermalSensor("optic18_206x156", 206, 156)
+	optic18 = CreateThermalSensor("optic18_206x156", 206, 156),
+	optic24 = CreateThermalSensor("optic24_64x64_10hz", 64, 64, 10)
 }
+
+concommand.Add("hg_t12w_materials", function()
+	local model = ClientsideModel("models/weapons/arc9/darsu_eft/mods/scope_torrey_t12w.mdl")
+	if not IsValid(model) then
+		print("[T12W] Failed to load model")
+		return
+	end
+
+	print("[T12W] Material slots (SetSubMaterial indices):")
+	for index, materialName in ipairs(model:GetMaterials()) do
+		print(string.format("[T12W] [%d] %s", index - 1, materialName))
+	end
+
+	model:Remove()
+end)
 local nightVisionWidth = 160
 local nightVisionHeight = 120
 local nightVisionRT = GetRenderTargetEx("hg_scope_nightvision_160x120", nightVisionWidth, nightVisionHeight,
@@ -341,7 +357,7 @@ function SWEP:DoRT()
 	local thermalSensor = thermal and sight and thermalSensors[sight[1]]
 	local thermalUpdate = thermalSensor and RealTime() >= thermalSensor.nextUpdate
 	local stabilizedScope = foundatt and foundatt.stableReticle
-	local digitalThermal = thermal and sight and (sight[1] == "optic17" or sight[1] == "optic18")
+	local digitalThermal = thermalSensor ~= nil
 
 	if thermalUpdate then
 		thermalSensor.nextUpdate = RealTime() + thermalSensor.interval

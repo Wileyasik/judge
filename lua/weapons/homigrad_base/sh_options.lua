@@ -3,6 +3,7 @@ if CLIENT then
 		if button ~= KEY_R then return end
 		local wep = ply:GetActiveWeapon()
 		if not IsValid(wep) then return end
+		if wep.IsGP25Active and wep:IsGP25Active() then return end
 		local canInspect = wep.AllowedInspect
 		if not isfunction(canInspect) then return end
 		if not canInspect(wep) then return end
@@ -156,6 +157,7 @@ if SERVER then
 	concommand.Add("hg_inspect", function(ply, cmd, args)
 		local gun = ply:GetActiveWeapon()
 		if not IsValid(gun) or not gun then return end
+		if gun.IsGP25Active and gun:IsGP25Active() then return end
 		local canInspect = gun.AllowedInspect
 		if not isfunction(canInspect) then return end
 		if not canInspect(gun) then return end

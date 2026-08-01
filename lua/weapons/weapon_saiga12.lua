@@ -48,6 +48,11 @@ SWEP.FakeMagDropBone = 50
 local path = "weapons/darsu_eft/saiga12/"
 
 SWEP.AnimsEvents = {
+	["look0"] = {
+		[0.01] = function(self) self:EmitSound("arc9_eft_shared/weap_handon.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin9.ogg") end,
+		[0.8] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin6.ogg") end,
+	},
 	["reload0"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/ak/saiga_magout_plastic.ogg") end,
 		[0.50] = function(self) self:EmitSound("weapons/darsu_eft/ak/saiga_magin_plastic.ogg") end,

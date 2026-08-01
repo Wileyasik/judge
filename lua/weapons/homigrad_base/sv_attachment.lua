@@ -203,6 +203,16 @@ net.Receive("ZB_AttachRemove", function(len, ply)
 		if IsValid(wep) then
 			if wep.attachments[placement][1] != att then return end
 			wep.attachments[placement] = placement == "barrel" and {} or (i and wep.availableAttachments[placement][i] or wep.availableAttachments[placement].empty or {})
+			if att == "gp25" then
+				if wep:GetNW2Int("GP25Clip", 0) > 0 then ply:GiveAmmo(1, "VOG-25 Grenade", true) end
+				wep:SetNW2Bool("GP25Active", false)
+				wep:SetNW2Bool("GP25Initialized", false)
+				wep:SetNW2Int("GP25Clip", 0)
+				wep.GP25ActionSerial = (wep.GP25ActionSerial or 0) + 1
+				wep.GP25NextAction = nil
+				wep.GP25TriggerHeld = nil
+				wep:PlayAnim("idle", 1, not wep.NoIdleLoop, nil, false, true)
+			end
 			wep:UpdateAttachmentModifiers()
 			ply:SetNetVar("Inventory",ply.inventory)
 			wep:SyncAtts()

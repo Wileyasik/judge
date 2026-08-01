@@ -157,6 +157,7 @@ function SWEP:Initialize()
 
 	self.deploy = CurTime() + self.CooldownDeploy / self.Ergonomics
 
+	if self.SetupGP25AttachmentSlot then self:SetupGP25AttachmentSlot() end
 	self:ClearAttachments()
 
 	self.AmmoTypes = self.AmmoTypes2[self.Primary.Ammo]
@@ -2293,7 +2294,7 @@ function SWEP:GetARC9ReloadLHIKWeight()
 	if not self.reload then return 1 end
 
 	local duration = self.StaminaReloadTime or self.ReloadTime or 1
-	local blendTime = duration * (self.ARC9ReloadLHIKFraction or 0.3)
+	local blendTime = duration * (self.ARC9ReloadLHIKFraction or 0.17)
 	local remaining = math.max(self.reload - CurTime() - 0.05, 0)
 	local weight = 1 - math.Clamp(remaining / math.max(blendTime, 0.001), 0, 1)
 	return math.ease.InOutSine(weight)
@@ -2513,6 +2514,8 @@ function SWEP:SetHandPos(noset)
 		end
 	end
 
+	if CLIENT and self.ApplyGP25LHIK then self:ApplyGP25LHIK(ent) end
+
 	if !should then self:AnimationRender() end
 	self:AnimHoldPost(self:GetWeaponEntity())
 
@@ -2638,7 +2641,7 @@ function SWEP:PlayAnim(anim, data, cycling, callback, reverse, sendtoclient)
         self.callback = callback
     end
 
-	if self.AnimsEvents and (self.AnimsEvents[anim] or self.AnimsEvents[self.seq]) then
+	if not self.SuppressAnimEvents and self.AnimsEvents and (self.AnimsEvents[anim] or self.AnimsEvents[self.seq]) then
 		local Time = time
 		for k,v in pairs(self.AnimsEvents[anim] or self.AnimsEvents[self.seq]) do
 			self.VM_TimerEvents = self.VM_TimerEvents or {}

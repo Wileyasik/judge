@@ -145,9 +145,6 @@ SWEP.AnimList = {
 
 -- Звуки анимаций
 SWEP.AnimsEvents = {
-    ["inspect"] = {
-        [0.01] = function(self) self:EmitSound("weapons/universal/uni_crawl_l_03.wav") end,
-    },
     ["ready0"] = {
         [0] = function(self) self:EmitSound("weapons/tfa_ins2/k98/mosin_boltback.wav") end,
         [0.4] = function(self) self:EmitSound("weapons/tfa_ins2/k98/mosin_boltforward.wav") end,
@@ -323,8 +320,9 @@ SWEP.AnimsEvents = {
     
     -- Look (осмотр)
     ["look"] = {
-        [0.2] = function(self) self:EmitSound("weapons/ak74/ak74_magout_rattle.wav") end,
-        [1.5] = function(self) self:EmitSound("weapons/ak74/ak74_magout_rattle.wav") end,
+        [0.01] = function(self) self:EmitSound("arc9_eft_shared/weap_handon.ogg") end,
+        [0.4] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin9.ogg") end,
+        [0.8] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin6.ogg") end,
     },
     ["look_empty"] = {
         [0.2] = function(self) self:EmitSound("weapons/ak74/ak74_magout_rattle.wav") end,

@@ -66,8 +66,10 @@ SWEP.AnimsEvents = {
 		[0.25] = function(self) self:EmitSound("weapons/darsu_eft/aa12/aa12_drum_out_0.ogg") end,
 		[0.70] = function(self) self:EmitSound("weapons/darsu_eft/aa12/aa12_drum_in_0.ogg") end,
 	},
-	["look"] = {
-		[0.01] = function(self) self:EmitSound("weapons/universal/uni_crawl_l_03.wav") end,
+	["inspect"] = {
+		[0.01] = function(self) self:EmitSound("arc9_eft_shared/weap_handon.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin9.ogg") end,
+		[0.8] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin6.ogg") end,
 	},
 }
 

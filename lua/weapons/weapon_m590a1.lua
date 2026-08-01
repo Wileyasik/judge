@@ -120,7 +120,9 @@ SWEP.AnimList = {
 
 SWEP.AnimsEvents = {
     ["inspect"] = {
-        [0.01] = function(self) self:EmitSound("weapons/universal/uni_crawl_l_03.wav") end,
+		[0.01] = function(self) self:EmitSound("arc9_eft_shared/weap_handon.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin9.ogg") end,
+		[0.8] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin6.ogg") end,
     },
     ["reload_start_empty0"] = {
         [0.2] = function(self) self:EmitSound("weapons/darsu_eft/m590/mr133_shell_pickup.ogg") end,
@@ -307,4 +309,3 @@ end
 function SWEP:CanPrimaryAttack()
     return self:ShotgunCanPrimaryAttack()
 end
-

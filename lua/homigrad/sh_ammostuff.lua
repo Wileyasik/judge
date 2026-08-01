@@ -2351,6 +2351,17 @@ hg.ammotypes = {
 		minsplash = 10,
 		maxsplash = 5,
 	},
+	["grenade_vog25"] = {
+		name = "VOG-25 Grenade",
+		dmgtype = DMG_BLAST,
+		tracer = TRACER_NONE,
+		plydmg = 0,
+		npcdmg = 0,
+		force = 150,
+		maxcarry = 20,
+		minsplash = 10,
+		maxsplash = 5,
+	},
 	["pulse"] = {
 		name = "Pulse",
 		dmgtype = DMG_BULLET,
@@ -2983,6 +2994,11 @@ local ammoents = {
 	["grenade_40x381"] = {
 		Icon = "vgui/hud/ahuetzcity",
 		Model = "models/Items/BoxMRounds.mdl",
+		Count = 6
+	},
+	["grenade_vog25"] = {
+		Icon = "vgui/hud/ahuetzcity",
+		Model = "models/weapons/arc9/darsu_eft/vog25.mdl",
 		Count = 6
 	},
 	["pulse"] = {
