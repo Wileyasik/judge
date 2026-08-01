@@ -45,6 +45,236 @@ module[1] = function(org)
 	org.heatbuff = 30
 	org.needed_temp = 36.7
 end
+local internalbleed_phrases = {
+	"That's... that's blood I just vomited...",
+	"Oh, that's blood...",
+	"Fuck, I just puked blood...",
+	"Oh shit... I don't feel good...",
+	"God... there's blood in my mouth...",
+	"I just puked... and it was red...",
+	"That tastes like iron...",
+	"Something inside is torn... I can feel it...",
+	"I'm coughing up blood... that's not good...",
+	"There's copper in my throat...",
+	"Did I just swallow blood...?",
+	"My guts... I think I'm bleeding inside...",
+}
+local about_to_puke = {
+	"I feel like I'm gonna puke any second now...",
+	"Not feeling good...",
+	"Gonna puke right now...",
+	"I want to vomit...",
+	"My stomach's churning...",
+	"I think I'm about to be sick...",
+	"Ugh... my stomach...",
+	"Here it comes... I'm gonna puke...",
+	"I feel sick to my stomach...",
+	"Don't... don't make me move... I'll puke...",
+	"The nausea is hitting me...",
+	"Gonna hurl... oh no...",
+}
+local bloodloss_light = {
+	"I'm bleeding... I need to stop it...",
+	"I need to patch this up...",
+	"Blood's flowing... shit...",
+	"Gotta find something to wrap this with...",
+	"I think I got nicked...",
+	"That's a lot of red...",
+	"Damn... I'm leaking...",
+	"Better wrap this up...",
+	"I can feel the warmth running down...",
+	"Gotta apply pressure...",
+}
+local bloodloss_moderate = {
+	"I'm losing too much blood...",
+	"I can feel myself getting weaker...",
+	"The blood won't stop... I need help...",
+	"I'm getting dizzy from the blood loss...",
+	"Need to stop the bleeding... now...",
+	"Too much blood... too fast...",
+	"I'm starting to feel lightheaded...",
+	"This wound won't close...",
+	"My shirt's soaked... shit...",
+	"My blood pressure's dropping...",
+	"The floor's getting slippery with my blood...",
+	"I'm soaked in it...",
+	"Where's the medic...? I'm bleeding out...",
+}
+local bloodloss_severe = {
+	"I can't... I'm losing so much blood...",
+	"My vision is going dark...",
+	"I feel so cold... so weak...",
+	"Please... someone help me...",
+	"I can't feel my fingers...",
+	"I'm leaving a trail of blood...",
+	"I can barely stand...",
+	"Somebody... the bleeding won't stop...",
+	"I'm getting colder... slower...",
+	"I'm about to pass out... too much blood...",
+	"The world is getting grey...",
+	"I can hear my heartbeat slowing down...",
+	"Someone... please... I'm bleeding too fast...",
+}
+local bloodloss_critical = {
+	"I'm dying... I know it...",
+	"Everything's fading away...",
+	"I can't... hold on...",
+	"Tell them... I tried...",
+	"So... cold...",
+	"This is it... I'm going to bleed out...",
+	"Too late... I can already feel it...",
+	"Darkness... I'm slipping...",
+	"Tell them... it wasn't their fault...",
+	"I can't feel my pulse anymore...",
+	"It's over... I've bled too much...",
+	"Cold... everything is cold...",
+	"Goodbye... everyone...",
+}
+local tachycardia_phrases = {
+	"My heart is racing...",
+	"I can feel my heartbeat in my ears...",
+	"Why is my heart pounding so hard...",
+	"I can hear my own heartbeat...",
+	"My chest is pounding...",
+	"My heart won't slow down...",
+	"Thump... thump... I can't calm down...",
+	"My pulse is out of control...",
+	"Something's wrong with my heartbeat...",
+	"My heart is trying to jump out of my chest...",
+	"Ba-boom ba-boom... I can't calm it...",
+	"Why won't my heart slow down...?",
+	"I can feel every single heartbeat...",
+}
+local cardiac_arrest_phrases = {
+	"My heart... it's stopping...",
+	"I can't... feel my pulse...",
+	"Something's wrong with my heart...",
+	"I'm fading... I can feel it...",
+	"My chest... it's tightening...",
+	"I can't feel my heart anymore...",
+	"No... not now... my heart...",
+	"Everything's stopping...",
+	"My heart... skipped...",
+	"I can't... my chest is crushing...",
+	"The beat... it's stopping...",
+	"Is this... a heart attack...?",
+}
+local hypothermia_mild = {
+	"I'm getting cold...",
+	"Chilly out here...",
+	"Need to warm up...",
+	"My fingers are numb...",
+	"Shivering...",
+	"I've got goosebumps...",
+	"It's getting cold out here...",
+	"I can't warm up...",
+	"Cold's starting to bite...",
+	"I'm getting goosebumps...",
+	"It's freezing...",
+	"Cold seeping into my bones...",
+	"I need a jacket...",
+}
+local hypothermia_moderate = {
+	"I can't stop shaking...",
+	"So cold... can't feel my hands...",
+	"Need warmth... now...",
+	"My body won't stop trembling...",
+	"I'm freezing...",
+	"I can't stop shivering...",
+	"My teeth are chattering...",
+	"Too cold... my fingers won't bend...",
+	"I need a fire... now...",
+	"Can't feel my feet anymore...",
+	"Hypothermia's setting in...",
+	"I'm trembling so hard I can't aim...",
+	"Warmth... I need warmth...",
+}
+local hypothermia_severe = {
+	"I can't... feel anything...",
+	"So... tired... just want to sleep...",
+	"The cold is... numbing everything...",
+	"I'm so sleepy...",
+	"Can't... move...",
+	"I don't feel the cold anymore...",
+	"My hands are useless...",
+	"Everything's numb...",
+	"Just want to close my eyes...",
+	"I'm beyond shivering now...",
+	"The cold has taken my muscles...",
+	"I can't feel my fingers... or my toes...",
+	"Just a little sleep... just a little...",
+}
+local hypothermia_critical = {
+	"Everything's... going dark...",
+	"So... cold...",
+	"I can't... feel my body...",
+	"Sleep... just... sleep...",
+	"Am I... still breathing...?",
+	"The cold... it's taking me...",
+	"I can't... move my arms...",
+	"So... tired...",
+	"It's... peaceful... being this cold...",
+	"Can't... hold my eyes open...",
+	"The cold is... finished with me...",
+	"Nothing... left...",
+}
+local hyperthermia_mild = {
+	"It's too hot...",
+	"I'm sweating so much...",
+	"Need water... need shade...",
+	"I'm overheating...",
+	"Can't take this heat...",
+	"I'm drenched in sweat...",
+	"Feels like a sauna in here...",
+	"Too hot... way too hot...",
+	"I'm roasting...",
+	"I'm sweating buckets...",
+	"Too warm... way too warm...",
+	"The heat is starting to get to me...",
+	"I'm cooking in this...",
+}
+local hyperthermia_moderate = {
+	"I'm burning up...",
+	"Everything's spinning from the heat...",
+	"Can't... think straight... too hot...",
+	"I need to cool down...",
+	"My head is pounding from the heat...",
+	"Can't cool down... no matter what...",
+	"The heat is frying my brain...",
+	"I feel like I'm about to pass out from the heat...",
+	"My skin is burning...",
+	"The heatstroke is coming...",
+	"I can't think through the heat...",
+	"Everything is hot and sticky...",
+	"I'm gonna pass out from the heat...",
+}
+local hyperthermia_severe = {
+	"I can't... breathe in this heat...",
+	"Everything's... blurring...",
+	"Need... water...",
+	"I'm going to collapse...",
+	"I'm going down from this heat...",
+	"Everything's throbbing... it's so hot...",
+	"Need... to get out of the sun...",
+	"I can't take much more of this heat...",
+	"Everything's swimming in the heat...",
+	"The heat is cooking my brain...",
+	"I need to cool down... or I'm done...",
+	"Too hot... can't... breathe...",
+}
+local hyperthermia_critical = {
+	"Can't... take it...",
+	"Everything's... fading...",
+	"Too... hot...",
+	"The heat's... shutting me down...",
+	"I can't... it's too... hot...",
+	"Everything's... burning...",
+	"Going... to... collapse...",
+	"The heat... has taken me...",
+	"Can't... move... burning...",
+	"No more... heat...",
+	"Cool... I need... cool...",
+}
 function hg.organism.should_gain_fear(org)
 	return ((org.pain > 30) or (org.blood < 3000) or (org.bleed > 1))
 end
@@ -294,111 +524,6 @@ function hg.organism.AddBleedSource(org, kind, rate, organ, bone, wound)
 
 	return source
 end
-local internalbleed_phrases = {
-	"That's... that's blood I just vomited...",
-	"Oh, that's blood...",
-	"Fuck, I just puked blood...",
-	"Oh shit... I don't feel good...",
-}
-local about_to_puke = {
-	"I feel like I'm gonna puke any second now...",
-	"Not feeling good...",
-	"Gonna puke right now...",
-	"I want to vomit...",
-}
-local bloodloss_light = {
-	"I'm bleeding... I need to stop it...",
-	"Damn, that's gonna leave a mark...",
-	"I need to patch this up...",
-	"Blood's flowing... shit...",
-	"Gotta find something to wrap this with..."
-}
-local bloodloss_moderate = {
-	"I'm losing too much blood...",
-	"I can feel myself getting weaker...",
-	"The blood won't stop... I need help...",
-	"I'm getting dizzy from the blood loss...",
-	"Need to stop the bleeding... now..."
-}
-local bloodloss_severe = {
-	"I can't... I'm losing so much blood...",
-	"My vision is going dark...",
-	"I feel so cold... so weak...",
-	"Please... someone help me...",
-	"I can't feel my fingers..."
-}
-local bloodloss_critical = {
-	"I'm dying... I know it...",
-	"Everything's fading away...",
-	"I can't... hold on...",
-	"Tell them... I tried...",
-	"So... cold..."
-}
-local tachycardia_phrases = {
-	"My heart is racing...",
-	"I can feel my heartbeat in my ears...",
-	"Why is my heart pounding so hard...",
-	"I can hear my own heartbeat...",
-	"My chest is pounding..."
-}
-local cardiac_arrest_phrases = {
-	"My heart... it's stopping...",
-	"I can't... feel my pulse...",
-	"Something's wrong with my heart...",
-	"I'm fading... I can feel it..."
-}
-local hypothermia_mild = {
-	"I'm getting cold...",
-	"Chilly out here...",
-	"Need to warm up...",
-	"My fingers are numb...",
-	"Shivering..."
-}
-local hypothermia_moderate = {
-	"I can't stop shaking...",
-	"So cold... can't feel my hands...",
-	"Need warmth... now...",
-	"My body won't stop trembling...",
-	"I'm freezing..."
-}
-local hypothermia_severe = {
-	"I can't... feel anything...",
-	"So... tired... just want to sleep...",
-	"The cold is... numbing everything...",
-	"I'm so sleepy...",
-	"Can't... move..."
-}
-local hypothermia_critical = {
-	"Everything's... going dark...",
-	"So... cold...",
-	"I can't... feel my body...",
-	"Sleep... just... sleep..."
-}
-local hyperthermia_mild = {
-	"It's too hot...",
-	"I'm sweating so much...",
-	"Need water... need shade...",
-	"I'm overheating...",
-	"Can't take this heat..."
-}
-local hyperthermia_moderate = {
-	"I'm burning up...",
-	"Everything's spinning from the heat...",
-	"Can't... think straight... too hot...",
-	"I need to cool down...",
-	"My head is pounding from the heat..."
-}
-local hyperthermia_severe = {
-	"I can't... breathe in this heat...",
-	"Everything's... blurring...",
-	"Need... water...",
-	"I'm going to collapse..."
-}
-local hyperthermia_critical = {
-	"Can't... take it...",
-	"Everything's... fading...",
-	"Too... hot..."
-}
 local vecZero = Vector(0, 0, 0)
 local hold_wound_size_threshold = 4
 local hold_wound_pain_threshold = 72

@@ -66,7 +66,6 @@ function SWEP:ClearAttachments()
 		mount = {},
 		grip = {},
 		underbarrel = {},
-		gp25 = {},
 		magwell = {},
 	}
 
@@ -109,7 +108,6 @@ function hg.ClearAttachments(wep)
 		mount = {},
 		grip = {},
 		underbarrel = {},
-		gp25 = {},
 		magwell = {},
 	}
 
@@ -315,19 +313,10 @@ if CLIENT then
 	local vecZero = Vector()
 	local posa = Vector()
 	local newview = Vector()
-	function SWEP:GetCameraOverride(view, baseZoomPos)
-		local info
-		local hasGP25 = self.HasGP25 and self:HasGP25()
-		local gp25Active = hasGP25 and self:IsGP25Active()
-		if hasGP25 then
-			self.GP25AimWeight = LerpFT(self.GP25AimTransitionSpeed or 0.04, self.GP25AimWeight or 0, gp25Active and 1 or 0)
-		end
-		if gp25Active or hasGP25 and (self.GP25AimWeight or 0) > 0.001 then
-			info = self:GetAttachmentInfo("gp25", "gp25")
-		end
-		info = info or self:GetAttachmentInfo("sight")
+	function SWEP:GetCameraOverride(view)
+		local info = self:GetAttachmentInfo("sight")
 		local sight = info and info.offsetView
-		if not info and not (self.HasGP25 and self:HasGP25()) then
+		if not info then
 			info = self:GetAttachmentInfo("underbarrel")
 			sight = info and info.offsetView
 		end
@@ -345,9 +334,6 @@ if CLIENT then
 				pos = info.viewFunction(self,model,pos)
 			end
 			
-			if info[1] == "gp25" and hasGP25 and baseZoomPos then
-				return LerpVector(self.GP25AimWeight or 0, baseZoomPos, pos)
-			end
 			return pos
 		end
 		return false
@@ -974,47 +960,139 @@ if CLIENT then
 
 	local slotOrder = {"sight", "barrel", "underbarrel", "grip", "magwell"}
 	local slotNames = {
-		sight = "OPTICS",
+		sight = "SCOPES",
 		barrel = "MUZZLE",
 		underbarrel = "UNDERBARREL",
 		grip = "FOREGRIP",
 		magwell = "MAGAZINE"
 	}
 	local slotSides = {sight = 1, barrel = -1, underbarrel = -1, grip = -1, magwell = -1}
-	local slotRows = {sight = 0.3, underbarrel = 0.18, barrel = 0.36, grip = 0.54, magwell = 0.72}
+	local slotRows = {sight = 0.3, underbarrel = 0.14, barrel = 0.345, grip = 0.55, magwell = 0.755}
 	local slotAnchorBones = {
 		magwell = {"mod_magazine"}
 	}
 	-- Value from 0 to 1: 0.5 pauses inspect at 50%, 0.2 at 20%, and so on.
 	local inspectFreezeFraction = 0.3
-	local inspectOpenSound = "arc9_eft_shared/weap_handon.ogg"
-	local inspectCloseSound = "arc9_eft_shared/weapon_generic_spin6.ogg"
-	local menuAccent = Color(210, 225, 230)
-	local menuMuted = Color(145, 155, 160)
-	local menuPanelColor = Color(10, 13, 15, 238)
+	local fallbackAccent = Color(55, 55, 55)
+	local fallbackPanel = Color(10, 10, 10)
+	local menuText = Color(235, 235, 235)
+	local menuMuted = Color(145, 150, 152)
+	local attachmentLineColor = Color(255, 255, 255)
+	local attachmentFont = "Mx437 IBM PS/55 re."
+
+	local function getMenuAccent()
+		return hg.theme and hg.theme.c.accent or fallbackAccent
+	end
+
+	local function getMenuPanel(alpha)
+		local panel = hg.theme and hg.theme.c.panel or fallbackPanel
+		return Color(panel.r, panel.g, panel.b, alpha or 212)
+	end
+
+	local function drawAttachmentText(text, font, x, y, color, alignX, alignY)
+		draw.SimpleText(text, font, x + 1, y + 1, Color(10, 10, 10, 200), alignX, alignY)
+		draw.SimpleText(text, font, x, y, color, alignX, alignY)
+	end
+
+	local function drawSelectorCorners(x, y, w, h, color, alpha)
+		local inset = 4
+		local length = math.min(13, math.floor(math.min(w, h) * 0.24))
+		surface.SetDrawColor(color.r, color.g, color.b, alpha or 190)
+		surface.DrawRect(x + inset, y + inset, length, 1)
+		surface.DrawRect(x + inset, y + inset, 1, length)
+		surface.DrawRect(x + w - inset - length, y + h - inset - 1, length, 1)
+		surface.DrawRect(x + w - inset - 1, y + h - inset - length, 1, length)
+	end
+
+	local function drawAttachmentLink(x1, y1, x2, y2, x3, y3, color, phase)
+		surface.SetDrawColor(0, 0, 0, 190)
+		for offset = -1, 1 do
+			surface.DrawLine(x1 + offset, y1, x2 + offset, y2)
+			surface.DrawLine(x2, y2 + offset, x3, y3 + offset)
+		end
+
+		surface.SetDrawColor(color.r, color.g, color.b, 125)
+		surface.DrawLine(x1, y1, x2, y2)
+		surface.DrawLine(x2, y2, x3, y3)
+
+		local firstLength = math.sqrt((x2 - x1) ^ 2 + (y2 - y1) ^ 2)
+		local secondLength = math.sqrt((x3 - x2) ^ 2 + (y3 - y2) ^ 2)
+		local totalLength = firstLength + secondLength
+		if totalLength > 0 then
+			local distance = phase * totalLength
+			local pulseX, pulseY
+			if distance <= firstLength and firstLength > 0 then
+				local fraction = distance / firstLength
+				pulseX = Lerp(fraction, x1, x2)
+				pulseY = Lerp(fraction, y1, y2)
+			elseif secondLength > 0 then
+				local fraction = (distance - firstLength) / secondLength
+				pulseX = Lerp(fraction, x2, x3)
+				pulseY = Lerp(fraction, y2, y3)
+			end
+			if pulseX then
+				surface.SetDrawColor(color.r, color.g, color.b, 230)
+				surface.DrawRect(pulseX - 2, pulseY - 2, 4, 4)
+			end
+		end
+	end
+
+	local scrambleCharacters = {"?", "%", "#", "*", "!", "/", "+", "-"}
+	local function getScrambledText(text, startedAt, duration)
+		text = tostring(text or "")
+		local progress = math.Clamp((RealTime() - startedAt) / duration, 0, 1)
+		local revealed = math.floor(#text * progress)
+		if revealed >= #text then return text end
+
+		local output = string.sub(text, 1, revealed)
+		for index = revealed + 1, #text do
+			local character = string.sub(text, index, index)
+			output = output .. (character == " " and " " or scrambleCharacters[math.random(#scrambleCharacters)])
+		end
+		return output
+	end
 
 	surface.CreateFont("HG_Attachment_Title", {
-		font = "Roboto Condensed",
+		font = attachmentFont,
 		size = 28,
 		weight = 700,
+		antialias = true,
 		extended = true
 	})
 	surface.CreateFont("HG_Attachment_Label", {
-		font = "Roboto Condensed",
+		font = attachmentFont,
 		size = 17,
 		weight = 600,
+		antialias = true,
 		extended = true
 	})
 	surface.CreateFont("HG_Attachment_Small", {
-		font = "Roboto Condensed",
+		font = attachmentFont,
 		size = 13,
 		weight = 500,
+		antialias = true,
 		extended = true
 	})
 	surface.CreateFont("HG_Attachment_Card", {
-		font = "Roboto Condensed",
+		font = attachmentFont,
 		size = 11,
 		weight = 600,
+		antialias = true,
+		extended = true
+	})
+	surface.CreateFont("HG_Attachment_Micro", {
+		font = attachmentFont,
+		size = 10,
+		weight = 600,
+		antialias = true,
+		extended = true
+	})
+	surface.CreateFont("HG_Attachment_Count", {
+		font = "Courier Prime",
+		size = 13,
+		weight = 400,
+		italic = true,
+		antialias = true,
 		extended = true
 	})
 
@@ -1308,8 +1386,10 @@ if CLIENT then
 		frame.slotSections = {}
 		frame.pendingUntil = 0
 		frame.availableSlots = {}
+		frame.openedAt = RealTime()
+		frame.escapeWasDown = input.IsKeyDown(KEY_ESCAPE)
 		for _, placement in ipairs(slotOrder) do
-			if wep.availableAttachments[placement] or placement == "underbarrel" and wep.availableAttachments.gp25 then
+			if wep.availableAttachments[placement] then
 				frame.availableSlots[#frame.availableSlots + 1] = placement
 			end
 		end
@@ -1319,23 +1399,15 @@ if CLIENT then
 		if inspectSequence and IsValid(wm) and wm:LookupSequence(inspectSequence) >= 0 then
 			frame.inspectDuration = 5
 			frame.inspectStarted = CurTime()
-			wep.SuppressAnimEvents = true
 			wep:PlayAnim("inspect", frame.inspectDuration, false)
-			wep.SuppressAnimEvents = nil
-			wep:EmitSound(inspectOpenSound)
 			frame.inspectSequence = inspectSequence
 		end
 
 		function frame:Paint(w, h)
 			surface.SetDrawColor(0, 0, 0, 105)
 			surface.DrawRect(0, 0, w, h)
-			surface.SetDrawColor(0, 0, 0, 115)
-			surface.DrawRect(0, 0, w, h * 0.095)
-			surface.DrawRect(0, h * 0.91, w, h * 0.09)
 
-			draw.SimpleText("WEAPON MODDING", "HG_Attachment_Title", w * 0.045, h * 0.035, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-			draw.SimpleText(IsValid(self.weapon) and self.weapon.PrintName or "", "HG_Attachment_Label", w * 0.046, h * 0.069, menuMuted, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-			draw.SimpleText("LMB  EQUIP / REMOVE     RMB  DROP FROM INVENTORY", "HG_Attachment_Small", w * 0.5, h * 0.95, menuMuted, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+			drawAttachmentText("LMB  EQUIP / REMOVE     RMB  DROP FROM INVENTORY", "HG_Attachment_Small", w * 0.5, h * 0.95, menuMuted, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 
 			local view = hg.LastMainRenderView or render.GetViewSetup(true)
 			local minX, minY = 4, 4
@@ -1351,12 +1423,31 @@ if CLIENT then
 				local targetX = math.Clamp(bx + (button.side == 1 and 0 or button:GetWide()), minX, maxX)
 				local targetY = math.Clamp(by + button:GetTall() * 0.5, minY, maxY)
 				local elbowX = math.Clamp(targetX + (button.side == 1 and -45 or 45), minX, maxX)
-				surface.SetDrawColor(menuAccent)
-				surface.DrawLine(screenX, screenY, elbowX, targetY)
-				surface.DrawLine(elbowX, targetY, targetX, targetY)
-				surface.DrawRect(screenX - 3, screenY - 3, 6, 6)
+				drawAttachmentLink(screenX, screenY, elbowX, targetY, targetX, targetY, attachmentLineColor, (RealTime() * 0.7 + screenX * 0.001) % 1)
+				surface.SetDrawColor(0, 0, 0, 210)
+				surface.DrawOutlinedRect(screenX - 9, screenY - 9, 18, 18, 2)
+				drawSelectorCorners(screenX - 10, screenY - 10, 20, 20, attachmentLineColor, 220)
+				surface.SetDrawColor(255, 255, 255, 210)
+				surface.DrawLine(screenX - 4, screenY, screenX + 4, screenY)
+				surface.DrawLine(screenX, screenY - 4, screenX, screenY + 4)
+				surface.DrawRect(targetX - 2, targetY - 2, 4, 4)
 			end
 			render.SetScissorRect(0, 0, 0, 0, false)
+		end
+
+		function frame:UpdateSlotLayout(immediate)
+			local panelW, panelH = self:GetSize()
+			local marginX = math.Clamp(panelW * 0.035, 24, 68)
+			for placement, section in pairs(self.slotSections) do
+				if not IsValid(section) then continue end
+				local side = section.slotButton.side
+				local targetX = side == 1 and panelW - marginX - section:GetWide() or marginX
+				local targetY = math.Clamp(panelH * (slotRows[placement] or 0.5), 72, panelH - section:GetTall() - 48)
+				local openProgress = math.Clamp((RealTime() - self.openedAt - section.animationDelay) / 0.35, 0, 1)
+				openProgress = 1 - (1 - openProgress) ^ 3
+				local startX = side == 1 and panelW + 20 or -section:GetWide() - 20
+				section:SetPos(immediate and targetX or Lerp(openProgress, startX, targetX), targetY)
+			end
 		end
 
 		local closeButton = vgui.Create("DButton", frame)
@@ -1364,11 +1455,14 @@ if CLIENT then
 		closeButton:SetSize(42, 42)
 		closeButton:SetPos(ScrW() - 66, 24)
 		closeButton.Paint = function(self, w, h)
-			surface.SetDrawColor(self:IsHovered() and Color(80, 30, 30, 245) or menuPanelColor)
+			local accent = getMenuAccent()
+			self.hover = Lerp(FrameTime() * 12, self.hover or 0, self:IsHovered() and 1 or 0)
+			surface.SetDrawColor(getMenuPanel(132 + self.hover * 80))
 			surface.DrawRect(0, 0, w, h)
-			surface.SetDrawColor(menuAccent)
+			surface.SetDrawColor(accent.r, accent.g, accent.b, 70 + self.hover * 80)
 			surface.DrawOutlinedRect(0, 0, w, h, 1)
-			draw.SimpleText("X", "HG_Attachment_Label", w * 0.5, h * 0.5, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+			if self.hover > 0.05 then drawSelectorCorners(0, 0, w, h, accent, self.hover * 180) end
+			drawAttachmentText("X", "HG_Attachment_Label", w * 0.5, h * 0.5, menuText, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 		end
 		closeButton.DoClick = function() frame:Close() end
 
@@ -1475,7 +1569,7 @@ if CLIENT then
 		end
 
 		function frame:BuildSlotCards(placement)
-			if self.previewPlacement == placement or placement == "underbarrel" and self.previewPlacement == "gp25" then self:ClearPreview() end
+			if self.previewPlacement == placement then self:ClearPreview() end
 			local section = self.slotSections[placement]
 			if not IsValid(section) then return end
 			if IsValid(section.cards) then section.cards:Remove() end
@@ -1493,6 +1587,15 @@ if CLIENT then
 			section.cards = scroll
 			scroll:SetPos(0, hasSight and 72 or 44)
 			scroll:SetSize(section:GetWide(), section:GetTall() - (hasSight and 72 or 44))
+			local scrollBar = scroll:GetVBar()
+			scrollBar:SetWide(4)
+			scrollBar:SetHideButtons(true)
+			scrollBar.Paint = function(_, w, h) surface.SetDrawColor(10, 10, 10, 132) surface.DrawRect(0, 0, w, h) end
+			scrollBar.btnGrip.Paint = function(self, w, h)
+				local accent = getMenuAccent()
+				surface.SetDrawColor(accent.r, accent.g, accent.b, self:IsHovered() and 160 or 80)
+				surface.DrawRect(0, 0, w, h)
+			end
 			local cards = vgui.Create("DIconLayout", scroll)
 			cards:Dock(TOP)
 			cards:SetWide(section:GetWide() - 12)
@@ -1500,8 +1603,6 @@ if CLIENT then
 			cards:SetSpaceY(8)
 
 			local slot = self.weapon.availableAttachments[placement]
-			local cardPlacements = placement == "underbarrel" and self.weapon.availableAttachments.gp25
-				and {"underbarrel", "gp25"} or {placement}
 
 			if hasSight then
 				local slider = vgui.Create("DNumSlider", section)
@@ -1512,6 +1613,14 @@ if CLIENT then
 				slider:SetMinMax(-1, 3)
 				slider:SetDecimals(1)
 				slider:SetValue(math.Clamp(tonumber(installed.sightSlide) or 0, -1, 3))
+				if IsValid(slider.Label) then
+					slider.Label:SetFont("HG_Attachment_Small")
+					slider.Label:SetTextColor(menuText)
+				end
+				if IsValid(slider.TextArea) then
+					slider.TextArea:SetFont("HG_Attachment_Small")
+					slider.TextArea:SetTextColor(menuText)
+				end
 				slider.OnValueChanged = function(_, value)
 					value = math.Clamp(value, -1, 3)
 					installed.sightSlide = value
@@ -1520,35 +1629,34 @@ if CLIENT then
 				end
 			end
 
-			local function addCard(id, count, isInstalled, cardPlacement)
-				cardPlacement = cardPlacement or placement
-				local cardSlot = self.weapon.availableAttachments[cardPlacement]
-				local cannotRemove = cardSlot and cardSlot.cannotremove
-				local cardInstalled = attachments[cardPlacement]
-				local cardInstalledID = cardInstalled and cardInstalled[1]
+			local function addCard(id, count, isInstalled)
 				local card = cards:Add("DButton")
-				card:SetSize(68, 68)
+				card:SetSize(74, 74)
 				card:SetText("")
-				card.nameLines = getCardNameLines(id, 62)
+				card.nameLines = getCardNameLines(id, 68)
 				card.Paint = function(button, w, h)
-					local fill = isInstalled and Color(28, 48, 50, 248) or (button:IsHovered() and Color(31, 38, 41, 248) or Color(13, 17, 19, 242))
-					surface.SetDrawColor(fill)
+					local accent = getMenuAccent()
+					button.hover = Lerp(FrameTime() * 14, button.hover or 0, button:IsHovered() and 1 or 0)
+					surface.SetDrawColor(getMenuPanel(isInstalled and 235 or 205 + button.hover * 30))
 					surface.DrawRect(0, 0, w, h)
-					surface.SetDrawColor(isInstalled and Color(131, 210, 190) or menuAccent)
+					surface.SetDrawColor(accent.r, accent.g, accent.b, isInstalled and 190 or 65 + button.hover * 65)
 					surface.DrawOutlinedRect(0, 0, w, h, isInstalled and 2 or 1)
+					if isInstalled or button.hover > 0.05 then
+						drawSelectorCorners(0, 0, w, h, accent, isInstalled and 185 or button.hover * 150)
+					end
 					if isInstalled then
-						draw.SimpleText("ON", "HG_Attachment_Small", 5, 4, Color(131, 210, 190), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+						drawAttachmentText("ACTIVE", "HG_Attachment_Micro", 5, 5, menuMuted, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 					elseif count and count > 1 then
-						draw.SimpleText("x" .. count, "HG_Attachment_Small", w - 5, 4, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
+						drawAttachmentText("x" .. count, "HG_Attachment_Micro", w - 5, 5, menuMuted, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
 					end
 					local lineCount = #button.nameLines
 					for lineIndex, line in ipairs(button.nameLines) do
-						draw.SimpleText(line, "HG_Attachment_Card", w * 0.5, h - 3 - (lineCount - lineIndex) * 10, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM)
+						drawAttachmentText(line, "HG_Attachment_Card", w * 0.5, h - 4 - (lineCount - lineIndex) * 10, menuText, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM)
 					end
 				end
 				card.OnCursorEntered = function(button)
 					frame.previewCard = button
-					frame:SetPreview(cardPlacement, id)
+					frame:SetPreview(placement, id)
 				end
 				card.OnCursorExited = function(button)
 					if frame.previewCard != button then return end
@@ -1557,65 +1665,54 @@ if CLIENT then
 				end
 
 				local iconPath = hg.attachmentsIcons[id]
-				if isstring(iconPath) and iconPath ~= "" then
+				if iconPath then
 					local icon = vgui.Create("DImage", card)
 					icon:SetImage(iconPath)
-					icon:SetSize(42, 30)
-					icon:SetPos(13, 10)
+					icon:SetKeepAspect(true)
+					icon:SetSize(46, 30)
+					icon:SetPos(22, 10)
 					icon:SetMouseInputEnabled(false)
 				end
 
 				if isInstalled then
-					card:SetTooltip(cannotRemove and "This module cannot be removed" or "LMB: remove")
+					card:SetTooltip(slot.cannotremove and "This module cannot be removed" or "LMB: remove")
 					card.DoClick = function()
-						if not cannotRemove then frame:RunAttachmentAction("remove", id) end
+						if not slot.cannotremove then frame:RunAttachmentAction("remove", id) end
 					end
 				else
 					card:SetTooltip("LMB: equip  |  RMB: drop")
 					card.DoClick = function()
-						if not cardInstalledID or cardInstalledID == "empty" then frame:RunAttachmentAction("add", id) end
+						if not installedID or installedID == "empty" then frame:RunAttachmentAction("add", id) end
 					end
 					card.DoRightClick = function() frame:RunAttachmentAction("drop", id) end
 				end
 			end
 
-			local installedCount = 0
-			for _, cardPlacement in ipairs(cardPlacements) do
-				local cardInstalled = attachments[cardPlacement]
-				local cardInstalledID = cardInstalled and cardInstalled[1]
-				if cardInstalledID and cardInstalledID != "empty" then
-					installedCount = installedCount + 1
-					addCard(cardInstalledID, nil, true, cardPlacement)
-				end
-			end
+			if installedID and installedID != "empty" then addCard(installedID, nil, true) end
 
 			local choices = {}
 			local choiceIDs = {}
 			local inventory = getInventoryCounts()
 			local sandbox = engine.ActiveGamemode() == "sandbox"
-			for _, cardPlacement in ipairs(cardPlacements) do
-				local cardInstalled = attachments[cardPlacement]
-				local cardInstalledID = cardInstalled and cardInstalled[1]
-				local candidates = sandbox and hg.attachments[cardPlacement] or inventory
-				for id in pairs(candidates or {}) do
-					local candidatePlacement, definition = getAttachmentDefinition(id)
-					if definition and not definition.standard and id != cardInstalledID and candidatePlacement == cardPlacement and isCompatible(self.weapon, cardPlacement, id, definition) then
-						choices[#choices + 1] = {id = id, count = sandbox and nil or inventory[id], placement = cardPlacement}
-						choiceIDs[id] = true
-					end
+			local candidates = sandbox and hg.attachments[placement] or inventory
+			for id in pairs(candidates or {}) do
+				local candidatePlacement, definition = getAttachmentDefinition(id)
+				if not definition.standard and candidatePlacement == placement and isCompatible(self.weapon, placement, id, definition) then
+					choices[#choices + 1] = {id = id, count = sandbox and nil or inventory[id]}
+					choiceIDs[id] = true
 				end
-				for id, definition in pairs(hg.attachments[cardPlacement] or {}) do
-					if definition.standard and id != cardInstalledID and not choiceIDs[id] and isCompatible(self.weapon, cardPlacement, id, definition) then
-						choices[#choices + 1] = {id = id, placement = cardPlacement}
-					end
+			end
+			for id, definition in pairs(hg.attachments[placement] or {}) do
+				if definition.standard and id != installedID and not choiceIDs[id] and isCompatible(self.weapon, placement, id, definition) then
+					choices[#choices + 1] = {id = id}
 				end
 			end
 			table.sort(choices, function(a, b)
 				return (hg.attachmentslaunguage[a.id] or a.id) < (hg.attachmentslaunguage[b.id] or b.id)
 			end)
-			for _, choice in ipairs(choices) do addCard(choice.id, choice.count, false, choice.placement) end
+			for _, choice in ipairs(choices) do addCard(choice.id, choice.count, false) end
 			local slotButton = self.slotButtons[placement]
-			if IsValid(slotButton) then slotButton.moduleCount = #choices + installedCount end
+			if IsValid(slotButton) then slotButton.moduleCount = #choices + (installedID and installedID != "empty" and 1 or 0) end
 
 			cards:InvalidateLayout(true)
 			cards:SizeToChildren(false, true)
@@ -1635,26 +1732,44 @@ if CLIENT then
 			local section = vgui.Create("DPanel", frame)
 			frame.slotSections[placement] = section
 			local button = vgui.Create("DPanel", section)
+			section.slotButton = button
+			section.animationDelay = (index - 1) * 0.07
+			section.scrambleStarted = frame.openedAt + section.animationDelay
 			frame.slotButtons[placement] = button
 			button.section = section
 			button.side = slotSides[placement] or (index % 2 == 0 and -1 or 1)
-			local sectionWidth = math.Clamp(ScrW() * 0.23, 280, 440)
-			local sectionHeight = 190
-			local screenMargin = math.Clamp(ScrW() * 0.04, 24, 76)
-			local x = button.side == 1 and ScrW() - screenMargin - sectionWidth or screenMargin
-			local y = ScrH() * (slotRows[placement] or (0.2 + index * 0.12))
+			local sectionWidth = math.Clamp(ScrW() * 0.235, 290, 450)
+			local sectionHeight = math.Clamp(ScrH() * 0.195, 185, 225)
 			section:SetSize(sectionWidth, sectionHeight)
-			section:SetPos(x, y)
-			section.Paint = function() end
+			section:SetPos(button.side == 1 and ScrW() + 20 or -sectionWidth - 20, ScrH() * 0.5)
+			section.Paint = function(_, w, h)
+				local accent = getMenuAccent()
+				surface.SetDrawColor(0, 0, 0, 100)
+				surface.DrawRect(4, 4, w, h)
+				surface.SetDrawColor(getMenuPanel(218))
+				surface.DrawRect(0, 0, w, h)
+				surface.SetDrawColor(255, 255, 255, 9)
+				surface.SetMaterial(gradient_d)
+				surface.DrawTexturedRect(0, 38, w, h - 38)
+				surface.SetDrawColor(accent.r, accent.g, accent.b, 52)
+				surface.DrawOutlinedRect(0, 0, w, h, 1)
+				surface.SetDrawColor(255, 255, 255, 16)
+				surface.DrawOutlinedRect(2, 2, w - 4, h - 4, 1)
+			end
 			button:SetSize(sectionWidth, 38)
 			button:SetPos(0, 0)
 			button.Paint = function(self, w, h)
-				surface.SetDrawColor(menuPanelColor)
+				local accent = getMenuAccent()
+				surface.SetDrawColor(getMenuPanel(240))
 				surface.DrawRect(0, 0, w, h)
-				surface.SetDrawColor(menuAccent)
-				surface.DrawOutlinedRect(0, 0, w, h, 1)
-				draw.SimpleText(slotNames[placement] or string.upper(placement), "HG_Attachment_Label", 10, h * 0.5, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-				draw.SimpleText((self.moduleCount or 0) .. " MODULES", "HG_Attachment_Small", w - 10, h * 0.5, menuMuted, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+				surface.SetDrawColor(accent.r, accent.g, accent.b, 75)
+				surface.DrawRect(0, h - 1, w, 1)
+				surface.DrawRect(self.side == 1 and 0 or w - 3, 0, 3, h)
+				drawSelectorCorners(0, 0, w, h, accent, 130)
+				local title = slotNames[placement] or string.upper(placement)
+				title = getScrambledText(title, section.scrambleStarted, 0.65)
+				drawAttachmentText(title, "HG_Attachment_Label", 10, h * 0.5, menuText, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+				drawAttachmentText((self.moduleCount or 0) .. " MODULES", "HG_Attachment_Count", w - 10, h * 0.5, menuMuted, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
 			end
 		end
 
@@ -1676,6 +1791,13 @@ if CLIENT then
 				return
 			end
 
+			local escapeDown = input.IsKeyDown(KEY_ESCAPE)
+			if escapeDown and not self.escapeWasDown then
+				self:Close()
+				return
+			end
+			self.escapeWasDown = escapeDown
+
 			if self.inspectSequence and self.weapon.seq == self.inspectSequence and CurTime() >= self.inspectStarted + self.inspectDuration * inspectFreezeFraction then
 				self.weapon.animtime = CurTime() + self.inspectDuration * (1 - inspectFreezeFraction)
 				self.weapon.animspeed = self.inspectDuration
@@ -1684,6 +1806,7 @@ if CLIENT then
 				local model = self.weapon:GetWM()
 				if IsValid(model) then model:SetCycle(inspectFreezeFraction) end
 			end
+			self:UpdateSlotLayout(false)
 			updatePreviewTransform(self)
 			self:UpdateManagedMagazineVisibility()
 			if self.pendingSightSlideAt and RealTime() >= self.pendingSightSlideAt then self:SendPendingSightSlide() end
@@ -1700,7 +1823,6 @@ if CLIENT then
 			if hg.attachmentsMenuPanel == self then hg.attachmentsMenuPanel = nil end
 			if IsValid(self.weapon) and self.inspectSequence and self.weapon.seq == self.inspectSequence and not self.weapon.reload then
 				local weapon = self.weapon
-				weapon:EmitSound(inspectCloseSound)
 				local model = weapon:GetWM()
 				if IsValid(model) then model:SetCycle(inspectFreezeFraction) end
 				weapon.animtime = CurTime() + inspectFreezeFraction * self.inspectDuration

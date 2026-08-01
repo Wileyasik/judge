@@ -352,6 +352,30 @@ end
 
 if SERVER then return end
 
+local hg_vmtilt = CreateClientConVar("hg_vmtilt", "1", true, false, "Enable first-person viewmodel tilt", 0, 1)
+local hg_vmtilt_angle = CreateClientConVar("hg_vmtilt_angle", "2.5", true, false, "Max viewmodel tilt roll (degrees)", 0, 12)
+local hg_vmtilt_shift = CreateClientConVar("hg_vmtilt_shift", "1.25", true, false, "Max viewmodel lateral shift on tilt", 0, 6)
+local hg_vmtilt_speed = CreateClientConVar("hg_vmtilt_speed", "8", true, false, "Viewmodel tilt smoothing speed", 1, 30)
+local hg_vmtilt_ads = CreateClientConVar("hg_vmtilt_ads", "0.5", true, false, "Viewmodel tilt scale while aiming", 0, 1)
+
+function SWEP:GetWeaponTilt(dtime)
+	local owner = self:GetOwner()
+	local target = 0
+
+	if hg_vmtilt:GetBool() and IsValid(owner) and owner:IsPlayer() and owner == LocalPlayer() and not self:IsResting() then
+		local left = owner:KeyDown(IN_MOVELEFT)
+		local right = owner:KeyDown(IN_MOVERIGHT)
+		target = (left and -1 or 0) + (right and 1 or 0)
+	end
+
+	local speed = hg_vmtilt_speed:GetFloat()
+	self.tiltLerp = Lerp(math.Clamp(dtime * speed, 0, 1), self.tiltLerp or 0, target)
+
+	local adsScale = self:IsZoom() and hg_vmtilt_ads:GetFloat() or 1
+	local amount = self.tiltLerp * adsScale
+	return amount * hg_vmtilt_angle:GetFloat(), amount * hg_vmtilt_shift:GetFloat()
+end
+
 local function remove(self, model)
     model:Remove()
 end
@@ -574,8 +598,9 @@ function SWEP:CreateWorldModel()
 		end
 		local swep = self
 		function model:GetShellColor()
-			local ammotype = hg.ammotypeshuy[swep.Primary.Ammo].BulletSettings
-			return ammotype.ShellColor or color_white
+			local ammotype = hg.ammotypeshuy[swep.Primary.Ammo]
+			local ammoSettings = ammotype and ammotype.BulletSettings
+			return ammoSettings and ammoSettings.ShellColor or color_white
 		end
 
 		self:PlayAnim("idle", 1, false)
@@ -737,6 +762,16 @@ function SWEP:WorldModel_Transform(bNoApply, bNoAdditional, model)
 			renderPos:Add(newAng:Forward() * -4.5 * (1 - readiness))
 			renderPos:Add(newAng:Up() * -3 * (1 - readiness))
 			renderAng = laggedAng
+		end
+
+		if CLIENT and self:IsLocal() and not bNoAdditional then
+			local tiltRoll, tiltShift = self:GetWeaponTilt(dtime)
+			if tiltShift ~= 0 then
+				renderPos:Add(renderAng:Right() * tiltShift)
+			end
+			if tiltRoll ~= 0 then
+				renderAng:RotateAroundAxis(renderAng:Forward(), tiltRoll)
+			end
 		end
 
 		self.visualDesiredPos, self.visualDesiredAng = renderPos, renderAng
@@ -908,7 +943,7 @@ function SWEP:DrawWorldModel()
 	if CLIENT then
 		if self.Primary.Next + 1 < CurTime() then 
 			self.dmgStack = 0
-			self.dmgStack2 = Lerp(hg.lerpFrameTime2(0.001,dtime), self.dmgStack2, 0)
+			self.dmgStack2 = Lerp(hg.lerpFrameTime(0.001,dtime), self.dmgStack2, 0)
 		end
 	end
 

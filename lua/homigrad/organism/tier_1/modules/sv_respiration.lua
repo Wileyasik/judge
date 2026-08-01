@@ -105,31 +105,67 @@ local lowoxy = {
 	"There's not enough oxygen... I can't hold much longer...",
 	"I really need some fresh air...",
 	"I'm gasping for air...",
-	"Need to breathe air... or I'm gonna faint right here..."
+	"Need to breathe air... or I'm gonna faint right here...",
+	"I'm running out of air...",
+	"Can't get enough oxygen...",
+	"I need air... I need air now...",
+	"Feels like my lungs are burning...",
+	"I'm one breath away from passing out...",
+	"The air is getting thin...",
+	"Can't catch my breath...",
+	"My chest is screaming for air...",
 }
 local lowoxy_critical = {
 	"Can't... breathe...",
 	"Air... please...",
 	"I'm suffocating...",
 	"Help... I can't...",
-	"Everything's... going dark..."
+	"Everything's... going dark...",
+	"I can't... catch my breath...",
+	"No... more... air...",
+	"Drowning... on dry land...",
+	"Please... please... air...",
+	"I'm... done... no... air...",
+	"Blacking... out...",
+	"Help... me... breathe...",
+	"Air... please... just... air...",
 }
 local hypoxia_symptoms = {
 	"My head is spinning... I need air...",
 	"I feel lightheaded...",
 	"Everything's getting fuzzy...",
 	"I can't think straight... need oxygen...",
-	"My fingers are tingling..."
+	"My fingers are tingling...",
+	"My ears are ringing... I need oxygen...",
+	"I can't feel my hands anymore...",
+	"Everything's going numb...",
+	"My vision's closing in...",
+	"My brain is starving for oxygen...",
+	"I'm getting tunnel vision...",
+	"Everything sounds far away...",
+	"My body feels so heavy...",
 }
 local not_enough_intake = {
 	"I need to breathe...",
 	"I'm struggling to breathe...",
+	"Every breath is a struggle...",
+	"I'm not getting enough air...",
+	"It's so hard to breathe...",
+	"I can't get a full breath...",
+	"Not enough air getting in...",
 }
 local drop_mask = {
 	"I can't breathe in this mask... I need to take it off.",
 	"Drop the mask, it's not worth it...",
 	"It's fucking disgusting... and I surely can't breathe in this...",
 	"Fucking stinks... Gotta take this mask off...",
+	"I'm suffocating under this thing...",
+	"This mask is gonna kill me...",
+	"Get this damn mask off me...",
+	"I can't get any air through this...",
+	"Take this thing off... I'm suffocating...",
+	"The mask is choking me...",
+	"Off... get it off...",
 }
 local pneumothorax_phrases = {
 	"I can feel something filling my lungs.",
@@ -137,13 +173,29 @@ local pneumothorax_phrases = {
 	"I'm really struggling to breathe.",
 	"My chest feels tight... something's wrong.",
 	"Every breath hurts...",
-	"I can't get enough air in..."
+	"I can't get enough air in...",
+	"Something's collapsed in my chest...",
+	"There's a sharp pain when I inhale...",
+	"My lung... I think my lung...",
+	"I can hear air where it shouldn't be...",
+	"There's a bubbling feeling in my chest...",
+	"My lung's collapsing... I think...",
+	"Breathing in is pure agony...",
+	"The air is trapped in my chest...",
 }
 local choking_phrases = {
 	"I'm choking!",
 	"Can't... breathe... something's stuck...",
 	"I can't get air in!",
-	"Help me... I'm choking!"
+	"Help me... I'm choking!",
+	"I can't breathe... something's blocking me...",
+	"I'm choking... please...",
+	"Air... I can't get any air...",
+	"Something's stuck in my throat...",
+	"I can't swallow... something's caught...",
+	"Please... please... I'm choking...",
+	"Can't breathe... can't breathe...",
+	"Get it out... get it out of me...",
 }
 local drugged = {
 	"Ohhh hohoohoooo Ie-like it.....",
@@ -155,26 +207,58 @@ local drugged = {
 	"Why am I here even?.. wWhatever whuhhh heh",
 	"Whoa re you? Gett outtaheree...",
 	"Don't want anything else... this is pERRRfect!..",
+	"Whoooaaa evEErything is moooovin.....",
+	"I feel lihke I'm floaaatin mannn...",
+	"This ishhh the beeeest feeeling EVERRR..",
+	"Whaat was I... doin...? donnn't even caaare...",
+	"I'm on top of the woooorld right now....",
+	"EVERYTHING isss sooo niiice......",
+	"Who am I... what am I... I luhhve this...",
+	"Best feeling... beessst... evERRR...",
 }
 local hunger_phrases = {
 	"My stomach is growling...",
 	"I need to eat something...",
 	"Haven't eaten in a while...",
 	"I'm getting hungry...",
-	"Need to find some food..."
+	"Need to find some food...",
+	"I could eat a horse right now...",
+	"My stomach won't stop growling...",
+	"When did I last eat...?",
+	"I'm craving something to eat...",
+	"My stomach thinks my throat's been cut...",
+	"Food... I need food...",
+	"I'm so hungry I could eat anything...",
+	"Rations... where are the rations...?",
 }
 local starvation_phrases = {
 	"I'm starving... I need food...",
 	"My body is eating itself...",
 	"I feel so weak from hunger...",
 	"Can't... think... need calories...",
-	"I'm dying of hunger..."
+	"I'm dying of hunger...",
+	"I'm wasting away... I need food...",
+	"Every step takes all my strength...",
+	"Please... something to eat...",
+	"My stomach is eating itself...",
+	"I'm wasting to nothing...",
+	"Can't remember the last meal...",
+	"The hunger is all I can feel...",
+	"I need calories... anything...",
 }
 local starvation_critical = {
 	"Can't... move... no energy...",
 	"Everything's... fading...",
 	"So... hungry...",
-	"I can't... hold on..."
+	"I can't... hold on...",
+	"Food... just... a bite...",
+	"I can't... stand... need energy...",
+	"So... weak... so... hungry...",
+	"I'm... fading...",
+	"Just... a bite... of anything...",
+	"Too... weak... to stand...",
+	"Food... please...",
+	"The hunger... is taking me...",
 }
 local bit_band,util_PointContents = bit.band,util.PointContents
 local color_white, color_red, color_red2, color_red3 = Color(255, 255, 255), Color(255, 0, 0), Color(200, 55, 55), Color(255, 100, 100)

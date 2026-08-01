@@ -267,6 +267,11 @@ hg.Appearance.FacemapsModels = hg.Appearance.FacemapsModels or {}
 local function AddFacemap(matOverride, strName, matMaterial, model)
 	hg.Appearance.FacemapsSlots[matOverride] = hg.Appearance.FacemapsSlots[matOverride] or {}
 	local tbl = hg.Appearance.FacemapsSlots[matOverride]
+	local faceNumber = tonumber(string.match(strName, "^Face (%d+)$"))
+	if faceNumber and faceNumber >= 10 and faceNumber <= 16 then
+		tbl[strName] = nil
+		return
+	end
 	tbl[strName] = matMaterial
 	if model then hg.Appearance.FacemapsModels[model] = matOverride end
 end

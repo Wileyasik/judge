@@ -63,7 +63,27 @@ local concussion_phrases = {
     "The noise is killing me...",
     "I can't stand the light...",
     "My head's about to explode...",
-    "Everything's muffled..."
+    "Everything's muffled...",
+    "My brain feels like jelly...",
+    "I can't stop swaying...",
+    "Why is my head ringing...?",
+    "I keep seeing spots...",
+    "The room won't stop moving...",
+    "I feel like my ears are full of water...",
+    "My thoughts are all scattered...",
+    "I don't even remember getting here...",
+    "Everything keeps tilting sideways...",
+    "I'm gonna be sick from the spinning...",
+    "I keep forgetting what I was doing...",
+    "My head feels full of cotton...",
+    "Why is the floor moving...?",
+    "I can't track straight lines anymore...",
+    "Every sound is echoing in my skull...",
+    "My balance is completely gone...",
+    "I feel like my brain is knocking around in there...",
+    "The ringing won't stop...",
+    "I'm walking like a drunk...",
+    "Did I hit my head...? Oh... yeah...",
 }
 local concussion_phrases_severe = {
     "I think I'm going to pass out...",
@@ -85,7 +105,21 @@ local concussion_phrases_severe = {
     "I think I'm dying...",
     "Everything's spinning too fast...",
     "I can't move my arms...",
-    "Get this noise out of my head..."
+    "Get this noise out of my head...",
+    "I'm going under... I can feel it...",
+    "The black's creeping in...",
+    "I can't hold onto my thoughts...",
+    "My head is full of static...",
+    "I think I hit my head too hard...",
+    "Help... I can't feel my face...",
+    "Everything's breaking apart...",
+    "I'm done... I'm done...",
+    "I can't feel my limbs... which one is which...",
+    "The world is made of static...",
+    "I'm sinking... someone pull me up...",
+    "My head is a bomb about to go off...",
+    "I'm... I'm falling apart...",
+    "Everything's white noise...",
 }
 local concussion_phrases_vomit = {
     "I'm gonna be sick...",
@@ -101,14 +135,33 @@ local concussion_phrases_vomit = {
     "Bleargh...",
     "I feel like puking my guts out...",
     "I'm gonna be sick all over the floor...",
-    "My stomach's cramping so bad..."
+    "My stomach's cramping so bad...",
+    "Here comes round two...",
+    "Blehh... I can't stop...",
+    "My stomach is doing flips...",
+    "I'm gonna spray the floor...",
+    "The puke won't stop coming...",
+    "Bleargh... bleargh...",
+    "Round three... blehh...",
+    "I'm all puked out... I hope...",
+    "My stomach is trying to escape...",
+    "Blehh... god... make it stop...",
+    "I'm gonna paint the walls...",
 }
 local concussion_phrases_dryheave = {
     "Hkk... I can't... nothing's coming out...",
     "Uugh... dry heaving... my chest hurts...",
     "I'm trying to puke but... nothing...",
     "Hkk... hkk... god... my throat...",
-    "Can't even throw up properly..."
+    "Can't even throw up properly...",
+    "Hkk... there's nothing left...",
+    "My chest is on fire from dry heaving...",
+    "Hkk... hkk... why won't it stop...?",
+    "I want to puke but my body won't let me...",
+    "Hkk... my abs are killing me...",
+    "Nothing... there's nothing left... hkk...",
+    "I keep dry heaving... it hurts...",
+    "Ughh... heaving... but empty...",
 }
 local concussion_phrases_cognitive = {
     "What was I doing...?",
@@ -120,21 +173,43 @@ local concussion_phrases_cognitive = {
     "I can't concentrate...",
     "My mind feels foggy...",
     "I'm so confused...",
-    "I can't process anything..."
+    "I can't process anything...",
+    "Wait... what was I...?",
+    "I forget... I keep forgetting...",
+    "Nothing makes sense right now...",
+    "My memory's full of holes...",
+    "I can't even finish a thought...",
+    "Who am I talking to...? Wait...",
+    "What was I saying...? I lost it...",
+    "I can't remember my own name for a second...",
+    "The words... they're not coming...",
+    "I keep zoning out...",
 }
 local concussion_phrases_photophobia = {
     "The light... it hurts my eyes...",
     "Everything's too bright...",
     "I can't stand the light...",
     "My eyes are burning...",
-    "Please... turn off the lights..."
+    "Please... turn off the lights...",
+    "The light is stabbing my eyes...",
+    "Any light is too much right now...",
+    "Shut the blinds... please...",
+    "Dark... I need it dark...",
+    "The light hurts my brain...",
+    "Turn it off... turn it off...",
 }
 local concussion_phrases_phonophobia = {
     "Everything's too loud...",
     "The noise is unbearable...",
     "My ears... stop the noise...",
     "I can't stand any more sound...",
-    "Even breathing sounds too loud..."
+    "Even breathing sounds too loud...",
+    "Quiet... please be quiet...",
+    "Every sound is tearing my head apart...",
+    "Stop talking... it hurts...",
+    "Shh... shh... too loud...",
+    "Why is everyone shouting...?",
+    "Whisper... please whisper...",
 }
 local concussion_phrases_headache = {
     "My head is pounding...",
@@ -142,14 +217,30 @@ local concussion_phrases_headache = {
     "It feels like my head's splitting...",
     "My temples are throbbing...",
     "The headache won't stop...",
-    "Every heartbeat makes my head hurt more..."
+    "Every heartbeat makes my head hurt more...",
+    "My head is going to split in two...",
+    "It feels like a spike in my skull...",
+    "The throbbing won't let up...",
+    "My brain is pounding against my skull...",
+    "There's a hammer in my head...",
+    "The pain is pulsing with my heartbeat...",
+    "I think my skull is cracked...",
+    "Every blink sends a shock through my head...",
 }
 local concussion_phrases_fatigue = {
     "I'm so tired...",
     "I just want to sleep...",
     "Can barely keep my eyes open...",
     "So exhausted...",
-    "I need to rest... I can't go on..."
+    "I need to rest... I can't go on...",
+    "I can't keep my head up...",
+    "Sleep... I just need sleep...",
+    "My eyelids are made of lead...",
+    "I'm running on fumes...",
+    "I could sleep for a week...",
+    "My head is too heavy to hold up...",
+    "Just five more minutes...",
+    "Sleep is pulling me down...",
 }
 
 module[1] = function(org)
@@ -597,12 +688,24 @@ end
 local combo_hemohypoxia_phrases = {
 	"I can't breathe... and I'm freezing...",
 	"I'm fading out...",
-	"Everything is going dark..."
+	"Everything is going dark...",
+	"Cold... and no air... I'm done...",
+	"I can't feel my body anymore...",
+	"The world's shutting down...",
+	"No air... no blood... nothing...",
+	"I'm shutting down piece by piece...",
+	"Too cold... too breathless... I'm gone...",
 }
 local combo_painhypovolemia_phrases = {
 	"Too much pain... I can't move...",
 	"I feel weak and dizzy...",
-	"I might collapse..."
+	"I might collapse...",
+	"The pain and the bleeding... I'm falling...",
+	"I can't stay upright...",
+	"I'm going down... someone help...",
+	"The pain is draining me... literally...",
+	"I'm collapsing under all of it...",
+	"Someone... please... I'm empty...",
 }
 module[2] = function(owner, org, timeValue)
 	if not org.alive then

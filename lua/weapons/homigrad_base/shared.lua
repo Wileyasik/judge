@@ -586,8 +586,9 @@ SWEP.ShootAnimMul = 2
 SWEP.shot2 = 0
 SWEP.shot = 0
 function SWEP:PrimaryShoot()
-	local ammotype = hg.ammotypeshuy[self.Primary.Ammo].BulletSettings
-	if ammotype.IsBlank then
+	local ammotype = hg.ammotypeshuy[self.Primary.Ammo]
+	local ammoSettings = ammotype and ammotype.BulletSettings
+	if ammoSettings and ammoSettings.IsBlank then
 		self.dwr_reverbDisable = nil
 		self.shooanim = self.ShootAnimMul
 
@@ -1016,7 +1017,7 @@ if CLIENT then
 
 	function SWEP:DrawHUD()
 		if not IsValid(self:GetOwner()) then return end
-		local ammotype = (hg.ammotypeshuy[self.Primary.Ammo].BulletSettings and hg.ammotypeshuy[self.Primary.Ammo].BulletSettings.Icon) or matPistolAmmo
+		local ammotype = hg.ammotypeshuy[self.Primary.Ammo] and hg.ammotypeshuy[self.Primary.Ammo].BulletSettings and hg.ammotypeshuy[self.Primary.Ammo].BulletSettings.Icon or matPistolAmmo
 		self.DrawAmmoMetods[self.AmmoDrawMetod](self,ammotype)
 		
 		self.isscoping = false

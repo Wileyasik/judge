@@ -710,7 +710,8 @@ function SWEP:FireBullet()
     	ent = hg.GetCurrentCharacter(owner)
 	end
 
-    local ammotype = hg.ammotypeshuy[self.Primary.Ammo].BulletSettings
+    local ammotype = hg.ammotypeshuy[self.Primary.Ammo]
+    local ammoSettings = ammotype and ammotype.BulletSettings
     
 	if SERVER and !timer.Exists("ShootWeaponAfterDeath"..self:EntIndex()) then
 		timer.Create("ShootWeaponAfterDeath"..self:EntIndex(), 0.1, 1, function()
@@ -1035,13 +1036,14 @@ if CLIENT then
 		end
 		if self.EjectAng then _,ang = LocalToWorld(vecZero,self.EjectAng,vecZero,ang) end
 
-		local ammotype = hg.ammotypeshuy[self.Primary.Ammo].BulletSettings
+		local ammotype = hg.ammotypeshuy[self.Primary.Ammo]
+		local ammoSettings = ammotype and ammotype.BulletSettings
 		local ejectAng = attmuzle.Ang
 		if self.EjectAddAng then
 			_,ejectAng = LocalToWorld(vecZero,self.EjectAddAng,vecZero,attmuzle.Ang) 
 		end
 		if self.CustomSecShell then self:MakeShell(self.CustomSecShell, pos, ejectAng, ang:Forward() * 75) end
-		if ammotype.Shell or self.CustomShell then self:MakeShell(ammotype.Shell or self.CustomShell, pos, ejectAng, ang:Forward() * 105) return end
+		if ammoSettings and (ammoSettings.Shell or self.CustomShell) then self:MakeShell(ammoSettings.Shell or self.CustomShell, pos, ejectAng, ang:Forward() * 105) return end
 		local effectdata = EffectData()
 		effectdata:SetOrigin(pos)
 		effectdata:SetAngles(ang)

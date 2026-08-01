@@ -21,6 +21,16 @@ local rehab_phrases = {
 	"I still feel dizzy after waking up.",
 	"Not steady yet... need a few seconds.",
 	"I'm conscious, but not recovered.",
+	"Give me a second... I'm still coming around...",
+	"Everything still feels distant...",
+	"I was out cold... how long?",
+	"Hold on... the room is still spinning...",
+	"Just... let me catch my breath...",
+	"How long was I out...?",
+	"Give me a hand... I'm still shaky...",
+	"I'm back... barely...",
+	"The world's still tilting...",
+	"Don't move me yet... I'll black out...",
 }
 local function get_role(ply)
 	if not IsValid(ply) then return "none" end

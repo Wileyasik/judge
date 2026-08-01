@@ -304,6 +304,9 @@ if CLIENT then
 		if !Tr then return end
 		local Size = math.max(math.min(1 - Tr.Fraction, 0.5), 0.1)
 		local x, y = Tr.HitPos:ToScreen().x, Tr.HitPos:ToScreen().y
+		local lerpthing = 1
+		local colWhite = Color(255, 255, 255, 255)
+		local colGray = Color(200, 200, 200, 200)
 		if Tr.Hit then
 			lerpthing = Lerp(0.1, lerpthing, 1)
 			colWhite.a = 255 * Size
