@@ -7,9 +7,9 @@ SWEP.Category = "Weapons - Melee"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 
-SWEP.WorldModel = "models/weapons/arc9/darsu_eft/w_melee_6x5.mdl"
-SWEP.WorldModelExchange = "models/weapons/arc9/darsu_eft/w_melee_6x5.mdl"
-SWEP.DroppedWorldModel = "models/weapons/arc9/darsu_eft/w_melee_6x5.mdl"
+SWEP.WorldModel = "models/weapons/w_melee_6x5.mdl"
+SWEP.WorldModelExchange = "models/weapons/w_melee_6x5.mdl"
+SWEP.DroppedWorldModel = "models/weapons/w_melee_6x5.mdl"
 SWEP.modelscale = 1.15
 SWEP.basebone = 76
 SWEP.weaponPos = Vector(2.6, 1.2, 3.3)
