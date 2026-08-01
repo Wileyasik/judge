@@ -47,17 +47,28 @@ function SWEP:SetupMuzzleAttachments()
 	if standard then slot.empty = {standard, Vector(0, 0, 0), {}} end
 end
 
+local modifierSlots = {"barrel", "sight", "grip", "underbarrel", "gp25", "magwell", "stock"}
+
+function SWEP:GetAttachmentModifierMul(field)
+	local mul = 1
+	for _, placement in ipairs(modifierSlots) do
+		local data = self:GetAttachmentInfo(placement)
+		if data then
+			local value = data[field]
+			if field == "recoilMul" and value == nil and placement == "grip" then value = data.recoilReduction end
+			mul = mul * (value or 1)
+		end
+	end
+	return mul
+end
+
 function SWEP:UpdateAttachmentModifiers()
 	self.BaseErgonomics = self.BaseErgonomics or self.Ergonomics or 1
-	local barrel = self:GetAttachmentInfo("barrel")
-	local stock = self:GetAttachmentInfo("stock")
-	self.Ergonomics = self.BaseErgonomics * (barrel and barrel.ergonomicsMul or 1) * (stock and stock.ergonomicsMul or 1)
+	self.Ergonomics = self.BaseErgonomics * self:GetAttachmentModifierMul("ergonomicsMul")
 end
 
 function SWEP:GetAttachmentRecoilMul()
-	local barrel = self:GetAttachmentInfo("barrel")
-	local stock = self:GetAttachmentInfo("stock")
-	return (barrel and barrel.recoilMul or 1) * (stock and stock.recoilMul or 1)
+	return self:GetAttachmentModifierMul("recoilMul")
 end
 
 function SWEP:ClearAttachments()

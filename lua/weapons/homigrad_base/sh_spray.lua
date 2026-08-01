@@ -25,9 +25,9 @@ SWEP.WeaponRecoilMul = 1.25
 local cos, sin, math_max, math_min = math.cos, math.sin, math.max, math.min
 function SWEP:GetPrimaryMul()
 	local owner = self:GetOwner()
-	local mul = ((0.5) + math_max(self.Primary.Force / 110 - 1, 0)) * (owner.Crouching and owner:Crouching() and self.CrouchMul or 1) * (self.attachments and self.attachments.barrel and self.attachments.barrel[1] ~= "empty" and 0.75 or 1)
+	local mul = ((0.5) + math_max(self.Primary.Force / 110 - 1, 0)) * (owner.Crouching and owner:Crouching() and self.CrouchMul or 1)
 	self:ApplyForce(mul)
-	mul = (mul or 0) * (self.Supressor and 0.75 or 1) * (owner.organism and owner.organism.recoilmul or 1)
+	mul = (mul or 0) * (owner.organism and owner.organism.recoilmul or 1)
 	return mul
 end
 
@@ -98,7 +98,6 @@ function SWEP:PrimarySpread()
 			angrand2[2] = math.Clamp(angrand2[2],-1,1)
 			angrand2[3] = -angrand2[2] * 1
 			local mulhuy = GetGlobalBool("FullRealismMode",false) and 10 or 1
-			mul = mul * (self.attachments and self.attachments.grip and not table.IsEmpty(self.attachments.grip) and hg.attachments.grip[self.attachments.grip[1]].recoilReduction or 1)
 			mul = mul * self:GetAttachmentRecoilMul()
 			
 			local huyang = angrand2 * mul / 2 * mulhuy

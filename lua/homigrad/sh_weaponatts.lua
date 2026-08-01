@@ -2588,6 +2588,83 @@ hg.attachments.agsmag = {
 	}
 }
 
+local suppressorErgonomics = {
+	supressor1 = 0.94, supressor2 = 0.93, supressor3 = 0.9, supressor4 = 0.91,
+	supressor5 = 0.86, supressor6 = 0.9, supressor7 = 0.87, supressor8 = 0.89,
+	supressor9 = 0.86, supressor11 = 0.8, supressor12 = 0.84, supressor13 = 0.78,
+	supressor14 = 0.82, supressor15 = 0.84, supressor16 = 0.87,
+}
+for id, ergonomicsMul in pairs(suppressorErgonomics) do
+	local data = hg.attachments.barrel[id]
+	if data then
+		data.ergonomicsMul = ergonomicsMul
+		data.recoilMul = nil
+	end
+end
+
+for id, data in pairs(hg.attachments.sight) do
+	if data.valid then
+		if string.StartWith(id, "optic") then
+			data.ergonomicsMul = data.thermal and 0.8 or data.nightvision and 0.82 or 0.86
+		elseif string.StartWith(id, "holo") then
+			data.ergonomicsMul = 0.95
+		elseif string.StartWith(id, "ironsight") then
+			data.ergonomicsMul = 0.98
+		else
+			data.ergonomicsMul = 0.94
+		end
+	end
+end
+
+local gripBalance = {
+	grip1 = {1.16, 0.8},   -- RK-2
+	grip2 = {0.92, 0.86},  -- ASH-12
+	grip3 = {1.1, 1.08},   -- AFG
+	grip4 = {0.91, 0.86},  -- KAC
+	grip5 = {1.12, 1.1},   -- M-LOK AFG
+	grip6 = {0.9, 0.84},   -- RVG
+	grip7 = {0.88, 0.82},  -- Sturmgriff
+	grip8 = {1.08, 1.06},  -- Cobra
+	grip9 = {0.92, 0.87},  -- Pillau
+	grip11 = {0.9, 0.84},  -- Osovets
+	grip12 = {0.93, 0.88}, -- UVG
+	grip13 = {1.18, 0.78}, -- Hera CQR
+	grip14 = {1.16, 0.76}, -- B-25U
+	grip15 = {1.1, 1.07},  -- SE-5
+}
+for id, balance in pairs(gripBalance) do
+	local data = hg.attachments.grip[id]
+	if data then
+		data.ergonomicsMul = balance[1]
+		data.recoilMul = balance[2]
+		data.recoilReduction = nil
+	end
+end
+
+local gp25 = hg.attachments.gp25.gp25
+gp25.ergonomicsMul = 0.62
+gp25.recoilMul = 0.55
+
+local magazineBalance = {
+	mag1 = {0.9, 1.2},  -- 50 rounds
+	mag2 = {0.82, 1.32}, -- 60 rounds
+	mag3 = {0.82, 1.32}, -- 60 rounds
+	mag4 = {0.68, 1.58}, -- 95 rounds
+	mag5 = {0.9, 1.2},  -- 50 rounds
+	mag6 = {0.75, 1.45}, -- 75 rounds
+	mag7 = {0.65, 1.65}, -- 100 rounds
+	mag8 = {1.12, 0.8}, -- 10 rounds
+	mag9 = {1.12, 0.8}, -- 10 rounds
+	mag11 = {1.12, 0.8}, -- 10 rounds
+}
+for id, balance in pairs(magazineBalance) do
+	local data = hg.attachments.magwell[id]
+	if data then
+		data.ergonomicsMul = balance[1]
+		data.reloadTimeMul = balance[2]
+	end
+end
+
 hg.validattachments = {}
 for placement, tbl in pairs(hg.attachments) do
 	for att, attTbl in pairs(tbl) do
