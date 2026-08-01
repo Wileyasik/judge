@@ -357,15 +357,26 @@ local intestineChunkModels = {
 util.PrecacheModel(stomachGoreModel)
 for _, model in ipairs(intestineChunkModels) do util.PrecacheModel(model) end
 
+local stomachBoneNames = {"ValveBiped.Bip01_Spine1", "ValveBiped.Bip01_Spine", "ValveBiped.Bip01_Pelvis"}
+
 local function getStomachBone(ent)
-	return ent:LookupBone("ValveBiped.Bip01_Spine1") or ent:LookupBone("ValveBiped.Bip01_Spine") or ent:LookupBone("ValveBiped.Bip01_Pelvis") or 0
+	for _, name in ipairs(stomachBoneNames) do
+		local bone = ent:LookupBone(name)
+		if bone then return bone end
+	end
+	return 0
 end
 
 local function setupStomachGoreParent(gore, ent)
 	if not IsValid(gore) or not IsValid(ent) then return false end
-	gore:SetParent(ent)
-	gore:AddEffects(EF_BONEMERGE)
+	local bone = getStomachBone(ent)
+	if not bone or bone <= 0 then return false end
+	local matrix = ent:GetBoneMatrix(bone)
+	if not matrix then return false end
+	gore:SetPos(matrix:GetTranslation())
+	gore:SetParent(ent, bone)
 	gore:SetSolid(SOLID_NONE)
+	gore:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
 	return true
 end
 
@@ -399,13 +410,14 @@ function hg.AttachStomachGore(target, force)
 	local gore = ents_Create("prop_dynamic")
 	if not IsValid(gore) then return end
 	gore:SetModel(stomachGoreModel)
-	if not bindStomachGore(gore, ent, target) then gore:Remove() return end
-	gore:Spawn()
-	gore:CallOnRemove("clear_stomach_gore_refs", function() clearStomachGoreRefs(gore) end)
-
 	local bone = getStomachBone(ent)
 	local matrix = ent:GetBoneMatrix(bone)
 	local pos = matrix and matrix:GetTranslation() or ent:GetPos()
+	gore:SetPos(pos)
+	gore:Spawn()
+	if not bindStomachGore(gore, ent, target) then gore:Remove() return end
+	gore:CallOnRemove("clear_stomach_gore_refs", function() clearStomachGoreRefs(gore) end)
+
 	ent:SetNWBool("NoVomitView", true)
 	if target ~= ent then target:SetNWBool("NoVomitView", true) end
 	ent:EmitSound(sounds[math.random(#sounds)], 70, math.random(95, 105), 1)

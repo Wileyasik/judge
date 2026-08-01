@@ -42,6 +42,41 @@ local RandomEvents = {
             end)
         end)
     end,
+    ["Hiccup"] = function( owner, org )
+        owner:ViewPunch(Angle(-1,0,0))
+        owner:Notify(table.Random({
+            "Hic!",
+            "Hic... hic!",
+            "Where did that hiccup come from...?",
+            "Ugh... hic... the hiccups...",
+        }), 5, "rnd_hiccup", 0)
+    end,
+    ["Yawn"] = function( owner, org )
+        owner:ViewPunch(Angle(1,0,0))
+        owner:Notify(table.Random({
+            "Haaaah... I'm so tired...",
+            "Yawn... been a long day...",
+            "Can't stop yawning...",
+            "I need a nap...",
+        }), 5, "rnd_yawn", 0)
+    end,
+    ["Sigh"] = function( owner, org )
+        owner:Notify(table.Random({
+            "What a day...",
+            "Ahh... whatever...",
+            "This is fine. Everything's fine.",
+            "Can I just sit down for a minute...?",
+        }), 5, "rnd_sigh", 0)
+    end,
+    ["Groan"] = function( owner, org )
+        owner:ViewPunch(AngleRand(-1,1))
+        owner:Notify(table.Random({
+            "Ugh... my everything hurts...",
+            "Groan... I don't feel so good...",
+            "Ughh... should not have done that...",
+            "My body is screaming at me...",
+        }), 5, "rnd_groan", 0)
+    end,
 }
 function module.TriggerRandomEvent(owner, eventName)
     if RandomEvents[eventName] then

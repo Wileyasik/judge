@@ -28,63 +28,135 @@ local pain_light = {
 	"Ouch... that hurt...",
 	"I'm bleeding a bit...",
 	"Damn, that stings...",
-	"Need to watch that..."
+	"Need to watch that...",
+	"Agh... that stung...",
+	"Okay, that hurt more than it should...",
+	"Just a scratch... right?",
+	"Son of a... that burns...",
+	"Ow... okay... I felt that...",
+	"That's gonna be a bruise...",
+	"Little warning next time...",
+	"Ah... damn... that smarts...",
 }
 local pain_moderate = {
 	"That really hurts...",
 	"I need to tend to this wound...",
 	"The pain is building up...",
 	"I can feel it throbbing...",
-	"Need to find something for the pain..."
+	"Need to find something for the pain...",
+	"That's really starting to ache...",
+	"This is more than a scratch...",
+	"I need to stop the bleeding...",
+	"The pain's getting worse...",
+	"This is really starting to hurt now...",
+	"I can't ignore this pain...",
+	"Every movement hurts...",
+	"I need something for this ache...",
 }
 local pain_severe = {
 	"The pain is unbearable...",
 	"I can't take this anymore...",
 	"Make it stop... please...",
 	"It hurts so much...",
-	"I'm in agony..."
+	"I'm in agony...",
+	"I can't take this pain...",
+	"It's eating through me...",
+	"I'm going to black out...",
+	"Somebody... the pain...",
+	"I'm going to lose my mind from this pain...",
+	"It's ripping through me...",
+	"I can't think... I can't breathe... the pain...",
+	"Somebody... anybody... help me...",
 }
 local pain_critical = {
 	"I can't... the pain...",
 	"Everything hurts...",
 	"I'm going to pass out from the pain...",
 	"Please... make it stop...",
-	"I can't feel anything but pain..."
+	"I can't feel anything but pain...",
+	"Everything is pain...",
+	"I can't even scream anymore...",
+	"Make it end... please...",
+	"Death would be kinder than this pain...",
+	"The pain is all that's left of me...",
+	"I'd rather die than feel this...",
+	"I can't... I can't... it won't stop...",
+	"Just let it end... let it end...",
 }
 local shock_phrases = {
 	"I'm going into shock...",
 	"I feel cold... so cold...",
 	"My hands are shaking...",
 	"I can't stop trembling...",
-	"Everything's spinning..."
+	"Everything's spinning...",
+	"I'm sweating... and I'm cold...",
+	"I can't stop shaking...",
+	"My hands won't hold still...",
+	"Something's not right... I feel strange...",
+	"Why is my skin so pale...?",
+	"I feel disconnected from my body...",
+	"Am I... okay...? I feel weird...",
+	"I'm trembling... I can't control it...",
 }
 local shock_severe = {
 	"I'm losing it...",
 	"Can't... focus...",
 	"Everything's fading...",
 	"I'm slipping away...",
-	"Help... I can't..."
+	"Help... I can't...",
+	"I'm going... under...",
+	"Can't... hold onto reality...",
+	"Everything's slipping...",
+	"Don't let me... fall...",
+	"I'm going down... down...",
+	"Reality is... fraying...",
+	"Help... me... I'm... lost...",
+	"Don't leave me... like this...",
 }
 local adrenaline_phrases = {
 	"I feel so alive!",
 	"Let's go! I can do this!",
 	"Nothing's gonna stop me!",
 	"I'm pumped up!",
-	"Bring it on!"
+	"Bring it on!",
+	"I feel unstoppable!",
+	"Come on! I can take anything!",
+	"Is that all you've got?!",
+	"I'm not even feeling it!",
+	"I could run a marathon right now!",
+	"Pain? What pain?!",
+	"This is what I live for!",
+	"Hell yeah! More! More!",
 }
 local adrenaline_crash = {
 	"Oh god... the crash...",
 	"I feel so drained...",
 	"The adrenaline wore off...",
 	"I'm exhausted...",
-	"Everything hurts now..."
+	"Everything hurts now...",
+	"Ugh... the adrenaline's gone...",
+	"Everything hurts twice as much now...",
+	"I can barely stand...",
+	"The rush wore off... I'm done...",
+	"The high is gone... and it hurts...",
+	"I'm crashing hard...",
+	"My hands are shaking from the crash...",
+	"Never felt worse after feeling so good...",
 }
 local stamina_exhausted = {
 	"I can't... go on...",
 	"No more... I'm done...",
 	"I need to rest...",
 	"Can't... move...",
-	"Legs won't work..."
+	"Legs won't work...",
+	"I've got nothing left...",
+	"Can't take another step...",
+	"My body just gave up...",
+	"Need to stop... right now...",
+	"My muscles are on fire...",
+	"I'm running on empty...",
+	"Just a little longer... no... I can't...",
+	"I've hit the wall...",
 }
 module[1] = function(org)
 	org.shock = 0

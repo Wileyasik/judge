@@ -1736,7 +1736,7 @@ hg.attachments.barrel = {
 		{},
 		modelscale = 1,
 		offset = Vector(-1.5,0.1,0),
-		mount = "models/weapons/arc9/darsu_eft/mods/muzzle_ar15_awc_psr_muzzle_brake_556x45.mdl",
+		mount = "models/weapons/mods/muzzle_ar15_awc_psr_muzzle_brake_556x45.mdl",
 		mountVec = Vector(0, 0, 0),
 		mountAng = Angle(0, 0, 0),
 		PhysModel = "models/hunter/plates/plate025.mdl",

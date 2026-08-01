@@ -1091,10 +1091,16 @@ end)
 local function hg_ResolveDislocationPatient(target, fixer)
 	if not IsValid(target) then return nil end
 	if target:IsPlayer() then return target end
-	if IsValid(target.organism) and IsValid(target.organism.owner) then return target.organism.owner end
 	local plyref = target:GetNWEntity("ply")
-	if IsValid(plyref) then return plyref end
+	if IsValid(plyref) and plyref:IsPlayer() then return plyref end
+	if target.organism and IsValid(target.organism.owner) and target.organism.owner:IsPlayer() then return target.organism.owner end
 	return nil
+end
+
+local function hg_PlayerReachPos(ply)
+	local rag = ply.FakeRagdoll
+	if IsValid(rag) then return rag:GetPos() end
+	return ply:GetPos()
 end
 
 net.Receive("hg_dislocation_minigame_pain", function(len, ply)
@@ -1107,8 +1113,8 @@ net.Receive("hg_dislocation_minigame_pain", function(len, ply)
 		local org = patient.organism
 		if not org then return end
 
-		org.painadd = org.painadd + 5
-		org.fearadd = org.fearadd + 0.1
+		org.painadd = org.painadd + 10
+		org.fearadd = org.fearadd + 0.2
 		patient:EmitSound("physics/body/body_medium_impact_hard1.wav", 60, 100, 1, CHAN_AUTO)
 		return
 	end
@@ -1116,8 +1122,8 @@ net.Receive("hg_dislocation_minigame_pain", function(len, ply)
 	local org = ply.organism
 	if not org then return end
 
-	org.painadd = org.painadd + 5
-	org.fearadd = org.fearadd + 0.1
+	org.painadd = org.painadd + 10
+	org.fearadd = org.fearadd + 0.2
 	ply:EmitSound("physics/body/body_medium_impact_hard1.wav", 60, 100, 1, CHAN_AUTO)
 end)
 
@@ -1127,7 +1133,7 @@ net.Receive("hg_dislocation_minigame_success", function(len, ply)
 	local target = net.ReadEntity()
 	local patient = hg_ResolveDislocationPatient(target, ply) or ply
 
-	if patient != ply and (not IsValid(patient) or not patient:IsPlayer() or patient == ply or ply:GetPos():Distance(patient:GetPos()) > 200) then
+	if patient != ply and (not IsValid(patient) or not patient:IsPlayer() or patient == ply or hg_PlayerReachPos(ply):Distance(hg_PlayerReachPos(patient)) > 300) then
 		patient = ply
 	end
 
@@ -1158,7 +1164,7 @@ net.Receive("hg_dislocation_minigame_success", function(len, ply)
 		org.fearadd = org.fearadd + 0.1
 
 		if failures > 0 then
-			org.painadd = org.painadd + (failures * 2)
+			org.painadd = org.painadd + (failures * 4)
 		end
 
 		patient:EmitSound("physics/body/body_medium_impact_soft1.wav", 60, 100, 1, CHAN_AUTO)
