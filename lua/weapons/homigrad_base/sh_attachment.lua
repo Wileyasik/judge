@@ -1065,6 +1065,10 @@ if CLIENT then
 	local attachmentLineColor = Color(255, 255, 255)
 	local previewColor = Color(85, 190, 215)
 	local attachmentFont = "Mx437 IBM PS/55 re."
+	local attachmentUIScale = math.Clamp(math.min(ScrW() / 2560, ScrH() / 1440), 0.5, 1.25)
+	local function attachmentPx(value)
+		return math.max(1, math.floor(value * attachmentUIScale + 0.5))
+	end
 
 	local function getMenuAccent()
 		return hg.theme and hg.theme.c.accent or fallbackAccent
@@ -1140,42 +1144,42 @@ if CLIENT then
 
 	surface.CreateFont("HG_Attachment_Title", {
 		font = attachmentFont,
-		size = 28,
+		size = attachmentPx(28),
 		weight = 700,
 		antialias = true,
 		extended = true
 	})
 	surface.CreateFont("HG_Attachment_Label", {
 		font = attachmentFont,
-		size = 17,
+		size = attachmentPx(17),
 		weight = 600,
 		antialias = true,
 		extended = true
 	})
 	surface.CreateFont("HG_Attachment_Small", {
 		font = attachmentFont,
-		size = 13,
+		size = attachmentPx(13),
 		weight = 500,
 		antialias = true,
 		extended = true
 	})
 	surface.CreateFont("HG_Attachment_Card", {
 		font = attachmentFont,
-		size = 11,
+		size = attachmentPx(11),
 		weight = 600,
 		antialias = true,
 		extended = true
 	})
 	surface.CreateFont("HG_Attachment_Micro", {
 		font = attachmentFont,
-		size = 10,
+		size = attachmentPx(10),
 		weight = 600,
 		antialias = true,
 		extended = true
 	})
 	surface.CreateFont("HG_Attachment_Count", {
 		font = "Courier Prime",
-		size = 13,
+		size = attachmentPx(13),
 		weight = 400,
 		italic = true,
 		antialias = true,
@@ -1592,23 +1596,23 @@ if CLIENT then
 
 		function frame:UpdateSlotLayout(immediate)
 			local panelW, panelH = self:GetSize()
-			local marginX = math.Clamp(panelW * 0.035, 24, 68)
+			local marginX = math.Clamp(panelW * 0.035, attachmentPx(24), attachmentPx(68))
 			for placement, section in pairs(self.slotSections) do
 				if not IsValid(section) then continue end
 				local side = section.slotButton.side
 				local targetX = side == 1 and panelW - marginX - section:GetWide() or marginX
-				local targetY = math.Clamp(panelH * (slotRows[placement] or 0.5), 72, panelH - section:GetTall() - 48)
+				local targetY = math.Clamp(panelH * (slotRows[placement] or 0.5), attachmentPx(72), panelH - section:GetTall() - attachmentPx(48))
 				local openProgress = math.Clamp((RealTime() - self.openedAt - section.animationDelay) / 0.35, 0, 1)
 				openProgress = 1 - (1 - openProgress) ^ 3
-				local startX = side == 1 and panelW + 20 or -section:GetWide() - 20
+				local startX = side == 1 and panelW + attachmentPx(20) or -section:GetWide() - attachmentPx(20)
 				section:SetPos(immediate and targetX or Lerp(openProgress, startX, targetX), targetY)
 			end
 		end
 
 		local closeButton = vgui.Create("DButton", frame)
 		closeButton:SetText("")
-		closeButton:SetSize(42, 42)
-		closeButton:SetPos(ScrW() - 66, 24)
+		closeButton:SetSize(attachmentPx(42), attachmentPx(42))
+		closeButton:SetPos(ScrW() - attachmentPx(66), attachmentPx(24))
 		closeButton.Paint = function(self, w, h)
 			local accent = getMenuAccent()
 			self.hover = Lerp(FrameTime() * 12, self.hover or 0, self:IsHovered() and 1 or 0)
@@ -1738,14 +1742,15 @@ if CLIENT then
 			local dovetail = installedDefinition and installedDefinition.mountType == "dovetail" or istable(activeMount) and activeMount.mountType == "dovetail"
 			local hasSight = placement == "sight" and installedID and installedID != "empty" and not dovetail
 			local baseHeight = section.baseHeight or section:GetTall()
-			section:SetTall(baseHeight + (hasSight and 32 or 0))
+			section:SetTall(baseHeight + (hasSight and attachmentPx(32) or 0))
 
 			local scroll = vgui.Create("DScrollPanel", section)
 			section.cards = scroll
-			scroll:SetPos(0, hasSight and 72 or 44)
-			scroll:SetSize(section:GetWide() - 3, section:GetTall() - (hasSight and 72 or 44) - 4)
+			local scrollTop = hasSight and attachmentPx(72) or attachmentPx(44)
+			scroll:SetPos(0, scrollTop)
+			scroll:SetSize(section:GetWide() - attachmentPx(3), section:GetTall() - scrollTop - attachmentPx(4))
 			local scrollBar = scroll:GetVBar()
-			scrollBar:SetWide(8)
+			scrollBar:SetWide(attachmentPx(8))
 			scrollBar:SetHideButtons(true)
 			scrollBar.Paint = function(_, w, h)
 				surface.SetDrawColor(5, 5, 5, 210)
@@ -1760,10 +1765,10 @@ if CLIENT then
 			end
 			local cards = vgui.Create("DIconLayout", scroll)
 			cards:Dock(TOP)
-			cards:DockMargin(8, 4, 4, 8)
-			cards:SetWide(section:GetWide() - 24)
-			cards:SetSpaceX(8)
-			cards:SetSpaceY(8)
+			cards:DockMargin(attachmentPx(8), attachmentPx(4), attachmentPx(4), attachmentPx(8))
+			cards:SetWide(section:GetWide() - attachmentPx(24))
+			cards:SetSpaceX(attachmentPx(8))
+			cards:SetSpaceY(attachmentPx(8))
 
 			local slot = self.weapon.availableAttachments[placement]
 			local cardPlacements = placement == "underbarrel" and self.weapon.availableAttachments.gp25
@@ -1772,29 +1777,29 @@ if CLIENT then
 			if hasSight then
 				local sliderPanel = vgui.Create("DPanel", section)
 				section.sightSlider = sliderPanel
-				sliderPanel:SetPos(8, 42)
-				sliderPanel:SetSize(section:GetWide() - 24, 30)
+				sliderPanel:SetPos(attachmentPx(8), attachmentPx(42))
+				sliderPanel:SetSize(section:GetWide() - attachmentPx(24), attachmentPx(30))
 				sliderPanel.value = math.Clamp(tonumber(installed.sightSlide) or 0, -1, 3)
 				sliderPanel.Paint = function(self, w, h)
 					drawAttachmentText("SIGHT X", "HG_Attachment_Small", 0, h * 0.5, menuText, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 					drawAttachmentText(string.format("%+.1f", self.value), "HG_Attachment_Count", w, h * 0.5, menuText, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
 					surface.SetDrawColor(255, 255, 255, 115)
-					surface.DrawRect(66, h - 7, w - 112, 1)
+					surface.DrawRect(attachmentPx(66), h - attachmentPx(7), w - attachmentPx(112), 1)
 					for index = 0, 4 do
-						local x = 66 + (w - 112) * index / 4
-						surface.DrawRect(math.floor(x), h - 10, 1, 7)
+						local x = attachmentPx(66) + (w - attachmentPx(112)) * index / 4
+						surface.DrawRect(math.floor(x), h - attachmentPx(10), 1, attachmentPx(7))
 					end
 				end
 
 				local slider = vgui.Create("DSlider", sliderPanel)
-				slider:SetPos(62, 6)
-				slider:SetSize(sliderPanel:GetWide() - 104, 20)
+				slider:SetPos(attachmentPx(62), attachmentPx(6))
+				slider:SetSize(sliderPanel:GetWide() - attachmentPx(104), attachmentPx(20))
 				slider:SetLockY(0.5)
 				slider:SetTrapInside(true)
 				slider:SetSlideX((sliderPanel.value + 1) / 4)
 				slider.Paint = function() end
 				if IsValid(slider.Knob) then
-					slider.Knob:SetSize(9, 14)
+					slider.Knob:SetSize(attachmentPx(9), attachmentPx(14))
 					slider.Knob.Paint = function(self, w, h)
 						surface.SetDrawColor(0, 0, 0, 230)
 						surface.DrawRect(0, 0, w, h)
@@ -1819,9 +1824,9 @@ if CLIENT then
 				local cardInstalled = attachments[cardPlacement]
 				local cardInstalledID = cardInstalled and cardInstalled[1]
 				local card = cards:Add("DButton")
-				card:SetSize(96, 110)
+				card:SetSize(attachmentPx(96), attachmentPx(110))
 				card:SetText("")
-				card.nameLines = getCardNameLines(id, 88)
+				card.nameLines = getCardNameLines(id, attachmentPx(88))
 				card.Paint = function(button, w, h)
 					local accent = getMenuAccent()
 					button.hover = Lerp(FrameTime() * 14, button.hover or 0, button:IsHovered() and 1 or 0)
@@ -1833,13 +1838,13 @@ if CLIENT then
 						drawSelectorCorners(0, 0, w, h, accent, isInstalled and 185 or button.hover * 150)
 					end
 					if isInstalled then
-						drawAttachmentText("ACTIVE", "HG_Attachment_Micro", 5, 5, menuMuted, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+						drawAttachmentText("ACTIVE", "HG_Attachment_Micro", attachmentPx(5), attachmentPx(5), menuMuted, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 					elseif count and count > 1 then
-						drawAttachmentText("x" .. count, "HG_Attachment_Micro", w - 5, 5, menuMuted, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
+						drawAttachmentText("x" .. count, "HG_Attachment_Micro", w - attachmentPx(5), attachmentPx(5), menuMuted, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
 					end
 					local lineCount = #button.nameLines
 					for lineIndex, line in ipairs(button.nameLines) do
-						drawAttachmentText(line, "HG_Attachment_Card", w * 0.5, h - 4 - (lineCount - lineIndex) * 10, menuText, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM)
+						drawAttachmentText(line, "HG_Attachment_Card", w * 0.5, h - attachmentPx(4) - (lineCount - lineIndex) * attachmentPx(10), menuText, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM)
 					end
 				end
 				card.OnCursorEntered = function(button)
@@ -1857,8 +1862,8 @@ if CLIENT then
 					local icon = vgui.Create("DImage", card)
 					icon:SetImage(iconPath)
 					icon:SetKeepAspect(true)
-					icon:SetSize(76, 76)
-					icon:SetPos(14, 5)
+					icon:SetSize(attachmentPx(76), attachmentPx(76))
+					icon:SetPos(attachmentPx(14), attachmentPx(5))
 					icon:SetMouseInputEnabled(false)
 				end
 
@@ -1938,30 +1943,30 @@ if CLIENT then
 			frame.slotButtons[placement] = button
 			button.section = section
 			button.side = slotSides[placement] or (index % 2 == 0 and -1 or 1)
-			local sectionWidth = 436
-			local sectionHeight = math.Clamp(ScrH() * 0.3, 230, 280)
+			local sectionWidth = attachmentPx(436)
+			local sectionHeight = attachmentPx(math.Clamp(ScrH() / attachmentUIScale * 0.3, 230, 280))
 			section.baseHeight = sectionHeight
 			section:SetSize(sectionWidth, sectionHeight)
-			section:SetPos(button.side == 1 and ScrW() + 20 or -sectionWidth - 20, ScrH() * 0.5)
+			section:SetPos(button.side == 1 and ScrW() + attachmentPx(20) or -sectionWidth - attachmentPx(20), ScrH() * 0.5)
 			section.Paint = function(_, w, h)
 				local accent = getMenuAccent()
 				surface.SetDrawColor(0, 0, 0, 100)
-				surface.DrawRect(4, 4, w, h)
+				surface.DrawRect(attachmentPx(4), attachmentPx(4), w, h)
 				surface.SetDrawColor(getMenuPanel(218))
 				surface.DrawRect(0, 0, w, h)
 				surface.SetDrawColor(255, 255, 255, 9)
 				surface.SetMaterial(gradient_d)
-				surface.DrawTexturedRect(0, 38, w, h - 38)
+				surface.DrawTexturedRect(0, attachmentPx(38), w, h - attachmentPx(38))
 				surface.SetDrawColor(accent.r, accent.g, accent.b, 52)
 				surface.DrawOutlinedRect(0, 0, w, h, 1)
 				surface.SetDrawColor(255, 255, 255, 16)
-				surface.DrawOutlinedRect(2, 2, w - 4, h - 4, 1)
+				surface.DrawOutlinedRect(attachmentPx(2), attachmentPx(2), w - attachmentPx(4), h - attachmentPx(4), 1)
 				surface.SetDrawColor(0, 0, 0, 150)
-				surface.DrawRect(w - 12, 42, 9, h - 46)
+				surface.DrawRect(w - attachmentPx(12), attachmentPx(42), attachmentPx(9), h - attachmentPx(46))
 				surface.SetDrawColor(255, 255, 255, 24)
-				surface.DrawOutlinedRect(w - 12, 42, 9, h - 46, 1)
+				surface.DrawOutlinedRect(w - attachmentPx(12), attachmentPx(42), attachmentPx(9), h - attachmentPx(46), 1)
 			end
-			button:SetSize(sectionWidth, 38)
+			button:SetSize(sectionWidth, attachmentPx(38))
 			button:SetPos(0, 0)
 			button.Paint = function(self, w, h)
 				local accent = getMenuAccent()
@@ -1973,8 +1978,8 @@ if CLIENT then
 				drawSelectorCorners(0, 0, w, h, accent, 130)
 				local title = slotNames[placement] or string.upper(placement)
 				title = getScrambledText(title, section.scrambleStarted, 0.65)
-				drawAttachmentText(title, "HG_Attachment_Label", 10, h * 0.5, menuText, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-				drawAttachmentText((self.moduleCount or 0) .. " MODULES", "HG_Attachment_Count", w - 10, h * 0.5, menuMuted, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+				drawAttachmentText(title, "HG_Attachment_Label", attachmentPx(10), h * 0.5, menuText, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+				drawAttachmentText((self.moduleCount or 0) .. " MODULES", "HG_Attachment_Count", w - attachmentPx(10), h * 0.5, menuMuted, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
 			end
 		end
 
