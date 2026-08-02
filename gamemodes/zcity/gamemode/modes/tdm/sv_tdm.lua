@@ -4,6 +4,7 @@ MODE.name = "tdm"
 MODE.BuyTime = 40
 MODE.StartMoney = 6500
 MODE.ROUND_TIME = 240
+MODE.VoteTime = 10
 
 MODE.Chance = 0.04
 
@@ -21,7 +22,143 @@ end
 MODE.ForBigMaps = true
 
 util.AddNetworkString("tdm_start")
+util.AddNetworkString("arena_round_start")
 util.AddNetworkString("arena_loadout_sync")
+util.AddNetworkString("arena_announcer")
+util.AddNetworkString("arena_start_vote")
+util.AddNetworkString("arena_vote_update")
+util.AddNetworkString("arena_vote_result")
+util.AddNetworkString("arena_change_vote")
+
+for i = 1, 10 do
+	util.PrecacheSound("arena/killz/kill" .. i .. ".mp3")
+end
+
+local function BroadcastArenaAnnouncer(eventType, index)
+	net.Start("arena_announcer")
+		net.WriteUInt(eventType, 2)
+		net.WriteUInt(index, 4)
+	net.Broadcast()
+end
+
+hook.Add("Player_Death", "ArenaKillAnnouncer", function(victim)
+	local attacker = victim.ArenaLastAttacker
+	local attackTime = victim.ArenaLastAttackTime or 0
+	victim.ArenaLastAttacker = nil
+	victim.ArenaLastAttackTime = nil
+	if zb.CROUND ~= "tdm" or zb.ROUND_STATE ~= 1 or CurTime() - attackTime > 20 or not IsValid(attacker) or attacker == victim then return end
+	BroadcastArenaAnnouncer(0, math.random(1, 10))
+
+	if not MODE.CleanupActive then
+		zb.ROUND_TIME = (zb.ROUND_TIME or MODE.ROUND_TIME) + 30
+		hg.UpdateRoundTime(zb.ROUND_TIME)
+	end
+end)
+
+hook.Add("EntityTakeDamage", "ArenaCleanupRoleDamage", function(victim, damageInfo)
+	if zb.CROUND ~= "tdm" or not MODE.CleanupActive or not victim:IsPlayer() then return end
+	local attacker = damageInfo:GetAttacker()
+	if not IsValid(attacker) or not attacker:IsPlayer() then return end
+
+	local sameRole = victim:GetNWBool("ArenaCleanupTarget") and attacker:GetNWBool("ArenaCleanupTarget")
+		or victim:GetNWBool("ArenaCleanupCleaner") and attacker:GetNWBool("ArenaCleanupCleaner")
+	if sameRole then return true end
+end)
+
+hook.Add("HomigradDamage", "ArenaTrackAttacker", function(victim, damageInfo, _, _, harm)
+	if zb.CROUND ~= "tdm" or not IsValid(victim) or not victim:IsPlayer() or (harm or 0) <= 0 then return end
+	local attacker = damageInfo:GetAttacker()
+	if IsValid(attacker) and attacker:IsPlayer() and attacker ~= victim then
+		victim.ArenaLastAttacker = attacker
+		victim.ArenaLastAttackTime = CurTime()
+	end
+end)
+
+local function RemoveVoteTimers()
+	timer.Remove("arena_vote_end")
+	timer.Remove("arena_vote_update")
+end
+
+function MODE:StartVoting()
+	self.VoteInProgress = true
+	self.VoteResults = {[1] = 0, [2] = 0, [3] = 0}
+
+	net.Start("arena_start_vote")
+		net.WriteFloat(CurTime() + self.VoteTime)
+	net.Broadcast()
+
+	timer.Create("arena_vote_end", self.VoteTime, 1, function()
+		if CurrentRound() == MODE then MODE:EndVoting() end
+	end)
+	timer.Create("arena_vote_update", 1, self.VoteTime, function()
+		if CurrentRound() ~= MODE or not MODE.VoteInProgress then return end
+		net.Start("arena_vote_update")
+			net.WriteTable(MODE.VoteResults)
+		net.Broadcast()
+	end)
+end
+
+function MODE:EndVoting()
+	RemoveVoteTimers()
+	local highestVotes, choices = -1, {}
+	for index = 1, 3 do
+		local votes = self.VoteResults[index] or 0
+		if votes > highestVotes then
+			highestVotes = votes
+			choices = {index}
+		elseif votes == highestVotes then
+			choices[#choices + 1] = index
+		end
+	end
+
+	local selected = highestVotes > 0 and choices[math.random(#choices)] or 2
+	self.SeriesTotal = (ARENA_ROUND_OPTIONS[selected] or ARENA_ROUND_OPTIONS[2]).rounds
+	self.SeriesLeft = self.SeriesTotal
+	self.VoteInProgress = false
+	self.RoundSetupTime = CurTime() + 2
+
+	net.Start("arena_vote_result")
+		net.WriteUInt(selected, 2)
+		net.WriteTable(self.VoteResults)
+	net.Broadcast()
+
+	timer.Simple(1, function()
+		if CurrentRound() ~= MODE then return end
+		MODE.HasAppliedLoadout = false
+		MODE:GiveEquipment()
+		net.Start("arena_round_start")
+			net.WriteBool(true)
+		net.Broadcast()
+	end)
+end
+
+net.Receive("arena_change_vote", function(_, ply)
+	if zb.CROUND ~= "tdm" or not MODE.VoteInProgress or ply:Team() == TEAM_SPECTATOR then return end
+	if (ply.LastArenaVoteChange or 0) > CurTime() then return end
+	ply.LastArenaVoteChange = CurTime() + 0.5
+
+	local oldVote, newVote = net.ReadUInt(2), net.ReadUInt(2)
+	if newVote < 1 or newVote > 3 then return end
+	if oldVote >= 1 and oldVote <= 3 and ply.ArenaVote == oldVote then
+		MODE.VoteResults[oldVote] = math.max((MODE.VoteResults[oldVote] or 0) - 1, 0)
+	end
+	MODE.VoteResults[newVote] = (MODE.VoteResults[newVote] or 0) + 1
+	ply.ArenaVote = newVote
+
+	net.Start("arena_vote_update")
+		net.WriteTable(MODE.VoteResults)
+	net.Broadcast()
+end)
+
+hook.Add("SetupPlayerVisibility", "ArenaCleanupTargets", function(ply)
+	if zb.CROUND ~= "tdm" or not MODE.CleanupActive or not ply:GetNWBool("ArenaCleanupCleaner") then return end
+
+	for _, target in player.Iterator() do
+		if target:Alive() and target:GetNWBool("ArenaCleanupTarget") then
+			AddOriginToPVS(target:GetPos())
+		end
+	end
+end)
 
 net.Receive("arena_loadout_sync", function(_, ply)
 	local raw = net.ReadString()
@@ -31,24 +168,39 @@ net.Receive("arena_loadout_sync", function(_, ply)
 	ply.ArenaLoadout = parsed
 end)
 function MODE:Intermission()
+	RemoveVoteTimers()
+	self.VoteInProgress = false
+	self.RoundSetupTime = nil
+	self.HasAppliedLoadout = false
+	self.CleanupActive = false
+	self.CleanupDeadline = nil
+	self.CleanupWinner = nil
+	SetGlobalBool("ArenaCleanupActive", false)
+	SetGlobalFloat("ArenaCleanupDeadline", 0)
+
 	game.CleanUpMap()
 
 	for i, ply in player.Iterator() do
+		ply.ArenaVote = nil
+		ply.ArenaLastAttacker = nil
+		ply.ArenaLastAttackTime = nil
+		ply:SetNWBool("ArenaCleanupTarget", false)
+		ply:SetNWBool("ArenaCleanupCleaner", false)
 		ply:SetupTeam(ply:Team())
 		
 	end
 
-	net.Start("tdm_start")
-	net.Broadcast()
+	if self.SeriesLeft and self.SeriesLeft > 0 then
+		net.Start("arena_round_start")
+			net.WriteBool(false)
+		net.Broadcast()
+	else
+		self:StartVoting()
+	end
 end
 
 function MODE:CheckAlivePlayers()
 	return zb:CheckAliveTeams(true)
-end
-
-function MODE:ShouldRoundEnd()
-	local endround, winner = zb:CheckWinner(self:CheckAlivePlayers())
-	return endround
 end
 
 function MODE:RoundStart()
@@ -155,53 +307,39 @@ local function ValidateArenaLoadout(ply)
 	return selected, selectedAttachments, selectedArmor, selectedMedical, weight
 end
 
+function MODE:RoundStartPost()
+	if self.SeriesLeft and self.SeriesLeft > 1 then NextRound(self.name, true) end
+end
+
 local function ApplyArenaLoadout(ply)
 	local selected, attachments, armor, medical, weight = ValidateArenaLoadout(ply)
-	local function ApplyWeaponAttachments(weapon, attachmentIds, attemptsLeft, onDone)
-		if not IsValid(weapon) then return end
-		if not istable(weapon.attachments) or not istable(weapon.availableAttachments) then
-			if attemptsLeft > 0 then timer.Simple(0.05, function() ApplyWeaponAttachments(weapon, attachmentIds, attemptsLeft - 1, onDone) end) end
-			return
-		end
-
-		local complete = true
-		for _, attachmentId in ipairs(attachmentIds or {}) do
-			local placement
-			for placementId, definitions in pairs(hg.attachments or {}) do
-				if definitions[attachmentId] then placement = placementId break end
-			end
-			if placement and (not weapon.attachments[placement] or weapon.attachments[placement][1] ~= attachmentId) then
-				complete = false
-				if hg.AddAttachmentForce then hg.AddAttachmentForce(ply, weapon, attachmentId) end
-			end
-		end
-
-		if not complete and attemptsLeft > 0 then
-			timer.Simple(0.05, function() ApplyWeaponAttachments(weapon, attachmentIds, attemptsLeft - 1, onDone) end)
-			return
-		end
-		if weapon.SyncAtts then weapon:SyncAtts() end
-		if onDone then onDone() end
-	end
+	local ammoGrants = {}
 
 	for _, weaponId in ipairs(selected) do
 		local info = MODE.ArenaWeapons[weaponId]
 		local weapon = ply:Give(weaponId)
 		if not IsValid(weapon) then continue end
-		local givenWeapon = weapon
-		local givenInfo = info
-		local givenAttachments = attachments[weaponId]
-
-		timer.Simple(0.05, function()
-			if not IsValid(ply) or not IsValid(givenWeapon) then return end
-			ApplyWeaponAttachments(givenWeapon, givenAttachments, 10, function()
-				if not IsValid(ply) or not IsValid(givenWeapon) then return end
-				if givenWeapon:GetPrimaryAmmoType() >= 0 and givenWeapon:GetMaxClip1() > 0 then
-					ply:GiveAmmo(givenWeapon:GetMaxClip1() * givenInfo.clips, givenWeapon:GetPrimaryAmmoType(), true)
-				end
-			end)
-		end)
+		ammoGrants[weaponId] = info.clips
 	end
+
+	timer.Simple(0.5, function()
+		if not IsValid(ply) then return end
+		for weaponId, clips in pairs(ammoGrants) do
+			if not ply:HasWeapon(weaponId) then continue end
+			local weapon = ply:GetWeapon(weaponId)
+			if not IsValid(weapon) then continue end
+			if istable(weapon.attachments) and hg.SetAttachment then
+				for _, attachmentId in ipairs(attachments[weaponId] or {}) do
+					hg.SetAttachment(weapon.attachments, attachmentId, weapon:GetClass())
+				end
+				if weapon.UpdateAttachmentModifiers then weapon:UpdateAttachmentModifiers() end
+				if weapon.SyncAtts then weapon:SyncAtts() end
+			end
+			if weapon:GetPrimaryAmmoType() >= 0 and weapon:GetMaxClip1() > 0 then
+				ply:GiveAmmo(weapon:GetMaxClip1() * clips, weapon:GetPrimaryAmmoType(), true)
+			end
+		end
+	end)
 	if hg.AddArmor then
 		for _, armorId in ipairs(armor) do hg.AddArmor(ply, armorId) end
 		hg.AddArmor(ply, "headphones1")
@@ -211,12 +349,128 @@ local function ApplyArenaLoadout(ply)
 	ply:SetNWInt("ArenaMetaWeight", weight)
 end
 
+local cleanupLoadouts = {
+	{primary = "weapon_m4a1", secondary = "weapon_glock17", grenade = "weapon_hg_flashbang_tpik", armor = "vest30", helmet = "helmet14"},
+	{primary = "weapon_ak12", secondary = "weapon_pl15", grenade = "weapon_hg_rgd_tpik", armor = "vest26", helmet = "helmet14"},
+	{primary = "weapon_mp7", secondary = "weapon_fn45", grenade = "weapon_hg_smokenade_tpik", armor = "vest26", helmet = "helmet1"},
+	{primary = "weapon_spas12", secondary = "weapon_p226", grenade = "weapon_hg_flashbang_tpik", armor = "vest30", helmet = "helmet1"},
+	{primary = "weapon_scarh", secondary = "weapon_hk_usp", grenade = "weapon_hg_smokenade_tpik", armor = "vest1", helmet = "helmet14"},
+	{primary = "weapon_m249", secondary = "weapon_cz75", grenade = "weapon_hg_grenade_tpik", armor = "vest30", helmet = "helmet14"},
+}
+
+local function ApplyCleanupLoadout(ply)
+	ply:StripWeapons()
+	ply:RemoveAllAmmo()
+	ply:SetSuppressPickupNotices(true)
+
+	local loadout = cleanupLoadouts[math.random(#cleanupLoadouts)]
+	local rifle = ply:Give(loadout.primary)
+	local pistol = ply:Give(loadout.secondary)
+	ply:Give(loadout.grenade)
+	ply:Give("weapon_combatknife")
+	ply:Give("weapon_bandage_sh")
+	ply:Give("weapon_tourniquet")
+	ply:Give("weapon_hands_sh")
+
+	for _, weapon in ipairs({rifle, pistol}) do
+		if IsValid(weapon) and weapon:GetPrimaryAmmoType() >= 0 and weapon:GetMaxClip1() > 0 then
+			ply:GiveAmmo(weapon:GetMaxClip1() * 4, weapon:GetPrimaryAmmoType(), true)
+		end
+	end
+
+	if hg.AddArmor then
+		hg.AddArmor(ply, loadout.armor)
+		hg.AddArmor(ply, loadout.helmet)
+		hg.AddArmor(ply, "headphones1")
+	end
+
+	ply:SetSuppressPickupNotices(false)
+	if IsValid(rifle) then ply:SelectWeapon(rifle:GetClass()) end
+end
+
+local function IsCleanupRoleAlive(role)
+	for _, ply in player.Iterator() do
+		if ply:Alive() and ply:GetNWBool(role) then return true end
+	end
+
+	return false
+end
+
+function MODE:StartCleanup()
+	local targets, cleaners = {}, {}
+	for _, ply in player.Iterator() do
+		if ply:Team() == TEAM_SPECTATOR then continue end
+		if ply:Alive() then
+			targets[#targets + 1] = ply
+		else
+			cleaners[#cleaners + 1] = ply
+		end
+	end
+
+	if #targets == 0 or #cleaners == 0 then return false end
+
+	local cleanupStart = CurTime()
+	self.CleanupActive = true
+	self.CleanupDeadline = cleanupStart + 90
+	self.CleanupWinner = nil
+	hg.UpdateRoundTime(90, cleanupStart, cleanupStart)
+	SetGlobalBool("ArenaCleanupActive", true)
+	SetGlobalFloat("ArenaCleanupDeadline", self.CleanupDeadline)
+	BroadcastArenaAnnouncer(3, math.random(1, 10))
+
+	for _, ply in ipairs(targets) do
+		ply:SetNWBool("ArenaCleanupTarget", true)
+		ply:SetNWBool("ArenaCleanupCleaner", false)
+	end
+
+	for _, ply in ipairs(cleaners) do
+		local oldTeam = ply:Team()
+		ply:Spawn()
+		ply:SetTeam(oldTeam)
+		ply:GetRandomSpawn()
+		ply:SetNWBool("ArenaCleanupTarget", false)
+		ply:SetNWBool("ArenaCleanupCleaner", true)
+		ApplyCleanupLoadout(ply)
+	end
+
+	return true
+end
+
+function MODE:ShouldRoundEnd()
+	if self.VoteInProgress or self.RoundSetupTime and CurTime() < self.RoundSetupTime then return false end
+
+	if self.CleanupActive then
+		if not IsCleanupRoleAlive("ArenaCleanupTarget") then
+			self.CleanupWinner = "cleaners"
+			return true
+		end
+
+		if not IsCleanupRoleAlive("ArenaCleanupCleaner") or CurTime() >= self.CleanupDeadline then
+			self.CleanupWinner = "targets"
+			return true
+		end
+
+		return false
+	end
+
+	local endround = zb:CheckWinner(self:CheckAlivePlayers())
+	if endround then return true end
+
+	local timedOut = (zb.ROUND_START or CurTime()) + (zb.ROUND_TIME or self.ROUND_TIME) <= CurTime()
+	if timedOut and self:StartCleanup() then return false end
+
+	return nil
+end
+
 -- local giveweapons = CreateConVar("zb_tdm_giveweapon","1",FCVAR_LUA_SERVER,"TDMSPAWNS",0,1)
 
 function MODE:GetPlySpawn(ply)
 end
 
 function MODE:GiveEquipment()
+	if self.VoteInProgress or self.HasAppliedLoadout then return end
+	self.HasAppliedLoadout = true
+
 	timer.Simple(0.1,function()
 		local mrand = math.random(#tblweps[0])
 
@@ -287,15 +541,38 @@ end
 
 util.AddNetworkString("tdm_roundend")
 function MODE:EndRound()
-	local endround, winner = zb:CheckWinner(self:CheckAlivePlayers())
+	local _, winner = zb:CheckWinner(self:CheckAlivePlayers())
+	local cleanupWinner = self.CleanupWinner
+	if not cleanupWinner then
+		if winner == 0 then
+			BroadcastArenaAnnouncer(1, math.random(1, 10))
+		elseif winner == 1 then
+			BroadcastArenaAnnouncer(2, math.random(1, 10))
+		end
+	end
+
 	for k,ply in player.Iterator() do
-		if ply:Team() == winner then
+		local won = cleanupWinner == "targets" and ply:GetNWBool("ArenaCleanupTarget")
+			or cleanupWinner == "cleaners" and ply:GetNWBool("ArenaCleanupCleaner")
+			or not cleanupWinner and ply:Team() == winner
+		if won then
 			ply:GiveExp(math.random(15,30))
 			ply:GiveSkill(math.Rand(0.1,0.15))
 			--print("give",ply)
 		else
 			--print("take",ply)
 			ply:GiveSkill(-math.Rand(0.05,0.1))
+		end
+	end
+
+	self.CleanupActive = false
+	SetGlobalBool("ArenaCleanupActive", false)
+
+	if self.SeriesLeft then
+		self.SeriesLeft = self.SeriesLeft - 1
+		if self.SeriesLeft <= 0 or zb.nextround ~= self.name then
+			self.SeriesLeft = nil
+			self.SeriesTotal = nil
 		end
 	end
 end

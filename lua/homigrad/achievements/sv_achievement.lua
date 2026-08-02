@@ -243,6 +243,7 @@ function hg.achievements.SetPlayerAchievement(ply, key, val)
         local wasObtainedBefore = playerAchievements[key].obtained_at ~= nil
         playerAchievements[key].obtained_at = playerAchievements[key].obtained_at or os.time()
         local rarity = hg.achievements.achievements_data.rarity[key] or {owners = 0, total = 0, percent = 0}
+        local unlockRarityName = getRarityName(tonumber(rarity.percent) or 0, tonumber(rarity.owners) or 0)
         rarity.owners = math.min((tonumber(rarity.owners) or 0) + (wasObtainedBefore and 0 or 1), math.max(tonumber(rarity.total) or 0, 1))
         rarity.total = math.max(tonumber(rarity.total) or 0, 1)
         rarity.percent = math.Round(rarity.owners / rarity.total * 100, 2)
@@ -252,7 +253,7 @@ function hg.achievements.SetPlayerAchievement(ply, key, val)
         net.Start("hg_NewAchievement")
             net.WriteString(ach.name)
             net.WriteString(ach.img)
-            net.WriteString(rarity.name)
+            net.WriteString(unlockRarityName)
         net.Send(ply)
 
         hg.achievements.SaveToSQL(ply, playerAchievements)
@@ -397,6 +398,29 @@ hook.Add("PlayerDeath", "hg_killemall_Acchivment", function(ply, inflictor, atta
     end
 end)
 
+hook.Add("HomigradDamage", "hg_git_gud_track", function(victim, dmgInfo)
+    if not IsValid(victim) or not victim:IsPlayer() then return end
+
+    local grenade = dmgInfo:GetInflictor()
+    if IsValid(grenade) and grenade.ishggrenade then
+        local grenadeOwner = IsValid(grenade.owner) and grenade.owner or grenade.owner2
+        if dmgInfo:GetAttacker() == victim or grenadeOwner == victim then
+            victim.GitGudLastHit = CurTime()
+            return
+        end
+    end
+
+    if dmgInfo:GetDamage() > 0 then victim.GitGudLastHit = nil end
+end)
+
+hook.Add("Player_Death", "hg_git_gud_achievement", function(victim)
+    local hitTime = victim.GitGudLastHit
+    victim.GitGudLastHit = nil
+    if hitTime and CurTime() - hitTime <= 30 then
+        hg.achievements.SetPlayerAchievement(victim, "git_gud", 1)
+    end
+end)
+
 hook.Add("PlayerSilentDeath","hg_killemall_Acchivment",function(ply)
     local london = hg.achievements.GetPlayerAchievement(ply, "london")
     if (london.value or 0) < 28 then hg.achievements.SetPlayerAchievement(ply, "london", 0) end
@@ -406,6 +430,7 @@ end)
 hook.Add("PlayerSpawn", "hg_london_reset", function(ply)
     ply.LondonLastKnifeHits = nil
     ply.JohnWickLastHit = nil
+    ply.GitGudLastHit = nil
     local london = hg.achievements.GetPlayerAchievement(ply, "london")
     if (london.value or 0) < 28 then hg.achievements.SetPlayerAchievement(ply, "london", 0) end
 end)

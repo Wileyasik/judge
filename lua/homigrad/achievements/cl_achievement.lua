@@ -906,8 +906,8 @@ local achievement_rarity_sounds = {
     Rare = "rare.MP3",
     Epic = "Epic.MP3",
     Legendary = "legendary.MP3",
-    Mythic = "Mythic.MP3",
-    Exotic = "exotic.MP3"
+    Mythic = "exotic.MP3",
+    Exotic = "Mythic.MP3"
 }
 
 local function PlayAchievementSound(rarity)

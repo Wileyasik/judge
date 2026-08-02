@@ -2,15 +2,171 @@ MODE.name = "tdm"
 
 local MODE = MODE
 
-net.Receive("tdm_start",function()
+local voteEndTime = 0
+local selectedVote = 0
+local voteResults = {[1] = 0, [2] = 0, [3] = 0}
+local gradientRight = Material("vgui/gradient-r")
+local gradientLeft = Material("vgui/gradient-l")
+local gradientDown = Material("vgui/gradient-d")
+
+local function GetVoteTotal()
+	return (voteResults[1] or 0) + (voteResults[2] or 0) + (voteResults[3] or 0)
+end
+
+local function OpenArenaVoteMenu()
+	if IsValid(ArenaVoteMenu) then ArenaVoteMenu:Remove() end
+
+	ArenaVoteMenu = vgui.Create("DFrame")
+	ArenaVoteMenu:SetSize(ScrW(), ScrH())
+	ArenaVoteMenu:SetPos(0, 0)
+	ArenaVoteMenu:SetTitle("")
+	ArenaVoteMenu:ShowCloseButton(false)
+	ArenaVoteMenu:SetDraggable(false)
+	ArenaVoteMenu:MakePopup()
+	ArenaVoteMenu.OpenTime = CurTime()
+	ArenaVoteMenu.Paint = function(self, w, h)
+		local elapsed = CurTime() - self.OpenTime
+		local titleFrac = math.Clamp(elapsed / 0.4, 0, 1)
+		local timerLeft = math.max(math.ceil(voteEndTime - CurTime()), 0)
+		local pulse = 0.5 + math.sin(CurTime() * 4) * 0.5
+		local timerColor = timerLeft <= 5 and Color(255, 120 + pulse * 80, 120 + pulse * 80) or Color(225, 225, 225)
+
+		hg.DrawBlur(self, 5)
+		draw.RoundedBox(0, 0, 0, w, h, Color(10, 10, 19, 235))
+		surface.SetDrawColor(18, 18, 18, 65)
+		surface.SetMaterial(gradientRight)
+		surface.DrawTexturedRect(0, 0, w, h)
+		surface.SetMaterial(gradientLeft)
+		surface.DrawTexturedRect(0, 0, w, h)
+		surface.SetMaterial(gradientDown)
+		surface.DrawTexturedRect(0, 0, w, h)
+		draw.SimpleText("ARENA ROUNDS", "ZCity_Menu_Small", w * 0.5, h * 0.12, Color(225, 225, 225, 255 * titleFrac), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		draw.SimpleText("Vote for the series length", "ZCity_Menu_Settings_Small", w * 0.5, h * 0.16, Color(200, 200, 200, 255 * titleFrac), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		draw.SimpleText("TIME LEFT: " .. timerLeft, "ZCity_Menu_Small", w * 0.5, h * 0.86, timerColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	end
+	ArenaVoteMenu.Think = function()
+		if CurTime() >= voteEndTime and IsValid(ArenaVoteMenu) then ArenaVoteMenu:Remove() end
+	end
+
+	for i = 1, 3 do
+		local data = ARENA_ROUND_OPTIONS[i]
+		local button = vgui.Create("DButton", ArenaVoteMenu)
+		button:SetSize(ScrW() * 0.7, ScrH() * 0.16)
+		button.TargetX = ScrW() * 0.15
+		button.TargetY = ScrH() * (0.25 + (i - 1) * 0.18)
+		button:SetPos((i % 2 == 0) and ScrW() + 120 or -button:GetWide() - 120, button.TargetY)
+		button:SetText("")
+		button.OpenTime = CurTime() + (i - 1) * 0.08
+		button.HoverFrac = 0
+		button.SelectFrac = 0
+		button.Think = function(self)
+			local x = self:GetX()
+			local intro = math.Clamp((CurTime() - self.OpenTime) / 0.35, 0, 1)
+			self.HoverFrac = Lerp(FrameTime() * 10, self.HoverFrac, self:IsHovered() and 1 or 0)
+			self.SelectFrac = Lerp(FrameTime() * 10, self.SelectFrac, selectedVote == i and 1 or 0)
+			self:SetPos(Lerp(FrameTime() * 10, x, self.TargetX + self.HoverFrac * 10), self.TargetY - (1 - intro) * 4 - self.HoverFrac * 6)
+		end
+		button.Paint = function(self, w, h)
+			local total = GetVoteTotal()
+			local votes = voteResults[i] or 0
+			local percent = total > 0 and math.floor(votes / total * 100) or 0
+			local glow = math.max(self.HoverFrac, self.SelectFrac)
+			draw.RoundedBox(0, 0, 0, w, h, Color(0, 0, 0, 190 + glow * 35))
+			surface.SetDrawColor(225, 225, 225, 120 + glow * 80)
+			surface.DrawOutlinedRect(0, 0, w, h, 1)
+			draw.SimpleText(data.name, "ZCity_Menu_Small", 24 + self.HoverFrac * 6, h * 0.32, Color(225, 225, 225), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+			draw.SimpleText(data.description, "ZCity_Menu_Settings_Small", 24 + self.HoverFrac * 6, h * 0.7, Color(210, 210, 210), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+			draw.SimpleText(percent .. "%", "ZCity_Menu_Small", w - 24, h * 0.32, Color(225, 225, 225), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+			draw.SimpleText(votes .. " votes", "ZCity_Menu_Settings_Small", w - 24, h * 0.7, Color(210, 210, 210), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+		end
+		button.DoClick = function()
+			local oldVote = selectedVote
+			selectedVote = i
+			surface.PlaySound("ui/rem_select.wav")
+			net.Start("arena_change_vote")
+				net.WriteUInt(oldVote, 2)
+				net.WriteUInt(i, 2)
+			net.SendToServer()
+		end
+	end
+end
+
+net.Receive("arena_start_vote", function()
+	voteEndTime = net.ReadFloat()
+	selectedVote = 0
+	voteResults = {[1] = 0, [2] = 0, [3] = 0}
+	OpenArenaVoteMenu()
+end)
+
+net.Receive("arena_vote_update", function()
+	voteResults = net.ReadTable() or {[1] = 0, [2] = 0, [3] = 0}
+end)
+
+net.Receive("arena_vote_result", function()
+	selectedVote = net.ReadUInt(2)
+	voteResults = net.ReadTable() or voteResults
+	if IsValid(ArenaVoteMenu) then ArenaVoteMenu:Remove() end
+	surface.PlaySound("ui/buttonclickrelease.wav")
+end)
+
+local function StartArenaIntro()
 	if hg.DynaMusic then hg.DynaMusic:Stop() end
 	surface.PlaySound("rem_tdm" .. math.random(1, 5) .. ".mp3")
-	zb.rtype = net.ReadString()
 	zb.RemoveFade()
 	MODE.RoundTextTilts = {}
 	for i = 1, 8 do
 		MODE.RoundTextTilts[i] = (math.random() < 0.5) and 3 or -3
 	end
+end
+
+net.Receive("arena_round_start",function()
+	local showIntro = net.ReadBool()
+	MODE.ShowRoundIntro = showIntro
+	if showIntro then StartArenaIntro() end
+end)
+
+net.Receive("tdm_start",function()
+	zb.rtype = net.ReadString()
+	StartArenaIntro()
+end)
+
+net.Receive("arena_announcer", function()
+	local eventType = net.ReadUInt(2)
+	local index = net.ReadUInt(4)
+	if index < 1 or index > 10 then return end
+
+	local path
+	if eventType == 0 then path = "arena/killz/kill" .. index .. ".mp3" end
+	if eventType == 1 then path = "arena/wins/red" .. index .. ".mp3" end
+	if eventType == 2 then path = "arena/wins/blue" .. index .. ".mp3" end
+	if eventType == 3 then path = "arena/cleaning/zachistka" .. index .. ".mp3" end
+	if not path then return end
+
+	for copy = 1, 2 do
+		sound.PlayFile("sound/" .. path, "noplay", function(channel)
+			if not IsValid(channel) then
+				if copy == 1 then surface.PlaySound(path) end
+				return
+			end
+			channel:SetVolume(1)
+			channel:Play()
+		end)
+	end
+end)
+
+hook.Add("PreDrawHalos", "ArenaCleanupTargets", function()
+	if zb.CROUND ~= "tdm" or not GetGlobalBool("ArenaCleanupActive") then return end
+	local localPlayer = LocalPlayer()
+	if not IsValid(localPlayer) or not localPlayer:GetNWBool("ArenaCleanupCleaner") then return end
+
+	local targets = {}
+	for _, ply in player.Iterator() do
+		if ply:Alive() and ply:GetNWBool("ArenaCleanupTarget") then
+			targets[#targets + 1] = ply
+		end
+	end
+
+	if #targets > 0 then halo.Add(targets, Color(255, 35, 20), 2, 2, 1, true, true) end
 end)
 
 local teams = {
@@ -56,6 +212,7 @@ local function tdm_draw_text(text, fontname, x, y, col, a, ang, xalign, yalign)
 end
 
 function MODE:RenderScreenspaceEffects()
+	if self.ShowRoundIntro == false then return end
     local StartTime = zb.ROUND_START or CurTime()
 	if StartTime + 7.5 < CurTime() then return end
     local fade = math.Clamp(StartTime + 7.5 - CurTime(),0,1)
@@ -67,13 +224,19 @@ end
 function MODE:HUDPaint()
     local StartTime = zb.ROUND_START or CurTime()
 	self:AddHudPaint()
-	if StartTime + self.start_time > CurTime() then
+	if GetGlobalBool("ArenaCleanupActive") then
+		local time = string.FormattedTime(math.max(GetGlobalFloat("ArenaCleanupDeadline") - CurTime(), 0), "%02i:%02i:%02i")
+		local objective = lply:GetNWBool("ArenaCleanupCleaner") and "ELIMINATE THE SURVIVORS" or "SURVIVE THE CLEANUP"
+		draw.SimpleText(time, "ZB_HomicideMedium", sw * 0.5, sh * 0.92, Color(230, 45, 35), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		draw.SimpleText(objective, "ZB_HomicideMedium", sw * 0.5, sh * 0.96, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	elseif StartTime + self.start_time > CurTime() then
 		draw.SimpleText( string.FormattedTime(StartTime + self.start_time - CurTime(), "%02i:%02i:%02i"	), "ZB_HomicideMedium", sw * 0.5, sh * 0.95, Color(255,255,255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 	else
 		local time = string.FormattedTime( math.max(StartTime + (zb.ROUND_TIME or 400) - CurTime(), 0), "%02i:%02i:%02i" )
 		draw.SimpleText( time, "ZB_HomicideMedium", sw * 0.5, sh * 0.95, ColorObj, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 	end
 
+	if self.ShowRoundIntro == false then return end
     if StartTime + self.start_time < CurTime() then return end
 	 
 	if not lply:Alive() then return end
@@ -271,6 +434,7 @@ CreateEndMenu = function()
 end
 
 function MODE:RoundStart()
+	if IsValid(ArenaVoteMenu) then ArenaVoteMenu:Remove() end
     if IsValid(hmcdEndMenu) then
         hmcdEndMenu:Remove()
         hmcdEndMenu = nil

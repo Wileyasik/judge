@@ -12,7 +12,13 @@ zb.Points.HMCD_TDM_T.Color = Color(150,95,0)
 zb.Points.HMCD_TDM_T.Name = "HMCD_TDM_T"
 
 MODE.PrintName = "Arena"
-MODE.start_time = 5
+MODE.start_time = 15
+
+ARENA_ROUND_OPTIONS = {
+	[1] = {rounds = 1, name = "1 ROUND", description = "One decisive Arena round."},
+	[2] = {rounds = 2, name = "2 ROUNDS", description = "A short two-round Arena series."},
+	[3] = {rounds = 3, name = "3 ROUNDS", description = "A full three-round Arena series."},
+}
 
 MODE.ArenaMaxWeight = 50
 MODE.ArenaAttachmentWeight = 1
@@ -72,16 +78,16 @@ MODE.ArenaWeapons = {
 	weapon_sv98 = {name = "SV-98", category = "Marksman", slot = "primary", weight = 11, clips = 4, attachments = {"supressor9", "supressor16", "supressor15", "holo1", "holo2", "holo14", "holo15", "optic2", "optic5", "optic7", "optic8"}},
 	weapon_vss = {name = "VSS Vintorez", category = "Marksman", slot = "primary", weight = 11, clips = 4, attachments = {"holo6", "holo6fur", "optic4", "optic11", "holo1", "holo2", "holo3", "holo4", "holo14", "holo15", "optic2", "optic5", "optic7", "optic8"}},
 	weapon_glock17 = {name = "Glock 17", category = "Sidearms", slot = "secondary", weight = 4, clips = 3, attachments = {"supressor2", "supressor1", "holo16", "optic24", "laser1", "laser2", "laser3", "laser5", "mag1"}},
-	weapon_px4beretta = {name = "Beretta PX4", category = "Sidearms", slot = "secondary", weight = 3, clips = 3, attachments = {"supressor6", "supressor4"}},
-    weapon_hk_usp = {name = "HK USP", category = "Sidearms", slot = "secondary", weight = 4, clips = 3, attachments = {"holo16", "supressor2"}},
-	weapon_p22 = {name = "Walther P22", category = "Sidearms", slot = "secondary", weight = 2, clips = 4, attachments = {"supressor1", "supressor2", "laser1", "laser2", "laser3", "laser5"}},
-	weapon_fn45 = {name = "FNX-45", category = "Sidearms", slot = "secondary", weight = 4, clips = 3, attachments = {"supressor4", "holo16", "optic24", "laser1", "laser2", "laser3", "laser5"}},
-	weapon_cz75 = {name = "CZ 75", category = "Sidearms", slot = "secondary", weight = 3, clips = 3, attachments = {"supressor4", "supressor6", "supressor3"}},
+	weapon_px4beretta = {name = "Beretta PX4", category = "Sidearms", slot = "secondary", weight = 3, clips = 3, attachments = {}},
+	weapon_hk_usp = {name = "HK USP", category = "Sidearms", slot = "secondary", weight = 4, clips = 3, attachments = {"supressor1", "supressor2", "holo16", "optic24", "laser1", "laser2", "laser3", "laser5"}},
+	weapon_p22 = {name = "Walther P22", category = "Sidearms", slot = "secondary", weight = 2, clips = 4, attachments = {"laser1", "laser2", "laser3", "laser5"}},
+	weapon_fn45 = {name = "FNX-45", category = "Sidearms", slot = "secondary", weight = 4, clips = 3, attachments = {"holo16", "optic24", "laser1", "laser2", "laser3", "laser5"}},
+	weapon_cz75 = {name = "CZ 75", category = "Sidearms", slot = "secondary", weight = 3, clips = 3, attachments = {"supressor1", "supressor2"}},
 	weapon_deagle = {name = "Desert Eagle", category = "Sidearms", slot = "secondary", weight = 5, clips = 3, attachments = {"holo16", "optic24", "laser1", "laser2", "laser3", "laser5"}},
-	weapon_m1911 = {name = "Colt M1911", category = "Sidearms", slot = "secondary", weight = 3, clips = 3, attachments = {"supressor4"}},
+	weapon_m1911 = {name = "Colt M1911", category = "Sidearms", slot = "secondary", weight = 3, clips = 3, attachments = {}},
 	weapon_pl15 = {name = "PL-15", category = "Sidearms", slot = "secondary", weight = 3, clips = 3, attachments = {"supressor1", "supressor2", "holo16", "optic24", "laser1", "laser2", "laser3", "laser5"}},
 	weapon_p226 = {name = "SIG Sauer P226", category = "Sidearms", slot = "secondary", weight = 3, clips = 3, attachments = {"supressor1", "supressor2", "holo16", "optic24", "laser1", "laser2", "laser3", "laser5"}},
-	weapon_revolver2 = {name = "Manurhin MR-96", category = "Sidearms", slot = "secondary", weight = 4, clips = 4, attachments = {"supressor4", "supressor6"}},
+	weapon_revolver2 = {name = "Manurhin MR-96", category = "Sidearms", slot = "secondary", weight = 4, clips = 4, attachments = {}},
 	weapon_m249 = {name = "M249", category = "Heavy", slot = "primary", weight = 16, clips = 2, attachments = {"supressor5", "supressor6", "supressor15", "holo1", "holo2", "holo3", "holo4", "holo14", "holo15", "optic5", "optic7", "optic8", "laser1", "laser2", "laser3", "laser5"}},
 	weapon_hg_smokenade_tpik = {name = "Smoke Bomb", category = "Grenades", slot = "grenade", weight = 2, clips = 0, attachments = {}},
 	weapon_hg_flashbang_tpik = {name = "Flashbang", category = "Grenades", slot = "grenade", weight = 3, clips = 0, attachments = {}},
