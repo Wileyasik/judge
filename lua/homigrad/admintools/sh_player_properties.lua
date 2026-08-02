@@ -540,67 +540,67 @@ properties.Add( "amputate_limb", {
 		head:SetRadio(true)
 		head:SetChecked(ent.organism.larm > 0)
 		head:SetIsCheckable(true)
-		head.OnChecked = function(s, checked) self:AmputateLimb(ent, 0) end
+		head.OnChecked = function(s, checked) if checked then self:AmputateLimb(ent, 0) end end
 
 		local larm = submenu:AddOption("Left Arm")
 		larm:SetRadio(true)
 		larm:SetChecked(ent.organism.larm > 0)
 		larm:SetIsCheckable(true)
-		larm.OnChecked = function(s, checked) self:AmputateLimb(ent, 1) end
+		larm.OnChecked = function(s, checked) if checked then self:AmputateLimb(ent, 1) end end
 
 		local rarm = submenu:AddOption("Right Arm")
 		rarm:SetRadio(true)
 		rarm:SetChecked(ent.organism.rarm > 0)
 		rarm:SetIsCheckable(true)
-		rarm.OnChecked = function(s, checked) self:AmputateLimb(ent, 2) end
+		rarm.OnChecked = function(s, checked) if checked then self:AmputateLimb(ent, 2) end end
 
 		local lleg = submenu:AddOption("Left Leg")
 		lleg:SetRadio(true)
 		lleg:SetChecked(ent.organism.lleg > 0)
 		lleg:SetIsCheckable(true)
-		lleg.OnChecked = function(s, checked) self:AmputateLimb(ent, 3) end
+		lleg.OnChecked = function(s, checked) if checked then self:AmputateLimb(ent, 3) end end
 
 		local rleg = submenu:AddOption("Right Leg")
 		rleg:SetRadio(true)
 		rleg:SetChecked(ent.organism.rleg > 0)
 		rleg:SetIsCheckable(true)
-		rleg.OnChecked = function(s, checked) self:AmputateLimb(ent, 4) end
+		rleg.OnChecked = function(s, checked) if checked then self:AmputateLimb(ent, 4) end end
 
 		local lhand = submenu:AddOption("Left Hand")
 		lhand:SetRadio(true)
 		lhand:SetChecked(ent.organism.lhandamputated)
 		lhand:SetIsCheckable(true)
-		lhand.OnChecked = function(s, checked) self:AmputateLimb(ent, 5) end
+		lhand.OnChecked = function(s, checked) if checked then self:AmputateLimb(ent, 5) end end
 
 		local rhand = submenu:AddOption("Right Hand")
 		rhand:SetRadio(true)
 		rhand:SetChecked(ent.organism.rhandamputated)
 		rhand:SetIsCheckable(true)
-		rhand.OnChecked = function(s, checked) self:AmputateLimb(ent, 6) end
+		rhand.OnChecked = function(s, checked) if checked then self:AmputateLimb(ent, 6) end end
 
 		local larmup = submenu:AddOption("Left Upper Arm")
 		larmup:SetRadio(true)
 		larmup:SetChecked(ent.organism.larmupamputated)
 		larmup:SetIsCheckable(true)
-		larmup.OnChecked = function(s, checked) self:AmputateLimb(ent, 7) end
+		larmup.OnChecked = function(s, checked) if checked then self:AmputateLimb(ent, 7) end end
 
 		local rarmup = submenu:AddOption("Right Upper Arm")
 		rarmup:SetRadio(true)
 		rarmup:SetChecked(ent.organism.rarmupamputated)
 		rarmup:SetIsCheckable(true)
-		rarmup.OnChecked = function(s, checked) self:AmputateLimb(ent, 8) end
+		rarmup.OnChecked = function(s, checked) if checked then self:AmputateLimb(ent, 8) end end
 
 		local llegup = submenu:AddOption("Left Upper Leg")
 		llegup:SetRadio(true)
 		llegup:SetChecked(ent.organism.llegupamputated)
 		llegup:SetIsCheckable(true)
-		llegup.OnChecked = function(s, checked) self:AmputateLimb(ent, 9) end
+		llegup.OnChecked = function(s, checked) if checked then self:AmputateLimb(ent, 9) end end
 
 		local rlegup = submenu:AddOption("Right Upper Leg")
 		rlegup:SetRadio(true)
 		rlegup:SetChecked(ent.organism.rlegupamputated)
 		rlegup:SetIsCheckable(true)
-		rlegup.OnChecked = function(s, checked) self:AmputateLimb(ent, 10) end
+		rlegup.OnChecked = function(s, checked) if checked then self:AmputateLimb(ent, 10) end end
 	end,
 
 	AmputateLimb = function( self, ent, id )

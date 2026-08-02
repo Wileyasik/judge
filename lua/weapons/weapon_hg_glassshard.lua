@@ -19,6 +19,8 @@ SWEP.SuicideTime = 0.5
 SWEP.CanSuicide = true
 SWEP.SuicideNoLH = true
 
+SWEP.CantClash = true
+
 SWEP.BreakBoneMul = 0.1
 SWEP.weight = 0.5
 
@@ -30,8 +32,9 @@ SWEP.modelscale = 0.5
 SWEP.modelscale2 = 1
 
 SWEP.noreverse = true
-SWEP.BlockTier = 1.5
+SWEP.BlockTier = 1
 SWEP.BlockMaterial = "none"
+SWEP.BlockSound = {"GlassBottle.ImpactHard", 68, {95, 102}}
 
 if CLIENT then
 	SWEP.WepSelectIcon = Material("entities/zcity/glassshard.png")

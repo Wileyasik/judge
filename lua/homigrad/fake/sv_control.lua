@@ -377,6 +377,26 @@ local models_female = {
 
 local vector_zero = Vector(0,0,0)
 local vector_usehull = Vector(6, 6, 6)
+local fall_cover_mins = Vector(-6, -6, -6)
+local fall_cover_maxs = Vector(6, 6, 6)
+local fall_cover_offsets = {
+	["male09"] = {
+		[2] = {ang = Angle(-25.820, -105.490, -100.210)},
+		[3] = {ang = Angle(-33.460, -72.240, -70.380)},
+		[4] = {ang = Angle(-10.640, 145.920, -34.760)},
+		[5] = {ang = Angle(12.380, 127.140, 75.320)},
+		[6] = {ang = Angle(-19.720, -33.680, -171.940)},
+		[7] = {ang = Angle(-1.960, 35.170, 116.580)}
+	},
+	["female06"] = {
+		[2] = {ang = Angle(-22.610, -99.190, -98.620)},
+		[3] = {ang = Angle(-29.870, -78.830, -71.760)},
+		[4] = {ang = Angle(-11.430, 139.440, -35.610)},
+		[5] = {ang = Angle(11.620, 117.010, 78.940)},
+		[6] = {ang = Angle(-20.210, -25.920, -171.180)},
+		[7] = {ang = Angle(-4.130, 45.020, 113.260)}
+	}
+}
 local slideFrictionBones = {13, 14, 12, 9}
 
 local hg_shitty_fake = CreateConVar("hg_shitty_fake", "1", FCVAR_ARCHIVE + FCVAR_NOTIFY, "enable shitty fake", 0, 1)
@@ -385,6 +405,25 @@ local speedupbones = {
 	["ValveBiped.Bip01_L_Foot"] = true,
 	["ValveBiped.Bip01_R_Foot"] = true,
 }
+
+local FAKE_LEG_KICK_DAMAGE_MUL = 0.65
+local FAKE_LEG_KICK_RAG_FORCE_MUL = 155
+local FAKE_LEG_KICK_PROP_FORCE_MUL = 90
+local FAKE_LEG_KICK_PLAYER_PUSH = 85
+local FAKE_LEG_KICK_FAKE_CHANCE = 0.65
+local FAKE_LEG_KICK_TRACE_RANGE = 28
+local FAKE_LEG_KICK_TRACE_SIZE = Vector(5, 5, 5)
+local FAKE_LEG_KICK_SEGMENT_SIZE = Vector(6, 6, 6)
+local FAKE_LEG_KICK_EXTEND_TIME = 0.35
+local FAKE_LEG_KICK_VIEWPUNCH = Angle(3, 0, 0)
+local FAKE_LEG_KICK_CHARGE_FORWARD_OFFSET = -90
+local FAKE_LEG_KICK_CHARGE_THIGH_RIGHT_OFFSET = -22
+local FAKE_LEG_KICK_CHARGE_CALF_RIGHT_OFFSET = -10
+local FAKE_LEG_KICK_CHARGE_CALF_UP_OFFSET = 220
+local FAKE_LEG_KICK_EXTEND_THIGH_UP_OFFSET = 46
+local FAKE_LEG_KICK_SHADOW_TIME = 0.001
+local FAKE_LEG_KICK_SHADOW_ANG = 170
+local FAKE_LEG_KICK_SHADOW_DAMP = 60
 
 local vecfive = Vector(5,5,5)
 
@@ -422,6 +461,142 @@ function hg.ClearRagdollSlideState(ragdoll)
 end
 
 local player_GetHumans = player.GetHumans
+
+local function traceFakeLegSegment(ply, ragdoll, startPos, endPos, size)
+	return util.TraceHull({
+		start = startPos,
+		endpos = endPos,
+		filter = {ply, ragdoll, hg.GetCurrentCharacter(ply)},
+		maxs = size,
+		mins = -size,
+		mask = MASK_SOLID
+	})
+end
+
+local function getFakeLegKickTrace(ply, ragdoll, dir)
+	local thigh = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, 8))
+	local calf = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, 9))
+	local foot = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, 14))
+	if not IsValid(thigh) or not IsValid(calf) or not IsValid(foot) then return end
+
+	local thighPos = thigh:GetPos()
+	local calfPos = calf:GetPos()
+	local footPos = foot:GetPos()
+	local traces = {
+		traceFakeLegSegment(ply, ragdoll, thighPos, calfPos, FAKE_LEG_KICK_SEGMENT_SIZE),
+		traceFakeLegSegment(ply, ragdoll, calfPos, footPos, FAKE_LEG_KICK_SEGMENT_SIZE),
+		traceFakeLegSegment(ply, ragdoll, footPos, footPos + dir * FAKE_LEG_KICK_TRACE_RANGE, FAKE_LEG_KICK_TRACE_SIZE)
+	}
+
+	for i = 1, #traces do
+		local tr = traces[i]
+		if tr.Hit and IsValid(tr.Entity) then return tr, footPos end
+	end
+
+	return traces[#traces], footPos
+end
+
+local function fakeLegKickHit(ply, ragdoll, state)
+	local org = ply.organism
+	if not org then return end
+
+	local tr = getFakeLegKickTrace(ply, ragdoll, state.dir)
+	if not tr then return end
+
+	if org.rleg == 1 or org.rlegdislocation then
+		org.painadd = org.painadd + 20
+	end
+
+	ply:EmitSound("player/shove_0" .. math.random(1,5) .. ".wav", 65)
+
+	if tr.Hit then
+		if org.rleg == 1 or org.rlegdislocation then
+			org.painadd = org.painadd + 20
+		end
+
+		ply:EmitSound("weapons/melee/blunt_light" .. math.random(1,8) .. ".wav")
+	end
+
+	local ent = tr.Entity
+	if not IsValid(ent) or ent == ply or ent == ragdoll or ent == hg.GetCurrentCharacter(ply) then return end
+
+	local phys = ent:GetPhysicsObjectNum(tr.PhysicsBone or 0)
+	if !ent:IsPlayer() and not IsValid(phys) then return end
+
+	local dmginfo = DamageInfo()
+	dmginfo:SetAttacker(ply)
+	dmginfo:SetInflictor(IsValid(ply:GetActiveWeapon()) and ply:GetActiveWeapon() or ply)
+	dmginfo:SetDamage(state.dmg)
+	dmginfo:SetDamageForce(state.dir * state.dmg * FAKE_LEG_KICK_RAG_FORCE_MUL)
+	dmginfo:SetDamageType((ent:GetClass() == "func_breakable_surf") and DMG_SLASH or DMG_CLUB)
+	dmginfo:SetDamagePosition(tr.HitPos)
+
+	PenetrationGlobal = 1
+	MaxPenLenGlobal = 1
+	if hg.AddForceRag then hg.AddForceRag(ent, tr.PhysicsBone or 0, state.dir * state.dmg * FAKE_LEG_KICK_RAG_FORCE_MUL, 0.25) end
+	ent:TakeDamageInfo(dmginfo)
+
+	if IsValid(phys) then
+		phys:ApplyForceOffset(state.dir * state.dmg * FAKE_LEG_KICK_PROP_FORCE_MUL, tr.HitPos)
+	end
+
+	if ent:IsPlayer() or ent:GetClass() == "prop_ragdoll" then
+		ent:EmitSound("physics/body/body_medium_impact_hard" .. math.random(6) .. ".wav", 60, math.random(85, 105), 0.6)
+	end
+
+	if ent:IsPlayer() then
+		if math.Rand(0, 1) <= FAKE_LEG_KICK_FAKE_CHANCE then
+			timer.Simple(0, function()
+				if IsValid(ent) then hg.Fake(ent) end
+			end)
+		end
+
+		ent:SetVelocity(state.dir * FAKE_LEG_KICK_PLAYER_PUSH)
+	end
+
+	if hgIsDoor and hgIsDoor(ent) and !ent:GetNoDraw() then
+		ent.HP = ent.HP or 200
+		ent.HP = ent.HP - state.dmg * (tr.MatType == MAT_METAL and 1 or 2)
+		ent:EmitSound("physics/wood/wood_crate_impact_hard" .. math.random(1,4) .. ".wav")
+		if ent.HP <= 0 and hgBlastThatDoor then hgBlastThatDoor(ent, state.dir * 125) end
+	end
+end
+
+function hg.FakeLegAttack(ply)
+	local ragdoll = ply.FakeRagdoll
+	local org = ply.organism
+	if not ply:Alive() or not IsValid(ragdoll) or not org or not org.canmove then return end
+	if ply.InLegKick and ply.InLegKick > CurTime() then return end
+	if ply:GetNWFloat("InLegKick", 0) > CurTime() then return end
+	if hook.Run("PlayerCanLegAttack", ply) == false then return end
+
+	ply:EmitSound("player/clothes_generic_foley_0" .. math.random(1,5) .. ".wav", 65)
+	org.stamina.subadd = org.stamina.subadd + 20 / (org.superfighter and 2 or 1)
+
+	local speedmul = (2 - (org.stamina[1] / org.stamina.max))
+	local speed = 1.5 * speedmul
+	local animstopAdjust = 0.3 * speedmul
+	local duration = speed - animstopAdjust
+	local dmg = 10 * (2 - speedmul)
+	dmg = dmg * (ply:IsBerserk() and org.berserk * 5 or 1)
+	dmg = dmg * (org.legstrength or 1)
+	dmg = dmg * FAKE_LEG_KICK_DAMAGE_MUL
+
+	local ang = ply:EyeAngles()
+	ang[1] = 0
+
+	hook.Run("HomigradLegKick", ply)
+	ply.InLegKick = CurTime() + duration
+	ply:SetNWFloat("InLegKick", CurTime() + duration)
+	ragdoll.fakeLegKick = {
+		start = CurTime(),
+		finish = CurTime() + duration,
+		hitTime = CurTime() + duration * 0.55,
+		dmg = dmg,
+		dir = ang:Forward(),
+		hit = false
+	}
+end
 
 hook.Add("Think", "Fake", function()
 	hg.humans_cached = player_GetHumans()
@@ -583,11 +758,14 @@ hook.Add("Think", "Fake", function()
 			ang:RotateAroundAxis(ang:Up(), 30)
 		end
 
+		local fakeKick = ragdoll.fakeLegKick
+		local fakeKickActive = fakeKick and CurTime() < fakeKick.finish and org.canmove
+
 		if (!ply:InVehicle() && (ply:KeyDown(IN_USE) || ((ishgweapon(wep)) && (ply:KeyDown(IN_ATTACK2) || (wep.IsResting and wep:IsResting()))) || (wep.ismelee && (ply:KeyDown(IN_ATTACK2) || ply:KeyDown(IN_ATTACK))))) || (ply:InVehicle() && not ply:KeyDown(IN_USE)) or ragdollcombat then
 			if org.canmove and (!((ply:KeyDown(IN_MOVELEFT) or ply:KeyDown(IN_MOVERIGHT)) and ragdoll:IsOnFire()) or ply:InVehicle()) then
 				local angl = angZero
 				angl:Set(ang)
-				if ply:KeyDown(IN_DUCK) then
+				if ply:KeyDown(IN_DUCK) and not fakeKickActive then
 					angl:RotateAroundAxis(angl:Right(), ishgweapon(wep) and 30 or 30)
 				end
 				--angl:RotateAroundAxis(angl:Right(), -90)
@@ -602,7 +780,7 @@ hook.Add("Think", "Fake", function()
 				--ang2 = Angle(-90,ang[2] - 90,0)
 				local angl = angZero
 				angl:Set(ang)
-				if ply:KeyDown(IN_DUCK) then
+				if ply:KeyDown(IN_DUCK) and not fakeKickActive then
 					angl:RotateAroundAxis(angl:Right(), -90)
 				end
 				angl:RotateAroundAxis(angl:Forward(), 90)
@@ -619,6 +797,49 @@ hook.Add("Think", "Fake", function()
 		rforearm = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll,6))
 		lhand = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll,5))
 		ang = spine:GetAngles()
+		local fallCoverActive = false
+		if org.alive and org.canmove and IsValid(spine) then
+			local vel = ragdoll:GetVelocity()
+			local fallSpeed = -vel.z
+			fallCoverActive = vel:LengthSqr() > 1000000
+
+			if not fallCoverActive and fallSpeed > 350 then
+				local fallTr = util.TraceHull({
+					start = spine:GetPos(),
+					endpos = spine:GetPos() - vector_up * fallSpeed,
+					mins = fall_cover_mins,
+					maxs = fall_cover_maxs,
+					filter = {ply, ragdoll},
+					mask = MASK_SOLID,
+				})
+
+				if fallTr.Hit and not fallTr.HitSky and fallTr.Fraction <= 1 then
+					fallCoverActive = true
+				end
+			end
+
+			if fallCoverActive then
+				inmove = true
+				if IsValid(ragdoll.ConsLH) then ragdoll.ConsLH:Remove() ragdoll.ConsLH = nil end
+				if IsValid(ragdoll.ConsRH) then ragdoll.ConsRH:Remove() ragdoll.ConsRH = nil end
+
+				local reference = ragdoll:GetPhysicsObjectNum(0)
+				if IsValid(reference) then
+					local offsets = string.find(string.lower(ragdoll:GetModel() or ""), "female", 1, true) and fall_cover_offsets.female06 or fall_cover_offsets.male09
+					local referenceAng = reference:GetAngles()
+					local coverForce = 1600 * ragdoll.power
+					local coverDamp = 900 * ragdoll.power
+
+					for physBone, offset in pairs(offsets) do
+						local canUseArm = ((physBone == 2 or physBone == 6 or physBone == 7) and not org.rarmamputated) or ((physBone == 3 or physBone == 4 or physBone == 5) and not org.larmamputated)
+						if canUseArm then
+							local _, targetAng = LocalToWorld(vector_origin, offset.ang, vector_origin, referenceAng)
+							shadowControl(ragdoll, physBone, 0.04, targetAng, coverForce, coverDamp, vector_origin, 0, 0)
+						end
+					end
+				end
+			end
+		end
 		local holdWound, holdWoundArterial = getHoldWound(org, ragdoll)
 		local wantsManualHold = holdWound and org.canmove and hg.KeyDown(ply, IN_USE) and hg.KeyDown(ply, IN_JUMP)
 		local canHoldLeft = IsValid(lupper) and IsValid(lforearm) and IsValid(lhand) and not org.larmamputated and not org.larmupamputated
@@ -691,12 +912,12 @@ hook.Add("Think", "Fake", function()
 			shadowControl(ragdoll, 13, otrub_ss, nil, nil, nil, fetalPos, otrub_maxspeed, otrub_maxspeeddamp)
 			shadowControl(ragdoll, 14, otrub_ss, nil, nil, nil, fetalPos, otrub_maxspeed, otrub_maxspeeddamp)
 
-			if (org.larm or 0) > 0 or org.larmdislocation then
+			if not fallCoverActive and ((org.larm or 0) > 0 or org.larmdislocation) then
 				shadowControl(ragdoll, 3, otrub_ss, nil, nil, nil, armHoldPos, otrub_maxspeed, otrub_maxspeeddamp)
 				shadowControl(ragdoll, 4, otrub_ss, nil, nil, nil, armHoldPos, otrub_maxspeed, otrub_maxspeeddamp)
 				shadowControl(ragdoll, 5, otrub_ss, nil, nil, nil, armHoldPos, otrub_maxspeed, otrub_maxspeeddamp)
 			end
-			if (org.rarm or 0) > 0 or org.rarmdislocation then
+			if not fallCoverActive and ((org.rarm or 0) > 0 or org.rarmdislocation) then
 				shadowControl(ragdoll, 2, otrub_ss, nil, nil, nil, armHoldPos, otrub_maxspeed, otrub_maxspeeddamp)
 				shadowControl(ragdoll, 6, otrub_ss, nil, nil, nil, armHoldPos, otrub_maxspeed, otrub_maxspeeddamp)
 				shadowControl(ragdoll, 7, otrub_ss, nil, nil, nil, armHoldPos, otrub_maxspeed, otrub_maxspeeddamp)
@@ -725,6 +946,45 @@ hook.Add("Think", "Fake", function()
 		local forward = ply:KeyDown(IN_FORWARD)
 		local back = ply:KeyDown(IN_BACK)
 		time = CurTime()
+
+		if fakeKick then
+			if time >= fakeKick.finish or not org.canmove then
+				ragdoll.fakeLegKick = nil
+				fakeKickActive = false
+			else
+				fakeKickActive = true
+				inmove = true
+
+				local duration = fakeKick.finish - fakeKick.start
+				local phase = math.Clamp((time - fakeKick.start) / duration, 0, 1)
+				local kickExtend = phase >= FAKE_LEG_KICK_EXTEND_TIME
+				local angle = -(-angles2)
+				angle:RotateAroundAxis(angle:Forward(), FAKE_LEG_KICK_CHARGE_FORWARD_OFFSET)
+
+				if kickExtend then
+					angle:RotateAroundAxis(angle:Up(), FAKE_LEG_KICK_EXTEND_THIGH_UP_OFFSET)
+				end
+
+				angle:RotateAroundAxis(angle:Right(), FAKE_LEG_KICK_CHARGE_THIGH_RIGHT_OFFSET)
+				shadowControl(ragdoll, 8, FAKE_LEG_KICK_SHADOW_TIME, angle, FAKE_LEG_KICK_SHADOW_ANG, FAKE_LEG_KICK_SHADOW_DAMP)
+
+				if kickExtend then
+					angle:RotateAroundAxis(angle:Up(), -FAKE_LEG_KICK_EXTEND_THIGH_UP_OFFSET)
+				end
+
+				angle:RotateAroundAxis(angle:Right(), FAKE_LEG_KICK_CHARGE_CALF_RIGHT_OFFSET)
+				if !kickExtend then
+					angle:RotateAroundAxis(angle:Up(), FAKE_LEG_KICK_CHARGE_CALF_UP_OFFSET)
+				end
+				shadowControl(ragdoll, 9, FAKE_LEG_KICK_SHADOW_TIME, angle, FAKE_LEG_KICK_SHADOW_ANG, FAKE_LEG_KICK_SHADOW_DAMP)
+
+				if not fakeKick.hit and time >= fakeKick.hitTime then
+					fakeKick.hit = true
+					ply:ViewPunch(FAKE_LEG_KICK_VIEWPUNCH)
+					fakeLegKickHit(ply, ragdoll, fakeKick)
+				end
+			end
+		end
 		
 		if manualHoldWound and org.canmove then
 			local tr = {}
@@ -752,7 +1012,7 @@ hook.Add("Think", "Fake", function()
 		
 		if not wep.RagdollFunc then
 			local force = math.max(1 - org.larm / 1.3, 0)
-			if not manualHoldWound and (!IsValid(ragdoll.ConsLH) and (ply:KeyDown(IN_ATTACK) and !ishgweapon(wep)) or (((ishgweapon(wep) and (!wep:IsResting() or ply:KeyDown(IN_FORWARD) or ply:KeyDown(IN_BACK))) or wep.ismelee2) and (ply:KeyDown(IN_USE) or ply:KeyDown(IN_ATTACK2)))) then// || ply:InVehicle() then
+			if not fallCoverActive and not manualHoldWound and (!IsValid(ragdoll.ConsLH) and (ply:KeyDown(IN_ATTACK) and !ishgweapon(wep)) or (((ishgweapon(wep) and (!wep:IsResting() or ply:KeyDown(IN_FORWARD) or ply:KeyDown(IN_BACK))) or wep.ismelee2) and (ply:KeyDown(IN_USE) or ply:KeyDown(IN_ATTACK2)))) then// || ply:InVehicle() then
 				if org.canmove then
 					//if !ply:InVehicle() then
 						ang2:Set(angles)
@@ -785,7 +1045,7 @@ hook.Add("Think", "Fake", function()
 					mask = MASK_SOLID,
 				}).Hit
 			
-			if forward then
+			if not fallCoverActive and forward then
 				if IsValid(ragdoll.ConsRH) then
 					local hand = ragdoll:GetPhysicsObjectNum(ragdoll.ConsRH.Bone1)
 					local torso = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, 1))
@@ -831,7 +1091,7 @@ hook.Add("Think", "Fake", function()
 				end
 			end
 
-			if back then
+			if not fallCoverActive and back then
 				if IsValid(ragdoll.ConsRH) then
 					local hand = ragdoll:GetPhysicsObjectNum(ragdoll.ConsRH.Bone1)
 					local torso = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, 1))
@@ -867,7 +1127,7 @@ hook.Add("Think", "Fake", function()
 
 			local force = math.max(1 - org.rarm / 1.3, 0)
 
-			if (!IsValid(ragdoll.ConsRH) and ply:KeyDown(IN_ATTACK2) or ((ishgweapon(wep) or wep.ismelee2) and ply:KeyDown(IN_USE))) then// || ply:InVehicle() then
+			if not fallCoverActive and (!IsValid(ragdoll.ConsRH) and ply:KeyDown(IN_ATTACK2) or ((ishgweapon(wep) or wep.ismelee2) and ply:KeyDown(IN_USE))) then// || ply:InVehicle() then
 				if org.canmove then
 					--if org.shock > 1 and not ply:KeyDown(IN_ATTACK2) then angles = spine:GetAngles() end
 					//if !ply:InVehicle() then
@@ -899,7 +1159,7 @@ hook.Add("Think", "Fake", function()
 			local choking = (IsValid(ragdoll.ConsRH) and IsValid(ragdoll.ConsRH.choking) and ragdoll.ConsRH.choking) or (IsValid(ragdoll.ConsLH) and IsValid(ragdoll.ConsLH.choking) and ragdoll.ConsLH.choking)
 			local chokinghead = false
 
-			if ply:KeyDown(IN_SPEED) and ply:KeyDown(IN_WALK) then
+			if not fallCoverActive and ply:KeyDown(IN_SPEED) and ply:KeyDown(IN_WALK) then
 				local trace
 				tr.start = lhand:GetPos() + lhand:GetAngles():Forward() * 5
 				tr.endpos = rhand:GetPos() + lhand:GetAngles():Forward() * 5
@@ -1115,7 +1375,7 @@ hook.Add("Think", "Fake", function()
 				end
 			end
 		else
-			if ply:KeyDown(IN_ATTACK2) and org.canmove then
+			if not fallCoverActive and ply:KeyDown(IN_ATTACK2) and org.canmove then
 				if wep.RagdollFunc then
 					wep:RagdollFunc(ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll,7)):GetPos() + angles:Forward() * 15 + ((vellen > 150 and ragdoll:GetPhysicsObject():GetVelocity() / 224) or vector_zero), angles, ragdoll)
 				end
@@ -1432,6 +1692,9 @@ hook.Add("Think", "Fake", function()
 					local slidePending = checkSpeed >= slideMinStartSpeed and onGround and not ragdoll._slideCooldown
 
 					local isDropkicking = ply:KeyDown(IN_ATTACK) and ply:KeyDown(IN_ATTACK2) and not slidePending and not onGround
+					if isDropkicking and not ragdoll.isDropkicking then
+						ragdoll.dropkickAchievementHit = false
+					end
 					ragdoll.isDropkicking = isDropkicking
 
 					if isDropkicking then
@@ -1572,6 +1835,10 @@ hook.Add("Ragdoll Collide", "SlideDamage", function(ragdoll, data)
 	local dmg = isDropkick and math.Clamp((speed - 180) / 8, 12, 60) or math.Clamp(speed / 25, 2, 20)
 
 	local targetPly = hg.RagdollOwner(hitEnt) or (hitEnt:IsPlayer() and hitEnt)
+	if isDropkick and not ragdoll.dropkickAchievementHit and IsValid(targetPly) and targetPly:IsPlayer() and targetPly:Alive() and targetPly ~= ply then
+		ragdoll.dropkickAchievementHit = true
+		hook.Run("HG_PlayerDropkicked", ply, targetPly)
+	end
 	if not IsValid(targetPly) then
 		local dmgInfo = DamageInfo()
 		dmgInfo:SetDamage(dmg)

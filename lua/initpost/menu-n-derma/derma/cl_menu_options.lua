@@ -5,11 +5,17 @@ function hg.settings:AddOpt( strCategory, strConVar, strTitle, bDecimals, bStrin
     self.tbl[strCategory] = self.tbl[strCategory] or {}
     self.tbl[strCategory][strConVar] = { strCategory, strConVar, strTitle, bDecimals or false, bString or false, category }
 end
-local hg_firstperson_death = CreateClientConVar("hg_firstperson_death", "0", true, false, "Toggle first-person death camera view", 0, 1)
+local hg_firstperson_death = CreateClientConVar("hg_firstperson_death", "0", true, false, "Toggle first-person death camera view", 0, 0)
 local hg_font_default = "Lora"
 local hg_font = ConVarExists("hg_font") and GetConVar("hg_font") or CreateClientConVar("hg_font", hg_font_default, true, false, "change every text font to selected because ui customization is cool")
 local hg_oldradialmenu = CreateClientConVar("hg_oldradialmenu", "0", true, false, "use the old radial menu style", 0, 1)
 local hg_hold_shift_sprint = ConVarExists("hg_hold_shift_sprint") and GetConVar("hg_hold_shift_sprint") or CreateClientConVar("hg_hold_shift_sprint", "0", true, true, "Disable jogging, holding shift will make you sprint.", 0, 1)
+
+local function ForceHGFirstPersonDeath()
+	if hg_firstperson_death:GetBool() then
+		RunConsoleCommand("hg_firstperson_death", "0")
+	end
+end
 
 local function ForceHGFont()
 	if hg_font:GetString() != hg_font_default then
@@ -17,7 +23,14 @@ local function ForceHGFont()
 	end
 end
 
+ForceHGFirstPersonDeath()
 ForceHGFont()
+
+cvars.AddChangeCallback("hg_firstperson_death", function(_, _, newValue)
+	if newValue != "0" then
+		RunConsoleCommand("hg_firstperson_death", "0")
+	end
+end, "hg_firstperson_death_lock")
 
 cvars.AddChangeCallback("hg_font", function(_, _, newValue)
 	if newValue != hg_font_default then
@@ -26,7 +39,10 @@ cvars.AddChangeCallback("hg_font", function(_, _, newValue)
 end, "hg_font_lock")
 
 hook.Add("InitPostEntity", "hg_font_force_join", function()
+	ForceHGFirstPersonDeath()
 	ForceHGFont()
+	timer.Simple(1, ForceHGFirstPersonDeath)
+	timer.Simple(5, ForceHGFirstPersonDeath)
 	timer.Simple(1, ForceHGFont)
 	timer.Simple(5, ForceHGFont)
 end)
@@ -154,7 +170,6 @@ hg.settings:AddOpt("Weapons","hg_zoomsensitivity", "Scope sensitivity")
 hg.settings:AddOpt("Weapons","hg_highpitchgunfire", "Toggle high pitched gunfire sounds inside buildings")
 hg.settings:AddOpt("Weapons","hg_nofovzoom", "Disable/Enable FOV Zoom")
 
-hg.settings:AddOpt("View","hg_firstperson_death", "First-Person Death")
 hg.settings:AddOpt("View","hg_fov", "Field Of View")
 hg.settings:AddOpt("View","hg_newspectate", "Smooth Spectator Camera")
 hg.settings:AddOpt("View","hg_cshs_fake", "C'sHS Ragdoll Camera")
@@ -240,6 +255,7 @@ local settings_color_accent = Color(192,57,43)
 local tex_gradient_d = surface.GetTextureID("vgui/gradient-d")
 local tex_gradient_r = surface.GetTextureID("vgui/gradient-r")
 local tex_gradient_l = surface.GetTextureID("vgui/gradient-l")
+local info_row_gradient = Material("vgui/gradient-l")
 local settings_menu_gradient_right = Color(18,18,18,65)
 local settings_clr_1 = Color(100,100,100,35)
 local settings_clr_verygray = Color(10,10,19,235)
@@ -272,6 +288,7 @@ local info_fallback_medal = {
 }
 local info_stat_rows = {
     {"Kills", "Kills"},
+    {"Headshots", "Headshots"},
     {"Deaths", "Deaths"},
     {"Suicides", "Suicides"}
 }
@@ -279,6 +296,19 @@ local info_active_section = nil
 local info_section_buttons = {}
 local info_content_panel = nil
 local info_header_label = nil
+local info_achievement_rarity_colors = {
+    Uncommon = Color(92, 184, 92),
+    Rare = Color(65, 135, 230),
+    Epic = Color(156, 82, 220),
+    Legendary = Color(240, 151, 40),
+    Mythic = Color(235, 62, 122),
+    Exotic = Color(235, 55, 45)
+}
+
+local function InfoFormatAchievementDate(timestamp)
+    timestamp = tonumber(timestamp)
+    return timestamp and os.date("%d.%m.%Y %H:%M", timestamp) or "date unknown"
+end
 
 local function InfoGetObtainedAchievements()
     local results = {}
@@ -290,7 +320,10 @@ local function InfoGetObtainedAchievements()
         local playerData = localach and localach[key] or nil
         local value = playerData and playerData.value or ach.start_value or 0
         if value >= (ach.needed_value or 1) then
-            results[#results + 1] = ach
+            local entry = table.Copy(ach)
+            entry.obtained_at = playerData and playerData.obtained_at
+            entry.rarity = hg.achievements.achievements_data.rarity and hg.achievements.achievements_data.rarity[key]
+            results[#results + 1] = entry
         end
     end
 
@@ -299,6 +332,16 @@ local function InfoGetObtainedAchievements()
     end)
 
     return results
+end
+
+local function InfoHasLocalAchievement(key)
+    if not hg or not hg.achievements or not hg.achievements.achievements_data then return false end
+    local created = hg.achievements.achievements_data.created_achevements or {}
+    local ach = created[key]
+    if not ach then return false end
+    local localach = hg.achievements.GetLocalAchievements and hg.achievements.GetLocalAchievements() or {}
+    local playerData = localach and localach[key] or nil
+    return (playerData and playerData.value or ach.start_value or 0) >= (ach.needed_value or 1)
 end
 
 local info_stat_methods = {
@@ -313,6 +356,10 @@ local function InfoGetPlayerStat(ply, key)
     local cached = ply.SvDB and ply.SvDB[key]
     if cached ~= nil then
         return tonumber(cached) or 0
+    end
+
+    if key == "Headshots" then
+        return tonumber(ply:GetNWInt("Headshots", 0)) or 0
     end
 
     local methodName = info_stat_methods[key]
@@ -365,6 +412,61 @@ hook.Add("RoundInfoCalled", "InfoRankRoundRefresh", function()
         end
     end)
 end)
+
+hg.Leaderboard = hg.Leaderboard or {Rows = {}, NextRequest = 0}
+
+function hg.Leaderboard.Request(limit)
+    if not InfoCanStartNet("zb_sql_leaderboard") then return end
+    if (hg.Leaderboard.NextRequest or 0) > CurTime() then return end
+    hg.Leaderboard.NextRequest = CurTime() + 3
+
+    net.Start("zb_sql_leaderboard")
+        net.WriteUInt(math.Clamp(limit or 10, 1, 10), 8)
+    net.SendToServer()
+end
+
+function hg.Leaderboard.Get(limit)
+    hg.Leaderboard.Request(limit)
+
+    local rows = hg.Leaderboard.Rows or {}
+    if limit and #rows > limit then
+        local trimmed = {}
+        for i = 1, limit do
+            trimmed[i] = rows[i]
+        end
+        return trimmed
+    end
+
+    return rows
+end
+
+function hg.Leaderboard.GetAwards(row)
+    if not row or not zb or not zb.Experience or not zb.Experience.GetAwards then return info_fallback_band, info_fallback_medal end
+    return zb.Experience.GetAwards({skill = row.skill or 0, exp = row.xp or 0})
+end
+
+if not hg.Leaderboard.NetHooked then
+    net.Receive("zb_sql_leaderboard", function()
+        local count = net.ReadUInt(8)
+        local rows = {}
+
+        for i = 1, count do
+            rows[i] = {
+                steamid = net.ReadString(),
+                name = net.ReadString(),
+                skill = net.ReadFloat(),
+                xp = net.ReadUInt(32),
+                kills = net.ReadUInt(16),
+                deaths = net.ReadUInt(16),
+                kd = net.ReadFloat()
+            }
+        end
+
+        hg.Leaderboard.Rows = rows
+    end)
+
+    hg.Leaderboard.NetHooked = true
+end
 
 local function SettingsCreateCategoryButton(pParent, strTitle, categoryKey)
     local id = #settings_category_buttons + 1
@@ -506,6 +608,7 @@ function SettingsRefreshContent()
     local entryWidth = settings_sw - sidebarWidth
 
     for convarName, settingData in SortedPairs(hg.settings.tbl[settings_active_category]) do
+        if convarName == "hg_gollavo_headshot_effect" and not InfoHasLocalAchievement("gollavo") then continue end
         local convar = GetConVar(settingData[2])
         if not convar then continue end
 
@@ -948,6 +1051,354 @@ function hg.DrawSettings(ParentPanel)
     SettingsRefreshContent()
 end
 
+local keybinds_content_panel = nil
+local keybinds_header_label = nil
+
+local function KeybindsFormatKey(key)
+    if not key or key == KEY_NONE or key == -999 then return "NONE" end
+    local keyName = input.GetKeyName(key)
+    return keyName and string.upper(keyName) or tostring(key)
+end
+
+local function KeybindsSetBind(bindName, slot, key)
+    hg.Binds.CurrentBinds[bindName] = hg.Binds.CurrentBinds[bindName] or {KEY_NONE, nil}
+    hg.Binds.CurrentBinds[bindName][slot] = key == KEY_NONE and nil or key
+    hg.Binds.SaveThem()
+end
+
+local function KeybindsResetDefaults()
+    for bindName, keys in pairs(hg.Binds.StandartBinds or {}) do
+        hg.Binds.CurrentBinds[bindName] = {keys[1], keys[2]}
+    end
+    hg.Binds.SaveThem()
+end
+
+local function KeybindsCreateSidebarButton(pParent, strTitle)
+    local btn = vgui.Create("DLabel", pParent)
+    btn:SetText(string.rep("#", #strTitle))
+    btn:SetMouseInputEnabled(true)
+    btn:SizeToContents()
+    btn:SetFont("ZCity_Menu_Settings_Small")
+    btn:SetTall(MenuUnit(42))
+    btn:Dock(TOP)
+    btn:DockMargin(MenuUnit(15), MenuUnit(2), 0, 0)
+    btn.RColor = Color(225,225,225)
+    btn.OpenTime = CurTime()
+    btn.LineLerp = 0
+    btn.HoverLerp = 0
+
+    function btn:Think()
+        local isHovered = self:IsHovered()
+        self.HoverLerp = LerpFT(0.2, self.HoverLerp or 0, isHovered and 1 or 0)
+        self.LineLerp = LerpFT(0.2, self.LineLerp or 0, isHovered and 1 or 0)
+        self:DockMargin(math.Round(MenuUnit(15) + self.HoverLerp * MenuUnit(2)), MenuUnit(2), 0, 0)
+
+        local targetText = "[ " .. strTitle .. " ]"
+        local charsToShow = math.min(#targetText, math.floor((CurTime() - self.OpenTime) * 15))
+        local ntxt = ""
+        for i = 1, #targetText do
+            ntxt = ntxt .. (i <= charsToShow and targetText:sub(i, i) or "#")
+        end
+        if self:GetText() ~= ntxt then
+            self:SetText(ntxt)
+            self:SizeToContents()
+        end
+    end
+
+    function btn:Paint(w, h)
+        local isHovered = self:IsHovered()
+        local flash = isHovered and (0.5 + 0.5 * math.sin(CurTime() * 10)) or 0
+        local textColor = self.RColor
+        local outlineColor = Color(0, 0, 0, 255)
+        if isHovered then
+            local v = flash * 255
+            textColor = Color(v, v, v, 255)
+            outlineColor = Color(255 - v, 255 - v, 255 - v, 255)
+        end
+        surface.SetFont(self:GetFont())
+        local tw, th = surface.GetTextSize(self:GetText())
+        draw.SimpleTextOutlined(self:GetText(), self:GetFont(), 0, h / 2, textColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER, 1, outlineColor)
+        if self.LineLerp and self.LineLerp > 0.01 then
+            surface.SetDrawColor(255, 255, 255, 255 * self.LineLerp)
+            surface.DrawRect(0, h / 2 + th / 2, tw * self.LineLerp, math.max(1, MenuUnit(1)))
+        end
+        return true
+    end
+end
+
+local function KeybindsCreateBinder(parent, bindName, slot, x, y)
+    local binder = vgui.Create("DBinder", parent)
+    binder:SetSize(MenuUnit(120), MenuUnit(28))
+    binder:SetPos(x, y)
+    binder:SetValue((hg.Binds.CurrentBinds[bindName] or {})[slot] or KEY_NONE)
+    binder:SetFont("ZCity_Menu_Settings_Tiny")
+
+    function binder:Paint(w, h)
+        surface.SetDrawColor(20, 20, 20, 240)
+        surface.DrawRect(0, 0, w, h)
+        surface.SetDrawColor(settings_color_whitey.r, settings_color_whitey.g, settings_color_whitey.b, self:IsHovered() and 210 or 120)
+        surface.DrawOutlinedRect(0, 0, w, h, 1)
+        draw.SimpleText(self.Trapping and "PRESS A BUTTON" or KeybindsFormatKey(self:GetValue()), "ZCity_Menu_Settings_Tiny", w / 2, h / 2, settings_color_text, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        return true
+    end
+
+    function binder:OnChange(key)
+        KeybindsSetBind(bindName, slot, key)
+    end
+
+    return binder
+end
+
+function KeybindsRefreshContent()
+    if not IsValid(keybinds_content_panel) then return end
+    keybinds_content_panel:Clear()
+
+    if IsValid(keybinds_header_label) then
+        keybinds_header_label:SetText("KEYBINDS")
+    end
+
+    local scroll = vgui.Create("DScrollPanel", keybinds_content_panel)
+    scroll:Dock(FILL)
+    scroll.Paint = function() end
+
+    local sbar = scroll:GetVBar()
+    sbar:SetWide(MenuUnit(4))
+    sbar:SetHideButtons(true)
+    function sbar:Paint(w, h)
+        surface.SetDrawColor(0, 0, 0, 80)
+        surface.DrawRect(0, 0, w, h)
+    end
+    function sbar.btnGrip:Paint(w, h)
+        local col = self:IsHovered() and settings_color_whitey or settings_color_dim
+        draw.RoundedBox(2, 1, 1, w - 2, h - 2, col)
+    end
+
+    local entryWidth = keybinds_content_panel:GetWide()
+    if entryWidth <= 0 then entryWidth = settings_sw end
+
+    for bindName, bindData in SortedPairs(hg.Binds.CurrentBinds or {}) do
+        local row = vgui.Create("DPanel", scroll)
+        row:SetSize(entryWidth - MenuUnit(20), MenuUnit(68))
+        row:Dock(TOP)
+        row:DockMargin(MenuUnit(10), MenuUnit(4), MenuUnit(10), MenuUnit(4))
+        row.Paint = function(self, w, h)
+            surface.SetDrawColor(20, 20, 30, 120)
+            surface.DrawRect(0, 0, w, h)
+            surface.SetDrawColor(settings_color_whitey.r, settings_color_whitey.g, settings_color_whitey.b, 90)
+            surface.DrawRect(0, h - MenuUnit(1), w, MenuUnit(1))
+        end
+
+        local title = vgui.Create("DLabel", row)
+        title:SetPos(MenuUnit(12), MenuUnit(7))
+        title:SetFont("ZCity_Menu_Settings_Small")
+        title:SetTextColor(settings_color_text)
+        title:SetText(hg.Binds.Names[bindName] or bindName)
+        title:SizeToContents()
+
+        local help = vgui.Create("DLabel", row)
+        help:SetPos(MenuUnit(12), MenuUnit(34))
+        help:SetFont("ZCity_Menu_Settings_Tiny")
+        help:SetTextColor(settings_color_text_dim)
+        help:SetText(bindName)
+        help:SizeToContents()
+
+        local clear = vgui.Create("DButton", row)
+        clear:SetSize(MenuUnit(62), MenuUnit(28))
+        clear:SetText("")
+        clear.Paint = function(self, w, h)
+            surface.SetDrawColor(20, 20, 20, 240)
+            surface.DrawRect(0, 0, w, h)
+            surface.SetDrawColor(settings_color_whitey.r, settings_color_whitey.g, settings_color_whitey.b, self:IsHovered() and 210 or 120)
+            surface.DrawOutlinedRect(0, 0, w, h, 1)
+            draw.SimpleText("Clear", "ZCity_Menu_Settings_Tiny", w / 2, h / 2, settings_color_text, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        end
+        clear.DoClick = function()
+            hg.Binds.CurrentBinds[bindName] = {KEY_NONE, nil}
+            hg.Binds.SaveThem()
+            KeybindsRefreshContent()
+        end
+
+        local binder1 = KeybindsCreateBinder(row, bindName, 1, 0, MenuUnit(20))
+        local binder2 = KeybindsCreateBinder(row, bindName, 2, 0, MenuUnit(20))
+
+        row.PerformLayout = function(self, w, h)
+			clear:SetPos(w - MenuUnit(350), MenuUnit(20))
+			binder1:SetPos(w - MenuUnit(274), MenuUnit(20))
+			binder2:SetPos(w - MenuUnit(140), MenuUnit(20))
+        end
+    end
+end
+
+function hg.DrawKeybinds(ParentPanel)
+    settings_sw, settings_sh = ScrW(), ScrH()
+
+    ParentPanel:SetAlpha(0)
+    ParentPanel.Paint = function(self, w, h)
+        if hg.DrawBlur then hg.DrawBlur(self, 5) end
+        draw.RoundedBox(0, 0, 0, w, h, settings_clr_verygray)
+        surface.SetDrawColor(settings_menu_gradient_right)
+        surface.SetTexture(tex_gradient_r)
+        surface.DrawTexturedRect(0,0,w,h)
+        surface.SetDrawColor(settings_clr_verygray)
+        surface.SetTexture(tex_gradient_l)
+        surface.DrawTexturedRect(0,0,w,h)
+        surface.SetDrawColor(settings_clr_1)
+        surface.SetTexture(tex_gradient_d)
+        surface.DrawTexturedRect(0,0,w,h)
+    end
+    ParentPanel:AlphaTo(255, 0.15, 0)
+
+    local mainPanel = vgui.Create("DPanel", ParentPanel)
+    mainPanel:SetSize(settings_sw, settings_sh)
+    mainPanel:SetPos(settings_sw, 0)
+    mainPanel.TargetX = 0
+    mainPanel.Think = function(self)
+        local curX, curY = self:GetPos()
+        if math.abs(curX - self.TargetX) > 0.5 then self:SetPos(Lerp(FrameTime() * 8, curX, self.TargetX), curY) else self:SetPos(self.TargetX, curY) end
+    end
+    mainPanel.Paint = function() end
+
+    local header = vgui.Create("DPanel", mainPanel)
+    header:Dock(TOP)
+    header:SetTall(MenuUnit(settings_header_height))
+    header.Paint = function(self, w, h)
+        draw.RoundedBox(0, 0, 0, w, h, Color(15, 15, 20, 120))
+        surface.SetDrawColor(settings_color_whitey.r, settings_color_whitey.g, settings_color_whitey.b, 140)
+        surface.DrawRect(0, h - MenuUnit(1), w, MenuUnit(1))
+    end
+
+    local headerTitle = vgui.Create("DLabel", header)
+    headerTitle:SetPos(MenuUnit(25), MenuUnit(18))
+    headerTitle:SetFont("ZCity_Menu_Settings_Medium")
+    headerTitle:SetTextColor(settings_color_whitey)
+    headerTitle:SetText("KEYBINDS")
+    headerTitle:SetWide(settings_sw - MenuUnit(50))
+    keybinds_header_label = headerTitle
+
+    local headerHint = vgui.Create("DLabel", header)
+    headerHint:SetPos(MenuUnit(25), MenuUnit(45))
+    headerHint:SetFont("ZCity_Menu_Settings_Tiny")
+    headerHint:SetTextColor(settings_color_text_dim)
+    headerHint:SetText("If you have the buttons already binded via console you can still use these as alternatives.")
+    headerHint:SizeToContents()
+
+	local backBtn = vgui.Create("DLabel", ParentPanel)
+	backBtn:SetPos(MenuUnit(15), settings_sh - MenuUnit(62))
+	backBtn:SetFont("ZCity_Menu_Settings_Small")
+	backBtn:SetTextColor(settings_color_text)
+	backBtn:SetText(string.rep("#", #"<- Return"))
+	backBtn:SetMouseInputEnabled(true)
+	backBtn:SizeToContents()
+	backBtn:SetTall(MenuUnit(42))
+	backBtn.OpenTime = CurTime()
+	backBtn.HoverLerp = 0
+	backBtn.LineLerp = 0
+	backBtn.HoverScale = 0.008
+	backBtn:MoveToFront()
+	function backBtn:DoClick()
+        surface.PlaySound(SOUND_SETTINGS_CLICK)
+        if not IsValid(ParentPanel) then return end
+        local luaMenu = ParentPanel:GetParent()
+        ParentPanel:AlphaTo(0, 0.2, 0, function()
+            if IsValid(ParentPanel) then ParentPanel:Remove() end
+        end)
+        if IsValid(luaMenu) then
+            for _, child in ipairs(luaMenu:GetChildren()) do
+                if child ~= ParentPanel then
+                    child:SetVisible(true)
+                    child:AlphaTo(255, 0.2, 0)
+                end
+            end
+            if luaMenu.panelparrent then
+                luaMenu.panelparrent = vgui.Create("DPanel", luaMenu)
+                luaMenu.panelparrent:SetPos(0, 0)
+                luaMenu.panelparrent:SetSize(ScrW(), ScrH())
+                luaMenu.panelparrent:MoveToFront()
+                luaMenu.panelparrent:SetMouseInputEnabled(false)
+                luaMenu.panelparrent.Paint = function() end
+            end
+            if luaMenu.ResetCurrentPanel then luaMenu:ResetCurrentPanel() end
+        end
+    end
+	function backBtn:Think()
+		local isHovered = self:IsHovered()
+		self.HoverLerp = LerpFT(0.2, self.HoverLerp or 0, isHovered and 1 or 0)
+		self.LineLerp = LerpFT(0.2, self.LineLerp or 0, isHovered and 1 or 0)
+		local elapsed = CurTime() - self.OpenTime
+		local charsToShow = math.floor(elapsed * 15)
+		local target = "<- Return"
+		local len = #target
+		if charsToShow > len then charsToShow = len end
+		if self.TypewriterTarget ~= target then
+			self.TypewriterTarget = target
+			self.LastTypewriterChars = 0
+		end
+		if charsToShow > 0 and charsToShow > (self.LastTypewriterChars or 0) then
+			PlayTypewriterSound()
+		end
+		self.LastTypewriterChars = charsToShow
+		local ntxt = ""
+		for i = 1, len do
+			if i <= charsToShow then ntxt = ntxt .. target:sub(i, i)
+			else ntxt = ntxt .. "#" end
+		end
+		if self:GetText() ~= ntxt then
+			self:SetText(ntxt)
+			self:SizeToContents()
+		end
+	end
+	function backBtn:Paint(w, h)
+		local isHovered = self:IsHovered()
+		local flash = isHovered and (0.5 + 0.5 * math.sin(CurTime() * 10)) or 0
+		local textColor = settings_color_text
+		local outlineColor = Color(0, 0, 0, 255)
+		if isHovered then
+			local v = flash * 255
+			textColor = Color(v, v, v, 255)
+			local inv = 255 - v
+			outlineColor = Color(inv, inv, inv, 255)
+		end
+		surface.SetFont(self:GetFont())
+		local tw, th = surface.GetTextSize(self:GetText())
+		local scale = 1 + (self.HoverLerp or 0) * (self.HoverScale or 0.02)
+		local matrix = Matrix()
+		matrix:Translate(Vector(0, h * (1 - scale) * 0.5, 0))
+		matrix:Scale(Vector(scale, scale, 1))
+		cam.PushModelMatrix(matrix)
+		draw.SimpleTextOutlined(self:GetText(), self:GetFont(), 0, h / 2, textColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER, 1, outlineColor)
+		if self.LineLerp and self.LineLerp > 0.01 then
+			surface.SetDrawColor(255, 255, 255, 255 * self.LineLerp)
+			surface.DrawRect(0, h / 2 + th / 2, tw * self.LineLerp, math.max(1, MenuUnit(1)))
+		end
+		cam.PopModelMatrix()
+		return true
+	end
+
+    local resetBtn = vgui.Create("DButton", header)
+    resetBtn:SetSize(MenuUnit(120), MenuUnit(28))
+	resetBtn:SetPos(settings_sw - resetBtn:GetWide() - MenuUnit(15), MenuUnit(21))
+    resetBtn:SetText("")
+    resetBtn.Paint = function(self, w, h)
+        surface.SetDrawColor(20, 20, 20, 240)
+        surface.DrawRect(0, 0, w, h)
+        surface.SetDrawColor(settings_color_whitey.r, settings_color_whitey.g, settings_color_whitey.b, self:IsHovered() and 210 or 120)
+        surface.DrawOutlinedRect(0, 0, w, h, 1)
+        draw.SimpleText("Reset defaults", "ZCity_Menu_Settings_Tiny", w / 2, h / 2, settings_color_text, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    end
+    resetBtn.DoClick = function()
+        surface.PlaySound(SOUND_SETTINGS_CLICK)
+        KeybindsResetDefaults()
+        KeybindsRefreshContent()
+    end
+
+    local contentHolder = vgui.Create("DPanel", mainPanel)
+    contentHolder:Dock(FILL)
+    contentHolder.Paint = function() end
+    keybinds_content_panel = contentHolder
+
+    KeybindsRefreshContent()
+end
+
 local function InfoCreateSectionButton(pParent, strTitle, sectionKey)
     local id = #info_section_buttons + 1
     info_section_buttons[id] = vgui.Create("DLabel", pParent)
@@ -1356,18 +1807,21 @@ function InfoRefreshContent()
                 local row = vgui.Create("DPanel", achievementsHolder)
                 row:Dock(TOP)
                 row:DockMargin(0, 0, 0, MenuUnit(8))
-                row:SetTall(MenuUnit(56))
+                row:SetTall(MenuUnit(70))
+                local rarityName = ach.rarity and ach.rarity.name or "Uncommon"
+                local rarityColor = info_achievement_rarity_colors[rarityName] or info_achievement_rarity_colors.Uncommon
                 row.Paint = function(self, w, h)
-                    surface.SetDrawColor(20, 20, 30, 120)
+                    surface.SetDrawColor(rarityColor.r * 0.12, rarityColor.g * 0.12, rarityColor.b * 0.12, 210)
                     surface.DrawRect(0, 0, w, h)
-                    surface.SetDrawColor(settings_color_whitey.r, settings_color_whitey.g, settings_color_whitey.b, 55)
+                    surface.SetDrawColor(rarityColor.r, rarityColor.g, rarityColor.b, 220)
+                    surface.DrawRect(0, 0, MenuUnit(3), h)
                     surface.DrawRect(0, h - MenuUnit(1), w, MenuUnit(1))
                 end
 
                 local title = vgui.Create("DLabel", row)
                 title:SetPos(MenuUnit(12), MenuUnit(10))
                 title:SetFont("ZCity_Menu_Settings_Small")
-                title:SetTextColor(settings_color_text)
+                title:SetTextColor(rarityColor)
                 title:SetText(ach.name or "Achievement")
                 title:SizeToContents()
 
@@ -1376,6 +1830,13 @@ function InfoRefreshContent()
                 desc:SetFont("ZCity_Menu_Settings_Tiny")
                 desc:SetTextColor(settings_color_text_dim)
                 desc:SetText(ach.description or "")
+
+                local obtainedAt = vgui.Create("DLabel", row)
+                obtainedAt:SetPos(MenuUnit(12), MenuUnit(49))
+                obtainedAt:SetFont("ZCity_Menu_Settings_Tiny")
+                obtainedAt:SetTextColor(rarityColor)
+                obtainedAt:SetText("Obtained: " .. InfoFormatAchievementDate(ach.obtained_at))
+                obtainedAt:SizeToContents()
                 row.PerformLayout = function(self, w, h)
                     desc:SetWide(w - MenuUnit(24))
                 end
@@ -1389,6 +1850,7 @@ function InfoRefreshContent()
 
         local statValues = {
             Kills = 0,
+            Headshots = 0,
             Deaths = 0,
             Suicides = 0
         }
@@ -1440,13 +1902,130 @@ function InfoRefreshContent()
             local obtained = InfoGetObtainedAchievements()
             local signature = tostring(#obtained)
             for i, ach in ipairs(obtained) do
-                signature = signature .. "|" .. tostring(ach.name or i)
+                signature = signature .. "|" .. tostring(ach.name or i) .. ":" .. tostring(ach.obtained_at or 0) .. ":" .. tostring(ach.rarity and ach.rarity.name or "")
             end
             if signature ~= lastAchievementSignature then
                 lastAchievementSignature = signature
                 RefreshAchievements()
             end
         end
+
+    elseif sectionKey == "leaderboard" then
+        local scroll = vgui.Create("DScrollPanel", info_content_panel)
+        scroll:Dock(FILL)
+        scroll:DockMargin(MenuUnit(24), MenuUnit(24), MenuUnit(24), MenuUnit(24))
+        scroll.Paint = function() end
+
+        local sbar = scroll:GetVBar()
+        sbar:SetWide(MenuUnit(4))
+        sbar:SetHideButtons(true)
+        function sbar:Paint(w, h)
+            surface.SetDrawColor(0, 0, 0, 80)
+            surface.DrawRect(0, 0, w, h)
+        end
+        function sbar.btnGrip:Paint(w, h)
+            local col = self:IsHovered() and settings_color_whitey or settings_color_dim
+            draw.RoundedBox(2, 1, 1, w - 2, h - 2, col)
+        end
+
+        local title = vgui.Create("DLabel", scroll)
+        title:Dock(TOP)
+        title:DockMargin(0, 0, 0, MenuUnit(10))
+        title:SetFont("ZCity_Menu_Settings_Small")
+        title:SetTextColor(settings_color_whitey)
+        title:SetText("TOP 10 PLAYERS")
+        title:SetTall(MenuUnit(30))
+
+        local rows = {}
+        local lastRefresh = 0
+
+        local function RebuildRows()
+            for _, row in ipairs(rows) do
+                if IsValid(row) then row:Remove() end
+            end
+            rows = {}
+
+            local leaders = hg.Leaderboard.Get(10)
+            if #leaders == 0 then
+                local empty = vgui.Create("DLabel", scroll)
+                empty:Dock(TOP)
+                empty:SetTall(MenuUnit(34))
+                empty:SetFont("ZCity_Menu_Settings_Tiny")
+                empty:SetTextColor(settings_color_text_dim)
+                empty:SetContentAlignment(5)
+                empty:SetText("NO SQL LEADERBOARD DATA")
+                rows[#rows + 1] = empty
+                return
+            end
+
+            for rank, data in ipairs(leaders) do
+                local rowRank = rank
+                local rowData = data
+                local row = vgui.Create("DPanel", scroll)
+                row:Dock(TOP)
+                row:DockMargin(0, 0, 0, MenuUnit(8))
+                row:SetTall(MenuUnit(64))
+                row.PlayerData = rowData
+                row.HoverLerp = 0
+                row.Paint = function(self, w, h)
+                    self.HoverLerp = LerpFT(0.18, self.HoverLerp or 0, self:IsHovered() and 1 or 0)
+                    surface.SetMaterial(info_row_gradient)
+                    surface.SetDrawColor(85, 85, 85, 120 + 40 * self.HoverLerp)
+                    surface.DrawTexturedRect(0, 0, w, h)
+                    surface.SetDrawColor(0, 0, 0, 145)
+                    surface.DrawRect(0, 0, w, h)
+                    surface.SetDrawColor(255, 255, 255, 30 + 55 * self.HoverLerp)
+                    surface.DrawOutlinedRect(0, 0, w, h, 1)
+                    surface.SetDrawColor(settings_color_whitey.r, settings_color_whitey.g, settings_color_whitey.b, rowRank <= 3 and 185 or 95)
+                    surface.DrawRect(0, 0, MenuUnit(2), h)
+                    draw.SimpleText("#" .. rowRank, "ZCity_Menu_Settings_Small", MenuUnit(15), h / 2, settings_color_whitey, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+                    draw.SimpleText(self.PlayerData.name, "ZCity_Menu_Settings_Small", MenuUnit(96), MenuUnit(22), settings_color_text, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+                    draw.SimpleText(string.format("K/D %.2f", self.PlayerData.kd), "ZCity_Menu_Settings_Tiny", MenuUnit(96), MenuUnit(43), settings_color_text_dim, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+                    draw.SimpleText("XP " .. self.PlayerData.xp, "ZCity_Menu_Settings_Tiny", w - MenuUnit(54), MenuUnit(22), settings_color_text_dim, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+                    draw.SimpleText("K " .. math.floor(self.PlayerData.kills) .. "  D " .. math.floor(self.PlayerData.deaths), "ZCity_Menu_Settings_Tiny", w - MenuUnit(18), MenuUnit(43), settings_color_text_dim, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+                end
+
+                local avatar = vgui.Create("AvatarImage", row)
+                avatar:SetSize(MenuUnit(38), MenuUnit(38))
+                avatar:SetPos(MenuUnit(42), MenuUnit(13))
+                avatar:SetMouseInputEnabled(false)
+                avatar:SetSteamID(rowData.steamid, 64)
+                avatar.PaintOver = function(self, w, h)
+                    surface.SetDrawColor(255, 255, 255, 45)
+                    surface.DrawOutlinedRect(0, 0, w, h, 1)
+                end
+
+                local medal = vgui.Create("DPanel", row)
+                medal:SetSize(MenuUnit(28), MenuUnit(28))
+                row.PerformLayout = function(self, w, h)
+                    medal:SetPos(w - MenuUnit(48), MenuUnit(8))
+                end
+                medal.Paint = function(self, w, h)
+                    local band, med = hg.Leaderboard.GetAwards(rowData)
+                    band = band or info_fallback_band
+                    med = med or info_fallback_medal
+                    if band and band.icon then
+                        surface.SetMaterial(band.icon)
+                        surface.SetDrawColor(255, 255, 255, 220)
+                        surface.DrawTexturedRect(0, 0, w, h)
+                    end
+                    if med and med.icon then
+                        surface.SetMaterial(med.icon)
+                        surface.SetDrawColor(255, 255, 255, 240)
+                        surface.DrawTexturedRect(0, 0, w, h)
+                    end
+                end
+
+                rows[#rows + 1] = row
+            end
+        end
+
+        scroll.Think = function()
+            if lastRefresh > CurTime() then return end
+            lastRefresh = CurTime() + 2
+            RebuildRows()
+        end
+        RebuildRows()
 
     elseif sectionKey == "credits" then
         local logoPanel = vgui.Create("DPanel", info_content_panel)

@@ -6,6 +6,8 @@ end
 
 local TRAITOR_MENU_FONT = "ZCity_Traitor_Loadout"
 local TRAITOR_POINTS_FONT = "ZCity_Traitor_Points"
+local ARENA_META_FONT = "ZCity_Arena_Meta"
+local ARENA_DESC_FONT = "ZCity_Arena_Description"
 local TRAITOR_PRESET_BUTTON_HEIGHT = 34
 local TRAITOR_LIST_BUTTON_HEIGHT = 38
 local TRAITOR_ADDON_BUTTON_HEIGHT = 32
@@ -32,6 +34,20 @@ local function CreateTraitorMenuFonts()
         weight = 400,
         antialias = true
     })
+
+	surface.CreateFont(ARENA_META_FONT, {
+		font = "Verily Serif Mono",
+		size = ScreenScale(7),
+		weight = 400,
+		antialias = true
+	})
+
+	surface.CreateFont(ARENA_DESC_FONT, {
+		font = "Verily Serif Mono",
+		size = ScreenScale(5),
+		weight = 400,
+		antialias = true
+	})
 end
 
 hook.Add("OnScreenSizeChanged", "ZCity_TraitorLoadout_Fonts", CreateTraitorMenuFonts)
@@ -142,11 +158,12 @@ end
 
 CreateClientConVar("hmcd_traitor_loadout", "", true, true, "Saved traitor loadout")
 CreateClientConVar("hmcd_hero_loadout", "", true, true, "Saved hero loadout")
+CreateClientConVar("zcity_arena_loadout", "", true, true, "Saved Arena loadout")
 
 local RoleConfigs = {
     traitor = {
-        title = "TRAITOR",
-        buttonTitle = "Traitor",
+        title = "EXECUTIONER",
+        buttonTitle = "Executioner",
         maxPoints = 30,
         convar = "hmcd_traitor_loadout",
         saveFile = "zcity_traitor_loadout.txt",
@@ -173,7 +190,7 @@ local RoleConfigs = {
             ["weapon_traitor_poison3"] = {cost = 4, name = "Cyanide Canister"},
             ["weapon_traitor_poison4"] = {cost = 2, name = "Curare vial"},
             ["weapon_traitor_poison_consumable"] = {cost = 3, name = "Potassium Cyanide Powder"},
-            ["weapon_traitor_suit"] = {cost = 1, name = "Traitor Suit"},
+            ["weapon_traitor_suit"] = {cost = 1, name = "Executioner Suit"},
             ["weapon_hg_jam"] = {cost = 1, name = "Door Jam"},
             ["weapon_walkie_talkie"] = {cost = 1, name = "Walkie-Talkie"}
         },
@@ -250,8 +267,8 @@ local RoleConfigs = {
         }
     },
     hero = {
-        title = "HERO",
-        buttonTitle = "Hero",
+        title = "JUDGE",
+        buttonTitle = "Judge",
         maxPoints = 16,
         convar = "hmcd_hero_loadout",
         saveFile = "zcity_hero_loadout.txt",
@@ -275,13 +292,13 @@ local RoleConfigs = {
             ["weapon_mosin"] = {cost = 8, name = "Mosin-Nagant M38", desc = "Bolt-action rifle chambered in 7.62x54mm."}
         },
         addons = {
-            ["hero_px4_silencer"] = {cost = 2, name = "PX4 Suppressor", parent = "weapon_px4beretta", attachment = "supressor4", desc = "Keep the PX4 quieter."},
+            ["hero_px4_silencer"] = {cost = 2, name = "PX4 Suppressor", parent = "weapon_px4beretta", attachment = "supressor6", desc = "Keep the PX4 quieter."},
             ["hero_px4_ammo"] = {cost = 2, name = "PX4 Extra Ammo", parent = "weapon_px4beretta", desc = "Start with extra magazine."},
-            ["hero_glock_silencer"] = {cost = 2, name = "Glock Suppressor", parent = "weapon_glock17", attachment = "supressor4", desc = "Suppress the Glock 17."},
+            ["hero_glock_silencer"] = {cost = 2, name = "Glock Suppressor", parent = "weapon_glock17", attachment = "supressor2", desc = "Suppress the Glock 17."},
             ["hero_glock_rmr"] = {cost = 2, name = "Glock RMR", parent = "weapon_glock17", attachment = "holo16", desc = "Adds a compact red dot."},
             ["hero_glock_laser"] = {cost = 1, name = "Glock Laser", parent = "weapon_glock17", attachment = "laser3", desc = "Adds a visible aiming laser."},
             ["hero_glock_ammo"] = {cost = 2, name = "Glock Extra Ammo", parent = "weapon_glock17", desc = "Start with extra magazine."},
-            ["hero_usp_silencer"] = {cost = 2, name = "USP Suppressor", parent = "weapon_hk_usp", attachment = "supressor4", desc = "Suppress the USP."},
+            ["hero_usp_silencer"] = {cost = 2, name = "USP Suppressor", parent = "weapon_hk_usp", attachment = "supressor2", desc = "Suppress the USP."},
             ["hero_usp_ammo"] = {cost = 2, name = "USP Extra Ammo", parent = "weapon_hk_usp", desc = "Start with extra magazine."},
             ["hero_remington_ammo"] = {cost = 2, name = "870 Extra Shells", parent = "weapon_remington870", desc = "Start with extra shells."},
             ["hero_kar98_scope"] = {cost = 2, name = "Kar98 Scope", parent = "weapon_kar98", attachment = "optic12", desc = "Adds the Kar98 scope."},
@@ -291,13 +308,13 @@ local RoleConfigs = {
             ["hero_remington_long_sight"] = {cost = 2, name = "870 Long Sight", parent = "weapon_remington870_long", attachment = "holo16", desc = "Adds a sight to the long barrel 870."},
             ["hero_remington_sawedoff_ammo"] = {cost = 2, name = "870 Sawed-off Extra Shells", parent = "weapon_remington870_sawed_off", desc = "Start with extra shells."},
             ["hero_remington_sawedoff_sight"] = {cost = 2, name = "870 Sawed-off Sight", parent = "weapon_remington870_sawed_off", attachment = "holo16", desc = "Adds a sight to the sawed-off 870."},
-            ["hero_vpo209_silencer"] = {cost = 2, name = "VPO-209 Suppressor", parent = "weapon_vpo209", attachment = "supressor1", desc = "Suppress the VPO-209."},
+            ["hero_vpo209_silencer"] = {cost = 2, name = "VPO-209 Suppressor", parent = "weapon_vpo209", attachment = "supressor3", desc = "Suppress the VPO-209."},
             ["hero_vpo209_optic"] = {cost = 2, name = "VPO-209 Red Dot", parent = "weapon_vpo209", attachment = "holo16", desc = "Adds a red dot sight to the VPO-209."},
             ["hero_vpo209_ammo"] = {cost = 2, name = "VPO-209 Extra Ammo", parent = "weapon_vpo209", desc = "Start with extra magazine."},
-            ["hero_vpo136_silencer"] = {cost = 2, name = "VPO-136 Suppressor", parent = "weapon_vpo136", attachment = "supressor1", desc = "Suppress the VPO-136."},
+            ["hero_vpo136_silencer"] = {cost = 2, name = "VPO-136 Suppressor", parent = "weapon_vpo136", attachment = "supressor7", desc = "Suppress the VPO-136."},
             ["hero_vpo136_optic"] = {cost = 2, name = "VPO-136 Red Dot", parent = "weapon_vpo136", attachment = "holo16", desc = "Adds a red dot sight to the VPO-136."},
             ["hero_vpo136_ammo"] = {cost = 2, name = "VPO-136 Extra Ammo", parent = "weapon_vpo136", desc = "Start with extra magazine."},
-            ["hero_mosin_silencer"] = {cost = 2, name = "Mosin Suppressor", parent = "weapon_mosin", attachment = "supressor1", desc = "Suppress the Mosin."},
+            ["hero_mosin_silencer"] = {cost = 2, name = "Mosin Suppressor", parent = "weapon_mosin", attachment = "supressor9", desc = "Suppress the Mosin."},
             ["hero_mosin_scope"] = {cost = 2, name = "Mosin Scope", parent = "weapon_mosin", attachment = "optic12", desc = "Adds a scope to the Mosin."},
             ["hero_mosin_ammo"] = {cost = 2, name = "Mosin Extra Ammo", parent = "weapon_mosin", desc = "Start with extra rounds."}
         },
@@ -1258,7 +1275,13 @@ local function OpenRoleEditor(parentPanel, roleId, returnPanel)
     UpdateUI()
 end
 
-function hg.DrawLoadoutMenu(parentPanel)
+local function OpenHomicideMenu(rootPanel)
+    local host = IsValid(rootPanel:GetParent()) and rootPanel:GetParent() or rootPanel
+    local parentPanel = vgui.Create("DPanel", host)
+    parentPanel:SetPos(0, 0)
+    parentPanel:SetSize(ScrW(), ScrH())
+    parentPanel:MoveToFront()
+    rootPanel:SetVisible(false)
     parentPanel:SetAlpha(0)
     parentPanel.Paint = function(self, w, h)
         if hg.DrawBlur then
@@ -1318,7 +1341,7 @@ function hg.DrawLoadoutMenu(parentPanel)
     local subtitle = vgui.Create("DLabel", parentPanel)
     subtitle:SetFont(TRAITOR_MENU_FONT)
     subtitle:SetTextColor(Color(200, 200, 200, 180))
-    subtitle:SetText("Choose which side you want to configure.")
+    subtitle:SetText("HOMICIDE / Choose a role dossier.")
     subtitle:SizeToContents()
     subtitle:SetPos(MenuUnit(48), MenuUnit(90))
 
@@ -1341,16 +1364,18 @@ function hg.DrawLoadoutMenu(parentPanel)
     local cardData = {
         {
             roleId = "hero",
-            title = "HERO",
-            desc = "Pick the gunner weapon",
+            title = "JUDGE",
+            desc = "Configure the Judge loadout",
             points = "16 POINTS",
+			accent = Color(142, 62, 190),
             align = "left"
         },
         {
             roleId = "traitor",
-            title = "TRAITOR",
-            desc = "Pick the traitor weapon",
+            title = "EXECUTIONER",
+            desc = "Configure the Executioner loadout",
             points = "30 POINTS",
+			accent = Color(190, 42, 42),
             align = "right"
         }
     }
@@ -1382,9 +1407,12 @@ function hg.DrawLoadoutMenu(parentPanel)
         end
         card.Paint = function(self, w, h)
             local hover = self.HoveredLerp or 0
-            draw.RoundedBox(0, 0, 0, w, h, Color(0, 0, 0, 235))
-            surface.SetDrawColor(255, 255, 255, 120 + hover * 135)
-            surface.DrawOutlinedRect(0, 0, w, h, 1)
+			local accent = info.accent
+			draw.RoundedBox(0, 0, 0, w, h, Color(accent.r * 0.18, accent.g * 0.18, accent.b * 0.18, 245))
+			surface.SetDrawColor(accent.r, accent.g, accent.b, 145 + hover * 110)
+			surface.DrawOutlinedRect(0, 0, w, h, 2)
+			surface.SetDrawColor(accent.r, accent.g, accent.b, 90 + hover * 100)
+			surface.DrawRect(0, 0, MenuUnit(5), h)
             draw.SimpleText(info.title, "ZCity_Menu_Small", w * 0.5, h * cardTitleY, color_whitey, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
             draw.SimpleText(info.points, TRAITOR_MENU_FONT, w * 0.5, h * cardPointsY, Color(225, 225, 225, 230), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
             draw.SimpleText(info.desc, TRAITOR_MENU_FONT, w * 0.5, h * cardDescY, Color(225, 225, 225, 210), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
@@ -1403,10 +1431,682 @@ function hg.DrawLoadoutMenu(parentPanel)
     SetupAnimatedLabel(backBtn, "<- Return", 0, 15)
     function backBtn:DoClick()
         surface.PlaySound(SOUND_SETTINGS_CLICK)
-        CloseToMainMenu(parentPanel)
+        parentPanel:Remove()
+        if IsValid(rootPanel) then
+            rootPanel:SetVisible(true)
+            rootPanel:AlphaTo(255, 0.15, 0)
+        end
     end
     backBtn.Think = ThinkAnimatedLabel
     backBtn.Paint = PaintAnimatedLabel
+end
+
+local function GetArenaMode()
+    return zb and zb.modes and zb.modes.tdm
+end
+
+local function ReadArenaLoadout()
+    local raw = file.Read("zcity_arena_loadout.txt", "DATA")
+    if not raw or raw == "" then raw = GetConVar("zcity_arena_loadout"):GetString() end
+    local ok, parsed = pcall(util.JSONToTable, raw or "")
+    return ok and istable(parsed) and parsed or {weapons = {}, attachments = {}, armor = {}, medical = {}}
+end
+
+local function SanitizeArenaLoadout(loadout)
+    local mode = GetArenaMode()
+    local catalog = mode and mode.ArenaWeapons or {}
+    local maxWeight = mode and mode.ArenaMaxWeight or 50
+    local normalized = {weapons = {}, attachments = {}, armor = {}, medical = {}}
+    local usedSlots, weight = {}, 0
+
+    for _, weaponId in ipairs(istable(loadout.weapons) and loadout.weapons or {}) do
+        local info = catalog[weaponId]
+        if info and not usedSlots[info.slot] and weight + info.weight <= maxWeight then
+            normalized.weapons[#normalized.weapons + 1] = weaponId
+            usedSlots[info.slot] = true
+            weight = weight + info.weight
+        end
+    end
+
+    local requested = istable(loadout.attachments) and loadout.attachments or {}
+    for _, weaponId in ipairs(normalized.weapons) do
+        local info = catalog[weaponId]
+        local allowed, usedPlacements = {}, {}
+        for _, attachmentId in ipairs(info.attachments or {}) do allowed[attachmentId] = true end
+        for _, attachmentId in ipairs(istable(requested[weaponId]) and requested[weaponId] or {}) do
+            local placement
+            for placementId, definitions in pairs(hg.attachments or {}) do
+                if definitions[attachmentId] then placement = placementId break end
+            end
+			local attachmentWeight = mode:GetArenaAttachmentWeight(attachmentId)
+            if allowed[attachmentId] and placement and not usedPlacements[placement] and weight + attachmentWeight <= maxWeight then
+                normalized.attachments[weaponId] = normalized.attachments[weaponId] or {}
+                normalized.attachments[weaponId][#normalized.attachments[weaponId] + 1] = attachmentId
+                usedPlacements[placement] = true
+                weight = weight + attachmentWeight
+            end
+        end
+    end
+
+	local usedArmorSlots = {}
+	for _, armorId in ipairs(istable(loadout.armor) and loadout.armor or {}) do
+		local info = mode and mode.ArenaArmor and mode.ArenaArmor[armorId]
+		if info and not usedArmorSlots[info.slot] and weight + info.weight <= maxWeight then
+			normalized.armor[#normalized.armor + 1] = armorId
+			usedArmorSlots[info.slot] = true
+			weight = weight + info.weight
+		end
+	end
+
+	local usedMedical = {}
+	for _, medicalId in ipairs(istable(loadout.medical) and loadout.medical or {}) do
+		local info = mode and mode.ArenaMedical and mode.ArenaMedical[medicalId]
+		if info and not usedMedical[medicalId] and weight + info.weight <= maxWeight then
+			normalized.medical[#normalized.medical + 1] = medicalId
+			usedMedical[medicalId] = true
+			weight = weight + info.weight
+		end
+	end
+
+    return normalized, weight
+end
+
+local ArenaLoadout = ReadArenaLoadout()
+
+local function SaveArenaLoadout()
+    ArenaLoadout = SanitizeArenaLoadout(ArenaLoadout)
+	local json = util.TableToJSON(ArenaLoadout) or "{\"weapons\":[],\"attachments\":{},\"armor\":[],\"medical\":[]}"
+    file.Write("zcity_arena_loadout.txt", json)
+    GetConVar("zcity_arena_loadout"):SetString(json)
+	net.Start("arena_loadout_sync")
+		net.WriteString(json)
+	net.SendToServer()
+end
+
+timer.Simple(1, function()
+	if IsValid(LocalPlayer()) and GetArenaMode() then SaveArenaLoadout() end
+end)
+
+local function ReadArenaPresets()
+	local ok, presets = pcall(util.JSONToTable, file.Read("zcity_arena_presets.txt", "DATA") or "")
+	return ok and istable(presets) and presets or {}
+end
+
+local ArenaPresets = ReadArenaPresets()
+
+local ArenaDefaultPresets = {
+	{
+		name = "RIFLEMAN",
+		desc = "M4A1 / heavy armor / drum",
+		accent = Color(62, 112, 190),
+		loadout = {
+			weapons = {"weapon_m4a1", "weapon_p22"},
+			armor = {"vest30", "helmet14", "mask1"},
+			medical = {"weapon_bandage_sh", "weapon_tourniquet", "weapon_bigbandage_sh", "weapon_medkit_sh", "weapon_painkillers", "weapon_morphine", "weapon_adrenaline", "weapon_bloodbag", "weapon_needle"},
+			attachments = {weapon_m4a1 = {"optic5", "supressor5", "mag2"}},
+		},
+	},
+	{
+		name = "BREACHER",
+		desc = "AK-74 / drum / field aid",
+		accent = Color(190, 72, 42),
+		loadout = {
+			weapons = {"weapon_ak74", "weapon_cz75"},
+			armor = {"vest26", "helmet14", "mask1"},
+			medical = {"weapon_bandage_sh", "weapon_tourniquet", "weapon_bigbandage_sh", "weapon_medkit_sh", "weapon_morphine", "weapon_adrenaline", "weapon_bloodbag"},
+			attachments = {weapon_ak74 = {"optic11", "supressor3", "mag4", "stock_ak_evo"}},
+		},
+	},
+	{
+		name = "SCOUT",
+		desc = "MP7 / Glock / heavy armor",
+		accent = Color(42, 160, 140),
+		loadout = {
+			weapons = {"weapon_mp7", "weapon_glock17"},
+			armor = {"vest30", "helmet14", "mask1"},
+			medical = {"weapon_bandage_sh", "weapon_tourniquet", "weapon_morphine", "weapon_adrenaline", "weapon_bloodbag"},
+			attachments = {
+				weapon_mp7 = {"optic5", "laser2", "supressor2"},
+				weapon_glock17 = {"optic24", "laser3", "supressor1", "mag1"},
+			},
+		},
+	},
+	{
+		name = "MARKSMAN",
+		desc = "SVD / sidearm / full aid",
+		accent = Color(142, 82, 190),
+		loadout = {
+			weapons = {"weapon_svd", "weapon_p22"},
+			armor = {"vest26", "helmet14", "mask1"},
+			medical = {"weapon_tourniquet", "weapon_bigbandage_sh", "weapon_medkit_sh", "weapon_morphine", "weapon_adrenaline", "weapon_bloodbag", "weapon_needle", "weapon_betablock"},
+			attachments = {
+				weapon_svd = {"optic4", "supressor9"},
+				weapon_p22 = {"supressor1", "laser2"},
+			},
+		},
+	},
+}
+
+local function SaveArenaPresets()
+	file.Write("zcity_arena_presets.txt", util.TableToJSON(ArenaPresets, true) or "{}")
+end
+
+local function RestorePanel(panel, returnPanel)
+    panel:Remove()
+    if IsValid(returnPanel) then
+        returnPanel:SetVisible(true)
+        returnPanel:AlphaTo(255, 0.15, 0)
+    end
+end
+
+local function OpenArenaEditor(rootPanel)
+    local mode = GetArenaMode()
+    if not mode or not mode.ArenaWeapons then return end
+
+    local host = IsValid(rootPanel:GetParent()) and rootPanel:GetParent() or rootPanel
+    local panel = vgui.Create("DPanel", host)
+    panel:SetPos(0, 0)
+    panel:SetSize(ScrW(), ScrH())
+    panel:MoveToFront()
+	panel:SetAlpha(0)
+	panel:AlphaTo(255, 0.15, 0)
+	surface.PlaySound(SOUND_MENU_SELECT)
+    rootPanel:SetVisible(false)
+    panel.Paint = function(self, w, h)
+        if hg.DrawBlur then hg.DrawBlur(self, 5) end
+		draw.RoundedBox(0, 0, 0, w, h, clr_verygray)
+		surface.SetDrawColor(menu_gradient_right)
+		surface.SetMaterial(tex_gradient_r)
+		surface.DrawTexturedRect(0, 0, w, h)
+		surface.SetDrawColor(clr_verygray)
+		surface.SetMaterial(tex_gradient_l)
+		surface.DrawTexturedRect(0, 0, w, h)
+		surface.SetDrawColor(clr_1)
+		surface.SetMaterial(tex_gradient_d)
+		surface.DrawTexturedRect(0, 0, w, h)
+    end
+
+	local sidebarWidth = math.floor(ScrW() / 4.2)
+	local sidebar = vgui.Create("DPanel", panel)
+	sidebar:SetPos(-sidebarWidth, 0)
+	sidebar:SetSize(sidebarWidth, ScrH())
+	sidebar:MoveTo(0, 0, 0.22, 0, 0.2)
+	sidebar.Paint = function(self, w, h)
+		draw.RoundedBox(0, 0, 0, w, h, Color(10, 10, 15, 120))
+		surface.SetDrawColor(color_whitey.r, color_whitey.g, color_whitey.b, 90)
+		surface.DrawRect(w - MenuUnit(1), 0, MenuUnit(1), h)
+	end
+
+	local sidebarHeader = vgui.Create("DPanel", sidebar)
+	sidebarHeader:Dock(TOP)
+	sidebarHeader:SetTall(MenuUnit(TRAITOR_HEADER_HEIGHT))
+	sidebarHeader.Paint = function(self, w, h)
+		draw.RoundedBox(0, 0, 0, w, h, Color(15, 15, 20, 120))
+		surface.SetDrawColor(color_whitey.r, color_whitey.g, color_whitey.b, 140)
+		surface.DrawRect(0, h - MenuUnit(1), w, MenuUnit(1))
+	end
+
+	local title = vgui.Create("DLabel", sidebarHeader)
+	title:SetPos(MenuUnit(15), MenuUnit(18))
+	title:SetFont("ZCity_Menu_Settings_Small")
+	title:SetTextColor(color_whitey)
+	title:SetText("ARENA")
+	title:SizeToContents()
+
+	local sidebarInfo = vgui.Create("DLabel", sidebar)
+	sidebarInfo:Dock(TOP)
+	sidebarInfo:DockMargin(MenuUnit(15), MenuUnit(22), MenuUnit(15), 0)
+	sidebarInfo:SetTall(MenuUnit(120))
+	sidebarInfo:SetFont(TRAITOR_MENU_FONT)
+	sidebarInfo:SetTextColor(Color(200, 200, 200))
+	sidebarInfo:SetWrap(true)
+	sidebarInfo:SetText("Primary + sidearm.\nLMB equip / RMB modify.\n50 weight maximum.")
+
+    local weightLabel = vgui.Create("DLabel", sidebar)
+	 weightLabel:SetPos(MenuUnit(15), MenuUnit(215))
+	 weightLabel:SetFont(TRAITOR_MENU_FONT)
+	 weightLabel:SetTextColor(color_whitey)
+	local RefreshWeapons
+	local RefreshPresetList
+
+	local presetLabel = vgui.Create("DLabel", sidebar)
+	presetLabel:SetPos(MenuUnit(15), MenuUnit(265))
+	presetLabel:SetFont(TRAITOR_MENU_FONT)
+	presetLabel:SetTextColor(Color(170, 185, 185))
+	presetLabel:SetText("PRESETS")
+	presetLabel:SizeToContents()
+
+	local savePreset = vgui.Create("DButton", sidebar)
+	savePreset:SetPos(MenuUnit(15), MenuUnit(292))
+	savePreset:SetSize(sidebarWidth - MenuUnit(30), MenuUnit(30))
+	savePreset:SetText("")
+	savePreset.Paint = function(self, w, h)
+		draw.RoundedBox(0, 0, 0, w, h, self:IsHovered() and Color(100, 100, 100, 150) or Color(30, 30, 30, 150))
+		draw.SimpleText("+ SAVE CURRENT", TRAITOR_MENU_FONT, MenuUnit(10), h / 2, color_whitey, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+	end
+
+	local presetList = vgui.Create("DScrollPanel", sidebar)
+	presetList:SetPos(MenuUnit(15), MenuUnit(330))
+	presetList:SetSize(sidebarWidth - MenuUnit(30), ScrH() - MenuUnit(404))
+
+    local list = vgui.Create("DScrollPanel", panel)
+	 list:SetPos(sidebarWidth + MenuUnit(20), MenuUnit(20))
+	 list:SetSize((ScrW() - sidebarWidth) * 0.59, ScrH() - MenuUnit(40))
+	 list:SetAlpha(0)
+	 list:AlphaTo(255, 0.2, 0.08)
+
+    local detail = vgui.Create("DPanel", panel)
+	 local detailX = sidebarWidth + (ScrW() - sidebarWidth) * 0.62
+	 detail:SetPos(ScrW() + MenuUnit(80), MenuUnit(20))
+	 detail:SetSize((ScrW() - sidebarWidth) * 0.35, ScrH() - MenuUnit(40))
+	 detail:MoveTo(detailX, MenuUnit(20), 0.22, 0.05, 0.2)
+	 local previewMaterial
+	 local previewName = "No item selected"
+	 detail.Paint = function(self, w, h)
+		draw.RoundedBox(0, 0, 0, w, h, Color(20, 20, 20, 180))
+		surface.SetDrawColor(200, 200, 200, 50)
+		surface.DrawOutlinedRect(0, 0, w, h, 1)
+		draw.SimpleText("ATTACHMENTS", TRAITOR_MENU_FONT, MenuUnit(16), MenuUnit(20), color_whitey)
+		draw.SimpleText(previewName, ARENA_META_FONT, MenuUnit(16), MenuUnit(44), Color(170, 185, 185))
+		if previewMaterial then
+			surface.SetDrawColor(255, 255, 255, 235)
+			surface.SetMaterial(previewMaterial)
+			local iconSize = math.min(w - MenuUnit(40), MenuUnit(145))
+			surface.DrawTexturedRect((w - iconSize) * 0.5, MenuUnit(62), iconSize, iconSize)
+		end
+    end
+
+    local attachmentList = vgui.Create("DScrollPanel", detail)
+	attachmentList:SetPos(MenuUnit(14), MenuUnit(215))
+	attachmentList:SetSize(detail:GetWide() - MenuUnit(28), detail:GetTall() - MenuUnit(229))
+
+    local selectedWeapon
+	local function PreviewItem(itemId, info, isArmor)
+		previewName = info.name
+		previewMaterial = nil
+		if isArmor then
+			local icon = hg.armorIcons and hg.armorIcons[itemId]
+			if icon then previewMaterial = Material(icon) end
+			return
+		end
+
+		local swep = weapons.GetStored(itemId)
+		if not swep then return end
+		local icon = swep.WepSelectIcon or swep.IconOverride
+		if isstring(icon) and icon ~= "" then previewMaterial = Material(icon) end
+		if type(icon) == "IMaterial" then previewMaterial = icon end
+	end
+	local function RestoreSelectedPreview()
+		local selectedInfo = selectedWeapon and mode.ArenaWeapons[selectedWeapon]
+		if selectedInfo then PreviewItem(selectedWeapon, selectedInfo, false) end
+	end
+
+    local function RefreshAttachments(weaponId)
+        attachmentList:Clear()
+        selectedWeapon = weaponId
+        local info = mode.ArenaWeapons[weaponId]
+        if not info then return end
+		PreviewItem(weaponId, info, false)
+
+        local byPlacement = {}
+        for _, attachmentId in ipairs(info.attachments or {}) do
+            local placement = "other"
+            for placementId, definitions in pairs(hg.attachments or {}) do
+                if definitions[attachmentId] then placement = placementId break end
+            end
+            byPlacement[placement] = byPlacement[placement] or {}
+            byPlacement[placement][#byPlacement[placement] + 1] = attachmentId
+        end
+
+        for placement, ids in SortedPairs(byPlacement) do
+            local header = attachmentList:Add("DLabel")
+            header:Dock(TOP)
+            header:DockMargin(0, MenuUnit(10), 0, MenuUnit(4))
+            header:SetFont(TRAITOR_MENU_FONT)
+			header:SetTextColor(Color(220, 220, 220))
+            header:SetText(string.upper(placement))
+            header:SizeToContentsY()
+
+            for _, attachmentId in ipairs(ids) do
+                local button = attachmentList:Add("DButton")
+				local attachmentMaterial = hg.attachmentsIcons and hg.attachmentsIcons[attachmentId] and Material(hg.attachmentsIcons[attachmentId])
+                button:Dock(TOP)
+                button:DockMargin(0, 0, 0, MenuUnit(4))
+			button:SetTall(MenuUnit(30))
+                button:SetText("")
+                button.Paint = function(self, w, h)
+                    local selected = table.HasValue(ArenaLoadout.attachments[weaponId] or {}, attachmentId)
+					draw.RoundedBox(0, 0, 0, w, h, selected and Color(100, 100, 100, 150) or Color(30, 30, 30, 150))
+					if attachmentMaterial then
+						surface.SetDrawColor(255, 255, 255, 230)
+						surface.SetMaterial(attachmentMaterial)
+						surface.DrawTexturedRect(MenuUnit(5), MenuUnit(3), h - MenuUnit(6), h - MenuUnit(6))
+					end
+					draw.SimpleText((hg.attachmentslaunguage and hg.attachmentslaunguage[attachmentId]) or attachmentId, ARENA_META_FONT, MenuUnit(34), h / 2, color_whitey, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+					draw.SimpleText("+" .. mode:GetArenaAttachmentWeight(attachmentId) .. " W", TRAITOR_MENU_FONT, w - MenuUnit(10), h / 2, Color(200, 255, 200), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+                end
+                button.DoClick = function()
+                    ArenaLoadout.attachments[weaponId] = ArenaLoadout.attachments[weaponId] or {}
+                    local selected = ArenaLoadout.attachments[weaponId]
+                    if table.HasValue(selected, attachmentId) then
+                        table.RemoveByValue(selected, attachmentId)
+                    else
+                        for _, otherId in ipairs(table.Copy(selected)) do
+                            for _, definitions in pairs(hg.attachments or {}) do
+                                if definitions[otherId] and definitions[attachmentId] and definitions[otherId][1] == definitions[attachmentId][1] then
+                                    table.RemoveByValue(selected, otherId)
+                                end
+                            end
+                        end
+                        selected[#selected + 1] = attachmentId
+                    end
+                    SaveArenaLoadout()
+                    RefreshAttachments(weaponId)
+                    RefreshWeapons()
+					surface.PlaySound(SOUND_MENU_SELECT)
+                end
+            end
+        end
+    end
+
+    RefreshWeapons = function()
+        list:Clear()
+		local currentWeight
+        ArenaLoadout, currentWeight = SanitizeArenaLoadout(ArenaLoadout)
+        weightLabel:SetText("META WEIGHT  " .. currentWeight .. " / " .. mode.ArenaMaxWeight)
+        weightLabel:SizeToContents()
+
+        for _, category in ipairs(mode.ArenaCategoryOrder or {}) do
+            local header = list:Add("DLabel")
+            header:Dock(TOP)
+            header:DockMargin(0, MenuUnit(12), 0, MenuUnit(5))
+			header:SetFont(TRAITOR_MENU_FONT)
+			header:SetTextColor(Color(220, 220, 220))
+            header:SetText(string.upper(category))
+            header:SizeToContentsY()
+
+            for weaponId, info in SortedPairsByMemberValue(mode.ArenaWeapons, "name") do
+                if info.category ~= category then continue end
+                local button = list:Add("DButton")
+                button:Dock(TOP)
+			button:DockMargin(0, 0, 0, MenuUnit(4))
+			button:SetTall(MenuUnit(42))
+                button:SetText("")
+                button.Paint = function(self, w, h)
+                    local selected = table.HasValue(ArenaLoadout.weapons, weaponId)
+                    local hover = self:IsHovered()
+					draw.RoundedBox(0, 0, 0, w, h, selected and Color(100, 100, 100, 150) or (hover and Color(150, 150, 150, 150) or Color(30, 30, 30, 150)))
+				draw.SimpleText(info.name, TRAITOR_MENU_FONT, MenuUnit(12), h * 0.4, color_whitey, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+					local description = info.slot == "grenade" and "GRENADE" or string.upper(info.slot) .. " / " .. info.clips .. " magazines"
+					draw.SimpleText(description, ARENA_DESC_FONT, MenuUnit(12), h * 0.75, Color(150, 175, 175), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+				draw.SimpleText(info.weight .. " W", TRAITOR_MENU_FONT, w - MenuUnit(12), h / 2, Color(200, 255, 200), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+                end
+				button.OnCursorEntered = function() PreviewItem(weaponId, info, false) end
+				button.OnCursorExited = RestoreSelectedPreview
+                button.DoClick = function()
+                    if table.HasValue(ArenaLoadout.weapons, weaponId) then
+                        table.RemoveByValue(ArenaLoadout.weapons, weaponId)
+                        ArenaLoadout.attachments[weaponId] = nil
+                        if selectedWeapon == weaponId then attachmentList:Clear() end
+                    else
+                        for _, otherId in ipairs(table.Copy(ArenaLoadout.weapons)) do
+                            local other = mode.ArenaWeapons[otherId]
+                            if other and other.slot == info.slot then
+                                table.RemoveByValue(ArenaLoadout.weapons, otherId)
+                                ArenaLoadout.attachments[otherId] = nil
+                            end
+                        end
+                        ArenaLoadout.weapons[#ArenaLoadout.weapons + 1] = weaponId
+                    end
+                    SaveArenaLoadout()
+                    RefreshWeapons()
+                    if table.HasValue(ArenaLoadout.weapons, weaponId) then RefreshAttachments(weaponId) end
+					surface.PlaySound(SOUND_MENU_SELECT)
+                end
+                button.DoRightClick = function()
+                    if table.HasValue(ArenaLoadout.weapons, weaponId) then RefreshAttachments(weaponId) end
+                end
+            end
+        end
+
+		local armorHeader = list:Add("DLabel")
+		armorHeader:Dock(TOP)
+		armorHeader:DockMargin(0, MenuUnit(12), 0, MenuUnit(5))
+		armorHeader:SetFont(TRAITOR_MENU_FONT)
+		armorHeader:SetTextColor(Color(220, 220, 220))
+		armorHeader:SetText("ARMOR")
+		armorHeader:SizeToContentsY()
+
+		for armorId, info in SortedPairsByMemberValue(mode.ArenaArmor or {}, "name") do
+			local button = list:Add("DButton")
+			local armorMaterial = hg.armorIcons and hg.armorIcons[armorId] and Material(hg.armorIcons[armorId])
+			button:Dock(TOP)
+			button:DockMargin(0, 0, 0, MenuUnit(4))
+			button:SetTall(MenuUnit(38))
+			button:SetText("")
+			button.Paint = function(self, w, h)
+				local selected = table.HasValue(ArenaLoadout.armor or {}, armorId)
+				draw.RoundedBox(0, 0, 0, w, h, selected and Color(100, 100, 100, 150) or (self:IsHovered() and Color(150, 150, 150, 150) or Color(30, 30, 30, 150)))
+				if armorMaterial then
+					surface.SetDrawColor(255, 255, 255, 230)
+					surface.SetMaterial(armorMaterial)
+					surface.DrawTexturedRect(MenuUnit(6), MenuUnit(4), h - MenuUnit(8), h - MenuUnit(8))
+				end
+				draw.SimpleText(info.name, TRAITOR_MENU_FONT, MenuUnit(42), h / 2, color_whitey, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+				draw.SimpleText(info.weight .. " W", TRAITOR_MENU_FONT, w - MenuUnit(12), h / 2, Color(200, 255, 200), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+			end
+			button.OnCursorEntered = function() PreviewItem(armorId, info, true) end
+			button.OnCursorExited = RestoreSelectedPreview
+			button.DoClick = function()
+				ArenaLoadout.armor = ArenaLoadout.armor or {}
+				if table.HasValue(ArenaLoadout.armor, armorId) then
+					table.RemoveByValue(ArenaLoadout.armor, armorId)
+				else
+					for _, otherId in ipairs(table.Copy(ArenaLoadout.armor)) do
+						local other = mode.ArenaArmor[otherId]
+						if other and other.slot == info.slot then table.RemoveByValue(ArenaLoadout.armor, otherId) end
+					end
+					ArenaLoadout.armor[#ArenaLoadout.armor + 1] = armorId
+				end
+				SaveArenaLoadout()
+				RefreshWeapons()
+				surface.PlaySound(SOUND_MENU_SELECT)
+			end
+		end
+
+		local medicalHeader = list:Add("DLabel")
+		medicalHeader:Dock(TOP)
+		medicalHeader:DockMargin(0, MenuUnit(12), 0, MenuUnit(5))
+		medicalHeader:SetFont(TRAITOR_MENU_FONT)
+		medicalHeader:SetTextColor(Color(220, 220, 220))
+		medicalHeader:SetText("MEDICAL")
+		medicalHeader:SizeToContentsY()
+
+		for medicalId, info in SortedPairsByMemberValue(mode.ArenaMedical or {}, "name") do
+			local button = list:Add("DButton")
+			button:Dock(TOP)
+			button:DockMargin(0, 0, 0, MenuUnit(4))
+			button:SetTall(MenuUnit(38))
+			button:SetText("")
+			button.Paint = function(self, w, h)
+				local selected = table.HasValue(ArenaLoadout.medical or {}, medicalId)
+				draw.RoundedBox(0, 0, 0, w, h, selected and Color(100, 100, 100, 150) or (self:IsHovered() and Color(150, 150, 150, 150) or Color(30, 30, 30, 150)))
+				draw.SimpleText(info.name, TRAITOR_MENU_FONT, MenuUnit(12), h / 2, color_whitey, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+				draw.SimpleText(info.weight .. " W", TRAITOR_MENU_FONT, w - MenuUnit(12), h / 2, Color(200, 255, 200), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+			end
+			button.OnCursorEntered = function() PreviewItem(medicalId, info, false) end
+			button.OnCursorExited = RestoreSelectedPreview
+			button.DoClick = function()
+				ArenaLoadout.medical = ArenaLoadout.medical or {}
+				if table.HasValue(ArenaLoadout.medical, medicalId) then
+					table.RemoveByValue(ArenaLoadout.medical, medicalId)
+				else
+					ArenaLoadout.medical[#ArenaLoadout.medical + 1] = medicalId
+				end
+				SaveArenaLoadout()
+				RefreshWeapons()
+				surface.PlaySound(SOUND_MENU_SELECT)
+			end
+		end
+    end
+
+	RefreshPresetList = function()
+		presetList:Clear()
+
+		local function AddCard(name, desc, accent, loadout, custom)
+			local _, presetWeight = SanitizeArenaLoadout(loadout)
+			local card = presetList:Add("DButton")
+			card:Dock(TOP)
+			card:DockMargin(0, 0, 0, MenuUnit(6))
+			card:SetTall(MenuUnit(64))
+			card:SetText("")
+			card.Paint = function(self, w, h)
+				local hover = self:IsHovered()
+				draw.RoundedBox(0, 0, 0, w, h, Color(accent.r * 0.18, accent.g * 0.18, accent.b * 0.18, 235))
+				surface.SetDrawColor(accent.r, accent.g, accent.b, hover and 255 or 150)
+				surface.DrawOutlinedRect(0, 0, w, h, 1)
+				surface.DrawRect(0, 0, MenuUnit(3), h)
+				draw.SimpleText(string.upper(name), TRAITOR_MENU_FONT, MenuUnit(10), MenuUnit(17), color_whitey, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+				draw.SimpleText(desc, ARENA_META_FONT, MenuUnit(10), MenuUnit(36), Color(175, 185, 190), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+				draw.SimpleText(presetWeight .. " / 50 W", ARENA_META_FONT, w - MenuUnit(8), h - MenuUnit(10), Color(200, 255, 200), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+			end
+			card.DoClick = function()
+				ArenaLoadout = table.Copy(loadout)
+				SaveArenaLoadout()
+				selectedWeapon = nil
+				attachmentList:Clear()
+				RefreshWeapons()
+				surface.PlaySound(SOUND_MENU_SELECT)
+			end
+			if custom then
+				card.DoRightClick = function()
+					Derma_Query("Delete preset '" .. name .. "'?", "Arena presets", "Delete", function()
+						ArenaPresets[name] = nil
+						SaveArenaPresets()
+						RefreshPresetList()
+					end, "Cancel")
+				end
+			end
+		end
+
+		for _, preset in ipairs(ArenaDefaultPresets) do
+			AddCard(preset.name, preset.desc, preset.accent, preset.loadout, false)
+		end
+		for name, loadout in SortedPairs(ArenaPresets) do
+			AddCard(name, "Custom preset", Color(190, 142, 62), loadout, true)
+		end
+	end
+
+	savePreset.DoClick = function()
+		Derma_StringRequest("Save Arena preset", "Preset name", "", function(name)
+			name = string.Trim(name or "")
+			if name == "" then return end
+			ArenaPresets[name] = table.Copy(SanitizeArenaLoadout(ArenaLoadout))
+			SaveArenaPresets()
+			RefreshPresetList()
+			surface.PlaySound(SOUND_MENU_SELECT)
+		end)
+	end
+
+    local back = vgui.Create("DLabel", sidebar)
+	 back:SetPos(MenuUnit(15), ScrH() - MenuUnit(62))
+    back:SetFont("ZCity_Menu_Settings_Small")
+    back:SetTextColor(color_whitey)
+	SetupAnimatedLabel(back, "<- Loadout modes", 0, 15)
+    back.Think = ThinkAnimatedLabel
+    back.Paint = PaintAnimatedLabel
+	back.DoClick = function() RestorePanel(panel, rootPanel) end
+
+	RefreshPresetList()
+    RefreshWeapons()
+end
+
+local function AddModeCard(parent, x, y, w, h, title, points, description, align, onClick)
+    local card = vgui.Create("DButton", parent)
+    card:SetPos(x, y)
+    card:SetSize(w, h)
+    card:SetText("")
+	card.BaseW = w
+	card.BaseH = h
+	card.HoveredLerp = 0
+	card.TargetX = x
+	card.TargetY = y
+	card:SetPos(align == "left" and -w - MenuUnit(80) or ScrW() + MenuUnit(80), y)
+	card.Think = function(self)
+		self.HoveredLerp = LerpFT(0.2, self.HoveredLerp or 0, self:IsHovered() and 1 or 0)
+		local scale = 1 + 0.035 * self.HoveredLerp
+		local targetW = self.BaseW * scale
+		local targetH = self.BaseH * scale
+		local targetX = self.TargetX - (targetW - self.BaseW) * 0.5
+		local targetY = self.TargetY - (targetH - self.BaseH) * 0.5
+		local curX, curY = self:GetPos()
+		local curW, curH = self:GetSize()
+		self:SetSize(Lerp(FrameTime() * 10, curW, targetW), Lerp(FrameTime() * 10, curH, targetH))
+		self:SetPos(Lerp(FrameTime() * 10, curX, targetX), Lerp(FrameTime() * 10, curY, targetY))
+	end
+	card.Paint = function(self, cw, ch)
+		local hover = self.HoveredLerp or 0
+		draw.RoundedBox(0, 0, 0, cw, ch, Color(0, 0, 0, 235))
+		surface.SetDrawColor(255, 255, 255, 120 + hover * 135)
+		surface.DrawOutlinedRect(0, 0, cw, ch, 1)
+		draw.SimpleText(title, "ZCity_Menu_Small", cw * 0.5, ch * 0.38, color_whitey, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		draw.SimpleText(points, TRAITOR_MENU_FONT, cw * 0.5, ch * 0.5, Color(225, 225, 225, 230), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		draw.SimpleText(description, TRAITOR_MENU_FONT, cw * 0.5, ch * 0.62, Color(225, 225, 225, 210), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    end
+    card.DoClick = function()
+        surface.PlaySound(SOUND_MENU_SELECT)
+        onClick()
+    end
+end
+
+function hg.DrawLoadoutMenu(parentPanel)
+    parentPanel:SetAlpha(0)
+	parentPanel.Paint = function(self, w, h)
+		if hg.DrawBlur then hg.DrawBlur(self, 5) end
+		draw.RoundedBox(0, 0, 0, w, h, clr_verygray)
+		surface.SetDrawColor(menu_gradient_right)
+		surface.SetMaterial(tex_gradient_r)
+		surface.DrawTexturedRect(0, 0, w, h)
+		surface.SetDrawColor(clr_verygray)
+		surface.SetMaterial(tex_gradient_l)
+		surface.DrawTexturedRect(0, 0, w, h)
+		surface.SetDrawColor(clr_1)
+		surface.SetMaterial(tex_gradient_d)
+		surface.DrawTexturedRect(0, 0, w, h)
+	end
+    parentPanel:AlphaTo(255, 0.15, 0)
+
+    local header = vgui.Create("DLabel", parentPanel)
+    header:SetPos(MenuUnit(48), MenuUnit(38))
+    header:SetFont("ZCity_Menu_Settings_Small")
+    header:SetTextColor(color_whitey)
+	header:SetText("LOADOUT")
+    header:SizeToContents()
+
+    local subtitle = vgui.Create("DLabel", parentPanel)
+    subtitle:SetPos(MenuUnit(50), MenuUnit(84))
+    subtitle:SetFont(TRAITOR_MENU_FONT)
+    subtitle:SetTextColor(Color(155, 160, 172))
+	subtitle:SetText("Choose a game mode to configure.")
+    subtitle:SizeToContents()
+
+    local gap = MenuUnit(24)
+    local x = ScrW() * 0.09
+    local y = ScrH() * 0.22
+    local totalW = ScrW() * 0.82
+    local cardW = (totalW - gap) * 0.5
+    local cardH = ScrH() * 0.55
+	AddModeCard(parentPanel, x, y, cardW, cardH, "HOMICIDE", "2 LOADOUTS", "Judge and Executioner", "left", function() OpenHomicideMenu(parentPanel) end)
+	AddModeCard(parentPanel, x + cardW + gap, y, cardW, cardH, "ARENA", "50 META WEIGHT", "Weapons, armor, medical", "right", function() OpenArenaEditor(parentPanel) end)
+
+    local back = vgui.Create("DLabel", parentPanel)
+    back:SetPos(MenuUnit(15), ScrH() - MenuUnit(62))
+    back:SetFont("ZCity_Menu_Settings_Small")
+    back:SetTextColor(color_whitey)
+    SetupAnimatedLabel(back, "<- Return", 0, 15)
+    back.Think = ThinkAnimatedLabel
+    back.Paint = PaintAnimatedLabel
+    back.DoClick = function() CloseToMainMenu(parentPanel) end
 end
 
 hg.DrawTraitorLoadout = hg.DrawLoadoutMenu

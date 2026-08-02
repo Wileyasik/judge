@@ -15,12 +15,16 @@ local head_otrub_max_chance = 0.35
 local head_consciousness_mul = 28
 local head_otrub_consciousness_cap = 0.04
 local instant_pain_shock_scale = 0.75
-local player_limb_gib_threshold = 130
-local player_head_gib_threshold = 140
-local player_buckshot_head_gib_threshold = 112
-local player_stomach_gib_threshold = 260
-local player_blast_limb_gib_threshold = 80
+local player_limb_gib_threshold = 190
+local player_head_gib_threshold = 200
+local player_buckshot_head_gib_threshold = 170
+local player_stomach_gib_threshold = 340
+local player_blast_limb_gib_threshold = 130
 local player_fall_head_gib_threshold = 1.2
+local full_body_blast_gib_threshold = 5000
+local full_body_blast_damage_threshold = 1400
+local full_body_physics_speed_threshold = 3400
+local full_body_physics_damage_threshold = 4200
 local blast_gib_damage_mul = 700
 local melee_gib_damage_mul = 0.35
 local ragdoll_fall_skull_damage_mul = 1.2
@@ -711,6 +715,8 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	
 	local org = ent.organism
 
+	if hg.TryExtinguisherBulletBlock and hg.TryExtinguisherBulletBlock(ent, dmgInfo) then return true end
+
 	-- Glass damage to ragdoll...
 	if IsValid(ent) and string.find(ent:GetClass(),"break") and 
 		ent:GetBrushSurfaces() and ent:GetBrushSurfaces()[1] and string.find(ent:GetBrushSurfaces()[1]:GetMaterial():GetName(),"glass") and 
@@ -1313,6 +1319,9 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	damageStack = damageStack * (dmgInfo:IsDamageType(DMG_BLAST) and blast_gib_damage_mul / lend * grenadeBlastMul or 1) * (!dmgInfo:IsDamageType(DMG_CLUB+DMG_SLASH+DMG_BULLET+DMG_BUCKSHOT+DMG_BLAST+DMG_SNIPER) and 0 or 1) * (ent:IsNPC() and 3 or 1)
 	if impact.armorStopped then damageStack = 0 end
 	--damageStack = damageStack * (bullet and bullet.AmmoType and hg.ammotypeshuy[bullet.AmmoType] and hg.ammotypeshuy[bullet.AmmoType].BulletSettings and hg.ammotypeshuy[bullet.AmmoType].BulletSettings.Mass or 1) / 8
+	if hg.FullBodyExplode and not org.fullbodyexploded and dmgInfo:IsDamageType(DMG_BLAST) and hg.CanFullBodyGib and hg.CanFullBodyGib(ent, org, ply) and (damageStack >= full_body_blast_gib_threshold or dmg_before >= full_body_blast_damage_threshold) then
+		return hg.FullBodyExplode(ent, dirCool * len, dmgInfo) or true
+	end
 	
 	org.dmgstack = org.dmgstack or {}
 	org.dmgstack[hitgroup] = org.dmgstack[hitgroup] or {}
@@ -1795,6 +1804,7 @@ local function velocityDamage(ent, data)
 	if !ent.organism then return end
 	if dmg * 20 < 0.1 then return end
 	dmg = dmg * 1.5
+	local rawPhysicsDamage = dmg * 20
 
 	dmg = math.min(dmg, 5)
 
@@ -1856,6 +1866,9 @@ local function velocityDamage(ent, data)
 
 	local org = ent.organism
 	if org.godmode then return end
+	if hg.FullBodyExplode and not org.fullbodyexploded and hg.CanFullBodyGib and hg.CanFullBodyGib(ent, org, ply) and (speed >= full_body_physics_speed_threshold or rawPhysicsDamage >= full_body_physics_damage_threshold) then
+		if hg.FullBodyExplode(ent, data.OurOldVelocity - data.TheirOldVelocity, dmgInfo) then return end
+	end
 
 	-- Armor protection vs physical/fall damage
 	local armorDmgMul = 1
@@ -2000,22 +2013,29 @@ function hg.BreakNeck(ent)
 	if !IsValid(ent) then return end
 
 	local ply = ent:IsRagdoll() and hg.RagdollOwner(ent) or ent
-	if ply:Alive() then ply:Kill() end
+	if IsValid(ply) and ply:Alive() then ply:Kill() end
 
 	ent.organism.spine3 = 1
 	ent:EmitSound("neck_snap_01.wav", 60, 100, 1, CHAN_AUTO)
+	local target = ent
 	
 	timer.Simple(0.1, function()
-		local ent = ent:IsRagdoll() and ent or ent:GetNWEntity("RagdollDeath")
+		if !IsValid(target) then return end
+		local ent = target:IsRagdoll() and target or target:GetNWEntity("RagdollDeath")
 
 		if IsValid(ent) then
-			ent:RemoveInternalConstraint(ent:TranslateBoneToPhysBone(ent:LookupBone("ValveBiped.Bip01_Head1")))
+			local headBone = ent:LookupBone("ValveBiped.Bip01_Head1")
+			local spineBone = ent:LookupBone("ValveBiped.Bip01_Spine2")
+			if !headBone or !spineBone then return end
 
-			local spine = ent:TranslateBoneToPhysBone(ent:LookupBone("ValveBiped.Bip01_Spine2"))
-			local head = ent:TranslateBoneToPhysBone(ent:LookupBone("ValveBiped.Bip01_Head1"))
+			ent:RemoveInternalConstraint(ent:TranslateBoneToPhysBone(headBone))
+
+			local spine = ent:TranslateBoneToPhysBone(spineBone)
+			local head = ent:TranslateBoneToPhysBone(headBone)
 
 			local pspine = ent:GetPhysicsObjectNum(spine)
 			local phead = ent:GetPhysicsObjectNum(head)
+			if !IsValid(pspine) or !IsValid(phead) then return end
 
 			local lpos, lang = WorldToLocal(phead:GetPos() + phead:GetAngles():Forward() * -2 + phead:GetAngles():Up() * -1.5, angle_zero, pspine:GetPos(), pspine:GetAngles())
 			
@@ -2096,6 +2116,8 @@ hook.Add("Player Spawn", "huyhuyhuy22", function(ply)
 		ply.organism.gibhealth = nil
 		ply.organism.gibdmgstack = nil
 		ply.organism.stomachgibbed = false
+		ply.organism.fullbodyexploded = false
+		ply.fullbodyexploded = nil
 		ply.organism.lastGibHitGroup = nil
 		ply.organism.lastGibHitTime = nil
 		ply.headExplodePending = nil
@@ -2141,6 +2163,7 @@ end)
 function hg.VehicleHitFunc(ent, tr, bullet, details)
 	local maxdmg = 0
 	local penetration = true
+	local bulletPenetration = bullet and bullet.Penetration or 0
 
 	for i, detail in pairs(details) do
 		local lpos, lang, mins, maxs = detail.lpos, detail.lang, detail.mins, detail.maxs
@@ -2160,7 +2183,7 @@ function hg.VehicleHitFunc(ent, tr, bullet, details)
 		
 		if hitpos then
 			maxdmg = math.max(maxdmg, detail.dmgmul)
-			penetration = penetration and detail.penetration < bullet.Penetration
+			penetration = penetration and detail.penetration < bulletPenetration
 
 			-- maybe some other effects
 		end

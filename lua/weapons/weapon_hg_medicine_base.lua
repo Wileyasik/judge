@@ -610,6 +610,15 @@ if SERVER then
 			["ValveBiped.Bip01_R_Foot"] = true
 		},
 	}
+	local amputationArteryGroups = {}
+	for _, group in ipairs({
+		{"ValveBiped.Bip01_L_UpperArmartery", "ValveBiped.Bip01_L_Forearmartery", "ValveBiped.Bip01_L_Handartery"},
+		{"ValveBiped.Bip01_R_UpperArmartery", "ValveBiped.Bip01_R_Forearmartery", "ValveBiped.Bip01_R_Handartery"},
+		{"ValveBiped.Bip01_L_Thighartery", "ValveBiped.Bip01_L_Calfartery"},
+		{"ValveBiped.Bip01_R_Thighartery", "ValveBiped.Bip01_R_Calfartery"},
+	}) do
+		for _, artery in ipairs(group) do amputationArteryGroups[artery] = group end
+	end
 	function SWEP:Tourniquet(ent, bone)
 		local org = ent.organism
 		if not org then return end
@@ -654,11 +663,30 @@ if SERVER then
 			if not wound then return false end
 			
 			ent.tourniquets[#ent.tourniquets + 1] = {wound[2], wound[3], wound[4]}
-			org[wound[7]] = 0
+			local arteryGroup = amputationArteryGroups[wound[7]]
+			local fullLimbAmputation = arteryGroup and (
+				(arteryGroup[1] == "ValveBiped.Bip01_L_UpperArmartery" and org.larmupamputated) or
+				(arteryGroup[1] == "ValveBiped.Bip01_R_UpperArmartery" and org.rarmupamputated) or
+				(arteryGroup[1] == "ValveBiped.Bip01_L_Thighartery" and org.llegupamputated) or
+				(arteryGroup[1] == "ValveBiped.Bip01_R_Thighartery" and org.rlegupamputated)
+			)
+			if not fullLimbAmputation then arteryGroup = nil end
+			if arteryGroup then
+				local groupedArteries = {}
+				for _, artery in ipairs(arteryGroup) do groupedArteries[artery] = true end
+				for i = #org.arterialwounds, 1, -1 do
+					local artery = org.arterialwounds[i][7]
+					if groupedArteries[artery] then
+						org[artery] = 0
+						table.remove(org.arterialwounds, i)
+					end
+				end
+			else
+				org[wound[7]] = 0
+				table.remove(org.arterialwounds, pw)
+			end
 
 			if wound[7] == "arteria" then org.o2.regen = 0 end
-
-			table.remove(org.arterialwounds,pw)
 
 			org.owner:SetNetVar("arterialwounds",org.arterialwounds)
 

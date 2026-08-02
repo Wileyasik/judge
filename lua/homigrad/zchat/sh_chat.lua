@@ -300,6 +300,7 @@ else
 		if text == "" then return end
 
 		if ply:Alive() and ply.organism and ply.organism.otrub then return end
+		hook.Run("HG_PlayerChatSent", ply, text)
 
 		ply.ChatWhisper = ply:Alive() and ply.ChatWhisper or false
 

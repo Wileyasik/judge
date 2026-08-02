@@ -158,10 +158,15 @@ local Selects = {
     {Title = "Information", Func = function(luaMenu,pp)
         hg.DrawInformation(pp)
     end},
-    {Title = "Settings", Func = function(luaMenu,pp) 
-        hg.DrawSettings(pp) 
+    {Title = "Keybinds", Func = function(luaMenu,pp)
+        hg.DrawKeybinds(pp)
     end},
-    {Title = "Appearance", Func = function(luaMenu,pp) hg.CreateApperanceMenu(pp) end},
+    {Title = "Settings", Func = function(luaMenu,pp) 
+        hg.DrawSettings(pp)
+    end},
+    {Title = "Appearance", Func = function(luaMenu,pp)
+        hg.CreateApperanceMenu(pp)
+    end},
     {Title = "Return", Func = function(luaMenu) luaMenu:Close() end},
 }
 
@@ -299,6 +304,76 @@ local menu_profile_fallback_band = {
 local menu_profile_fallback_medal = {
     icon = Material("vgui/mats_jack_awards/pt")
 }
+local menu_news = {
+    top = 24,
+    height = 36,
+    speed = 100,
+    refresh = 2
+}
+
+local function MenuCanStartNet(messageName)
+    return util.NetworkStringToID(messageName) ~= 0
+end
+
+hg.Leaderboard = hg.Leaderboard or {Rows = {}, NextRequest = 0}
+
+function hg.Leaderboard.Request(limit)
+    if not MenuCanStartNet("zb_sql_leaderboard") then return end
+    if (hg.Leaderboard.NextRequest or 0) > CurTime() then return end
+    hg.Leaderboard.NextRequest = CurTime() + 3
+
+    net.Start("zb_sql_leaderboard")
+        net.WriteUInt(math.Clamp(limit or 10, 1, 10), 8)
+    net.SendToServer()
+end
+
+function hg.Leaderboard.Get(limit)
+    hg.Leaderboard.Request(limit)
+
+    local rows = hg.Leaderboard.Rows or {}
+    if limit and #rows > limit then
+        local trimmed = {}
+        for i = 1, limit do
+            trimmed[i] = rows[i]
+        end
+        return trimmed
+    end
+
+    return rows
+end
+
+function hg.Leaderboard.GetAwards(row)
+    if not row or not zb or not zb.Experience or not zb.Experience.GetAwards then return menu_profile_fallback_band, menu_profile_fallback_medal end
+    return zb.Experience.GetAwards({skill = row.skill or 0, exp = row.xp or 0})
+end
+
+function hg.Leaderboard.GetMedalName(row)
+    local _, medal = hg.Leaderboard.GetAwards(row)
+    return string.upper((medal and medal.name) or "UNRANKED")
+end
+
+if not hg.Leaderboard.NetHooked then
+    net.Receive("zb_sql_leaderboard", function()
+        local count = net.ReadUInt(8)
+        local rows = {}
+
+        for i = 1, count do
+            rows[i] = {
+                steamid = net.ReadString(),
+                name = net.ReadString(),
+                skill = net.ReadFloat(),
+                xp = net.ReadUInt(32),
+                kills = net.ReadUInt(16),
+                deaths = net.ReadUInt(16),
+                kd = net.ReadFloat()
+            }
+        end
+
+        hg.Leaderboard.Rows = rows
+    end)
+
+    hg.Leaderboard.NetHooked = true
+end
 
 local function CleanupPreviewAccessories(ent)
     if not IsValid(ent) or not ent.modelAccess then return end
@@ -502,6 +577,65 @@ function PANEL:CreateProfileInfo()
     timer.Simple(0, function()
         if not IsValid(profile) then return end
         profile:AlphaTo(255, appearance_preview.enter_time * 0.75, appearance_preview.enter_delay)
+    end)
+end
+
+function PANEL:CreateTopPlayersTicker()
+    local ticker = vgui.Create("DPanel", self)
+    self.topPlayersTicker = ticker
+    ticker:SetSize(ScrW(), MenuUnit(menu_news.height))
+    ticker:SetPos(0, MenuUnit(menu_news.top))
+    ticker:SetMouseInputEnabled(false)
+    ticker:SetAlpha(0)
+    ticker.Text = "TOP 3 PLAYERS: LOADING"
+    ticker.Leaders = {}
+    ticker.NextRefresh = 0
+    ticker.Paint = function(this, w, h)
+        if (this.NextRefresh or 0) <= CurTime() then
+            local leaders = hg.Leaderboard.Get(3)
+            this.Leaders = leaders
+            this.Text = #leaders > 0 and "TOP 3 PLAYERS:" or "TOP 3 PLAYERS: NO SQL LEADERBOARD DATA"
+            this.NextRefresh = CurTime() + menu_news.refresh
+        end
+
+        surface.SetDrawColor(0, 0, 0, 185)
+        surface.DrawRect(0, 0, w, h)
+        surface.SetDrawColor(255, 255, 255, 70)
+        surface.DrawRect(0, h - MenuUnit(1), w, MenuUnit(1))
+
+        surface.SetFont("ZCity_Menu_Tiny")
+        local iconSize = MenuUnit(18)
+        local gap = MenuUnit(18)
+        local textW = surface.GetTextSize(this.Text)
+        for i, data in ipairs(this.Leaders or {}) do
+            textW = textW + surface.GetTextSize("   #" .. i .. " " .. string.upper(data.name) .. " XP " .. data.xp) + iconSize + gap
+        end
+        local span = w + textW + MenuUnit(80)
+        local x = w - ((RealTime() * menu_news.speed) % span)
+        local y = h / 2
+        draw.SimpleTextOutlined(this.Text, "ZCity_Menu_Tiny", x, y, Color(225, 225, 225), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, 235))
+        x = x + surface.GetTextSize(this.Text)
+
+        for i, data in ipairs(this.Leaders or {}) do
+            local label = "   #" .. i .. " " .. string.upper(data.name) .. " XP " .. data.xp
+            draw.SimpleTextOutlined(label, "ZCity_Menu_Tiny", x, y, Color(225, 225, 225), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, 235))
+            x = x + surface.GetTextSize(label) + MenuUnit(4)
+
+            local _, medal = hg.Leaderboard.GetAwards(data)
+            if medal and medal.icon then
+                surface.SetMaterial(medal.icon)
+                surface.SetDrawColor(255, 255, 255, 235)
+                surface.DrawTexturedRect(x, y - iconSize / 2, iconSize, iconSize)
+            end
+
+            x = x + iconSize + gap
+        end
+    end
+
+    timer.Simple(0, function()
+        if IsValid(ticker) then
+            ticker:AlphaTo(255, appearance_preview.enter_time * 0.75, appearance_preview.enter_delay)
+        end
     end)
 end
 
@@ -797,6 +931,7 @@ function PANEL:Init()
 
     self:CreateAppearancePreview()
     self:CreateProfileInfo()
+    self:CreateTopPlayersTicker()
 
     self.Buttons = {}
     for k, v in ipairs(Selects) do

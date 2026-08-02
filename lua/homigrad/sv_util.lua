@@ -127,12 +127,14 @@ hook.Add( "OnEntityCreated", "HelicopterGunshipInit", function( ent )
 	end )
 end )
 
-hook.Add( "Think", "Dumalkasniper", function()
+
+timer.Create( "Dumalkasniper", 0.1, 0, function()
+	local time = CurTime()
 	for _, sniper in ipairs( ents.FindByClass( "npc_sniper" ) ) do
 		if not IsValid( sniper ) then continue end
 		
-		if (sniper.NextSuppressionCheck or 0) > CurTime() then continue end
-		sniper.NextSuppressionCheck = CurTime() + 0.1
+		if (sniper.NextSuppressionCheck or 0) > time then continue end
+		sniper.NextSuppressionCheck = time + 0.1
 		
 		local enemy = sniper:GetEnemy()
 		
@@ -150,7 +152,7 @@ hook.Add( "Think", "Dumalkasniper", function()
 				sniper.LastSeenEnemy = enemy
 				sniper.LastSeenPos = enemy:GetPos()
 				sniper.LastSeenVel = enemy:GetVelocity()
-				sniper.LastSeenTime = CurTime()
+				sniper.LastSeenTime = time
 				sniper.WasVisible = true
 				
 				if IsValid(sniper.SuppressionTarget) then
@@ -427,8 +429,9 @@ hook.Add("Player_Death","notarget_removebull",function(ply)
 end)
 
 hook.Add("Player Think", "homigrad-dropholstered", function(ply)
-	if (ply.thinkdropwep or 0) > CurTime() then return end
-	ply.thinkdropwep = CurTime() + 0.1
+	local time = CurTime()
+	if (ply.thinkdropwep or 0) > time then return end
+	ply.thinkdropwep = time + 0.1
 	if ply.organism and ply.organism.allowholster then return end
 
 	local activewep = ply:GetActiveWeapon()
@@ -2127,21 +2130,23 @@ end
 local hook_Run = hook.Run
 
 hook.Add("PlayerTick", "ilovefurries", function(ply)
-	ply.lastcall_tick = ply.lastcall_tick or SysTime() - 0.01
-	local dtime = SysTime() - ply.lastcall_tick
+	local sysTime = SysTime()
+	ply.lastcall_tick = ply.lastcall_tick or sysTime - 0.01
+	local dtime = sysTime - ply.lastcall_tick
 
 	hook_Run("Player Think", ply, CurTime(), dtime)
 
-	ply.lastcall_tick = SysTime()
+	ply.lastcall_tick = sysTime
 end)
 
 hook.Add("VehicleMove", "ilovefurries", function(ply, veh, mv)
-	ply.lastcall_tick = ply.lastcall_tick or SysTime() - 0.01
-	local dtime = SysTime() - ply.lastcall_tick
+	local sysTime = SysTime()
+	ply.lastcall_tick = ply.lastcall_tick or sysTime - 0.01
+	local dtime = sysTime - ply.lastcall_tick
 
 	hook_Run("Player Think", ply, CurTime(), dtime)
 
-	ply.lastcall_tick = SysTime()
+	ply.lastcall_tick = sysTime
 end)
 
 hook.Add("Player Think", "homigrad-viewoffset", function(ply)
@@ -2164,12 +2169,14 @@ hook.Add("SetupMove", "AntiCrouchSpam", function(ply, mvd, cmd) -- на само
 	if !ply:Alive() or !hg.GetCurrentCharacter( ply ):IsPlayer() then return end
 
 	ply.OldCrouchState = ply.OldCrouchState or false
+	local ducking = mvd:KeyDown( IN_DUCK )
+	local time = CurTime()
 
-	if ply.CrouchCD and ply.CrouchCD > CurTime() then
+	if ply.CrouchCD and ply.CrouchCD > time then
 		mvd:RemoveKeys( IN_DUCK )
-	elseif ply.OldCrouchState != mvd:KeyDown( IN_DUCK ) and !mvd:KeyDown( IN_DUCK ) then
-		ply.CrouchCD = CurTime() + 0.35
+	elseif ply.OldCrouchState != ducking and !ducking then
+		ply.CrouchCD = time + 0.35
 	end
 
-	ply.OldCrouchState = mvd:KeyDown( IN_DUCK )
+	ply.OldCrouchState = ducking
 end)

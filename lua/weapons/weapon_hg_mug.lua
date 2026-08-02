@@ -56,6 +56,11 @@ SWEP.StaminaSecondary = 3
 SWEP.AttackLen1 = 45
 SWEP.AttackLen2 = 30
 
+SWEP.CantClash = true 
+SWEP.BlockTier = 2
+SWEP.BlockMaterial = "none"
+SWEP.BlockSound = {"GlassBottle.ImpactHard", 68, {95, 102}}
+
 SWEP.HoldPos = Vector(-8, 1, -2)
 
 function SWEP:CustomBlockAnim(addPosLerp, addAngLerp)

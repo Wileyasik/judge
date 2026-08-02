@@ -175,11 +175,11 @@ SWEP.holsteredAng = Angle(0, 20, 30)
 SWEP.shouldntDrawHolstered = true
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"supressor4", Vector(0,0,0), {}},
-		[2] = {"supressor6", Vector(0,0,0), {}},
-		[3] = {"supressor3", Vector(0,0,0), {}},
+		[1] = {"supressor1", Vector(0,0,0), {}},
+		[2] = {"supressor2", Vector(0,0,0), {}},
 
-		["mount"] = Vector(1.1,0.2,0),
+		["mount"] = Vector(0.8,-0.2,0),
+		["mountAngle"] = Angle(0, 0, -90),
 	},
 }
 

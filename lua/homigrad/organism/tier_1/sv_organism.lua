@@ -974,7 +974,7 @@ hook.Add("StartCommand","hg_lol",function(ply,cmd)
 	if not ply:Alive() or not ply.organism then return end
 	if ply.organism.seizureActive then
 		cmd:ClearMovement()
-		cmd:ClearButtons()
+		if not IsValid(ply.FakeRagdoll) then cmd:ClearButtons() end
 	elseif ply.organism.otrub then
 		cmd:ClearMovement()
 	end

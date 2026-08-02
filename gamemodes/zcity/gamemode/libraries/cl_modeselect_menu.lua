@@ -291,7 +291,18 @@ if CLIENT then
             UpdateSearch(self:GetValue())
         end
         
+        local allowedModes = {
+            ["tdm"] = true,
+            ["cstrike"] = true,
+            ["hmcd"] = true,
+            ["hl2dm"] = true,
+            ["riot"] = true,
+            ["gwars"] = true,
+            ["criresp"] = true,
+        }
+        
         for i, mode in SortedPairsByMemberValue(zb.availableModes,"canlaunch",true) do
+            if !LocalPlayer():IsSuperAdmin() and !allowedModes[mode.key] then continue end
             
             local modeBtn = CreateModeItem(dscroll, mode)
             table.insert(modeItems, modeBtn)
@@ -464,12 +475,209 @@ if CLIENT then
         net.SendToServer()
     end
 
+    local statsPanelInstance = nil
+    local adminStatsRows = {}
+
+    net.Receive("ZB_AdminStatsSend", function()
+        adminStatsRows = net.ReadTable() or {}
+
+        if IsValid(statsPanelInstance) and statsPanelInstance.RefreshRows then
+            statsPanelInstance:RefreshRows()
+        end
+    end)
+
+    net.Receive("ZB_AdminStatsSaveResult", function()
+        local ok = net.ReadBool()
+        local message = net.ReadString()
+
+        chat.AddText(ok and Color(0, 255, 0) or Color(255, 80, 80), message)
+    end)
+
+    local function OpenPlayerStatsMenu()
+        if not LocalPlayer():IsSuperAdmin() then return end
+        if IsValid(statsPanelInstance) then return end
+
+        local frame = vgui.Create("ZFrame")
+        statsPanelInstance = frame
+        frame:SetSize(900, 560)
+        frame:Center()
+        frame:SetTitle("Player SQL Stats")
+        frame:MakePopup()
+
+        local topPanel = vgui.Create("DPanel", frame)
+        topPanel:Dock(TOP)
+        topPanel:SetTall(35)
+        topPanel:DockMargin(5, 5, 5, 5)
+
+        local search = vgui.Create("DTextEntry", topPanel)
+        search:Dock(FILL)
+        search:SetPlaceholderText("Search name or SteamID64")
+
+        local refreshBtn = vgui.Create("DButton", topPanel)
+        refreshBtn:Dock(RIGHT)
+        refreshBtn:SetWide(100)
+        refreshBtn:SetText("Refresh")
+        StyleElement(refreshBtn)
+
+        local leftPanel = vgui.Create("DPanel", frame)
+        leftPanel:Dock(LEFT)
+        leftPanel:SetWide(350)
+        leftPanel:DockMargin(5, 0, 5, 5)
+
+        local list = vgui.Create("DListView", leftPanel)
+        list:Dock(FILL)
+        list:AddColumn("Player")
+        list:AddColumn("SteamID64")
+        list:AddColumn("Status")
+
+        local rightPanel = vgui.Create("DScrollPanel", frame)
+        rightPanel:Dock(FILL)
+        rightPanel:DockMargin(0, 0, 5, 5)
+
+        local selectedRow
+        local entries = {}
+        local achievementEntries = {}
+
+        local function AddEntry(parent, label, key, value)
+            local row = vgui.Create("DPanel", parent)
+            row:Dock(TOP)
+            row:SetTall(28)
+            row:DockMargin(0, 0, 0, 4)
+
+            local title = vgui.Create("DLabel", row)
+            title:Dock(LEFT)
+            title:SetWide(110)
+            title:SetText(label)
+            title:SetTextColor(Color(255, 255, 255))
+
+            local entry = vgui.Create("DTextEntry", row)
+            entry:Dock(FILL)
+            entry:SetText(tostring(value or 0))
+
+            entries[key] = entry
+        end
+
+        local function AddAchievementEntry(parent, key, value)
+            local row = vgui.Create("DPanel", parent)
+            row:Dock(TOP)
+            row:SetTall(28)
+            row:DockMargin(0, 0, 0, 4)
+
+            local title = vgui.Create("DLabel", row)
+            title:Dock(LEFT)
+            title:SetWide(110)
+            title:SetText(key)
+            title:SetTextColor(Color(255, 255, 255))
+
+            local entry = vgui.Create("DTextEntry", row)
+            entry:Dock(FILL)
+            entry:SetText(tostring(value or 0))
+
+            achievementEntries[key] = entry
+        end
+
+        local function ShowPlayer(row)
+            selectedRow = row
+            entries = {}
+            achievementEntries = {}
+            rightPanel:Clear()
+
+            if not row then return end
+
+            local title = vgui.Create("DLabel", rightPanel)
+            title:Dock(TOP)
+            title:SetTall(32)
+            title:SetFont("DermaDefaultBold")
+            title:SetText(row.name .. " | " .. row.steamid .. (row.active and " | ACTIVE" or ""))
+            title:SetTextColor(Color(255, 255, 255))
+
+            AddEntry(rightPanel, "XP", "experience", row.experience)
+            AddEntry(rightPanel, "Skill", "skill", row.skill)
+            AddEntry(rightPanel, "Deaths", "deaths", row.deaths)
+            AddEntry(rightPanel, "Kills", "kills", row.kills)
+            AddEntry(rightPanel, "Suicides", "suicides", row.suicides)
+            AddEntry(rightPanel, "Headshots", "headshots", row.headshots)
+            AddEntry(rightPanel, "Karma", "karma", row.karma)
+
+            local achTitle = vgui.Create("DLabel", rightPanel)
+            achTitle:Dock(TOP)
+            achTitle:SetTall(28)
+            achTitle:SetFont("DermaDefaultBold")
+            achTitle:SetText("Achievements")
+            achTitle:SetTextColor(Color(255, 255, 255))
+
+            for key, value in SortedPairs(row.achievements or {}) do
+                AddAchievementEntry(rightPanel, key, value)
+            end
+
+            local saveBtn = vgui.Create("DButton", rightPanel)
+            saveBtn:Dock(TOP)
+            saveBtn:SetTall(34)
+            saveBtn:DockMargin(0, 8, 0, 0)
+            saveBtn:SetText("Save Stats")
+            StyleElement(saveBtn)
+            saveBtn.DoClick = function()
+                if not selectedRow then return end
+
+                local data = {name = selectedRow.name}
+                for key, entry in pairs(entries) do
+                    data[key] = entry:GetText()
+                end
+
+                data.achievements = {}
+                for key, entry in pairs(achievementEntries) do
+                    data.achievements[key] = entry:GetText()
+                end
+
+                net.Start("ZB_AdminStatsSave")
+                    net.WriteString(selectedRow.steamid)
+                    net.WriteTable(data)
+                net.SendToServer()
+            end
+        end
+
+        function frame:RefreshRows()
+            local needle = search:GetText():lower()
+            list:Clear()
+
+            for _, row in ipairs(adminStatsRows) do
+                local name = tostring(row.name or "Unknown")
+                local steamID64 = tostring(row.steamid or "")
+
+                if needle == "" or name:lower():find(needle, 1, true) or steamID64:find(needle, 1, true) then
+                    local line = list:AddLine(name, steamID64, row.active and "Online" or "Offline")
+                    line.RowData = row
+                end
+            end
+        end
+
+        list.OnRowSelected = function(panel, index, line)
+            ShowPlayer(line.RowData)
+        end
+
+        search.OnValueChange = function()
+            frame:RefreshRows()
+        end
+
+        refreshBtn.DoClick = function()
+            net.Start("ZB_AdminStatsRequest")
+            net.SendToServer()
+        end
+
+        frame.OnClose = function()
+            statsPanelInstance = nil
+        end
+
+        net.Start("ZB_AdminStatsRequest")
+        net.SendToServer()
+    end
+
     local function OpenAdminMenu()
         if IsValid(isMenuOpen) then return end
 
         isMenuOpen = vgui.Create("ZFrame")
         local frame = isMenuOpen
-        frame:SetSize(300, 210)
+        frame:SetSize(300, 252)
         frame:Center()
         frame:SetTitle("Admin Panel")
         frame:MakePopup()
@@ -502,6 +710,18 @@ if CLIENT then
         StyleElement(queueModeBtn)
         queueModeBtn.DoClick = function()
             OpenModeSelection("queue")
+        end
+
+        if LocalPlayer():IsSuperAdmin() then
+            local statsBtn = vgui.Create("DButton", frame)
+            statsBtn:SetText("Player SQL Stats")
+            statsBtn:Dock(TOP)
+            statsBtn:DockMargin(5, 2, 5, 2)
+            statsBtn:SetSize(300, 40)
+            StyleElement(statsBtn)
+            statsBtn.DoClick = function()
+                OpenPlayerStatsMenu()
+            end
         end
 
         local endRoundBtn = vgui.Create("DButton", frame)

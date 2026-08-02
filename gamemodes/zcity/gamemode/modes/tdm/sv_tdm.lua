@@ -3,9 +3,6 @@ local MODE = MODE
 MODE.name = "tdm"
 MODE.BuyTime = 40
 MODE.StartMoney = 6500
-MODE.start_time = 20
-MODE.buymenu = true
-
 MODE.ROUND_TIME = 240
 
 MODE.Chance = 0.04
@@ -24,13 +21,21 @@ end
 MODE.ForBigMaps = true
 
 util.AddNetworkString("tdm_start")
+util.AddNetworkString("arena_loadout_sync")
+
+net.Receive("arena_loadout_sync", function(_, ply)
+	local raw = net.ReadString()
+	if #raw > 4096 then return end
+	local ok, parsed = pcall(util.JSONToTable, raw)
+	if not ok or not istable(parsed) then return end
+	ply.ArenaLoadout = parsed
+end)
 function MODE:Intermission()
 	game.CleanUpMap()
 
 	for i, ply in player.Iterator() do
 		ply:SetupTeam(ply:Team())
 		
-		ply:SetNWInt( "TDM_Money", self.StartMoney )
 	end
 
 	net.Start("tdm_start")
@@ -79,6 +84,133 @@ local tblarmors = {
 	},
 }
 
+local function ParseArenaLoadout(ply)
+	if istable(ply.ArenaLoadout) then return ply.ArenaLoadout end
+	local raw = ply:GetInfo("zcity_arena_loadout")
+	if not isstring(raw) or raw == "" or #raw > 4096 then return {} end
+
+	local ok, parsed = pcall(util.JSONToTable, raw)
+	return ok and istable(parsed) and parsed or {}
+end
+
+local function ValidateArenaLoadout(ply)
+	local parsed = ParseArenaLoadout(ply)
+	local selected, usedSlots, selectedAttachments = {}, {}, {}
+	local selectedArmor, selectedMedical, usedArmorSlots = {}, {}, {}
+	local weight = 0
+
+	for _, weaponId in ipairs(istable(parsed.weapons) and parsed.weapons or {}) do
+		local info = MODE.ArenaWeapons[weaponId]
+		if not info or usedSlots[info.slot] or weight + info.weight > MODE.ArenaMaxWeight then continue end
+
+		usedSlots[info.slot] = true
+		selected[#selected + 1] = weaponId
+		weight = weight + info.weight
+	end
+	if #selected == 0 then
+		selected = {ply:Team() == 1 and "weapon_m4a1" or "weapon_akm", "weapon_p22"}
+		weight = MODE.ArenaWeapons[selected[1]].weight + MODE.ArenaWeapons[selected[2]].weight
+	end
+
+	local requestedAttachments = istable(parsed.attachments) and parsed.attachments or {}
+	for _, weaponId in ipairs(selected) do
+		local info = MODE.ArenaWeapons[weaponId]
+		local allowed = {}
+		for _, attachmentId in ipairs(info.attachments or {}) do allowed[attachmentId] = true end
+
+		local usedPlacements = {}
+		for _, attachmentId in ipairs(istable(requestedAttachments[weaponId]) and requestedAttachments[weaponId] or {}) do
+			local placement
+			for placementId, definitions in pairs(hg.attachments or {}) do
+				if definitions[attachmentId] then placement = placementId break end
+			end
+			if not allowed[attachmentId] or not placement or usedPlacements[placement] then continue end
+			local attachmentWeight = MODE:GetArenaAttachmentWeight(attachmentId)
+			if weight + attachmentWeight > MODE.ArenaMaxWeight then continue end
+
+			usedPlacements[placement] = true
+			selectedAttachments[weaponId] = selectedAttachments[weaponId] or {}
+			selectedAttachments[weaponId][#selectedAttachments[weaponId] + 1] = attachmentId
+			weight = weight + attachmentWeight
+		end
+	end
+
+	for _, armorId in ipairs(istable(parsed.armor) and parsed.armor or {}) do
+		local info = MODE.ArenaArmor[armorId]
+		if not info or usedArmorSlots[info.slot] or weight + info.weight > MODE.ArenaMaxWeight then continue end
+		usedArmorSlots[info.slot] = true
+		selectedArmor[#selectedArmor + 1] = armorId
+		weight = weight + info.weight
+	end
+
+	local usedMedical = {}
+	for _, medicalId in ipairs(istable(parsed.medical) and parsed.medical or {}) do
+		local info = MODE.ArenaMedical[medicalId]
+		if not info or usedMedical[medicalId] or weight + info.weight > MODE.ArenaMaxWeight then continue end
+		usedMedical[medicalId] = true
+		selectedMedical[#selectedMedical + 1] = medicalId
+		weight = weight + info.weight
+	end
+
+	return selected, selectedAttachments, selectedArmor, selectedMedical, weight
+end
+
+local function ApplyArenaLoadout(ply)
+	local selected, attachments, armor, medical, weight = ValidateArenaLoadout(ply)
+	local function ApplyWeaponAttachments(weapon, attachmentIds, attemptsLeft, onDone)
+		if not IsValid(weapon) then return end
+		if not istable(weapon.attachments) or not istable(weapon.availableAttachments) then
+			if attemptsLeft > 0 then timer.Simple(0.05, function() ApplyWeaponAttachments(weapon, attachmentIds, attemptsLeft - 1, onDone) end) end
+			return
+		end
+
+		local complete = true
+		for _, attachmentId in ipairs(attachmentIds or {}) do
+			local placement
+			for placementId, definitions in pairs(hg.attachments or {}) do
+				if definitions[attachmentId] then placement = placementId break end
+			end
+			if placement and (not weapon.attachments[placement] or weapon.attachments[placement][1] ~= attachmentId) then
+				complete = false
+				if hg.AddAttachmentForce then hg.AddAttachmentForce(ply, weapon, attachmentId) end
+			end
+		end
+
+		if not complete and attemptsLeft > 0 then
+			timer.Simple(0.05, function() ApplyWeaponAttachments(weapon, attachmentIds, attemptsLeft - 1, onDone) end)
+			return
+		end
+		if weapon.SyncAtts then weapon:SyncAtts() end
+		if onDone then onDone() end
+	end
+
+	for _, weaponId in ipairs(selected) do
+		local info = MODE.ArenaWeapons[weaponId]
+		local weapon = ply:Give(weaponId)
+		if not IsValid(weapon) then continue end
+		local givenWeapon = weapon
+		local givenInfo = info
+		local givenAttachments = attachments[weaponId]
+
+		timer.Simple(0.05, function()
+			if not IsValid(ply) or not IsValid(givenWeapon) then return end
+			ApplyWeaponAttachments(givenWeapon, givenAttachments, 10, function()
+				if not IsValid(ply) or not IsValid(givenWeapon) then return end
+				if givenWeapon:GetPrimaryAmmoType() >= 0 and givenWeapon:GetMaxClip1() > 0 then
+					ply:GiveAmmo(givenWeapon:GetMaxClip1() * givenInfo.clips, givenWeapon:GetPrimaryAmmoType(), true)
+				end
+			end)
+		end)
+	end
+	if hg.AddArmor then
+		for _, armorId in ipairs(armor) do hg.AddArmor(ply, armorId) end
+		hg.AddArmor(ply, "headphones1")
+	end
+	for _, medicalId in ipairs(medical) do ply:Give(medicalId) end
+
+	ply:SetNWInt("ArenaMetaWeight", weight)
+end
+
 -- local giveweapons = CreateConVar("zb_tdm_giveweapon","1",FCVAR_LUA_SERVER,"TDMSPAWNS",0,1)
 
 function MODE:GetPlySpawn(ply)
@@ -108,6 +240,8 @@ function MODE:GiveEquipment()
 				ply:SetNetVar("CurPluv", "pluvboss")
 			end
 
+			ApplyArenaLoadout(ply)
+
 			--[[if giveweapons:GetBool() then
 				local gun = ply:Give(tblweps[ply:Team()][mrand])
 				ply:GiveAmmo(gun:GetMaxClip1() * 3,gun:GetPrimaryAmmoType(),true)
@@ -125,8 +259,6 @@ function MODE:GiveEquipment()
 			//ply:Give("weapon_combatknife")
 
 			ply:Give("weapon_combatknife")
-			ply:Give("weapon_bandage_sh")
-			ply:Give("weapon_tourniquet")
 			ply.organism.allowholster = true
 
 			local Radio = ply:Give("weapon_walkie_talkie")
@@ -155,10 +287,6 @@ end
 
 util.AddNetworkString("tdm_roundend")
 function MODE:EndRound()
-	timer.Simple(2,function()
-		net.Start("tdm_roundend")
-		net.Broadcast()
-	end)
 	local endround, winner = zb:CheckWinner(self:CheckAlivePlayers())
 	for k,ply in player.Iterator() do
 		if ply:Team() == winner then
@@ -174,62 +302,3 @@ end
 
 function MODE:PlayerDeath(ply)
 end
-util.AddNetworkString( "tdm_open_buymenu" )
-function MODE:ShowSpare1(ply ) -- OpenMenu
-	if not ply:Alive() then return end
-	net.Start( "tdm_open_buymenu" )
-	net.Send( ply )
-end
-
-util.AddNetworkString( "tdm_buyitem" )
-
-local AttachmentPrice = 50
-net.Receive("tdm_buyitem",function(len,ply)
-	if !CurrentRound().buymenu then return end
-	if ((zb.ROUND_START or 0) + 40 < CurTime()) then ply:ChatPrint("Time's up!") return end
-	local tItem = net.ReadTable()
-	if not istable(tItem) then return end
-	local category = tItem[1]
-	local index = tItem[2]
-	if not category or not index then return end
-	local buyItems = CurrentRound().BuyItems
-	if not buyItems or not buyItems[category] or not buyItems[category][index] then return end
-	local item = buyItems[category][index]
-
-	if not item then return end
-
-	if tItem[3] then
-		if not ply:HasWeapon(item.ItemClass) then ply:ChatPrint("You can't buy this attachment without a weapon.") return end
-		if ((ply:GetNWInt("TDM_Money",0) - AttachmentPrice) < 0) then ply:ChatPrint("Not enough money.") return end
-
-		local wep = ply:GetWeapon(item.ItemClass)
-		hg.AddAttachmentForce( ply,wep,tItem[3] )
-		ply:SetNWInt( "TDM_Money", ply:GetNWInt("TDM_Money",0) - AttachmentPrice )
-		ply:EmitSound("items/itempickup.wav")
-
-		return
-	end
-
-	if ((ply:GetNWInt("TDM_Money",0) - item.Price) < 0) then ply:ChatPrint("Not enough money.") return end
-	local ent = ply:Give(item.ItemClass)
-	
-	if ent.Use and IsValid(ent) then
-		ent:Use( ply )
-	end
-
-	if IsValid(ent) and ent:GetClass() == "weapon_bloodbag" then
-		ent.bloodtype = "o-"
-		ent.modeValues[1] = 1
-	end
-
-	if item.Amount then
-		ent.AmmoCount = item.Amount
-	end
-
-	if ent.GetPrimaryAmmoType then
-		ply:GiveAmmo(ent:GetMaxClip1() * 1,ent:GetPrimaryAmmoType(),true)
-	end
-
-	ply:SetNWInt( "TDM_Money", ply:GetNWInt("TDM_Money",0) - item.Price )
-	ply:EmitSound("items/itempickup.wav")
-end)

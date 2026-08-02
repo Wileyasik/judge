@@ -93,7 +93,7 @@ local whitelist = {
 
 local islply
 
-local hg_firstperson_death = ConVarExists("hg_firstperson_death") and GetConVar("hg_firstperson_death") or CreateClientConVar("hg_firstperson_death", "0", "first person death", true, false, 0, 1)
+local hg_firstperson_death = { GetBool = function() return false end }
 
 function RenderAccessories(ply, accessories, setup)
 

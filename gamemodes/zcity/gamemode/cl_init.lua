@@ -282,7 +282,7 @@ net.Receive("RoundInfo", function()
 	zb.ROUND_STATE = net.ReadInt(4)
 	
 	if zb.ROUND_STATE == 0 then
-		zb.fade = 7
+		zb.fade = 0.75
 	end
 
 	if zb.CROUND ~= "" then
@@ -442,6 +442,17 @@ local colorBGBlacky = Color(40,40,40,255)
 
 hg.muteall = false
 hg.mutespect = false
+
+local function ApplyScoreboardVoiceMutes()
+	for _, ply in player.Iterator() do
+		if not IsValid(ply) then continue end
+		if hg.muteall or (hg.mutespect and (!ply:Alive() or ply:Team() == TEAM_SPECTATOR)) then
+			ply:SetVoiceVolumeScale(0)
+		else
+			ply:SetVoiceVolumeScale(hg.playerInfo[ply:SteamID()] and hg.playerInfo[ply:SteamID()][2] or 1)
+		end
+	end
+end
 
 local function OpenPlayerSoundSettings(selfa, ply)
 	local Menu = DermaMenu()
@@ -681,6 +692,16 @@ function GM:ScoreboardShow()
 		switchingPage = true
 	end)
 
+	local muteSpectBtn = SB_MakeButton(footer, "MUTE SPECTATORS", function() return hg.mutespect end, function()
+		hg.mutespect = !hg.mutespect
+		ApplyScoreboardVoiceMutes()
+	end)
+
+	local muteAllBtn = SB_MakeButton(footer, "MUTE ALL", function() return hg.muteall end, function()
+		hg.muteall = !hg.muteall
+		ApplyScoreboardVoiceMutes()
+	end)
+
 	footer.PerformLayout = function(pnl, w, h)
 		local bh = SB_Unit(30)
 		local pad = SB_Unit(14)
@@ -688,8 +709,16 @@ function GM:ScoreboardShow()
 
 		local viewW = SB_Unit(145)
 		local teamW = SB_Unit(170)
+		local muteSpectW = SB_Unit(190)
+		local muteAllW = SB_Unit(130)
+		local gap = SB_Unit(10)
+		local muteTotalW = muteSpectW + muteAllW + gap
 		viewBtn:SetSize(viewW, bh)
 		viewBtn:SetPos(pad, y)
+		muteSpectBtn:SetSize(muteSpectW, bh)
+		muteSpectBtn:SetPos(math.floor((w - muteTotalW) / 2), y)
+		muteAllBtn:SetSize(muteAllW, bh)
+		muteAllBtn:SetPos(math.floor((w - muteTotalW) / 2) + muteSpectW + gap, y)
 		teamBtn:SetSize(teamW, bh)
 		teamBtn:SetPos(w - pad - teamW, y)
 	end
@@ -1174,205 +1203,3 @@ hook.Add("Player Spawn", "GuiltKnown",function(ply)
 		system.FlashWindow()
 	end
 end)
-
-local LIPSYNC_ENABLED = true
-local LIPSYNC_MULTIPLIER = 6
-local LIPSYNC_LERP_SPEED = 15
-
-local LIPSYNC_MOUTH_FLEX_NAMES = {
-    "jaw_drop", "left_part", "right_part", "left_mouth_drop", "right_mouth_drop",
-    "talk", "voice", "phoneme", "mouth", "mouth_open", "open", "open_mouth",
-    "jaw_open", "shrug_mouth", "jaw_down", "lower_lip_depressor", "lip_part",
-    "AA", "O", "CH", "AO", "ah", "oh", "AU25", "AU26", "AU27",
-    "phoneme_aa", "phoneme_ao", "phoneme_oh", "phoneme_o",
-    "jaw_drop_low", "mouth_drop", "lips_part", "chin_raiser", "upper_lip_raiser",
-    "uh", "ae", "aw", "er", "oo", "AU26Z", "AU22", "AU17", "AU16", "AU10",
-    "phoneme_uh", "phoneme_aw", "phoneme_ah"
-}
-
-local LIPSYNC_FLEX_KEYWORDS = {
-    "open", "jaw", "mouth", "phoneme", "v_aa", "v_ao"
-}
-
-local lipMouthTargets = {}
-local lipMouthCurrents = {}
-local lipCachedBones = {}
-local lipCachedKeywordFlexIDs = {}
-
-hook.Add("Initialize", "JudgeLipsync_KillMouthAutopilot", function()
-    function GAMEMODE:MouthMoveAnimation(ply)
-    end
-end)
-
-local function LipUpdateMouthVariable(ply)
-    if not IsValid(ply) or not ply:IsPlayer() then return end
-
-    local entID = ply:EntIndex()
-    lipMouthTargets[entID] = lipMouthTargets[entID] or 0
-    lipMouthCurrents[entID] = lipMouthCurrents[entID] or 0
-
-    local volume = ply:VoiceVolume() or 0
-    
-    if volume > 0 then
-        lipMouthTargets[entID] = math.Clamp(volume * LIPSYNC_MULTIPLIER, 0, 1)
-    else
-        lipMouthTargets[entID] = 0
-    end
-
-    lipMouthCurrents[entID] = Lerp(FrameTime() * LIPSYNC_LERP_SPEED, lipMouthCurrents[entID], lipMouthTargets[entID])
-
-    if lipMouthCurrents[entID] < 0.01 then 
-        lipMouthCurrents[entID] = 0 
-    end
-end
-
-hook.Add("Think", "JudgeLipsync_CalculateMath", function()
-    if not LIPSYNC_ENABLED then return end
-    for _, ply in ipairs(player.GetAll()) do
-        LipUpdateMouthVariable(ply)
-    end
-end)
-
-local function LipApplyExactFlexMouth(ply)
-    local flexNum = ply:GetFlexNum() or 0
-    if flexNum <= 0 then return false end
-
-    local currentLevel = lipMouthCurrents[ply:EntIndex()] or 0
-    local appliedAny = false
-
-    for i = 1, #LIPSYNC_MOUTH_FLEX_NAMES do
-        local flexID = ply:GetFlexIDByName(LIPSYNC_MOUTH_FLEX_NAMES[i])
-        if flexID and flexID >= 0 and flexID < flexNum then
-            ply:SetFlexWeight(flexID, currentLevel)
-            appliedAny = true
-        end
-    end
-
-    return appliedAny
-end
-
-local function LipApplyKeywordFlexMouth(ply)
-    local flexNum = ply:GetFlexNum() or 0
-    if flexNum <= 0 then return false end
-
-    local mdl = ply:GetModel()
-    local currentLevel = lipMouthCurrents[ply:EntIndex()] or 0
-
-    if lipCachedKeywordFlexIDs[mdl] == nil then
-        local cache = {}
-        for i = 0, flexNum - 1 do
-            local name = ply:GetFlexName(i)
-            if name then
-                local lowerName = string.lower(name)
-                for _, keyword in ipairs(LIPSYNC_FLEX_KEYWORDS) do
-                    if string.find(lowerName, keyword) then
-                        table.insert(cache, i)
-                        break
-                    end
-                end
-            end
-        end
-        lipCachedKeywordFlexIDs[mdl] = cache
-    end
-
-    local validFlexs = lipCachedKeywordFlexIDs[mdl]
-    if #validFlexs > 0 then
-        for _, flexID in ipairs(validFlexs) do
-            ply:SetFlexWeight(flexID, currentLevel)
-        end
-        return true
-    end
-
-    return false
-end
-
-local function LipGetModelBoneCache(ply)
-    local mdl = ply:GetModel()
-    if lipCachedBones[mdl] then return lipCachedBones[mdl] end
-
-    local cache = { jaw = {}, lowLip = {}, upLip = {} }
-    local count = ply:GetBoneCount() or 0
-
-    for i = 0, count - 1 do
-        local name = ply:GetBoneName(i)
-        if name then
-            local lowerName = string.lower(name)
-
-            if string.find(lowerName, "jaw") or string.find(lowerName, "chin") or string.find(lowerName, "facelower") or string.find(lowerName, "mandible") then
-                table.insert(cache.jaw, i)
-            elseif string.find(lowerName, "lip2") or string.find(lowerName, "lip_2") or
-                   (string.find(lowerName, "lip") and (string.find(lowerName, "_d_") or string.find(lowerName, "low") or string.find(lowerName, "inf"))) or
-                   (string.find(lowerName, "mouth") and (string.find(lowerName, "_l") or string.find(lowerName, "bot"))) or
-                   string.find(lowerName, "tongue") or (string.find(lowerName, "teeth") and (string.find(lowerName, "_d_") or string.find(lowerName, "low"))) then
-                table.insert(cache.lowLip, i)
-            elseif string.find(lowerName, "lip1") or string.find(lowerName, "lip_1") or
-                   (string.find(lowerName, "lip") and (string.find(lowerName, "_t_") or string.find(lowerName, "up") or string.find(lowerName, "sup"))) or
-                   (string.find(lowerName, "mouth") and (string.find(lowerName, "_u") or string.find(lowerName, "top"))) or
-                   (string.find(lowerName, "teeth") and (string.find(lowerName, "_t_") or string.find(lowerName, "up"))) then
-                table.insert(cache.upLip, i)
-            end
-        end
-    end
-
-    lipCachedBones[mdl] = cache
-    return cache
-end
-
-local function LipApplyBoneMouth(ply)
-    local entID = ply:EntIndex()
-    local currentLevel = lipMouthCurrents[entID] or 0
-
-    if ply == LocalPlayer() then
-        if EyePos():DistToSqr(ply:EyePos()) < 225 then
-            currentLevel = 0
-        end
-    end
-
-    local bones = LipGetModelBoneCache(ply)
-    local maxJawAngle = 3 
-    local currentJawAngle = currentLevel * maxJawAngle
-
-    if currentJawAngle > 0 then
-        for _, boneID in ipairs(bones.jaw) do ply:ManipulateBoneAngles(boneID, Angle(0, 0, currentJawAngle)) end
-        for _, boneID in ipairs(bones.lowLip) do ply:ManipulateBoneAngles(boneID, Angle(0, 0, currentJawAngle * 0.8)) end
-        for _, boneID in ipairs(bones.upLip) do ply:ManipulateBoneAngles(boneID, Angle(0, 0, -currentJawAngle * 0.25)) end
-    else
-        for _, boneID in ipairs(bones.jaw) do ply:ManipulateBoneAngles(boneID, Angle(0,0,0)) end
-        for _, boneID in ipairs(bones.lowLip) do ply:ManipulateBoneAngles(boneID, Angle(0,0,0)) end
-        for _, boneID in ipairs(bones.upLip) do ply:ManipulateBoneAngles(boneID, Angle(0,0,0)) end
-    end
-end
-
-local function LipForcePlayerVisuals(ply)
-    if not IsValid(ply) or not ply:IsPlayer() then return end
-    
-    local success = LipApplyExactFlexMouth(ply)
-    
-    if not success then
-        success = LipApplyKeywordFlexMouth(ply)
-    end
-    
-    if not success then
-        LipApplyBoneMouth(ply)
-    end
-end
-
-hook.Add("PrePlayerDraw", "JudgeLipsync_ApplyLerpPre", function(ply)
-    if not LIPSYNC_ENABLED then return end
-    LipForcePlayerVisuals(ply)
-end)
-
-hook.Add("PostPlayerDraw", "JudgeLipsync_ApplyLerpPost", function(ply)
-    if not LIPSYNC_ENABLED then return end
-    LipForcePlayerVisuals(ply)
-end)
-
-hook.Add("PostDrawOpaqueRenderables", "JudgeLipsync_ApplyLerpLP", function()
-    if not LIPSYNC_ENABLED then return end
-    local lp = LocalPlayer()
-    if IsValid(lp) and lp:IsPlayer() then
-        LipForcePlayerVisuals(lp)
-    end
-end)
-
-print("Improved Lipsync integrated into Judge")

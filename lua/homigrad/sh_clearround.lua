@@ -1,6 +1,6 @@
 
 
-local DURATION   = 6      
+local DURATION   = 4      
 local TARGET_FOV = 40     
 local SLOW_SCALE = 0.35   
 

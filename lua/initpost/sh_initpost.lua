@@ -1,6 +1,201 @@
 
 if CLIENT then lply = LocalPlayer() end
 
+hg.Binds = hg.Binds or {}
+hg.Binds.CurrentBinds = hg.Binds.CurrentBinds or {}
+hg.Binds.StandartBinds = hg.Binds.StandartBinds or {}
+hg.Binds.Names = hg.Binds.Names or {}
+hg.Binds.Commands = hg.Binds.Commands or {}
+
+local PLAYERMETA = FindMetaTable("Player")
+
+function hg.Binds:CreateBind(type_bind, key, key2, type_std, name, command)
+    self.CurrentBinds[type_bind] = self.CurrentBinds[type_bind] or {key, key2}
+    self.Names[type_bind] = name or self.Names[type_bind] or string.Replace(string.lower(type_bind), "_", " ")
+    self.Commands[type_bind] = command or self.Commands[type_bind]
+
+    if type_std then
+        self.StandartBinds[type_bind] = {key, key2}
+    end
+end
+
+function hg.Binds.GetButton(bind_name, ply)
+    if SERVER then
+        return ((ply.binds or {})[bind_name] or false)
+    end
+
+    return (hg.Binds.CurrentBinds[bind_name] or false)
+end
+
+function PLAYERMETA:IsBindPressed(bind_name)
+    local bind = hg.Binds.GetButton(bind_name, self)
+    if not bind then return false end
+
+    local buttons = self.downedbuttons or {}
+    local key1 = bind[1]
+    local key2 = bind[2]
+
+    if not key1 or key1 == -999 or key1 == KEY_NONE then return false end
+
+    if key2 and key2 ~= KEY_NONE and key2 ~= -999 then
+        return buttons[key1] and buttons[key2] or false
+    end
+
+    return buttons[key1] or false
+end
+
+function hg.Binds.CheckBinds(buttons, ply)
+    local activated = {}
+    buttons = buttons or ply.downedbuttons or {}
+
+    local binds = CLIENT and ply == LocalPlayer() and hg.Binds.CurrentBinds or (ply.binds or {})
+
+    for bind_name, bind in pairs(binds) do
+        local key1 = bind[1]
+        local key2 = bind[2]
+
+        if not key1 or key1 == -999 or key1 == KEY_NONE then continue end
+
+        if key2 and key2 ~= KEY_NONE and key2 ~= -999 then
+            if buttons[key1] and buttons[key2] then activated[bind_name] = true end
+        elseif buttons[key1] then
+            activated[bind_name] = true
+        end
+    end
+
+    return activated
+end
+
+hook.Add("PlayerButtonDown", "zcity_keybinds_down", function(ply, button)
+    ply.downedbuttons = ply.downedbuttons or {}
+    ply.downedbuttons[button] = true
+
+    if CLIENT and ply == LocalPlayer() then return end
+
+    local binds = hg.Binds.CheckBinds(ply.downedbuttons, ply)
+    for bind_name in pairs(binds) do
+        hook.Run("BindActivated_" .. bind_name, ply)
+    end
+end)
+
+hook.Add("PlayerButtonUp", "zcity_keybinds_up", function(ply, button)
+    ply.downedbuttons = ply.downedbuttons or {}
+    ply.downedbuttons[button] = nil
+
+    if CLIENT and ply == LocalPlayer() then return end
+end)
+
+if SERVER then
+    util.AddNetworkString("Bullshit_binds")
+
+    net.Receive("Bullshit_binds", function(_, ply)
+        ply.binds = net.ReadTable() or {}
+    end)
+else
+    local activeBinds = {}
+
+    local function IsBindDown(bind)
+        local key1 = bind and bind[1]
+        local key2 = bind and bind[2]
+
+        if not key1 or key1 == -999 or key1 == KEY_NONE then return false end
+        if key2 and key2 ~= -999 and key2 ~= KEY_NONE then
+            return input.IsButtonDown(key1) and input.IsButtonDown(key2)
+        end
+
+        return input.IsButtonDown(key1)
+    end
+
+    hook.Add("Think", "zcity_keybinds_client_think", function()
+        local ply = LocalPlayer()
+        if not IsValid(ply) then return end
+
+        ply.downedbuttons = ply.downedbuttons or {}
+
+        if vgui.CursorVisible() or gui.IsGameUIVisible() then
+            activeBinds = {}
+            return
+        end
+
+        for bind_name, bind in pairs(hg.Binds.CurrentBinds or {}) do
+            local key1 = bind[1]
+            local key2 = bind[2]
+            local down = IsBindDown(bind)
+            local wasDown = activeBinds[bind_name]
+
+            if key1 and key1 ~= KEY_NONE and key1 ~= -999 then ply.downedbuttons[key1] = input.IsButtonDown(key1) or nil end
+            if key2 and key2 ~= KEY_NONE and key2 ~= -999 then ply.downedbuttons[key2] = input.IsButtonDown(key2) or nil end
+
+            if down and not wasDown then
+                activeBinds[bind_name] = true
+                hook.Run("BindActivated_" .. bind_name, ply)
+
+                local command = hg.Binds.Commands[bind_name]
+                if command then RunConsoleCommand(command) end
+            elseif not down and wasDown then
+                activeBinds[bind_name] = nil
+
+                local command = hg.Binds.Commands[bind_name]
+                if command and string.StartWith(command, "+") then
+                    RunConsoleCommand("-" .. string.sub(command, 2))
+                end
+            end
+        end
+    end)
+
+    function hg.Binds.SaveThem()
+        local json_table = util.TableToJSON(hg.Binds.CurrentBinds)
+
+        file.CreateDir("zcity/binds")
+        file.Write("zcity/binds/main.json", json_table)
+
+        net.Start("Bullshit_binds")
+        net.WriteTable(hg.Binds.CurrentBinds)
+        net.SendToServer()
+    end
+
+    function hg.Binds.LoadBinds()
+        if not file.Exists("zcity/binds/main.json", "DATA") then hg.Binds.SaveThem() return true end
+
+        local content = file.Read("zcity/binds/main.json", "DATA")
+        local saved = content and util.JSONToTable(content)
+        if not saved then return hg.Binds.SaveThem() end
+
+        for bind_name, keys in pairs(saved) do
+            if hg.Binds.CurrentBinds[bind_name] then
+                hg.Binds.CurrentBinds[bind_name] = keys
+            end
+        end
+    end
+end
+
+local function RemoveOldBinds()
+    hg.Binds.CurrentBinds.CLOSE_BUTTON = nil
+    hg.Binds.CurrentBinds.STRONG_KICK = nil
+    hg.Binds.StandartBinds.CLOSE_BUTTON = nil
+    hg.Binds.StandartBinds.STRONG_KICK = nil
+    hg.Binds.Names.CLOSE_BUTTON = nil
+    hg.Binds.Names.STRONG_KICK = nil
+    hg.Binds.Commands.CLOSE_BUTTON = nil
+    hg.Binds.Commands.STRONG_KICK = nil
+end
+
+RemoveOldBinds()
+
+hg.Binds:CreateBind("hg_kick", KEY_NONE, nil, true, "Kick", "hg_kick")
+hg.Binds:CreateBind("hmcd_togglelaser", KEY_NONE, nil, true, "Toggle weapon laser", "hmcd_togglelaser")
+hg.Binds:CreateBind("+alt1", KEY_NONE, nil, true, "Lean left", "+alt1")
+hg.Binds:CreateBind("+alt2", KEY_NONE, nil, true, "Lean right", "+alt2")
+hg.Binds:CreateBind("+hmcd_holdbreath", KEY_NONE, nil, true, "Hold breath", "+hmcd_holdbreath")
+hg.Binds:CreateBind("+altlook", KEY_NONE, nil, true, "Look around", "+altlook")
+hg.Binds:CreateBind("+hg_zoom", KEY_NONE, nil, true, "Zoom camera", "+hg_zoom")
+
+if CLIENT then
+    hg.Binds.LoadBinds()
+    RemoveOldBinds()
+    hg.Binds.SaveThem()
+end
+
 function GAMEMODE:PlayerShouldTaunt( ply, actid )
     return true
 end

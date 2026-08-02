@@ -3144,6 +3144,7 @@ function SWEP:CustomThink()
                     end)
                 end
 
+                if hgIsDoor and hgIsDoor(ent) then ent.SDD_LastMeleeHit = CurTime() end
                 self:PrimaryAttackAdd(ent, trace)
             end
 
@@ -3310,6 +3311,7 @@ function SWEP:CustomThink()
                     end)
                 end
 
+                if hgIsDoor and hgIsDoor(ent) then ent.SDD_LastMeleeHit = CurTime() end
                 self:SecondaryAttackAdd(ent, trace)
             end
 
@@ -3391,6 +3393,11 @@ function SWEP:CustomThink()
             if CLIENT then goto meleeskip3 end
 
             if not soft then
+                if hgIsDoor and hgIsDoor(ent) then
+                    ent.SDD_LastMeleeHit = CurTime()
+                    self:ChargeAttackAdd(ent, trace)
+                end
+
                 if self:HandleChargeWorldHit(trace, 3) then
                     goto meleeskip3
                 end
@@ -3488,6 +3495,7 @@ function SWEP:CustomThink()
                     end)
                 end
 
+                if hgIsDoor and hgIsDoor(ent) then ent.SDD_LastMeleeHit = CurTime() end
                 self:ChargeAttackAdd(ent, trace)
             end
 
@@ -3576,7 +3584,8 @@ end
 function SWEP:SecondaryAttackAdd(ent)
 end
 
-function SWEP:ChargeAttackAdd(ent)
+function SWEP:ChargeAttackAdd(ent, trace)
+    self:PrimaryAttackAdd(ent, trace)
 end
 
 SWEP.AttackTimeLength = 0.15

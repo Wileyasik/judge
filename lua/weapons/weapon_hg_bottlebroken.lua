@@ -54,6 +54,8 @@ SWEP.AttackHitFlesh = "snd_jack_hmcd_knifestab.wav"
 
 SWEP.DeploySnd = "GlassBottle.ImpactSoft"
 
+SWEP.CantClash = true
+
 SWEP.DamageType = DMG_SLASH
 SWEP.PainMultiplier = .4
 SWEP.MaxPenLen = 0.7
@@ -69,8 +71,9 @@ SWEP.AnimList = {
 }
 
 SWEP.noreverse = true
-SWEP.BlockTier = 1.5
+SWEP.BlockTier = 1
 SWEP.BlockMaterial = "none"
+SWEP.BlockSound = {"GlassBottle.ImpactHard", 68, {95, 102}}
 
 SWEP.HoldPos = Vector(-4,0,-1)
 SWEP.HoldAng = Angle(0,0,0)

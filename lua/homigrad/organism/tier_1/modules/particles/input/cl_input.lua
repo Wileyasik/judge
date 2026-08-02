@@ -128,6 +128,21 @@ net.Receive("hg_bloodimpact", function()
 	for i = 1, amt do impact(pos,vel,mul) end
 end)
 
+net.Receive("hg_fullbody_bloodmist", function()
+	local pos = net.ReadVector()
+	local force = net.ReadVector()
+	local amt = math.Clamp(net.ReadUInt(8), 0, 120)
+	local forceDir = force:LengthSqr() > 1 and force:GetNormalized() or vector_origin
+
+	for i = 1, amt do
+		local dir = VectorRand()
+		local mistPos = pos + dir * Rand(8, 46)
+		local mistVel = dir * Rand(12, 90) + vector_up * Rand(25, 115) + forceDir * Rand(10, 45)
+		local size = Rand(95, 180)
+		addBloodPart2(mistPos, mistVel, cloudmat, size, size, Rand(2.4, 4.2))
+	end
+end)
+
 local function explode(pos, size, force)
 	size = size or 1
 	local xx, yy = 12, 12

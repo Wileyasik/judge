@@ -27,13 +27,13 @@ local HeroWeaponData = {
 }
 
 local HeroUpgradeData = {
-	["hero_px4_silencer"] = {parent = "weapon_px4beretta", type = "attachment", attachment = "supressor4"},
+	["hero_px4_silencer"] = {parent = "weapon_px4beretta", type = "attachment", attachment = "supressor6"},
 	["hero_px4_ammo"] = {parent = "weapon_px4beretta", type = "ammo", extraClips = 1},
-	["hero_glock_silencer"] = {parent = "weapon_glock17", type = "attachment", attachment = "supressor4"},
+	["hero_glock_silencer"] = {parent = "weapon_glock17", type = "attachment", attachment = "supressor2"},
 	["hero_glock_rmr"] = {parent = "weapon_glock17", type = "attachment", attachment = "holo16"},
 	["hero_glock_laser"] = {parent = "weapon_glock17", type = "attachment", attachment = "laser3"},
 	["hero_glock_ammo"] = {parent = "weapon_glock17", type = "ammo", extraClips = 1},
-	["hero_usp_silencer"] = {parent = "weapon_hk_usp", type = "attachment", attachment = "supressor4"},
+	["hero_usp_silencer"] = {parent = "weapon_hk_usp", type = "attachment", attachment = "supressor2"},
 	["hero_usp_ammo"] = {parent = "weapon_hk_usp", type = "ammo", extraClips = 1},
 	["hero_remington_sight"] = {parent = "weapon_remington870", type = "attachment", attachment = "holo16"},
 	["hero_remington_ammo"] = {parent = "weapon_remington870", type = "ammo", extraClips = 1},
@@ -43,13 +43,13 @@ local HeroUpgradeData = {
 	["hero_remington_sawedoff_ammo"] = {parent = "weapon_remington870_sawed_off", type = "ammo", extraClips = 1},
 	["hero_kar98_scope"] = {parent = "weapon_kar98", type = "attachment", attachment = "optic12"},
 	["hero_kar98_ammo"] = {parent = "weapon_kar98", type = "ammo", extraClips = 1},
-	["hero_vpo209_silencer"] = {parent = "weapon_vpo209", type = "attachment", attachment = "supressor1"},
+	["hero_vpo209_silencer"] = {parent = "weapon_vpo209", type = "attachment", attachment = "supressor3"},
 	["hero_vpo209_optic"] = {parent = "weapon_vpo209", type = "attachment", attachment = "holo16"},
 	["hero_vpo209_ammo"] = {parent = "weapon_vpo209", type = "ammo", extraClips = 1},
-	["hero_vpo136_silencer"] = {parent = "weapon_vpo136", type = "attachment", attachment = "supressor1"},
+	["hero_vpo136_silencer"] = {parent = "weapon_vpo136", type = "attachment", attachment = "supressor7"},
 	["hero_vpo136_optic"] = {parent = "weapon_vpo136", type = "attachment", attachment = "holo16"},
 	["hero_vpo136_ammo"] = {parent = "weapon_vpo136", type = "ammo", extraClips = 1},
-	["hero_mosin_silencer"] = {parent = "weapon_mosin", type = "attachment", attachment = "supressor1"},
+	["hero_mosin_silencer"] = {parent = "weapon_mosin", type = "attachment", attachment = "supressor9"},
 	["hero_mosin_scope"] = {parent = "weapon_mosin", type = "attachment", attachment = "optic12"},
 	["hero_mosin_ammo"] = {parent = "weapon_mosin", type = "ammo", extraClips = 1},
 }
@@ -83,12 +83,30 @@ local LegacyTraitorLoadout = {
 	}
 }
 
+local TraitorSkillsetSubRoles = {
+	["infiltrator"] = "traitor_infiltrator",
+	["assassin"] = "traitor_assasin",
+	["chemist"] = "traitor_chemist",
+}
+
+local function ApplyCodeAttachments(weapon, attachments)
+	if not IsValid(weapon) or not istable(weapon.attachments) or not hg or not hg.SetAttachment then return end
+
+	for _, attachmentId in ipairs(attachments) do
+		hg.SetAttachment(weapon.attachments, attachmentId, weapon:GetClass())
+	end
+
+	if weapon.UpdateAttachmentModifiers then weapon:UpdateAttachmentModifiers() end
+	if weapon.SyncAtts then weapon:SyncAtts() end
+end
+
 local function ApplyTraitorLoadout(ply)
 	local loadout = ParseLoadoutString(ply:GetInfo("hmcd_traitor_loadout"))
 	if not loadout.skillset and not istable(loadout.weapons) then loadout = LegacyTraitorLoadout end
 
 	local skillset = loadout.skillset or "none"
 	local weaponsList = loadout.weapons or {}
+	ply.SubRole = TraitorSkillsetSubRoles[skillset] or ply.SubRole
 
 	ply.organism.stamina.max = 220
 	ply.organism.recoilmul = 1
@@ -116,14 +134,14 @@ local function ApplyTraitorLoadout(ply)
 			timer.Simple(0.5, function()
 				if IsValid(ply) and ply:HasWeapon("weapon_p22") then
 					local w = ply:GetWeapon("weapon_p22")
-					if hg and hg.AddAttachmentForce then hg.AddAttachmentForce(ply, w, "supressor4") end
+					ApplyCodeAttachments(w, {"supressor1"})
 				end
 			end)
 		elseif wep == "weapon_pl15_silencer" then
 			timer.Simple(0.5, function()
 				if IsValid(ply) and ply:HasWeapon("weapon_pl15") then
 					local w = ply:GetWeapon("weapon_pl15")
-					if hg and hg.AddAttachmentForce then hg.AddAttachmentForce(ply, w, "supressor4") end
+					ApplyCodeAttachments(w, {"supressor2"})
 				end
 			end)
 		elseif wep == "weapon_p22_ammo" then
@@ -223,11 +241,7 @@ local function ApplyHeroLoadout(ply)
 			if not IsValid(activeWeapon) then
 				return
 			end
-			for _, attachmentId in ipairs(attachments) do
-				if hg and hg.AddAttachmentForce then
-					hg.AddAttachmentForce(ply, activeWeapon, attachmentId)
-				end
-			end
+			ApplyCodeAttachments(activeWeapon, attachments)
 		end)
 	end
 end
@@ -237,10 +251,10 @@ MODE.ApplyHeroLoadout = ApplyHeroLoadout
 
 MODE.SubRoles = {
 	["traitor_custom"] = {
-		Name = "Traitor",
-		Description = [[You are the custom traitor.
+		Name = "Executioner",
+		Description = [[You are the custom executioner.
 Your abilities and loadout are based on your selected preset or loadout.]],
-		Objective = "Use your loadout to murder everyone here.",
+		Objective = "Use your loadout to eliminate everyone before the Judge stops you.",
 		SpawnFunction = function(ply)
 			ApplyTraitorLoadout(ply)
 		end,
@@ -336,19 +350,19 @@ MODE.RoleChooseRoundTypes = {
 MODE.Roles = {}
 MODE.Roles.standard = {
 	traitor = {
-		objective = "You've been preparing for this for a long time. Kill everyone.",
-		name = "Murderer",
+		objective = "You've been preparing for this for a long time. Eliminate everyone before the Judge stops you.",
+		name = "Executioner",
 		color = Color(190,0,0)
 	},
 
 	gunner = {
-		objective = "You're the hero. Use your loadout to stop the murderer.",
-		name = "Hero",
+		objective = "You're the Judge. Use your loadout to stop the Executioner.",
+		name = "Judge",
 		color = Color(158,0,190)
 	},
 
 	innocent = {
-		name = "Bystander",
+		name = "Victim",
 		color = Color(0,120,190)
 	},
 }

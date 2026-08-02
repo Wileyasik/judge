@@ -100,8 +100,10 @@ SWEP.shouldntDrawHolstered = true
 
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"supressor4", Vector(0,0,0), {}},
-        ["mount"] = Vector(-0.7,0.73,0),
+		[1] = {"supressor1", Vector(0,0,0), {}},
+		[2] = {"supressor2", Vector(0,0,0), {}},
+        ["mount"] = Vector(-0.6,0.3,0),
+		["mountAngle"] = Angle(0, 0, -90),
     },
 	sight = {
 		["mountType"] = {"picatinny","pistolmount"},

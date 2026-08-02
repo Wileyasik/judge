@@ -223,7 +223,8 @@ local Angle, Vector, AngleRand, VectorRand, math, hook, util, game = Angle, Vect
 	hook.Add("SetupMove", "HG(StartCommand)", function(ply, mv, cmd)
 		--\\ DeltaTime
 			ply.LastStartCommand = ply.LastStartCommand or SysTime()
-			local delta_time = SysTime() - ply.LastStartCommand--FrameTime()
+		local tick_interval = engine.TickInterval()
+		local delta_time = math.Clamp(SysTime() - ply.LastStartCommand, 0, tick_interval * 1.25)--FrameTime()
 			ply.LastStartCommand = SysTime()
 		--//
 
@@ -559,8 +560,11 @@ local Angle, Vector, AngleRand, VectorRand, math, hook, util, game = Angle, Vect
 			-- local new_inertia = LerpVector(1 - 0.5^(delta_time * ply.InertiaBlend), ply.MovementInertia, inertia_to)
 			//local new_inertia = approach_vector(ply.MovementInertia, inertia_to, 1000)//SERVER and delta_time * ply.InertiaBlend * ply:Ping() / 100 or delta_time * ply.InertiaBlend)
 			//local new_inertia = approach_vector_smooth(ply.MovementInertia, inertia_to, hg.lerpFrameTime2(0.075, delta_time))
-			if !ply:OnGround() then
-				ply.MovementInertia = ply.LastVelocity	
+		if !ply:OnGround() then
+			ply.MovementInertia = ply.LastVelocity
+			if ply:Ping() >= 45 and ply.MovementInertia:Length2D() > ply:GetRunSpeed() * 1.25 then
+				ply.MovementInertia = ply.MovementInertia:GetNormalized() * ply:GetRunSpeed() * 1.25
+			end
 			end
 
 			local new_inertia = approach_vector(ply.MovementInertia, inertia_to, delta_time * ply.InertiaBlend)
@@ -718,6 +722,10 @@ local Angle, Vector, AngleRand, VectorRand, math, hook, util, game = Angle, Vect
 
 		if org.noradrenaline and org.noradrenaline > 0 and inertia_len > 0 then
 			inertia_len = inertia_len + 200 * math.Round(org.noradrenaline, 1)
+		end
+
+		if CLIENT and ply:Ping() >= 45 and ply.hg_LastLandingTime and ply.hg_LastLandingTime + 0.35 > CurTime() then
+			inertia_len = math.min(inertia_len, ply:GetRunSpeed() * 1.1)
 		end
 		
 		mv:SetMaxSpeed(inertia_len)

@@ -23,7 +23,7 @@ local func = function()
 	end)
 end
 
-hook.Add("Tick", "vphysics_cathcer", func)
+timer.Create("vphysics_cathcer", 0.25, 0, func)
 
 local CrazyPhysPerSec = 0
 local CrazyPhysTime = 0

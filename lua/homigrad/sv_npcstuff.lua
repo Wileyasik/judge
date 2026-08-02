@@ -49,12 +49,14 @@ local math_random, math_Rand = math.random, math.Rand
 	}
 
 	local hg_noorganismnpcs = CreateConVar("hg_noorganismnpcs", 0, FCVAR_ARCHIVE + FCVAR_REPLICATED + FCVAR_NOTIFY, "NPCs will NOT have organism system like the players", 0, 1)
+	local trackedFallNPCs = {}
 	hook.Add("OnEntityCreated", "npcorg", function(ent)
 		if hg_noorganismnpcs:GetBool() then return end
 		if not IsValid(ent) then return end
 
 		local class = ent:GetClass()
 		if ent:IsNPC() and lootNPCs[class] then
+			trackedFallNPCs[ent] = true
 			hg.organism.Add(ent)
 			hg.organism.Clear(ent.organism)
 			ent.organism.fakePlayer = true
@@ -71,6 +73,10 @@ local math_random, math_Rand = math.random, math.Rand
 				end
 			end
 		end
+	end)
+
+	hook.Add("EntityRemoved", "npcorg_falltrack", function(ent)
+		trackedFallNPCs[ent] = nil
 	end)
 
 	--[[hook.Add("EntityTakeDamage", "npcdmg", function(ent, dmgInfo)
@@ -358,9 +364,8 @@ local math_random, math_Rand = math.random, math.Rand
 	local vecforce = Vector(5000, 5000, -30000)
 	hook.Add("Think", "NPCFallDamageTracker", function()
 		if hg_noorganismnpcs:GetBool() then return end
-		for _, npc in ipairs(ents.GetAll()) do
-			if not IsValid(npc) then continue end
-			if not npc:IsNPC() or not lootNPCs[npc:GetClass()] then continue end
+		for npc in pairs(trackedFallNPCs) do
+			if not IsValid(npc) then trackedFallNPCs[npc] = nil continue end
 
 			local zPos = npc:GetPos().z
 			if npc:IsOnGround() then
@@ -391,7 +396,7 @@ local math_random, math_Rand = math.random, math.Rand
 				if not npc.falling then
 					npc.falling = true
 					npc.topZ = zPos
-				elseif npc:GetPos().z > npc.topZ then
+				elseif zPos > npc.topZ then
 					npc.topZ = zPos
 				end
 			end

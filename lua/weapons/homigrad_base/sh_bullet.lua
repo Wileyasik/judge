@@ -163,6 +163,93 @@ local bulletHit
 local timer, util, math, IsValid, WorldToLocal, Vector, sound, EffectData, game = timer, util, math, IsValid, WorldToLocal, Vector, sound, EffectData, game
 local table_Copy = table.Copy
 local hg_bulletholes = CreateConVar("hg_bulletholes", "0", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Enable R6S bulletholes feature", 0, 1)
+local knockbackMul, knockbackMin = 0.35, 25
+local gollavoSound = "rem_gollavo.wav"
+
+if SERVER then
+	util.AddNetworkString("hg_gollavo_headshot")
+	resource.AddFile("materials/effects/crit.vmt")
+	resource.AddFile("materials/effects/crit.vtf")
+	resource.AddFile("sound/" .. gollavoSound)
+end
+
+if CLIENT then
+	local gollavoEnabled = ConVarExists("hg_gollavo_headshot_effect") and GetConVar("hg_gollavo_headshot_effect") or CreateClientConVar("hg_gollavo_headshot_effect", "1", true, false, "Enable Sinister headshot effect", 0, 1)
+	local gollavoMat = Material("effects/crit", "smooth")
+	local gollavoEffects = {}
+
+	net.Receive("hg_gollavo_headshot", function()
+		if not gollavoEnabled:GetBool() then return end
+		gollavoEffects[#gollavoEffects + 1] = {pos = net.ReadVector(), time = CurTime()}
+	end)
+
+	hook.Add("PostDrawTranslucentRenderables", "hg_gollavo_headshot", function()
+		render.SetMaterial(gollavoMat)
+		for i = #gollavoEffects, 1, -1 do
+			local data = gollavoEffects[i]
+			local delta = (CurTime() - data.time) / 1.5
+			if delta >= 1 then
+				table.remove(gollavoEffects, i)
+			else
+				local pos = data.pos + Vector(0, 0, delta * 18)
+				local size = Lerp(delta, 8, 18)
+				render.DrawSprite(pos, size, size, Color(255, 255, 255, 255 * (1 - delta)))
+			end
+		end
+	end)
+end
+
+local function scaleBulletForce(force, pellets)
+	pellets = math.max(pellets or 1, 1)
+	return math.max((force or 0) * (knockbackMul / pellets), knockbackMin / pellets)
+end
+
+local function hasGollavo(ply)
+	if not IsValid(ply) or not ply:IsPlayer() or not hg.achievements then return false end
+	local info = hg.achievements.GetAchievementInfo and hg.achievements.GetAchievementInfo("gollavo")
+	local ach = hg.achievements.GetPlayerAchievement and hg.achievements.GetPlayerAchievement(ply, "gollavo")
+	return info and ach and (ach.value or 0) >= info.needed_value
+end
+
+local function getHeadPos(ent, tr)
+	if IsValid(ent) then
+		local bone = ent.LookupBone and ent:LookupBone("ValveBiped.Bip01_Head1")
+		local mat = bone and ent:GetBoneMatrix(bone)
+		if mat then return mat:GetTranslation() end
+		if ent.EyePos then return ent:EyePos() end
+		return ent:GetPos()
+	end
+
+	return tr.HitPos
+end
+
+local function getTraceHitGroup(ent, tr)
+	if tr.HitGroup == HITGROUP_HEAD then return HITGROUP_HEAD end
+	if not IsValid(ent) or not ent:IsRagdoll() then return tr.HitGroup end
+
+	if tr.PhysicsBone ~= nil and ent.TranslatePhysBoneToBone and ent.GetBoneName then
+		local bone = ent:TranslatePhysBoneToBone(tr.PhysicsBone)
+		if bone and bone >= 0 then return hg.bonetohitgroup and hg.bonetohitgroup[ent:GetBoneName(bone)] end
+	end
+
+	if tr.HitBoxBone ~= nil and ent.GetBoneName then
+		return hg.bonetohitgroup and hg.bonetohitgroup[ent:GetBoneName(tr.HitBoxBone)]
+	end
+
+	return tr.HitGroup
+end
+
+local function gollavoHeadshotEffect(attacker, victim, tr)
+	if getTraceHitGroup(victim, tr) ~= HITGROUP_HEAD then return end
+	local pos = getHeadPos(victim, tr)
+	if not hasGollavo(attacker) then return end
+	if (attacker.GollavoHeadshotEffectNext or 0) > CurTime() then return end
+	attacker.GollavoHeadshotEffectNext = CurTime() + 1
+	net.Start("hg_gollavo_headshot")
+		net.WriteVector(pos)
+	net.Broadcast()
+	sound.Play(gollavoSound, pos, 70, 100, 1)
+end
 
 local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 	if CLIENT then return end
@@ -239,7 +326,7 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 			local tBullet = {
 				Attacker = IsValid(self) and IsValid(self:GetOwner()) and self:GetOwner() or self,
 				Damage = dmg * 0.65,
-				Force = force / 3,
+				Force = scaleBulletForce(force / 3, bullet.Pellets),
 				Num = 1,
 				Tracer = 0,
 				TracerName = "nil",
@@ -258,6 +345,7 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 				penetrated = bullet.penetrated + 1,
 				dmgtype = bullet.dmgtype or DMG_BULLET,
 				NpcShoot = bullet.NpcShoot,
+				Pellets = bullet.Pellets,
 				limit_ricochet = bullet.limit_ricochet + 1,
 				noricochet = bullet.noricochet,
 				AmmoType = bullet.AmmoType
@@ -349,7 +437,7 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 		local tBullet = {
 			Attacker = IsValid(self) and IsValid(self:GetOwner()) and self:GetOwner() or self,
 			Damage = (dmg or 1) * .85,
-			Force = force / 3,
+			Force = scaleBulletForce(force / 3, bullet.Pellets),
 			Num = 1,
 			Tracer = 0,
 			TracerName = "nil",
@@ -367,6 +455,7 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 			EnergyRetention = bullet.EnergyRetention,
 			penetrated = bullet.penetrated + 1,
 			dmgtype = bullet.dmgtype or DMG_BULLET,
+			Pellets = bullet.Pellets,
 			limit_ricochet = bullet.limit_ricochet + 1,
 			noricochet = bullet.noricochet,
 			AmmoType = bullet.AmmoType
@@ -453,6 +542,8 @@ local allowedMats = {
 }
 bulletHit = function(ply, tr, dmgInfo, bullet, Weapon)
 	if CLIENT then return end
+	local attacker = dmgInfo:GetAttacker()
+	gollavoHeadshotEffect(attacker, tr.Entity, tr)
 	local inflictor = IsValid(ply) and not ply:IsNPC() and ply.GetActiveWeapon and ply:GetActiveWeapon() or dmgInfo:GetInflictor()
 	local dmg, force = dmgInfo:GetDamage(), dmgInfo:GetDamage()--dmgInfo:GetDamageForce():Length()
 
@@ -468,13 +559,13 @@ bulletHit = function(ply, tr, dmgInfo, bullet, Weapon)
 		util.ScreenShake(trPos, 3, 1, 1, 128)
 	end
 	
-	-- if force >= 35 and dist <= 1400000 and (math.random(3) == 2 or force >= 45) and !tr.Entity:IsRagdoll() then
-	-- 	util.Decal("Impact.ShootPowderAdd", trPos + trNormal, trPos - trNormal)
-	-- 	util.ScreenShake(trPos, 3, 10, 1, 150)
-	-- end
+	 if force >= 35 and dist <= 1400000 and (math.random(3) == 2 or force >= 45) and !tr.Entity:IsRagdoll() then
+	 	util.Decal("Impact.ShootPowderAdd", trPos + trNormal, trPos - trNormal)
+	 	util.ScreenShake(trPos, 3, 10, 1, 150)
+	 end
 
-	-- gasInertia(trPos, force * 3, -tr.Normal, Weapon, tr)
-	-- gasInertia(trStart, force * 3, tr.Normal, Weapon, tr)
+	 gasInertia(trPos, force * 3, -tr.Normal, Weapon, tr)
+	 gasInertia(trStart, force * 3, tr.Normal, Weapon, tr)
 
 	local penetration, dmgmul
 	if tr.Entity:IsVehicle() then
@@ -828,7 +919,7 @@ function SWEP:FireBullet()
 		bullet.Dir = (owner:GetAngles()+AngleRand(-4,4)+Angle(npcPitchOffset,npcYawOffset,0)):Forward()
 	end
 
-	bullet.Force = ammotype.Force and ammotype.Force / 1.5 or primary.Force
+	bullet.Force = scaleBulletForce(ammotype.Force and ammotype.Force / 1.5 or primary.Force, numbullet)
     bullet.Damage = ammotype.Damage or primary.Damage or 25
 	bullet.Damage = bullet.Damage * (self.Supressor and 0.9 or 1) * (self.DamageMultiplier or 1)
 
@@ -856,6 +947,7 @@ function SWEP:FireBullet()
 	end
 	bullet.Spread = baseSpread * accuracyMul
 	bullet.Num = 1
+	bullet.Pellets = numbullet
 	
 	bullet.AmmoType = primary.Ammo
 	bullet.Speed = ammotype.Speed or 0

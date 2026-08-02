@@ -138,6 +138,7 @@ SWEP.SwingAng2 = 0
 SWEP.BulletBlockExplodeChance = 0.2
 SWEP.DroppedExplodeChance = 0.5
 SWEP.BulletBlockFrontDot = 0.12
+SWEP.BulletBlockTraceDist = 32
 SWEP.ExplosionRadius = 140
 SWEP.ExplosionDamage = 2
 SWEP.ExplosionFireOutRadius = 140
@@ -265,6 +266,18 @@ local function ExplodeExtinguisher(wep, attacker, pos)
     end
 end
 
+local function GetExtinguisherDefender(target)
+    local defender = hg.RagdollOwner(target) or target
+
+    if IsValid(defender) and defender:IsPlayer() then return defender end
+
+    for _, ply in player.Iterator() do
+        if IsValid(ply) and ply:Alive() and (ply.FakeRagdoll == target or hg.GetCurrentCharacter(ply) == target) then
+            return ply
+        end
+    end
+end
+
 local function CanBlockBulletWithExtinguisher(wep, defender, hitEnt, dmginfo)
     if not IsValid(wep) or not IsValid(defender) or not wep.GetBlocking or not wep:GetBlocking() then return false end
 
@@ -291,40 +304,50 @@ local function CanBlockBulletWithExtinguisher(wep, defender, hitEnt, dmginfo)
         HGPreventHeadRagdoll = true,
     }
 
-    if wep.IsBlockTraceCovered and not wep:IsBlockTraceCovered(defender, trace, eyePos, aimVec, wep) then
+    if util.DistanceToLine(eyePos + aimVec * 100, eyePos, hitPos) > (wep.BulletBlockTraceDist or 32) then
         return false
     end
 
     return true, trace, hitPos
 end
 
+local function TryExtinguisherBulletBlock(target, dmginfo)
+    local defender = GetExtinguisherDefender(target)
+
+    if not IsValid(defender) or not defender:IsPlayer() or not dmginfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT) then return false end
+
+    local wep = defender:GetActiveWeapon()
+
+    if not IsValid(wep) or wep:GetClass() ~= EXTINGUISHER_CLASS then return false end
+
+    local blocked, trace, hitPos = CanBlockBulletWithExtinguisher(wep, defender, target, dmginfo)
+
+    if not blocked then return false end
+
+    dmginfo:SetDamage(0)
+    dmginfo:SetDamageForce(vector_origin)
+
+    wep:PlayBlockImpactEffect(trace, wep, "block")
+
+    if wep.SetLastBlocked then
+        wep:SetLastBlocked(CurTime())
+    end
+
+    if math.Rand(0, 1) <= (wep.BulletBlockExplodeChance or 0.5) then
+        ExplodeExtinguisher(wep, dmginfo:GetAttacker(), hitPos)
+    end
+
+    return true
+end
+
 if SERVER then
+    hg.TryExtinguisherBulletBlock = TryExtinguisherBulletBlock
+
     hook.Add("EntityTakeDamage", "hg_extinguisher_damage_logic", function(target, dmginfo)
         if not IsValid(target) or not dmginfo or (dmginfo.GetDamage and dmginfo:GetDamage() <= 0) then return end
 
-        local defender = hg.RagdollOwner(target) or target
-
-        if IsValid(defender) and defender:IsPlayer() and dmginfo:IsDamageType(DMG_BULLET) then
-            local wep = defender:GetActiveWeapon()
-
-            if IsValid(wep) and wep:GetClass() == EXTINGUISHER_CLASS then
-                local blocked, trace, hitPos = CanBlockBulletWithExtinguisher(wep, defender, target, dmginfo)
-
-                if blocked then
-                    wep:PlayBlockImpactEffect(trace, wep, "block")
-
-                    if wep.SetLastBlocked then
-                        wep:SetLastBlocked(CurTime())
-                    end
-
-                    if math.Rand(0, 1) <= (wep.BulletBlockExplodeChance or 0.5) then
-                        ExplodeExtinguisher(wep, dmginfo:GetAttacker(), hitPos)
-                    end
-
-                    dmginfo:SetDamage(0)
-                    return true
-                end
-            end
+        if TryExtinguisherBulletBlock(target, dmginfo) then
+            return true
         end
 
         if target:GetClass() ~= EXTINGUISHER_CLASS or IsValid(target:GetOwner()) or target.ExtinguisherExploded then return end

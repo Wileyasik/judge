@@ -228,6 +228,7 @@ function PLAYER:LegAttack()
     dmg = dmg * (isCurbstomp and CURBSTOMP_DAMAGE_MUL or LEG_KICK_DAMAGE_MUL)
     --print(dmg)
     --print(speedmul)
+    hook.Run("HomigradLegKick", self)
     self:PlayCustomAnims(anim, true, speed, true, animstopAdjust, {
         [0.12] = function(self)
             if hg.GetCurrentCharacter(self):IsRagdoll() then return end
@@ -352,7 +353,7 @@ function PLAYER:LegAttack()
                             hg.ApplyBruiseTo(ent, ragOwner, tr.HitPos, tr.HitNormal)
                         end
                     end
-                    
+
                     if IsValid(phys) then
                         phys:ApplyForceOffset(normal * dmg * propForceMul, tr.HitPos)
                     end
@@ -444,5 +445,10 @@ hook.Add("HG_MovementCalc_2","HG-LegKickAnim",function(mul, ply, cmd, mv)
 end)
 
 concommand.Add("hg_kick",function(ply)
+	if IsValid(ply.FakeRagdoll) and hg.FakeLegAttack then
+		hg.FakeLegAttack(ply)
+		return
+	end
+
     ply:LegAttack()
 end)

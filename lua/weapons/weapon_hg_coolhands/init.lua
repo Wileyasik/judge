@@ -7,6 +7,8 @@ SWEP.AutoSwitchTo = false
 SWEP.AutoSwitchFrom = false
 SWEP.SpecialTime = 0
 
+util.AddNetworkString("hg_coolhands_hit_stop")
+
 local math = math -- owo
 local math_random, math_Clamp, CurTime, Color = math.random, math.Clamp, CurTime, Color
 
@@ -18,25 +20,48 @@ local clamp = math_Clamp
 local chargeHoldTime = 0.12
 local chargeAnimTime = 0.5
 local shoveAnimTime = 0.7
-local shoveCooldownPrimary = 1.1
-local shoveCooldownSecondary = 1.35
+local shoveCooldownPrimary = 1
+local shoveCooldownSecondary = 1.25
 local shoveRange = 50
-local shoveForce = 200
+local shoveForce = 165
 local shoveRagdollChance = 6
 local shoveStumbleChance = 1
-local specialDamageMul = 1.5
+local specialDamageMul = 2
+local runningSpecialDamageMul = 2.5
+local incomingVelocityDamageMul = 2
 
-local function PlayPunchSound(pos, level)
+local function PlayPunchSound(pos, level, highPitch)
         local id = math_random(1, 11)
-        sound.Play("punch/Punch-" .. (id < 10 and "0" or "") .. id .. ".wav", pos, level or 70, math_random(110, 125))
+        sound.Play("punch/Punch-" .. (id < 10 and "0" or "") .. id .. ".wav", pos, level or 70, highPitch and math_random(125, 140) or math_random(110, 125))
 end
 
 local function PlayShoveBodyImpact(pos, level)
         sound.Play("physics/body/body_medium_impact_soft" .. math_random(1, 7) .. ".wav", pos, level or 72, math_random(110, 125))
 end
 
-local function PlayKnuckledusterSound(pos, level)
-        sound.Play("knuckledusters/knuckledustershit" .. math_random(1, 4) .. ".mp3", pos, level or 75, math_random(95, 110))
+local function PlayKnuckledusterSound(pos, level, highPitch)
+        sound.Play("knuckledusters/knuckledustershit" .. math_random(1, 4) .. ".mp3", pos, level or 75, highPitch and math_random(110, 125) or math_random(95, 110))
+end
+
+local function SendCoolHandsHitStop(wep, normal, specialAttack)
+	net.Start("hg_coolhands_hit_stop")
+	net.WriteEntity(wep)
+	net.WriteFloat(specialAttack and 0.1 or 0.07)
+	net.WriteVector(normal and normal:GetNormalized() or vector_up)
+	net.SendPVS(wep:GetPos())
+end
+
+local function WriteShoveHarm(owner, target, wep, harm)
+	target = hg.RagdollOwner(target) or target
+	if not IsValid(owner) or not IsValid(target) or not target:IsPlayer() or target == owner then return end
+
+	local dmgInfo = DamageInfo()
+	dmgInfo:SetAttacker(owner)
+	dmgInfo:SetInflictor(wep)
+	dmgInfo:SetDamage(harm * 10)
+	dmgInfo:SetDamageType(DMG_CLUB)
+	dmgInfo:SetDamagePosition(target:GetPos())
+	hook.Run("HomigradDamage", target, dmgInfo, HITGROUP_CHEST, target, harm)
 end
 
 local function PushRagdoll(rag, physbone, pushVel, hitPos)
@@ -89,7 +114,8 @@ end
 function SWEP:CanShove()
         local owner = self:GetOwner()
         if not IsValid(owner) or owner:InVehicle() then return false end
-        if not self:GetFists() or self:GetBlocking() or self.Charging then return false end
+	local sprintShove = owner:KeyDown(IN_SPEED) and owner:KeyDown(IN_USE)
+	if (not self:GetFists() and not sprintShove) or self:GetBlocking() or self.Charging then return false end
         if owner:GetNetVar("handcuffed",false) then return false end
         if (self.ShoveEnd or 0) > CurTime() then return false end
         if (self.SpecialAttackUntil or 0) > CurTime() then return false end
@@ -99,13 +125,7 @@ end
 
 function SWEP:Deploy()
 	local owner = self:GetOwner()
-	if not IsFirstTimePredicted() then
-		self:PlayAnim("draw",1)
-		if not IsValid(owner:GetViewModel()) then
-			owner:GetViewModel():SetPlaybackRate(.1)
-		end
-		return true
-	end
+	if not IsFirstTimePredicted() then return true end
 
 	self:SetNextPrimaryFire(CurTime() + .5)
 	self:UpdateNextIdle()
@@ -123,10 +143,13 @@ function SWEP:SecondaryAttack()
 	if self:GetOwner():InVehicle() then return end
 	if not IsFirstTimePredicted() then return end
         if self:CanShove() and self:GetOwner():KeyDown(IN_USE) then
+				local sprintShove = self:GetOwner():KeyDown(IN_SPEED)
                 self.ShoveEnd = CurTime() + shoveAnimTime
                 self.Charging = nil
                 self.ChargeStarted = nil
                 self.ChargeIdlePlayed = nil
+				self.ChargeComfort = nil
+				if sprintShove then self:SetFists(true) end
                 self:SetBlocking(false)
                 self:SetNextPrimaryFire(CurTime() + shoveCooldownPrimary)
                 self:SetNextSecondaryFire(CurTime() + shoveCooldownSecondary)
@@ -136,7 +159,7 @@ function SWEP:SecondaryAttack()
                 self:PlayAnim("Shove",1)
                 self:GetOwner():ViewPunch(Angle(2, 0, 0))
                 sound.Play("player/shove_0"..math_random(5)..".wav", self:GetPos(), 65, math_random(105, 115))
-                self:ShoveFront()
+				self:ShoveFront(sprintShove)
                 return
         end
 	if self:GetFists() and self:GetOwner().PlayerClassName == "sc_infiltrator" then
@@ -289,7 +312,7 @@ function SWEP:ApplyForce()
 		end
 
 		if self.CarryEnt:GetClass() == "ent_hg_cyanide_canister" then
-			ply.Guilt = math.max(ply.Guilt, 5)
+			ply.Guilt = math.max(ply.Guilt or 0, 5)
 		end
 
             if self.CarryEnt:GetClass() == "prop_ragdoll" then
@@ -412,8 +435,12 @@ function SWEP:ApplyForce()
 					if (self.CPRThink or 0) < CurTime() then
 						self.CPRThink = CurTime() + (1 / 120) * 60
 						if org.alive then
-							//org.o2[1] = math.min(org.o2[1] + hg.organism.OxygenateBlood(org) * 2 * (ply.Profession == "doctor" and 2 or 1), org.o2.range)
-							org.pulse = math.min(org.pulse + 5 * (ply.Profession == "doctor" and 2 or 1),70)
+							local cprMul = ply.Profession == "doctor" and 2 or 1
+							if org.o2 then org.o2[1] = math.min(org.o2[1] + hg.organism.OxygenateBlood(org) * cprMul, org.o2.range) end
+							org.pulse = math.min((org.pulse or 0) + 7 * cprMul, 75)
+							org.bloodPressure = math.min((org.bloodPressure or 0) + 6 * cprMul, 70)
+							org.cardiacOutput = math.min((org.cardiacOutput or 0) + 0.08 * cprMul, 0.6)
+							org.myocardialOxygen = math.min((org.myocardialOxygen or 0) + 0.05 * cprMul, 0.6)
 							org.CO = math.Approach(org.CO, 0, (ply.Profession == "doctor" and 2 or 1))
 							org.COregen = math.Approach(org.COregen, 0, (ply.Profession == "doctor" and 2 or 1))
 
@@ -634,21 +661,34 @@ function SWEP:Think()
 		self:SetBlocking(false)
 	end
 
-        local wantsCharge = self:GetFists() and owner.PlayerClassName ~= "furry" and owner:KeyDown(IN_USE) and owner:KeyDown(IN_ATTACK)
-        if self.Charging and (not wantsCharge or self:GetBlocking() or owner:InVehicle()) then
+        local chargeHeld = owner:KeyDown(IN_USE) and owner:KeyDown(IN_ATTACK)
+        local wantsCharge = owner.PlayerClassName ~= "furry" and chargeHeld and (self:GetFists() or owner:KeyDown(IN_SPEED))
+		if self.Charging and self.ChargeComfort and wantsCharge then
+				self.Charging = nil
+				self.ChargeStarted = nil
+				self.ChargeIdlePlayed = nil
+				self.ChargeComfort = nil
+				self:PrimaryAttack(true)
+				return
+		elseif self.Charging and (not chargeHeld or self:GetBlocking() or owner:InVehicle()) then
                 local startedAt = self.ChargeStarted or CurTime()
                 self.Charging = nil
                 self.ChargeStarted = nil
                 self.ChargeIdlePlayed = nil
+				self.ChargeComfort = nil
 
                 if not self:GetBlocking() and not owner:InVehicle() and CurTime() - startedAt >= chargeHoldTime then
                         self:PrimaryAttack(true)
                         return
                 end
-        elseif wantsCharge and not self.Charging and not self:GetBlocking() and self:GetNextPrimaryFire() < CurTime() and self:GetNextSecondaryFire() < CurTime() and (self.attacked or 0) <= CurTime() then
+		elseif self.Charging and chargeHeld and not wantsCharge then
+				self.ChargeComfort = true
+		elseif wantsCharge and not self.Charging and not self:GetBlocking() and self:GetNextPrimaryFire() < CurTime() and self:GetNextSecondaryFire() < CurTime() and (self.attacked or 0) <= CurTime() then
+				self:SetFists(true)
                 self.Charging = true
                 self.ChargeStarted = CurTime()
                 self.ChargeIdlePlayed = nil
+				self.ChargeComfort = nil
                 self:PlayAnim("attack_charge_begin", chargeAnimTime)
         elseif self.Charging and not self.ChargeIdlePlayed and (self.ChargeStarted or 0) + chargeAnimTime <= CurTime() then
                 self.ChargeIdlePlayed = true
@@ -708,37 +748,26 @@ function SWEP:PrimaryAttack(forcespecial)
 	local isfur = owner.PlayerClassName == "furry"
 	local side = isfur and "fists_left" or "attack_quick_2"
 	local rand = math.Round(util.SharedRandom( "fist_Punching", 1, 2 ),0) == 1
-	local twohands = (owner:GetNetVar("carrymass",0) ~= 0 and owner:GetNetVar("carrymass",0) or owner:GetNetVar("carrymass2",0)) > 15
+	local org = owner.organism
 
 	local inv = owner:GetNetVar("Inventory",{})
 	if not inv then return end
 	local havekastet = inv["Weapons"] and inv["Weapons"]["hg_brassknuckles"]
         local kastetCount = isnumber(havekastet) and havekastet or (havekastet and 1 or 0)
 
-        if rand or (CLIENT and ((owner:GetTable().ChatGestureWeight and owner:GetTable().ChatGestureWeight >= 0.1) or twohands)) or kastetCount == 1 then
+	if rand or kastetCount == 1 then
 		if isfur then
-			if owner.organism and owner.organism.larmamputated then
-				rand = 1
-				side = "fists_right"
-			end
-		
-			if owner.organism and owner.organism.rarmamputated then
-				rand = 2
-				side = "fists_left"
-			end
+			side = "fists_right"
 		else
 			side = "attack_quick_1"
-
-			if owner.organism and owner.organism.larmamputated then
-				rand = 1
-				side = "attack_quick_1"
-			end
-		
-			if owner.organism and owner.organism.rarmamputated then
-				rand = 2
-				side = "attack_quick_2"
-			end
 		end
+	end
+	if org and org.larmamputated then
+		rand = true
+		side = isfur and "fists_right" or "attack_quick_1"
+	elseif org and org.rarmamputated then
+		rand = false
+		side = isfur and "fists_left" or "attack_quick_2"
 	end
 
 	if owner:KeyDown(IN_ATTACK2) and owner.PlayerClassName ~= "sc_infiltrator" then return end
@@ -761,6 +790,7 @@ function SWEP:PrimaryAttack(forcespecial)
 	end
 
 	if self:GetBlocking() then return end
+	if self.Charging and not forcespecial then return end
 	--if owner:KeyDown(IN_SPEED) then return end
 
         if not forcespecial and not isfur and owner:KeyDown(IN_USE) then
@@ -772,10 +802,7 @@ function SWEP:PrimaryAttack(forcespecial)
                 return
         end
 
-	if not IsFirstTimePredicted() then
-		self:PlayAnim(side,1)
-		return
-	end
+	if not IsFirstTimePredicted() then return end
 	self.attacked = CurTime() + 0.2
 
         local special_attack = forcespecial and true or false
@@ -846,7 +873,7 @@ local concrete = {
 	"physics/concrete/boulder_impact_hard4.wav"
 }
 
-function SWEP:ShoveFront()
+function SWEP:ShoveFront(sprintShove)
         if CLIENT then return end
         local owner = self:GetOwner()
         owner:LagCompensation(true)
@@ -864,11 +891,12 @@ function SWEP:ShoveFront()
         local pushVel = owner:GetAimVector()
         pushVel.z = math.max(pushVel.z, 0.08)
         pushVel:Normalize()
-        pushVel = pushVel * shoveForce
+		pushVel = pushVel * shoveForce * (sprintShove and 1.3 or 1)
 
         if IsValid(ent) and ent:IsRagdoll() then
                 sound.Play("physics/body/body_medium_impact_soft" .. math_random(1, 7) .. ".wav", trace.HitPos, 75, 110)
                 PushRagdoll(ent, trace.PhysicsBone or 0, pushVel * 0.45, trace.HitPos)
+                WriteShoveHarm(owner, ent, self, sprintShove and 2 or 1.25)
                 owner:LagCompensation(false)
                 return
         end
@@ -882,16 +910,25 @@ function SWEP:ShoveFront()
         end
 
         if IsValid(target) and target:IsPlayer() and target ~= owner then
+                WriteShoveHarm(owner, target, self, sprintShove and 2 or 1.25)
+
                 local ragdolled = false
 
-                if math_random(shoveRagdollChance) == 1 and hg.TriggerSprintCollisionRagdoll then
+				local victimSprinting = target:KeyDown(IN_SPEED) or (target.IsSprinting and target:IsSprinting())
+				local targetWep = target:GetActiveWeapon()
+				local victimBlocking = IsValid(targetWep) and targetWep.GetBlocking and targetWep:GetBlocking()
+				local victimVel = victimSprinting and target:GetVelocity() * 0.5 or vector_origin
+				local ragdollPushVel = pushVel * (victimSprinting and 1.5 or 1) + victimVel
+				local ragdollChance = sprintShove and math.max(math.floor(shoveRagdollChance * 0.5), 1) or shoveRagdollChance
+
+				if (victimBlocking or victimSprinting or math_random(ragdollChance) == 1) and hg.TriggerSprintCollisionRagdoll then
                         ragdolled = true
-                        hg.TriggerSprintCollisionRagdoll(target, trace, pushVel, pushVel:Length() * 0.45)
+					hg.TriggerSprintCollisionRagdoll(target, trace, ragdollPushVel, ragdollPushVel:Length() * 0.45)
                         timer.Simple(0, function()
                                 if not IsValid(target) then return end
                                 local rag = hg.GetCurrentCharacter(target)
                                 if not IsValid(rag) or rag == target then return end
-                                PushRagdoll(rag, trace.PhysicsBone or 0, pushVel * 0.55, trace.HitPos)
+								PushRagdoll(rag, trace.PhysicsBone or 0, ragdollPushVel * 0.55, trace.HitPos)
                         end)
                 end
 
@@ -966,7 +1003,7 @@ function SWEP:AttackFront(special_attack, rand)
                                         sound.Play("weapons/melee/blunt_light"..math_random(8)..".wav", HitPos, 60, math_random(90, 110))
                                         PlayPunchSound(HitPos, 65)
                                 else
-                                        PlayPunchSound(HitPos, 65)
+                                        PlayPunchSound(HitPos, 65, true)
                                 end
                                 if owner:IsBerserk() then
                                         sound.Play("zbattle/berserk/unarmed" .. math_random(1, 9) .. ".wav", HitPos, 90, math_random(90, 110), 0.1 + owner.organism.berserk / 2)
@@ -974,12 +1011,12 @@ function SWEP:AttackFront(special_attack, rand)
                         else
                                 local snd = special_attack and "weapons/melee/blunt_heavy"..math_random(6)..".wav" or "Flesh.ImpactHard"
                                 if owner.PlayerClassName == "furry" then
-                                        sound.Play("pwb/weapons/knife/hit"..math_random(1,4)..".wav", HitPos, 80, math_random(90, 110))
+                                        sound.Play("pwb/weapons/knife/hit"..math_random(1,4)..".wav", HitPos, 80, math_random(105, 125))
                                 elseif special_attack then
                                         sound.Play(snd, HitPos, 80, math_random(90, 110))
                                         PlayPunchSound(HitPos, 75)
                                 else
-                                        PlayPunchSound(HitPos, 75)
+                                        PlayPunchSound(HitPos, 75, true)
                                 end
                                 if owner:IsBerserk() then
                                         sound.Play("zbattle/berserk/unarmed" .. math_random(1, 9) .. ".wav", HitPos, 90, math_random(90, 110), 0.1 + owner.organism.berserk / 2)
@@ -1004,14 +1041,17 @@ function SWEP:AttackFront(special_attack, rand)
                                 owner.organism.painadd = owner.organism.painadd + (math.random(3, 6) * (special_attack and 2.5 or 1.5))
                                 hg.organism.AddWoundManual(owner, math_random(6, 8) * (special_attack and 2 or 1), vector_origin, AngleRand(), owner:LookupBone("ValveBiped.Bip01_"..(rand and "R" or "L").."_Hand"), CurTime())
                         end
-                        sound.Play(owner.PlayerClassName == "furry" and "pwb/weapons/knife/hitwall.wav" or "weapons/melee/blunt_light"..math_random(8)..".wav", HitPos, 65, math_random(90, 110))
+                        sound.Play(owner.PlayerClassName == "furry" and "pwb/weapons/knife/hitwall.wav" or "weapons/melee/blunt_light"..math_random(8)..".wav", HitPos, 65, special_attack and math_random(90, 110) or math_random(105, 125))
                         if owner:IsBerserk() then
                                 sound.Play(table.Random(concrete), HitPos, 90, math_random(90, 110), 0.1 + owner.organism.berserk / 2)
                                 util.Decal("Rollermine.Crater",HitPos + owner:EyeAngles():Forward() * -1,HitPos - owner:EyeAngles():Forward() * -1, Ent)
                         end
                 end
 
-                local DamageAmt = ((math_random(8, 10) * (special_attack and specialDamageMul or 1)) * ((isfur and (owner:IsBerserk() and 10 or 0.85)) or 1)) * (self.DamageMul or 1)
+				local runningChargeMul = special_attack and (1 + math_Clamp((owner:GetVelocity():Length() - 100) / 200, 0, 1) * (runningSpecialDamageMul - 1)) or 1
+				local incomingSpeed = math.max(Ent:GetVelocity():Dot(-AimVec), 0)
+				local incomingDamageMul = 1 + math_Clamp((incomingSpeed - 150) / 450, 0, 1) * (incomingVelocityDamageMul - 1)
+				local DamageAmt = ((math_random(special_attack and 8 or 6, special_attack and 10 or 8) * (special_attack and specialDamageMul * runningChargeMul or 1) * incomingDamageMul) * ((isfur and (owner:IsBerserk() and 10 or 0.85)) or 1)) * (self.DamageMul or 1)
                 local ent = Ent
                 local vec = AimVec
 
@@ -1056,7 +1096,8 @@ function SWEP:AttackFront(special_attack, rand)
                 Dam:SetDamageForce(AimVec * Mul ^ 2)
                 Dam:SetDamageType((owner.PlayerClassName == "furry" or (Ent:GetClass() == "func_breakable_surf")) and DMG_SLASH or DMG_CLUB)
                 Dam:SetDamagePosition(HitPos)
-Ent:TakeDamageInfo(Dam)
+				Ent:TakeDamageInfo(Dam)
+				SendCoolHandsHitStop(self, trace.HitNormal, special_attack)
 
 				if special_attack and Dam:GetDamageType() == DMG_CLUB then
 					if Ent:IsPlayer() then
@@ -1083,7 +1124,7 @@ Ent:TakeDamageInfo(Dam)
         end
 
         if SERVER then
-                owner.organism.stamina.subadd = owner.organism.stamina.subadd + 6
+				owner.organism.stamina.subadd = owner.organism.stamina.subadd + (special_attack and owner:KeyDown(IN_SPEED) and 13 or 3)
         end
 
         owner:LagCompensation(false)
@@ -1118,7 +1159,7 @@ function SWEP:Reload()
 	end
 end
 
-local hg_coolhands = CreateConVar("hg_coolhands", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Give cool hands instead of default hands on spawn")
+CreateConVar("hg_coolhands", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Give cool hands instead of default hands on spawn")
 hook.Add("PlayerSpawn", "Toggle_CoolHands", function(ply)
         timer.Simple(0, function()
                 if not IsValid(ply) then return end

@@ -982,11 +982,12 @@ function hg.DoTPIK(ply, ent)
     ply.segmentsr = ply.segmentsr or {}
     ply.segmentsr[1] = ply.segmentsr[1] or {Pos = Vector(), Len = 0}
     ply.segmentsr[2] = ply.segmentsr[2] or {Pos = Vector(), Len = 0}
-    ply.segmentsr[3] = ply.segmentsr[3] or {Pos = Vector(), Len = 0}
+    ply.segmentsr[3] = ply.segmentsr[3] or {Pos = ply_r_hand_matrix:GetTranslation(), Len = limblength}
 
     ply.segmentsl = ply.segmentsl or {}
     ply.segmentsl[1] = ply.segmentsl[1] or {Pos = Vector(), Len = 0}
     ply.segmentsl[2] = ply.segmentsl[2] or {Pos = Vector(), Len = 0}
+    ply.segmentsl[3] = ply.segmentsl[3] or {Pos = ply_l_hand_matrix:GetTranslation(), Len = limblength}
     
     if not ply.BonesLength then
         ply.BonesLength = {}

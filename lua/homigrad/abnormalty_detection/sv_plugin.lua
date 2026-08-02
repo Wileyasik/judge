@@ -125,14 +125,19 @@ util.AddNetworkString("Abnormalties(SendOpenedPage)")
 		end
 	end
 
+	local nextSQLSaveCheck = 0
 	hook.Add("Think", "Abnormalties_SQLSave", function()
+		local time = CurTime()
+		if nextSQLSaveCheck > time then return end
+		nextSQLSaveCheck = time + 1
+
 		for steam_id_64, stats in pairs(PLUGIN.PlayerStats) do
 			local ply = PLUGIN.PlayerStatsPlayers[steam_id_64]
 			
 			if(IsValid(ply))then
 				if(ply.AbnormaltiesReady)then
-					if(!ply.AbnormaltiesNextStatsSaveTime or ply.AbnormaltiesNextStatsSaveTime <= CurTime())then
-						ply.AbnormaltiesNextStatsSaveTime = CurTime() + PLUGIN.PlayerStatsSaveCD
+					if(!ply.AbnormaltiesNextStatsSaveTime or ply.AbnormaltiesNextStatsSaveTime <= time)then
+						ply.AbnormaltiesNextStatsSaveTime = time + PLUGIN.PlayerStatsSaveCD
 						
 						if(next(stats) != nil)then
 							local query = mysql:Update("abnormalties_player_info")

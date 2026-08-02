@@ -2,16 +2,28 @@ local MODE = MODE
 
 util.AddNetworkString("defense_highlight_last_npcs")
 
+local CurTime = CurTime
+local IsValid = IsValid
+local pairs = pairs
+local ipairs = ipairs
+local ents_FindByClass = ents.FindByClass
+local ents_FindInSphere = ents.FindInSphere
+local player_GetAll = player.GetAll
+local TraceLine = util.TraceLine
+local table_insert = table.insert
+local math_max = math.max
+local string_find = string.find
 
 local npc_autoseek_timer = 0
 hook.Add("Think", "NPCAutoSeekPlayer", function()
     local currentRound = CurrentRound()
     if not currentRound or currentRound.name ~= "defense" then return end
-    if npc_autoseek_timer > CurTime() then return end
-    npc_autoseek_timer = CurTime() + 1
+    local now = CurTime()
+    if npc_autoseek_timer > now then return end
+    npc_autoseek_timer = now + 1
     
-    local npcs = ents.FindByClass("npc_*")
-    local plys = player.GetAll()
+    local npcs = ents_FindByClass("npc_*")
+    local plys = player_GetAll()
     local plyCount = #plys
 
     if (plyCount == 0) then
@@ -21,11 +33,12 @@ hook.Add("Think", "NPCAutoSeekPlayer", function()
     for i = 1, #npcs do
         local npc = npcs[i]
         if not IsValid(npc) or not npc.GetEnemy then continue end
+        local npcPos = npc:GetPos()
         
         if IsValid(npc:GetEnemy()) then
             local blocking = npc:GetBlockingEntity()
             
-            if IsValid(blocking) and not blocking:IsNPC() and not blocking:IsPlayer() and blocking:GetPos():DistToSqr(npc:GetPos()) < 64 * 64 then
+            if IsValid(blocking) and not blocking:IsNPC() and not blocking:IsPlayer() and blocking:GetPos():DistToSqr(npcPos) < 64 * 64 then
                 blocking.unblock_tries = (blocking.unblock_tries or 0) + 1
                 
                 if blocking.unblock_tries < 5 then
@@ -33,7 +46,7 @@ hook.Add("Think", "NPCAutoSeekPlayer", function()
                     blocking:TakeDamage(10, npc)
 
                     if IsValid(phys) then
-                        phys:ApplyForceCenter((phys:GetPos() - npc:GetPos()):GetNormalized() * 3000)
+                        phys:ApplyForceCenter((phys:GetPos() - npcPos):GetNormalized() * 3000)
                     end
                 else
                     blocking.unblock_tries = 0
@@ -51,16 +64,17 @@ hook.Add("Think", "NPCAutoSeekPlayer", function()
 
 
             if npc:IsUnreachable(npc:GetEnemy()) or npc:HasObstacles() then
-                for i, ent in pairs(ents.FindInSphere(npc:GetPos(), 64)) do
+                local tr = {start = npcPos, filter = {npc, nil}, mask = MASK_SOLID_BRUSHONLY}
+                local filter = tr.filter
+
+                for i, ent in pairs(ents_FindInSphere(npcPos, 64)) do
                     if ent:IsPlayer() or ent:IsNPC() then continue end
 
-                    local tr = {}
-                    tr.start = npc:GetPos()
-                    tr.endpos = ent:GetPos()
-                    tr.filter = {npc, ent}
-                    tr.mask = MASK_SOLID_BRUSHONLY
+                    local entPos = ent:GetPos()
+                    tr.endpos = entPos
+                    filter[2] = ent
 
-                    if util.TraceLine(tr).Hit then continue end
+                    if TraceLine(tr).Hit then continue end
 
                     ent.unblock_tries = (ent.unblock_tries or 0) + 1
                     local phys = ent:GetPhysicsObject()
@@ -68,11 +82,11 @@ hook.Add("Think", "NPCAutoSeekPlayer", function()
                     ent:TakeDamage(10, npc)
 
                     if hgIsDoor(ent) and not ent:GetNoDraw() then
-                        hgBlastThatDoor(ent, (ent:GetPos() - npc:GetPos()):GetNormalized() * 50)
+                        hgBlastThatDoor(ent, (entPos - npcPos):GetNormalized() * 50)
                     end
 
                     if IsValid(phys) then
-                        phys:ApplyForceCenter((phys:GetPos() - npc:GetPos()):GetNormalized() * 3000)
+                        phys:ApplyForceCenter((phys:GetPos() - npcPos):GetNormalized() * 3000)
                     end
                     if ent.unblock_tries >= 5 then
                         ent.unblock_tries = 0
@@ -96,14 +110,12 @@ hook.Add("Think", "NPCAutoSeekPlayer", function()
         local curPlyPos
         local curDist = math.huge
         
-        local npcPos = npc:GetPos()
-
-        local dobeyte_vyzhivshih = {}
+        local hasDownedPlayer = false
         for i = 1, plyCount do
             local ply = plys[i]
 
             if not ply:Alive() then continue end
-            if ply.organism and ply.organism.otrub then table.insert(dobeyte_vyzhivshih, i) continue end
+            if ply.organism and ply.organism.otrub then hasDownedPlayer = true continue end
             
             if (npc:Disposition(ply) == D_HT) then
                 local plyPos = ply:GetPos()
@@ -117,9 +129,11 @@ hook.Add("Think", "NPCAutoSeekPlayer", function()
             end
         end
 
-        if not IsValid(curPly) then
-            for i = 1, #dobeyte_vyzhivshih do
-                local ply = plys[dobeyte_vyzhivshih[i]]
+        if not IsValid(curPly) and hasDownedPlayer then
+            for i = 1, plyCount do
+                local ply = plys[i]
+                if not ply:Alive() then continue end
+                if not (ply.organism and ply.organism.otrub) then continue end
                 
                 if (npc:Disposition(ply) == D_HT) then
                     local plyPos = ply:GetPos()
@@ -159,7 +173,7 @@ hook.Add("EntityRemoved", "DefenseNPCRemoved", function(ent)
             
             if not ent.DefenseNPCCountedAsDead then
                 ent.DefenseNPCCountedAsDead = true
-                MODE.NPCCount = math.max(0, MODE.NPCCount - 1)
+                MODE.NPCCount = math_max(0, MODE.NPCCount - 1)
                 print("[DEFENSE] NPC Count after removal: " .. MODE.NPCCount)
                 
 
@@ -251,7 +265,7 @@ hook.Add("OnNPCKilled", "DefenseNPCKilled", function(npc, attacker, inflictor)
 
             if not npc.DefenseNPCCountedAsDead then
                 npc.DefenseNPCCountedAsDead = true
-                MODE.NPCCount = math.max(0, MODE.NPCCount - 1)
+                MODE.NPCCount = math_max(0, MODE.NPCCount - 1)
                 
                 if MODE.DefenseWaveEntities and npc.DefenseEntityID then
                     MODE.DefenseWaveEntities[npc.DefenseEntityID] = nil
@@ -285,7 +299,7 @@ hook.Add("EntityTakeDamage", "DefenseZombieDamageTrack", function(ent, dmginfo)
     local class = ent:GetClass() or ""
     if class == "zb_temporary_ent" then return end
     
-    if not (string.find(class, "npc_vj_") or string.find(class, "sent_vj_")) then return end
+    if not (string_find(class, "npc_vj_") or string_find(class, "sent_vj_")) then return end
     
     local MODE = CurrentRound()
     if not MODE or MODE.name ~= "defense" then return end
@@ -301,7 +315,7 @@ hook.Add("EntityTakeDamage", "DefenseZombieDamageTrack", function(ent, dmginfo)
                 
                 if not ent.DefenseNPCCountedAsDead then
                     ent.DefenseNPCCountedAsDead = true
-                    MODE.NPCCount = math.max(0, MODE.NPCCount - 1)
+                    MODE.NPCCount = math_max(0, MODE.NPCCount - 1)
                     
                     if MODE.DefenseWaveEntities and ent.DefenseEntityID then
                         MODE.DefenseWaveEntities[ent.DefenseEntityID] = nil
@@ -332,9 +346,12 @@ end)
 local lastNPCUpdate = 0
 local lastNPCList = {}
 local lastSentTime = 0
+local nextValidityCheck = 0
 
 hook.Add("Think", "DefenseNPCValidityCheck", function()
-    if CurTime() % 5 != 0 then return end 
+    local now = CurTime()
+    if nextValidityCheck > now then return end
+    nextValidityCheck = now + 5
     
     local MODE = CurrentRound()
     if not MODE or MODE.name ~= "defense" then return end
@@ -353,7 +370,7 @@ hook.Add("Think", "DefenseNPCValidityCheck", function()
         end
         
         if invalidCount > 0 then
-            local newCount = math.max(0, MODE.NPCCount - invalidCount)
+            local newCount = math_max(0, MODE.NPCCount - invalidCount)
             print("[DEFENSE] NPC Validity Check: Removed " .. invalidCount .. " invalid NPCs, updating count " .. MODE.NPCCount .. " -> " .. newCount)
             MODE.NPCCount = newCount
             
@@ -376,12 +393,12 @@ hook.Add("Think", "DefenseNPCValidityCheck", function()
             local remainingNPCs = {}
             for id, npc in pairs(MODE.DefenseWaveEntities) do
                 if IsValid(npc) and (not npc.DefenseNPCCountedAsDead) then
-                    table.insert(remainingNPCs, npc:EntIndex())
+                    table_insert(remainingNPCs, npc:EntIndex())
                 end
             end
             
            
-            local shouldSend = #remainingNPCs ~= #lastNPCList or CurTime() - lastSentTime > 5
+            local shouldSend = #remainingNPCs ~= #lastNPCList or now - lastSentTime > 5
             
             if shouldSend and #remainingNPCs > 0 then
                
@@ -395,9 +412,9 @@ hook.Add("Think", "DefenseNPCValidityCheck", function()
                     end
                 end
                 
-                if isDifferent or CurTime() - lastSentTime > 10 then
-                    lastNPCList = table.Copy(remainingNPCs)
-                    lastSentTime = CurTime()
+                if isDifferent or now - lastSentTime > 10 then
+                    lastNPCList = remainingNPCs
+                    lastSentTime = now
                     
                     net.Start("defense_highlight_last_npcs")
                     net.WriteTable(remainingNPCs)
@@ -408,8 +425,11 @@ hook.Add("Think", "DefenseNPCValidityCheck", function()
     end
 end)
 
+local nextCleanupCheck = 0
 hook.Add("Think", "DefenseCleanupCheck", function()
-    if CurTime() % 15 != 0 then return end 
+    local now = CurTime()
+    if nextCleanupCheck > now then return end
+    nextCleanupCheck = now + 15
     
     local MODE = CurrentRound()
     if not MODE or MODE.name ~= "defense" then return end
@@ -417,10 +437,10 @@ hook.Add("Think", "DefenseCleanupCheck", function()
     if not MODE:IsWaveActive() and MODE.WaveCompleted then
         for _, ent in ents.Iterator() do
             if IsValid(ent) and (ent:IsNPC() or 
-                string.find(tostring(ent:GetClass() or ""), "npc_vj_") or
-                string.find(tostring(ent:GetClass() or ""), "sent_vj_") or
-                string.find(tostring(ent:GetClass() or ""), "zb_") or
-                string.find(tostring(ent:GetClass() or ""), "terminator_nextbot_")) then
+                string_find(tostring(ent:GetClass() or ""), "npc_vj_") or
+                string_find(tostring(ent:GetClass() or ""), "sent_vj_") or
+                string_find(tostring(ent:GetClass() or ""), "zb_") or
+                string_find(tostring(ent:GetClass() or ""), "terminator_nextbot_")) then
                 
                 local class = ent:GetClass()
                 if class ~= "npc_bullseye" and class ~= "npc_enemyfinder" and class ~= "npc_bullseye_new" then

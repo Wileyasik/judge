@@ -122,14 +122,15 @@ SWEP.DistSound = ""
 
 SWEP.SupressedSound = {"arccw_uc/common/fire-22-sup-01.ogg", 65, 90, 100}
 SWEP.SupressedSoundFP = {"arccw_uc/common/fire-22-sup-01.ogg", 65, 90, 100}
+SWEP.SupressorOnly = true
 
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/makarov/handling/makarov_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"supressor4", Vector(0,0,0), {}},
-		[2] = {"supressor6", Vector(0,0,0), {}},
-		--[3] = {"supressor3", Vector(0,0.2,0), {}},
-		["mount"] = Vector(-0.1,0.4,0.03),
+		[1] = {"supressor1", Vector(0,0,0), {}},
+		[2] = {"supressor2", Vector(0,0,0), {}},
+		["mount"] = Vector(-0.4,-0,0),
+		["mountAngle"] = Angle(0,1,-90)
 	},
 	underbarrel = {
 		["mount"] = Vector(13, -1.4, -1),

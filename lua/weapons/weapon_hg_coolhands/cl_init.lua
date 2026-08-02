@@ -20,8 +20,8 @@ local math_random, math_Clamp, CurTime, Color = math.random, math.Clamp, CurTime
 local chargeHoldTime = 0.12
 local chargeAnimTime = 0.5
 local shoveAnimTime = 0.7
-local shoveCooldownPrimary = 1.1
-local shoveCooldownSecondary = 1.35
+local shoveCooldownPrimary = 1
+local shoveCooldownSecondary = 1.25
 
 local colWhite = Color(255, 255, 255, 255)
 local lerpthing = 1
@@ -38,7 +38,8 @@ local clamp = math_Clamp
 function SWEP:CanShove()
         local owner = self:GetOwner()
         if not IsValid(owner) or owner:InVehicle() then return false end
-        if not self:GetFists() or self:GetBlocking() or self.Charging then return false end
+		local sprintShove = owner:KeyDown(IN_SPEED) and owner:KeyDown(IN_USE)
+		if (not self:GetFists() and not sprintShove) or self:GetBlocking() or self.Charging then return false end
         if owner:GetNetVar("handcuffed",false) then return false end
         if (self.ShoveEnd or 0) > CurTime() then return false end
         if (self.SpecialAttackUntil or 0) > CurTime() then return false end
@@ -50,15 +51,14 @@ function SWEP:SecondaryAttack()
         local owner = self:GetOwner()
         if not self:CanShove() or not owner:KeyDown(IN_USE) then return end
 
-        if not IsFirstTimePredicted() then
-                self:PlayAnim("Shove",1)
-                return
-        end
+		if not IsFirstTimePredicted() then return end
 
         self.ShoveEnd = CurTime() + shoveAnimTime
         self.Charging = nil
         self.ChargeStarted = nil
-        self.ChargeIdlePlayed = nil
+		self.ChargeIdlePlayed = nil
+		self.ChargeComfort = nil
+		if owner:KeyDown(IN_SPEED) then self:SetFists(true) end
         self.attacked = CurTime() + 0.2
         self:SetNextPrimaryFire(CurTime() + shoveCooldownPrimary)
         self:SetNextSecondaryFire(CurTime() + shoveCooldownSecondary)
@@ -205,7 +205,19 @@ function SWEP:DrawWorldModel()
 
 	local WorldModel = self.worldModel
 
-	WorldModel:SetCycle(1 - math_Clamp(self.animtime - CurTime(),0,1))
+	local cycle = 1 - math_Clamp(self.animtime - CurTime(),0,1)
+	if self.hitstopuntil then
+		if self.hitstopuntil > CurTime() then
+			cycle = self.hitstopcycle or cycle
+		else
+			self.animtime = self.animtime + (self.hitstoppause or 0)
+			self.hitstopuntil = nil
+			self.hitstoppause = nil
+			self.hitstopcycle = nil
+			cycle = 1 - math_Clamp(self.animtime - CurTime(),0,1)
+		end
+	end
+	WorldModel:SetCycle(cycle)
 
 	self.blockinganim = qerp(0.05 * FrameTime() / engine.TickInterval(),self.blockinganim,self:GetBlocking() and 1 or 0)
 
@@ -239,6 +251,23 @@ function SWEP:DrawWorldModel()
 	WorldModel:SetupBones()
 	--WorldModel:DrawModel()
 end
+
+net.Receive("hg_coolhands_hit_stop", function()
+	local wep = net.ReadEntity()
+	local pause = net.ReadFloat()
+	local normal = net.ReadVector()
+	if not IsValid(wep) then return end
+
+	wep.hitstoppause = pause
+	wep.hitstopuntil = CurTime() + pause
+	wep.hitstopcycle = 1 - math_Clamp(wep.animtime - CurTime(), 0, 1)
+
+	local owner = wep:GetOwner()
+	if IsValid(owner) and owner == LocalPlayer() then
+		util.ScreenShake(wep:GetPos(), 25, 1, 0.35, 80)
+		ViewPunch(Angle(-1.5, normal.y * 2, normal.x * -2))
+	end
+end)
 
 local host_timescale = game.GetTimeScale
 
@@ -633,21 +662,34 @@ function SWEP:Think()
                 self.blockSound = nil
         end
 
-        local wantsCharge = self:GetFists() and owner.PlayerClassName ~= "furry" and owner:KeyDown(IN_USE) and owner:KeyDown(IN_ATTACK)
-        if self.Charging and (not wantsCharge or self:GetBlocking() or owner:InVehicle()) then
+        local chargeHeld = owner:KeyDown(IN_USE) and owner:KeyDown(IN_ATTACK)
+        local wantsCharge = owner.PlayerClassName ~= "furry" and chargeHeld and (self:GetFists() or owner:KeyDown(IN_SPEED))
+        if self.Charging and self.ChargeComfort and wantsCharge then
+                self.Charging = nil
+                self.ChargeStarted = nil
+                self.ChargeIdlePlayed = nil
+                self.ChargeComfort = nil
+                self:PrimaryAttack(true)
+                return
+        elseif self.Charging and (not chargeHeld or self:GetBlocking() or owner:InVehicle()) then
                 local startedAt = self.ChargeStarted or CurTime()
                 self.Charging = nil
                 self.ChargeStarted = nil
                 self.ChargeIdlePlayed = nil
+                self.ChargeComfort = nil
 
                 if not self:GetBlocking() and not owner:InVehicle() and CurTime() - startedAt >= chargeHoldTime then
                         self:PrimaryAttack(true)
                         return
                 end
+        elseif self.Charging and chargeHeld and not wantsCharge then
+                self.ChargeComfort = true
         elseif wantsCharge and not self.Charging and not self:GetBlocking() and self:GetNextPrimaryFire() < CurTime() and self:GetNextSecondaryFire() < CurTime() and (self.attacked or 0) <= CurTime() then
+                self:SetFists(true)
                 self.Charging = true
                 self.ChargeStarted = CurTime()
                 self.ChargeIdlePlayed = nil
+                self.ChargeComfort = nil
                 self:PlayAnim("attack_charge_begin", chargeAnimTime)
         elseif self.Charging and not self.ChargeIdlePlayed and (self.ChargeStarted or 0) + chargeAnimTime <= CurTime() then
                 self.ChargeIdlePlayed = true
@@ -660,21 +702,30 @@ function SWEP:PrimaryAttack(forcespecial)
 	local owner = self:GetOwner()
 	if not IsValid(owner) or owner:InVehicle() then return end
 	if (self.attacked or 0) > CurTime() then return end
+	if owner.organism and owner.organism.rarmamputated and owner.organism.larmamputated then return end
 	local isfur = owner.PlayerClassName == "furry"
 	local side = isfur and "fists_left" or "attack_quick_2"
 	local rand = math.Round(util.SharedRandom( "fist_Punching", 1, 2 ),0) == 1
+	local org = owner.organism
 
 	local inv = owner:GetNetVar("Inventory",{})
 	if not inv then return end
 	local havekastet = inv["Weapons"] and inv["Weapons"]["hg_brassknuckles"]
         local kastetCount = isnumber(havekastet) and havekastet or (havekastet and 1 or 0)
 
-        if rand or (CLIENT and ((owner:GetTable().ChatGestureWeight and owner:GetTable().ChatGestureWeight >= 0.1) or twohands)) or kastetCount == 1 then
+	if rand or kastetCount == 1 then
 		if isfur then
 			side = "fists_right"
 		else
 			side = "attack_quick_1"
 		end
+	end
+	if org and org.larmamputated then
+		rand = true
+		side = isfur and "fists_right" or "attack_quick_1"
+	elseif org and org.rarmamputated then
+		rand = false
+		side = isfur and "fists_left" or "attack_quick_2"
 	end
 	if owner:KeyDown(IN_ATTACK2) and owner.PlayerClassName ~= "sc_infiltrator" then return end
 	if owner:GetNetVar("handcuffed",false) then return end
@@ -684,6 +735,7 @@ function SWEP:PrimaryAttack(forcespecial)
 	end
 
 	if self:GetBlocking() then return end
+	if self.Charging and not forcespecial then return end
 	--if owner:KeyDown(IN_SPEED) then return end
 
         if not forcespecial and not isfur and owner:KeyDown(IN_USE) then
@@ -695,10 +747,7 @@ function SWEP:PrimaryAttack(forcespecial)
                 return
         end
 
-	if not IsFirstTimePredicted() then
-                self:PlayAnim(forcespecial and "attack_charge_end" or side,1)
-		return
-	end
+	if not IsFirstTimePredicted() then return end
 	self.attacked = CurTime() + 0.2
 
         local special_attack = forcespecial and true or false

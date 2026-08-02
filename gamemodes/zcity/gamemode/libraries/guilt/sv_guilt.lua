@@ -4,6 +4,8 @@ zb = zb or {}
 zb.GuiltTable = zb.GuiltTable or {}
 zb.HarmDone = zb.HarmDone or {}
 zb.HarmDoneKarma = zb.HarmDoneKarma or {}
+zb.HarmReturnedKarma = zb.HarmReturnedKarma or {}
+zb.HarmReceivedKarma = zb.HarmReceivedKarma or {}
 zb.HarmDoneDetailed = zb.HarmDoneDetailed or {}
 zb.HarmAttacked = zb.HarmAttacked or {}
 zb.GuiltSQL = zb.GuiltSQL or {}
@@ -126,6 +128,18 @@ hook.Add("HomigradDamage", "GuiltReg", function(ply, dmgInfo, hitgroup, ent, har
     local id = Victim:IsPlayer() and Victim:SteamID() or Victim:EntIndex()
     local id2 = Attacker:IsPlayer() and Attacker:SteamID() or Attacker:EntIndex()
     local maxharm = zb.MaximumHarm
+    local damage = dmgInfo:GetDamage()
+    harm = tonumber(harm) or 0
+
+    if damage and damage > 0 then
+        local damageHarm = math.Clamp(damage / 10, 0, maxharm)
+        if hitgroup == HITGROUP_HEAD and damage >= 15 then
+            damageHarm = math.max(damageHarm, maxharm * 0.75)
+        end
+
+        harm = math.max(harm, damageHarm)
+    end
+
     zb.HarmDone[Victim] = zb.HarmDone[Victim] or {}
     zb.HarmDoneDetailed[id] = zb.HarmDoneDetailed[id] or {}
     zb.HarmDoneKarma[Victim] = zb.HarmDoneKarma[Victim] or {}
@@ -223,8 +237,23 @@ hook.Add("HomigradDamage", "GuiltReg", function(ply, dmgInfo, hitgroup, ent, har
     end
     
     local guiltadd = amt * 60
+    local maxLoss = zb.IsForce(Attacker) and 50 or 30
+    local karmaDone = zb.HarmDoneKarma[Victim][Attacker]
+    zb.HarmReturnedKarma[Attacker] = zb.HarmReturnedKarma[Attacker] or {}
+    local karmaReturn = math.max(((zb.HarmDoneKarma[Attacker] and zb.HarmDoneKarma[Attacker][Victim] or 0) * 0.5) - (zb.HarmReturnedKarma[Attacker][Victim] or 0), 0)
+    zb.HarmReturnedKarma[Attacker][Victim] = (zb.HarmReturnedKarma[Attacker][Victim] or 0) + karmaReturn
+    add = math.Clamp(add, 0, math.max(maxLoss - karmaDone, 0))
+
+    if Victim:IsPlayer() and add > 0 then
+        zb.HarmReceivedKarma[Victim] = zb.HarmReceivedKarma[Victim] or 0
+        local victimAdd = math.Clamp(add * 0.5, 0, math.max(30 - zb.HarmReceivedKarma[Victim], 0))
+        zb.HarmReceivedKarma[Victim] = zb.HarmReceivedKarma[Victim] + victimAdd
+        Victim.Karma = math.Clamp((Victim.Karma or 100) + victimAdd, 0, zb.MaxKarma)
+        Victim:SetNetVar("Karma", Victim.Karma)
+    end
+
     Attacker.Guilt = (Attacker.Guilt or 0) + guiltadd
-    Attacker.Karma = math.Clamp((Attacker.Karma or 100) - add * math.max(((1 - (zb.GuiltTable[Victim][Attacker] or 0)) / 1),0), -60, zb.MaxKarma)
+    Attacker.Karma = math.Clamp((Attacker.Karma or 100) - add + karmaReturn, -60, zb.MaxKarma)
 
     zb.HarmDoneKarma[Victim][Attacker] = zb.HarmDoneKarma[Victim][Attacker] + add
 
@@ -270,7 +299,7 @@ hook.Add("HomigradDamage", "GuiltReg", function(ply, dmgInfo, hitgroup, ent, har
 end)
 
 function zb.IsForce(Attacker)
-    return Attacker.PlayerClassName == "police" and Attacker.PlayerClassName == "nationalguard" and Attacker.PlayerClassName == "swat"
+    return Attacker.PlayerClassName == "police" or Attacker.PlayerClassName == "nationalguard" or Attacker.PlayerClassName == "swat"
 end
 
 local function IsLookingAt(ply, targetVec)
@@ -353,6 +382,8 @@ hook.Add("ZB_StartRound","NO_HARM",function()
     
     zb.HarmDone = {}
     zb.HarmDoneKarma = {}
+    zb.HarmReturnedKarma = {}
+    zb.HarmReceivedKarma = {}
 end)
 
 util.AddNetworkString("get_karma")
@@ -404,7 +435,7 @@ net.Receive("forgive_player", function(len, ply)
 
     ent.Karma = math.Clamp(ent.Karma + harm, 0, zb.MaxKarma)
     ent:SetNetVar("Karma",ent.Karma)
-    //ent:guilt_SetValue((ent.Karma or 100))
+    if ply.GiveExp then ply:GiveExp(math.Round(harm)) end
 
     zb.HarmDone[ply][ent] = 0
     zb.HarmDoneKarma[ply][ent] = 0

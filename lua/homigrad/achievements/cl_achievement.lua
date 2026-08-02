@@ -2,6 +2,7 @@ hg.achievements = hg.achievements or {}
 hg.achievements.achievements_data = hg.achievements.achievements_data or {}
 hg.achievements.achievements_data.player_achievements = hg.achievements.achievements_data.player_achievements or {}
 hg.achievements.achievements_data.created_achevements = {}
+hg.achievements.achievements_data.rarity = hg.achievements.achievements_data.rarity or {}
 
 hg.achievements.MenuPanel = hg.achievements.MenuPanel or nil
 
@@ -80,6 +81,24 @@ local achievement_card = Color(20,20,30,120)
 local achievement_card_strong = Color(15,15,20,120)
 local achievement_border = Color(255,255,255,90)
 local achievement_placeholder = Material("homigrad/vgui/models/star.png", "smooth")
+local achievement_rarity_colors = {
+    Uncommon = Color(92, 184, 92),
+    Rare = Color(65, 135, 230),
+    Epic = Color(156, 82, 220),
+    Legendary = Color(240, 151, 40),
+    Mythic = Color(235, 62, 122),
+    Exotic = Color(235, 55, 45)
+}
+
+local function AchievementGetRarityColor(rarity)
+    local name = istable(rarity) and rarity.name or rarity
+    return achievement_rarity_colors[name] or achievement_rarity_colors.Uncommon
+end
+
+local function AchievementFormatObtainedAt(timestamp)
+    timestamp = tonumber(timestamp)
+    return timestamp and os.date("%d.%m.%Y %H:%M", timestamp) or "date unknown"
+end
 local gradient_u = Material("vgui/gradient-u")
 local tex_gradient_d = surface.GetTextureID("vgui/gradient-d")
 local tex_gradient_r = surface.GetTextureID("vgui/gradient-r")
@@ -99,6 +118,7 @@ end
 
 local function AchievementGetSortedEntries()
     local created = hg and hg.achievements and hg.achievements.achievements_data and hg.achievements.achievements_data.created_achevements or {}
+    local rarity = hg and hg.achievements and hg.achievements.achievements_data and hg.achievements.achievements_data.rarity or {}
     local localach = AchievementGetLocalTable()
     local entries = {}
 
@@ -110,6 +130,7 @@ local function AchievementGetSortedEntries()
         local normalized = math.Clamp((currentValue - startValue) / denominator, 0, 1)
         local completed = currentValue >= neededValue
         local percent = math.Clamp(math.Round(normalized * 100), 0, 100)
+        local playerAchievement = localach[key]
 
         entries[#entries + 1] = {
             key = key,
@@ -122,7 +143,9 @@ local function AchievementGetSortedEntries()
             progress = normalized,
             percent = percent,
             completed = completed,
-            status = completed and "Completed" or (percent > 0 and "In Progress" or "Locked")
+            status = completed and "Completed" or (percent > 0 and "In Progress" or "Locked"),
+            rarity = rarity[key],
+            obtained_at = playerAchievement and playerAchievement.obtained_at
         }
     end
 
@@ -594,12 +617,14 @@ function hg.DrawAchievmentsMenu(ParentPanel)
     local detailIcon = vgui.Create("DPanel", detailContent)
     detailIcon:SetSize(MenuUnit(120), MenuUnit(120))
     detailIcon.IconMat = achievement_placeholder
+    detailIcon.RarityColor = achievement_rarity_colors.Uncommon
     detailIcon.Paint = function(self, w, h)
+        local rarityColor = self.RarityColor or achievement_rarity_colors.Uncommon
         surface.SetDrawColor(0, 0, 0, 120)
         surface.DrawRect(0, 0, w, h)
-        surface.SetDrawColor(achievement_color_white.r, achievement_color_white.g, achievement_color_white.b, 60)
-        surface.DrawOutlinedRect(0, 0, w, h, 1)
-        surface.SetDrawColor(255, 255, 255, 255)
+        surface.SetDrawColor(rarityColor.r, rarityColor.g, rarityColor.b, 210)
+        surface.DrawOutlinedRect(0, 0, w, h, MenuUnit(2))
+        surface.SetDrawColor(rarityColor.r, rarityColor.g, rarityColor.b, 255)
         surface.SetMaterial(self.IconMat or achievement_placeholder)
         surface.DrawTexturedRect(MenuUnit(16), MenuUnit(16), w - MenuUnit(32), h - MenuUnit(32))
     end
@@ -637,10 +662,12 @@ function hg.DrawAchievmentsMenu(ParentPanel)
 
     local detailBar = vgui.Create("DPanel", detailContent)
     detailBar.Progress = 0
+    detailBar.RarityColor = achievement_rarity_colors.Uncommon
     detailBar.Paint = function(self, w, h)
+        local rarityColor = self.RarityColor or achievement_rarity_colors.Uncommon
         surface.SetDrawColor(0, 0, 0, 160)
         surface.DrawRect(0, 0, w, h)
-        surface.SetDrawColor(achievement_color_accent.r, achievement_color_accent.g, achievement_color_accent.b, 220)
+        surface.SetDrawColor(rarityColor.r, rarityColor.g, rarityColor.b, 220)
         surface.DrawRect(0, 0, math.floor(w * (self.Progress or 0)), h)
         surface.SetDrawColor(achievement_color_white.r, achievement_color_white.g, achievement_color_white.b, 80)
         surface.DrawOutlinedRect(0, 0, w, h, 1)
@@ -747,6 +774,7 @@ function hg.DrawAchievmentsMenu(ParentPanel)
             row.Paint = function(self, w, h)
                 local active = achievement_active_key == self.Entry.key
                 local alpha = 110 + math.floor((self.HoverLerp or 0) * 40)
+                local rarityColor = AchievementGetRarityColor(self.Entry.rarity)
                 local percentText = self.Entry.percent .. "%"
                 local percentFont = "ZCity_Ach_Tiny"
                 local nameFont = "ZCity_Ach_Small"
@@ -757,24 +785,24 @@ function hg.DrawAchievmentsMenu(ParentPanel)
                 local rightPadding = MenuUnit(12)
                 local nameAvailable = math.max(10, w - nameX - rightPadding - percentW - MenuUnit(16))
                 local nameOffset = AchievementGetMarqueeOffset(self.Entry.name, nameFont, nameAvailable, w)
-                surface.SetDrawColor(20, 20, 30, alpha)
+                surface.SetDrawColor(rarityColor.r * 0.1, rarityColor.g * 0.1, rarityColor.b * 0.1, alpha + 70)
                 surface.DrawRect(0, 0, w, h)
                 if active then
-                    surface.SetDrawColor(achievement_color_accent.r, achievement_color_accent.g, achievement_color_accent.b, 220)
-                    surface.DrawRect(0, 0, MenuUnit(2), h)
+                    surface.SetDrawColor(rarityColor.r, rarityColor.g, rarityColor.b, 230)
+                    surface.DrawRect(0, 0, MenuUnit(3), h)
                 end
                 surface.SetDrawColor(achievement_color_white.r, achievement_color_white.g, achievement_color_white.b, 55 + math.floor((self.HoverLerp or 0) * 60))
                 surface.DrawRect(0, h - MenuUnit(1), w, MenuUnit(1))
                 local clipX1, clipY1 = self:LocalToScreen(nameX, nameY - MenuUnit(14))
                 local clipX2, clipY2 = self:LocalToScreen(nameX + nameAvailable, nameY + MenuUnit(14))
                 render.SetScissorRect(clipX1, clipY1, clipX2, clipY2, true)
-                draw.SimpleText(self.Entry.name, nameFont, nameX + nameOffset, nameY, achievement_color_text, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+                draw.SimpleText(self.Entry.name, nameFont, nameX + nameOffset, nameY, rarityColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
                 render.SetScissorRect(0, 0, 0, 0, false)
                 draw.SimpleText(self.Entry.status, "ZCity_Ach_Tiny", MenuUnit(12), MenuUnit(38), achievement_color_text_dim, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
                 draw.SimpleText(percentText, percentFont, w - MenuUnit(12), MenuUnit(16), achievement_color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
                 surface.SetDrawColor(0, 0, 0, 160)
                 surface.DrawRect(MenuUnit(12), h - MenuUnit(18), w - MenuUnit(24), MenuUnit(6))
-                surface.SetDrawColor(achievement_color_accent.r, achievement_color_accent.g, achievement_color_accent.b, 220)
+                surface.SetDrawColor(rarityColor.r, rarityColor.g, rarityColor.b, 220)
                 surface.DrawRect(MenuUnit(12), h - MenuUnit(18), math.floor((w - MenuUnit(24)) * self.Entry.progress), MenuUnit(6))
             end
         end
@@ -794,11 +822,20 @@ function hg.DrawAchievmentsMenu(ParentPanel)
         end
 
         detailIcon.IconMat = entry.image or achievement_placeholder
+        detailIcon.RarityColor = AchievementGetRarityColor(entry.rarity)
         detailName.DisplayText = string.upper(entry.name)
-        detailStatus:SetText(entry.status)
+        local rarity = entry.rarity
+        local rarityText = "Rarity: Unknown"
+        if rarity and (tonumber(rarity.total) or 0) > 0 then
+            rarityText = string.format("Rarity: %s | %.2f%% (%d / %d players)", tostring(rarity.name or "Unknown"), tonumber(rarity.percent) or 0, tonumber(rarity.owners) or 0, tonumber(rarity.total) or 0)
+        end
+        local obtainedText = entry.completed and (" | Obtained: " .. AchievementFormatObtainedAt(entry.obtained_at)) or ""
+        detailStatus:SetText(entry.status .. " | " .. rarityText .. obtainedText)
+        detailStatus:SetTextColor(AchievementGetRarityColor(entry.rarity))
         detailDesc:SetText(entry.description ~= "" and entry.description or "No description provided.")
         detailProgress:SetText(entry.current .. " / " .. entry.needed .. " progress")
         detailBar.Progress = entry.progress
+        detailBar.RarityColor = AchievementGetRarityColor(entry.rarity)
         detailContent:InvalidateLayout(true)
     end
 
@@ -855,51 +892,104 @@ end
 net.Receive("req_ach",function()
     hg.achievements.achievements_data.created_achevements = net.ReadTable()
     hg.achievements.achievements_data.player_achievements[tostring(LocalPlayer():SteamID())] = net.ReadTable()
-    
+    hg.achievements.achievements_data.rarity = net.ReadTable()
+
     if IsValid(hg.achievements.MenuPanel) then
         hg.achievements.MenuPanel:UpdateValues()
     end
 end)
 
 hg.achievements.NewAchievements = hg.achievements.NewAchievements or {}
-local AchTable = hg.achievements.NewAchievements 
+local AchTable = hg.achievements.NewAchievements
+local achievement_rarity_sounds = {
+    Uncommon = "uncommon.MP3",
+    Rare = "rare.MP3",
+    Epic = "Epic.MP3",
+    Legendary = "legendary.MP3",
+    Mythic = "Mythic.MP3",
+    Exotic = "exotic.MP3"
+}
+
+local function PlayAchievementSound(rarity)
+    local fileName = achievement_rarity_sounds[rarity] or achievement_rarity_sounds.Uncommon
+    sound.PlayFile("addons/judge/sounds/" .. fileName, "noplay", function(channel, errorID, errorName)
+        if IsValid(channel) then
+            channel:SetVolume(1)
+            channel:Play()
+            return
+        end
+
+        surface.PlaySound("homigrad/vgui/achievement_earned.wav")
+    end)
+end
+
 net.Receive("hg_NewAchievement",function()
-    local Ach = {time = CurTime() + 7.5,name = net.ReadString(),img = net.ReadString()}
+    local now = CurTime()
+    local Ach = {start = now, time = now + 7.5, name = net.ReadString(), img = net.ReadString(), rarity = net.ReadString()}
+    Ach.sparks = {}
+    for i = 1, 12 do
+        Ach.sparks[i] = {
+            x = math.Rand(0.08, 0.32),
+            y = math.Rand(0.15, 0.85),
+            speed = math.Rand(0.05, 0.14),
+            size = math.Rand(1, 3),
+            phase = math.Rand(0, math.pi * 2)
+        }
+    end
     table.insert(AchTable,1,Ach)
-	surface.PlaySound("homigrad/vgui/achievement_earned.wav")
+	PlayAchievementSound(Ach.rarity)
 end)
 
-local ach_clr1 , ach_clr2 = Color(200,25,25), Color(100,25,25)
 hook.Add("HUDPaint","hg_NewAchievement", function()
-    local frametime = FrameTime() * 10
-    for i = 1, #AchTable do
+    for i = #AchTable, 1, -1 do
         local ach = AchTable[i]
         if not ach then continue end
-        local txt = "Achievement! "..ach.name
-        ach.img = isstring(ach.img) and Material(ach.img) or ach.img
-        local wt, _ = surface.GetTextSize(txt)
+        local now = CurTime()
+        if ach.time < now then table.remove(AchTable, i) continue end
 
-        ach.Lerp = Lerp( frametime, ach.Lerp or 0, math.min( ach.time - CurTime(), 1 ) * i )
-        WSize, HSize = (ScrW() * 0.1) + (wt), ScrH() * 0.05
-        local HPos = ScrH() - ( HSize * ach.Lerp )
-        draw.RoundedBox( 0, 2, HPos + 2, WSize - 4, HSize - 4, ach_clr2 )
-		
-		surface.SetDrawColor(155, 0, 0, 255)
-		surface.SetMaterial(gradient_u)
-		surface.DrawTexturedRect( 0, HPos, WSize, HSize )
-	
-		surface.SetDrawColor( 150, 0, 0, 255)
-		surface.DrawOutlinedRect( 0, HPos, WSize, HSize, 2.5 )
+        ach.img = isstring(ach.img) and Material(ach.img, "smooth") or ach.img
+        local rarityColor = AchievementGetRarityColor(ach.rarity)
+        local elapsed = now - ach.start
+        local remaining = ach.time - now
+        local enter = math.ease.OutCubic(math.Clamp(elapsed / 0.45, 0, 1))
+        local leave = math.ease.InCubic(math.Clamp(remaining / 0.55, 0, 1))
+        local visibility = math.min(enter, leave)
+        local cardW = math.Clamp(ScrW() * 0.27, 380, 560)
+        local cardH = math.Clamp(ScrH() * 0.105, 94, 126)
+        local margin = math.max(20, ScrH() * 0.025)
+        local x = margin - (1 - visibility) * (cardW + margin)
+        local y = ScrH() - margin - cardH - (i - 1) * (cardH + 12)
+        draw.RoundedBox(8, x, y, cardW, cardH, Color(9, 10, 16, 245 * visibility))
+        draw.RoundedBox(8, x, y, cardW, cardH, Color(rarityColor.r * 0.12, rarityColor.g * 0.12, rarityColor.b * 0.12, 190 * visibility))
+        surface.SetDrawColor(rarityColor.r, rarityColor.g, rarityColor.b, 245 * visibility)
+        surface.DrawRect(x, y, 5, cardH)
+        surface.DrawOutlinedRect(x, y, cardW, cardH, 2)
 
+        local iconSize = cardH - 24
+        local iconX, iconY = x + 16, y + 12
+        draw.RoundedBox(6, iconX, iconY, iconSize, iconSize, Color(0, 0, 0, 145 * visibility))
+        surface.SetDrawColor(rarityColor.r, rarityColor.g, rarityColor.b, 255 * visibility)
+        surface.SetMaterial(ach.img or achievement_placeholder)
+        surface.DrawTexturedRect(iconX + 8, iconY + 8, iconSize - 16, iconSize - 16)
+
+        local textX = iconX + iconSize + 17
+        draw.SimpleText(string.upper(ach.rarity or "Uncommon") .. " ACHIEVEMENT", "ZCity_Ach_Tiny", textX, y + 20, rarityColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        local availableTextW = cardW - (textX - x) - 18
+        local displayName = ach.name
         surface.SetFont("HomigradFontMedium")
-        surface.SetTextColor(255,255,255)
-        surface.SetTextPos(HSize*1.25,(HPos + ( HSize/2 ) - ( HSize/4 )) )
-        surface.DrawText(txt)
-        surface.SetDrawColor(255,255,255)
-        surface.SetMaterial(ach.img)
-        surface.DrawTexturedRect(2,HPos+2,HSize-4,HSize-4)
-        if ach.time < CurTime() then 
-            table.remove(AchTable,i)
+        while #displayName > 3 and surface.GetTextSize(displayName) > availableTextW do
+            displayName = displayName:sub(1, -2)
+        end
+        if displayName ~= ach.name then displayName = displayName:sub(1, -4) .. "..." end
+        draw.SimpleText(displayName, "HomigradFontMedium", textX, y + cardH * 0.53, Color(255, 255, 255, 255 * visibility), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        draw.SimpleText("ACHIEVEMENT UNLOCKED", "ZCity_Ach_Tiny", textX, y + cardH - 20, Color(180, 185, 195, 230 * visibility), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+
+        for _, spark in ipairs(ach.sparks or {}) do
+            local sparkX = x + cardW * ((spark.x + elapsed * spark.speed) % 0.35)
+            local sparkY = y + cardH * spark.y + math.sin(now * 3 + spark.phase) * 5
+            local sparkAlpha = (90 + math.sin(now * 6 + spark.phase) * 70) * visibility
+            surface.SetDrawColor(rarityColor.r, rarityColor.g, rarityColor.b, sparkAlpha)
+            surface.DrawRect(sparkX, sparkY, spark.size, spark.size)
         end
     end
 end)

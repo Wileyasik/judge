@@ -82,7 +82,10 @@ MODE.LootTable = {
 		{0.5,"weapon_naloxone"},
 		{0.1,"weapon_fentanyl"},
 		{0.9,"weapon_betablock"},
-		{0.5,"weapon_adrenaline"},
+		{0.6,"weapon_adrenaline"},
+		{0.5,"weapon_midazolam"},
+		{0.3,"weapon_defibrillator"},
+		{0.10,"hg_brassknuckles"},
 
 		{0.65,"ent_armor_mask2"},
 		{0.27, "ent_armor_helmet2"},
@@ -96,6 +99,8 @@ MODE.LootTable = {
 		{1,"weapon_metalbat"},
 		{4,"weapon_leadpipe"},
 		{3,"weapon_hg_extinguisher"},
+		{0.25,"weapon_chainsaw"},
+		{0.75,"weapon_defibrillator"},
 
 		{2,"weapon_hg_crowbar"},
 		{1,"weapon_hatchet"},
@@ -103,7 +108,7 @@ MODE.LootTable = {
 		{0.5,"weapon_hg_machete"},
 		{0.4,"weapon_hg_sledgehammer"},
 
-		{0.2,"hg_brassknuckles"},
+		{1,"hg_brassknuckles"},
 		{0.13,"weapon_hg_spear"},
 		{0.13, "weapon_hg_spear_pro"},
 	}},
@@ -127,6 +132,7 @@ MODE.LootTable = {
 		{3.5,"weapon_m1911"},
 		{3,"weapon_m9beretta"},
 		{2,"weapon_fn45"},
+		{2,"weapon_chainsaw"},
 	}},
 	{6, {
 		{9,"weapon_hk_usp"},
@@ -169,6 +175,7 @@ MODE.LootTable = {
 		{1,"weapon_musket"},
 		{1,"weapon_vpo136"},
 		{1,"weapon_sr25"},
+		{3,"weapon_chainsaw"},
 	}},
 }
 
@@ -304,10 +311,10 @@ MODE.Types.standard = {
 	LootTable = MODE.LootTableSingle,
 	Messages = {
 		[3] = "Everyone died.",
-		[1] = "The murderer has killed everyone.",
-		[0] = "The murderer was",
+		[1] = "The Executioner has eliminated everyone.",
+		[0] = "The Executioner was",
 	},
-	Message = "The murderer was ",
+	Message = "The Executioner was ",
 	TraitorLoot = function(ply)
 		ply:Give("weapon_buck200knife")
 		ply:Give("weapon_hg_type59_tpik")
@@ -520,10 +527,10 @@ MODE.Types.gunfreezone = {
 	LootTable = MODE.LootTableStandard,
 	Messages = {
 		[3] = "Everyone died.",
-		[1] = "The murderer has killed everyone.",
-		[0] = "The murderer was",
+		[1] = "The Executioner has eliminated everyone.",
+		[0] = "The Executioner was",
 	},
-	Message = "The murderer was ",
+	Message = "The Executioner was ",
 	TraitorLoot = function(ply)
 		ply:Give("weapon_buck200knife")
 		ply:Give("weapon_hg_type59_tpik")
@@ -1257,7 +1264,7 @@ function MODE:SendTraitorDeathState(traitor, is_alive)
 
     local recipients = {}
     for _, ply in player.Iterator() do
-        if ply.isTraitor and ply.MainTraitor then
+        if ply.isTraitor then
             table.insert(recipients, ply)
         end
     end
@@ -1293,7 +1300,7 @@ hook.Add("PlayerCanPickupWeapon", "HMCD_TraitorRadioPickup", function( ply, weap
 end)
 
 net.Receive("HMCD_RequestTraitorStatuses", function(len, ply)
-    if not ply.isTraitor or not ply.MainTraitor then return end
+    if not ply.isTraitor then return end
     
 
     for _, other_ply in player.Iterator() do
@@ -1879,21 +1886,19 @@ function MODE.SpawnPlayers(spawn_with_subroles)
                         net.WriteUInt(0, MODE.TraitorExpectedAmtBits)
                     end
                     
-                    if (this_player.MainTraitor) then
-                        timer.Simple(0.5, function()
-                            if IsValid(this_player) and this_player.isTraitor and this_player.MainTraitor then
-                                net.Start("HMCD_UpdateTraitorAssistants")
-                                    net.WriteUInt(#traitor_associates, 8)
-                                    
-                                    for _, info in ipairs(traitor_associates) do
-                                        net.WriteColor(info[1])
-                                        net.WriteString(info[2])
-										net.WriteString(IsValid(info[3]) and (info[3]:SteamID() or "") or "")
-                                    end
-                                net.Send(this_player)
-                            end
-                        end)
-                    end
+                    timer.Simple(0.5, function()
+                        if IsValid(this_player) and this_player.isTraitor then
+                            net.Start("HMCD_UpdateTraitorAssistants")
+                                net.WriteUInt(#traitor_associates, 8)
+                                
+                                for _, info in ipairs(traitor_associates) do
+                                    net.WriteColor(info[1])
+                                    net.WriteString(info[2])
+									net.WriteString(IsValid(info[3]) and (info[3]:SteamID() or "") or "")
+                                end
+                            net.Send(this_player)
+                        end
+                    end)
                     
                     net.WriteString(this_player.Profession or "")
                 net.Send(this_player)
@@ -1911,12 +1916,12 @@ hook.Add("PlayerSpawn", "HMCD_UpdateTraitorsList", function(ply)
 	if not ply.isTraitor then return end
 	
 	timer.Simple(0.5, function()
-		for _, main_traitor in player.Iterator() do
-			if IsValid(main_traitor) and main_traitor.isTraitor and main_traitor.MainTraitor then
+		for _, traitor_ply in player.Iterator() do
+			if IsValid(traitor_ply) and traitor_ply.isTraitor then
 				local traitor_assistants = {}
 				
 				for _, other_ply in player.Iterator() do
-					if other_ply.isTraitor then
+					if other_ply.isTraitor and other_ply ~= traitor_ply then
 						local Appearance = other_ply.CurAppearance
 						if Appearance then
 							local color = Appearance.AColor or color_white
@@ -1941,7 +1946,7 @@ hook.Add("PlayerSpawn", "HMCD_UpdateTraitorsList", function(ply)
 					net.WriteString(info[3])
 				end
 				
-				net.Send(main_traitor)
+				net.Send(traitor_ply)
 			end
 		end
 	end)
@@ -1956,12 +1961,12 @@ hook.Add("PlayerDeath", "HMCD_UpdateTraitorsList", function(ply)
 		end
 		
 		timer.Simple(0.4, function()
-			for _, main_traitor in player.Iterator() do
-				if IsValid(main_traitor) and main_traitor.isTraitor and main_traitor.MainTraitor then
+			for _, traitor_ply in player.Iterator() do
+				if IsValid(traitor_ply) and traitor_ply.isTraitor then
 					local traitor_assistants = {}
 					
 					for _, other_ply in player.Iterator() do
-						if other_ply.isTraitor then
+						if other_ply.isTraitor and other_ply ~= traitor_ply then
 							local Appearance = other_ply.CurAppearance
 							if Appearance then
 								local color = Appearance.AColor or color_white
@@ -1986,7 +1991,7 @@ hook.Add("PlayerDeath", "HMCD_UpdateTraitorsList", function(ply)
 						net.WriteString(info[3])
 					end
 					
-					net.Send(main_traitor)
+					net.Send(traitor_ply)
 				end
 			end
 		end)

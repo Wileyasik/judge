@@ -45,7 +45,7 @@ local IsValid, math_Clamp = IsValid, math.Clamp
 	end
 	
 	local hg_firstperson_ragdoll = ConVarExists("hg_firstperson_ragdoll") and GetConVar("hg_firstperson_ragdoll") or CreateConVar("hg_firstperson_ragdoll", "0", FCVAR_ARCHIVE, "Toggle first-person ragdoll camera view", 0, 1) --!! unused??
-	local hg_firstperson_death = ConVarExists("hg_firstperson_death") and GetConVar("hg_firstperson_death") or CreateClientConVar("hg_firstperson_death", "0", true, false, "Toggle first-person death camera view", 0, 1)
+	local hg_firstperson_death = { GetBool = function() return false end }
 	local hg_thirdperson = ConVarExists("hg_thirdperson") and GetConVar("hg_thirdperson") or CreateConVar("hg_thirdperson", 0, FCVAR_REPLICATED, "Toggle third-person camera view", 0, 1)
 	local hg_gopro = ConVarExists("hg_gopro") and GetConVar("hg_gopro") or CreateClientConVar("hg_gopro", "0", true, false, "Toggle GoPro-like camera view", 0, 1)
 	local hg_deathfadeout = CreateClientConVar("hg_deathfadeout", "1", true, true, "Toggle screen fade and sound mute on death", 0, 1)
@@ -75,7 +75,7 @@ local IsValid, math_Clamp = IsValid, math.Clamp
 	local bandageHandsOnly = "00000010010000"
 
 	function hg.RenderBandageGloves(ent, ply)
-		local mdl = ply:GetNWString("BandageGlovesMdl", "")
+		local mdl = ply.PlayerClassName ~= "swat" and ply:GetNWString("BandageGlovesMdl", "") or ""
 		if mdl == "" then
 			if IsValid(ent.bandageGlovesModel) then
 				ent.bandageGlovesModel:Remove()
@@ -101,25 +101,20 @@ local IsValid, math_Clamp = IsValid, math.Clamp
 		model:SetParent(ent)
 		model:AddEffects(EF_BONEMERGE)
 
-		if not model.BandageBGsApplied then
+		local org = ply.organism or {}
+		local amputatedHands = tostring(org.larmupamputated or org.larmamputated or org.lhandamputated) .. tostring(org.rarmupamputated or org.rarmamputated or org.rhandamputated)
+		if model.BandageAmputatedHands ~= amputatedHands then
 			for i = 0, 13 do
 				local charVal = string.byte(bandageHandsOnly, i + 1) - 48
-				if charVal > 0 then
-					local bgName = bandageBGNames[i]
-					if bgName then
-						local bgIdx = model:FindBodygroupByName(bgName)
-						if bgIdx and bgIdx >= 0 then
-							model:SetBodygroup(bgIdx, charVal)
-						else
-							bgIdx = model:FindBodygroupByName(bgName .. "-f")
-							if bgIdx and bgIdx >= 0 then
-								model:SetBodygroup(bgIdx, charVal)
-							end
-						end
-					end
-				end
+				if i == 6 and (org.larmupamputated or org.larmamputated or org.lhandamputated) then charVal = 0 end
+				if i == 9 and (org.rarmupamputated or org.rarmamputated or org.rhandamputated) then charVal = 0 end
+				local bgName = bandageBGNames[i]
+				if not bgName then continue end
+				local bgIdx = model:FindBodygroupByName(bgName)
+				if not bgIdx or bgIdx < 0 then bgIdx = model:FindBodygroupByName(bgName .. "-f") end
+				if bgIdx and bgIdx >= 0 then model:SetBodygroup(bgIdx, charVal) end
 			end
-			model.BandageBGsApplied = true
+			model.BandageAmputatedHands = amputatedHands
 		end
 
 		local clr = ply.CurAppearance and ply.CurAppearance.AColor
@@ -180,6 +175,8 @@ local IsValid, math_Clamp = IsValid, math.Clamp
 		if armors and next(armors) and not hideArmorRender then
 			RenderArmors(ply, armors, ent)
 		end
+
+		if hg.RenderDefibs then hg.RenderDefibs(ent, ply) end
 
 		hg.RenderBandages(ent, ply)
 

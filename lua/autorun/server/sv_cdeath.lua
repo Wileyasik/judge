@@ -47,7 +47,7 @@ hook.Add("PlayerDeath", "DeathEffect_OnDeath", function(ply)
         ply:SetNWBool("DeathEffect_BlockRespawn", false)
 
         timer.Simple(0, function()
-            if IsValid(ply) and not ply:Alive() then
+            if IsValid(ply) and not ply:Alive() and ply.CanSpawn and ply:CanSpawn() then
                 ply:Spawn()
             end
         end)
@@ -76,6 +76,7 @@ end)
 -- client triggers
 net.Receive("DeathEffect_Respawn", function(len, ply)
     if IsValid(ply) and not ply:Alive() then
+        if not ply.CanSpawn or not ply:CanSpawn() then return end
         ply:SetNWBool("DeathEffect_BlockRespawn", false)
         ply:UnSpectate()
         ply:Spawn()

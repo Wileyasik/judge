@@ -61,8 +61,19 @@ if SERVER then
 	
 	local time = CurTime()
 	local CurTime = CurTime
+	local IsValid = IsValid
+	local isnumber = isnumber
+	local ipairs = ipairs
+	local pairs = pairs
+	local TraceLine = util.TraceLine
+	local net_Start = net.Start
+	local net_WriteTable = net.WriteTable
+	local net_WriteVector = net.WriteVector
+	local net_WriteEntity = net.WriteEntity
+	local net_Broadcast = net.Broadcast
 	hook.Add("Think", "drum_think", function()
-		if time > CurTime() then return end
+		local now = CurTime()
+		if time > now then return end
 		time = time + 0.1
 
 		for i, drum in pairs(hg.drums) do
@@ -73,26 +84,27 @@ if SERVER then
 	local time2 = CurTime()
 	local ents_FindInSphere = ents.FindInSphere
 	hook.Add("Think", "path_think", function()
-		if time2 > CurTime() then return end
+		local now = CurTime()
+		if time2 > now then return end
 		time2 = time2 + 1
 
 		for i, tbl in ipairs(hg.gasolinePath) do
 			local pos, ignited = tbl[1], tbl[2]
 			
-			if isnumber(ignited) and (ignited + 60) < CurTime() then tbl[2] = true continue end
+			if isnumber(ignited) and (ignited + 60) < now then tbl[2] = true continue end
 			
 			if isnumber(ignited) then
 				local something_ignited = false
 				
-				for i, tbl2 in ipairs(hg.gasolinePath) do
-					if not tbl2[2] and (tbl[1] - tbl2[1]):LengthSqr() < 2048 then
-						tbl2[2] = CurTime()
+				for _, tbl2 in ipairs(hg.gasolinePath) do
+					if not tbl2[2] and pos:DistToSqr(tbl2[1]) < 2048 then
+						tbl2[2] = now
 						tbl2[3] = tbl[3] or tbl2[3]
 						something_ignited = true
 					end
 				end
 			
-				for i, obj in ipairs(ents_FindInSphere(pos, 32)) do
+				for _, obj in ipairs(ents_FindInSphere(pos, 32)) do
 					if obj:GetMoveType() == MOVETYPE_NONE then continue end
 					
 					if IsValid(obj) and (((not obj:IsPlayer()) or (obj:Alive() and obj:GetMoveType() != MOVETYPE_NOCLIP and !IsValid(obj.FakeRagdoll))) and not obj:IsOnFire() and obj:WaterLevel() < 1)  then
@@ -102,9 +114,9 @@ if SERVER then
 					end
 				end
 			elseif not ignited then
-				for i, obj in ipairs(ents_FindInSphere(pos, 32)) do
+				for _, obj in ipairs(ents_FindInSphere(pos, 32)) do
 					if IsValid(obj) and obj:GetClass() == "vfire" then
-						tbl[2] = CurTime()
+						tbl[2] = now
 						tbl[3] = obj:GetOwner() or obj
 						break
 					end
@@ -137,6 +149,8 @@ if SERVER then
 	end)
 
 	local vecTemp = Vector(0, 0, 0)
+	local vecCenter = Vector(0, 0, 0)
+	local worldEnt = Entity(0)
 	
 	hook.Add("Drum Think", "Main", function(i, drum)
 		local ent = drum.Entity
@@ -147,14 +161,17 @@ if SERVER then
 			return
 		end
 
+		local now = CurTime()
 		local pos = ent:GetPos()
-		local maxs, mins, center = ent:OBBMaxs(), ent:OBBMins(), ent:OBBCenter()
+		local ang = ent:GetAngles()
+		local vel = ent:GetVelocity()
+		local obbCenter = ent:OBBCenter()
 		
-		ent.lastvel = ent.lastvel or ent:GetVelocity()
+		ent.lastvel = ent.lastvel or vel
 
-		local diff = ent.lastvel:LengthSqr() - ent:GetVelocity():LengthSqr()
+		local diff = ent.lastvel:LengthSqr() - vel:LengthSqr()
 		if math.abs(diff) > 75 * 75 and drum.Volume > 1 then
-			ent.lastvel = ent:GetVelocity()
+			ent.lastvel = vel
 
 			ent:EmitSound("player/footsteps/wade3.wav", 65, math.random(55, 75) * math.Clamp(2 - drum.Volume * 0.1, 1, 2))
 		--elseif diff > 0 then
@@ -165,16 +182,17 @@ if SERVER then
 			ent.Volume = drum.Volume
 			local high_point = vecZero
 			high_point:Set(point[1])
-			high_point:Rotate(ent:GetAngles())
+			high_point:Rotate(ang)
 
-			local center = ent:OBBCenter()
-			center:Rotate(ent:GetAngles())
+			local center = vecCenter
+			center:Set(obbCenter)
+			center:Rotate(ang)
 			
 			local dot = math.max(math.abs(vector_up:Dot(ent:GetUp())), 0.99)
-			vecTemp[3] = drum.Volume / dot - ent:OBBCenter()[3]
+			vecTemp[3] = drum.Volume / dot - obbCenter[3]
 			
 			local volumePos = center + vecTemp
-			volumePos:Add(ent:GetVelocity() / 8)
+			volumePos:Add(vel / 8)
 			
 			if math_Round(high_point[3], 1) < math_Round(volumePos[3], 1) + 1 then
 				drum.Volume = math_max(drum.Volume - 0.1, 0)
@@ -182,29 +200,32 @@ if SERVER then
 				drum.loopsound = drum.loopsound or CreateSound(ent,"ambient/water/leak_1.wav")
 				drum.loopsound:Play()
 
-				local tr = {}
+				local tr = drum._traceData
+				if not tr then
+					tr = {filter = ent}
+					drum._traceData = tr
+				end
 				tr.start = pos + high_point
 				tr.endpos = tr.start + -vector_up * 256
-				tr.filter = ent
 
-				tr = util.TraceLine(tr)
+				tr = TraceLine(tr)
 				
-				if tr.Hit and tr.Entity == Entity(0) then
-					if (drum.lastFireCreated or 0) < CurTime() then
-						drum.lastFireCreated = CurTime() + 0.2
+				if tr.Hit and tr.Entity == worldEnt then
+					if (drum.lastFireCreated or 0) < now then
+						drum.lastFireCreated = now + 0.2
 
 						hg.gasolineNextId = hg.gasolineNextId + 1
 						table.insert(hg.gasolinePath, {tr.HitPos, false, nil, hg.gasolineNextId, CurTime()})
 					end
-				elseif tr.Entity != Entity(0) then
+				elseif tr.Entity != worldEnt then
 					tr.Entity.shouldburn = tr.Entity.shouldburn and tr.Entity.shouldburn + 1 or 1
 				end
 
-				net.Start("gas particle")
-				net.WriteVector(pos + high_point)
-				net.WriteVector(vector_up * 0 + ent:GetVelocity() + VectorRand(-15, 15) + (pos + high_point - (center + ent:GetPos())):GetNormalized() * 60)
-				net.WriteEntity(ent)
-				net.Broadcast()
+				net_Start("gas particle")
+				net_WriteVector(pos + high_point)
+				net_WriteVector(vel + VectorRand(-15, 15) + (pos + high_point - (center + pos)):GetNormalized() * 60)
+				net_WriteEntity(ent)
+				net_Broadcast()
 			else
 				if drum.loopsound then
 					drum.loopsound:Stop()
@@ -213,7 +234,7 @@ if SERVER then
 				drum.leaking = false
 			end
 
-			if point[2] < CurTime() then point[2] = point[2] + 0.1 end
+			if point[2] < now then point[2] = point[2] + 0.1 end
 		end
 
 		if drum.Volume <= 0.5 then

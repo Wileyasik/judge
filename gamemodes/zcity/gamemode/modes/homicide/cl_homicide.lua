@@ -15,6 +15,9 @@ local HMCD_ScreenDuration = 10
 local hmcd_show_associates
 local hmcd_clear_associates
 net.Receive("HMCD_RoundStart",function()
+	local lply = LocalPlayer()
+	if not IsValid(lply) then return end
+
 	for i, ply in player.Iterator() do
 		ply.isTraitor = false
 		ply.isGunner = false
@@ -41,10 +44,10 @@ net.Receive("HMCD_RoundStart",function()
 			if(MODE.TraitorExpectedAmt == 2)then
 				chat.AddText("You have 1 accomplice")
 			else
-				chat.AddText("There are(is) " .. MODE.TraitorExpectedAmt - 1 .. " traitor(s) besides you")
+				chat.AddText("There are " .. (MODE.TraitorExpectedAmt - 1) .. " other executioners besides you.")
 			end
 
-			chat.AddText("Traitor secret words are: \"" .. MODE.TraitorWord .. "\" and \"" .. MODE.TraitorWordSecond .. "\".")
+			chat.AddText("Executioner secret words are: \"" .. MODE.TraitorWord .. "\" and \"" .. MODE.TraitorWordSecond .. "\".")
 		end
 
 		local associate_count = net.ReadUInt(4)
@@ -60,14 +63,12 @@ net.Receive("HMCD_RoundStart",function()
 
 			MODE.TraitorAssociates[#MODE.TraitorAssociates + 1] = traitor_info
 
-			if(lply.MainTraitor)then
-				MODE.TraitorsLocal[#MODE.TraitorsLocal + 1] = {traitor_info.color, traitor_info.name}
-			end
+			MODE.TraitorsLocal[#MODE.TraitorsLocal + 1] = {traitor_info.color, traitor_info.name, IsValid(traitor_info.ply) and traitor_info.ply:SteamID() or ""}
 		end
 
 		if(lply.MainTraitor)then
 			if(MODE.TraitorExpectedAmt > 1)then
-				chat.AddText("Traitor names (only you, as a main traitor can see them):")
+				chat.AddText("Executioner names (only the main Executioner can see them):")
 			end
 
 			for _, traitor_info in ipairs(MODE.TraitorsLocal) do
@@ -106,7 +107,7 @@ net.Receive("HMCD_RoundStart",function()
 	MODE.CursorLerpY = 0
 
 	fade = 0
-	hmcd_show_associates()
+	hmcd_clear_associates()
 end)
 
 MODE.TypeNames = {
@@ -179,22 +180,22 @@ surface.CreateFont("ZB_HomicideHumongous", {
 MODE.TypeObjectives = {}
 MODE.TypeObjectives.standard = {
 	traitor = {
-		objective = "You're geared up with items, poisons, explosives and weapons hidden in your pockets. Murder everyone here.",
-		name = "a Murderer",
+		objective = "You're geared up with items, poisons, explosives and weapons hidden in your pockets. Eliminate everyone before the Judge stops you.",
+		name = "an Executioner",
 		color1 = Color(190,0,0),
 		color2 = Color(190,0,0)
 	},
 
 	gunner = {
-		objective = "You are a hero. You've tasked yourself to help police find the criminal faster.",
-		name = "a Hero",
+		objective = "You are the Judge. Use your loadout to identify and stop the Executioner.",
+		name = "the Judge",
 		color1 = Color(158,0,190),
 		color2 = Color(158,0,190)
 	},
 
 	innocent = {
-		objective = "You are a bystander of a murder scene, although it didn't happen to you, you better be cautious.",
-		name = "a Bystander",
+		objective = "You are a potential victim. Survive, stay cautious and help identify the Executioner.",
+		name = "a Victim",
 		color1 = Color(0,120,190)
 	},
 }
@@ -418,6 +419,8 @@ hmcd_show_associates = function()
 end
 
 function MODE:HUDPaint()
+	local lply = LocalPlayer()
+	if not IsValid(lply) then return end
 	if not MODE.Type or not MODE.TypeObjectives[MODE.Type] then return end
 	if lply:Team() == TEAM_SPECTATOR then return end
 
@@ -485,21 +488,19 @@ function MODE:HUDPaint()
 	if(lply.isTraitor)then
 		cur_y = cur_y + ScreenScale(20)
 
-		if(lply.MainTraitor)then
-			MODE.TraitorsLocal = MODE.TraitorsLocal or {}
+		MODE.TraitorsLocal = MODE.TraitorsLocal or {}
 
-			if(#MODE.TraitorsLocal > 1)then
-				add("Traitors list:", "ZB_HomicideMedium", ColorRole, sw * 0.5, cur_y, "right", stack_delay, 1.05)
+		if(#MODE.TraitorsLocal > 0)then
+			add("Executioners list:", "ZB_HomicideMedium", ColorRole, sw * 0.5, cur_y, "right", stack_delay, 1.05)
+			stack_delay = stack_delay + 0.15
+
+			for _, traitor_info in ipairs(MODE.TraitorsLocal) do
+				cur_y = cur_y + ScreenScale(15)
+				add(traitor_info[2], "ZB_HomicideMedium", Color(traitor_info[1].r, traitor_info[1].g, traitor_info[1].b), sw * 0.5, cur_y, "right", stack_delay, 1.05)
 				stack_delay = stack_delay + 0.15
-
-				for _, traitor_info in ipairs(MODE.TraitorsLocal) do
-					cur_y = cur_y + ScreenScale(15)
-					add(traitor_info[2], "ZB_HomicideMedium", Color(traitor_info[1].r, traitor_info[1].g, traitor_info[1].b), sw * 0.5, cur_y, "right", stack_delay, 1.05)
-					stack_delay = stack_delay + 0.15
-				end
 			end
-		else
-			add("Traitor secret words:", "ZB_HomicideMedium", ColorRole, sw * 0.5, cur_y, "right", stack_delay, 1.05)
+		elseif(!lply.MainTraitor)then
+			add("Executioner secret words:", "ZB_HomicideMedium", ColorRole, sw * 0.5, cur_y, "right", stack_delay, 1.05)
 			stack_delay = stack_delay + 0.15
 
 			cur_y = cur_y + ScreenScale(15)
@@ -533,7 +534,7 @@ function MODE:HUDPaint()
 	end
 
 	if(!lply.MainTraitor and lply.isTraitor)then
-		Objective = "You are equipped with nothing. Help other traitors win."
+		Objective = "You are equipped with nothing. Help the other Executioners win."
 	end
 
 	--; WARNING Traitor's objective is not lined up with SubRole's
@@ -624,7 +625,7 @@ net.Receive("hmcd_announce_traitor_lose", function()
 	local traitor_alive = net.ReadBool()
 
 	if(IsValid(traitor))then
-		chat.AddText(color_white, (traitor_alive and "" or "Traitor "), traitor:GetPlayerColor():ToColor(), traitor:GetPlayerName() .. ", " .. traitor:Nick(), color_white, " was " .. (traitor_alive and "a Traitor." or "killed."))
+		chat.AddText(color_white, (traitor_alive and "" or "Executioner "), traitor:GetPlayerColor():ToColor(), traitor:GetPlayerName() .. ", " .. traitor:Nick(), color_white, " was " .. (traitor_alive and "an Executioner." or "killed."))
 	end
 end)
 
@@ -722,9 +723,9 @@ CreateEndMenu = function(traitor)
 	hmcdEndMenu.PaintOver = function(self,w,h)
 		surface.SetFont( "ZB_InterfaceMediumLarge" )
 		surface.SetTextColor(col.r,col.g,col.b,col.a)
-		local lengthX, lengthY = surface.GetTextSize(traitorName .. " was a traitor ("..traitorNick..")")
+		local lengthX, lengthY = surface.GetTextSize(traitorName .. " was an Executioner ("..traitorNick..")")
 		surface.SetTextPos(w / 2 - lengthX / 2, 20)
-		surface.DrawText(traitorName .. " was a traitor ("..traitorNick..")")
+		surface.DrawText(traitorName .. " was an Executioner ("..traitorNick..")")
 	end
 
 	-- PLAYERS
@@ -802,7 +803,7 @@ net.Receive("HMCD(StartPlayersRoleSelection)", function()
 end)
 
 function hg.SelectPlayerRole(role, mode)
-	role = role or "Traitor"
+	role = role or "Executioner"
 	mode = mode or "standard"
 
 	if(IsValid(VGUI_HMCD_RolePanelList))then

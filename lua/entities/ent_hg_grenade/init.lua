@@ -290,37 +290,42 @@ function ENT:Explode()
 	local dis = self.BlastDis / 0.01905 * GRENADE_BLAST_RADIUS_MULT
 	local disorientation_dis = GRENADE_DISORIENTATION_RADIUS / 0.01905
 	local entsCount = 0
+	local propForces = {}
 	for i, enta in ipairs(ents.FindInSphere(selfPos, disorientation_dis)) do
-		local tracePos = enta:IsPlayer() and (enta:GetPos() + enta:OBBCenter()) or enta:GetPos()
-		local tr = hg.ExplosionTrace(selfPos, tracePos, {self})
+		local entPos = enta:GetPos()
 		local phys = enta:GetPhysicsObject()
 		if IsValid(phys) then
 			entsCount = entsCount + 1
 		end
-		
-		local phys = enta:GetPhysicsObject()
-		local force = (enta:GetPos() - selfPos)
+
+		local force = entPos - selfPos
 		local len = force:Length()
-		force:Div(len)
 		local frac = math.Clamp((disorientation_dis - len) / disorientation_dis, 0.1, 1)
-		local physics_frac = math.Clamp((dis - len) / dis, 0.5, 1)
-		local forceadd = force * physics_frac * GRENADE_KNOCKBACK_FORCE
-		local liftForce = Vector(0, 0, GRENADE_LIFT_FORCE * physics_frac * GRENADE_LIFT_FRAC)
+		local tracePos = enta:IsPlayer() and (entPos + enta:OBBCenter()) or entPos
+		local tr = hg.ExplosionTrace(selfPos, tracePos, {self})
 
 		if enta.organism then
 			if IsValid(enta.organism.owner) and enta.organism.owner:IsPlayer() then
-if not enta.organism.owner.organism or not enta.organism.owner.organism.godmode then
-				local behindwall = tr.Entity != enta and tr.MatType != MAT_GLASS
-				local div = behindwall and hg.GetBlastWallAttenuation(tr) or 1
-				hg.ExplosionDisorientation(enta, 5 * frac / div, 6 * frac / div)
-				hg.RunZManipAnim(enta.organism.owner, "shieldexplosion")
-			end
+				if not enta.organism.owner.organism or not enta.organism.owner.organism.godmode then
+					local behindwall = tr.Entity != enta and tr.MatType != MAT_GLASS
+					local div = behindwall and hg.GetBlastWallAttenuation(tr) or 1
+					hg.ExplosionDisorientation(enta, 5 * frac / div, 6 * frac / div)
+					hg.RunZManipAnim(enta.organism.owner, "shieldexplosion")
+				end
 			end
 		end
 
 		if len > dis then continue end
-		if tr.Entity != enta then continue end
+		if len > 0 then
+			force:Div(len)
+		else
+			force:Set(vector_up)
+		end
 
+		local physics_frac = math.Clamp((dis - len) / dis, 0.5, 1)
+		local forceadd = force * physics_frac * GRENADE_KNOCKBACK_FORCE
+		local liftForce = Vector(0, 0, GRENADE_LIFT_FORCE * physics_frac * GRENADE_LIFT_FRAC)
+		if tr.Entity != enta then continue end
 
 		if enta:IsPlayer() then
 			local isGod = enta.organism and enta.organism.godmode

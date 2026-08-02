@@ -325,8 +325,12 @@ hook.Add( "StartCommand", "Glide.MouseWheelInput", function( ply, cmd )
 end )
 
 local FrameTime = FrameTime
+local next = next
+local pairs = pairs
 
 hook.Add( "Think", "Glide.ProcessMouseInput", function()
+    if not next( activeData ) then return end
+
     local dt = FrameTime()
 
     for ply, active in pairs( activeData ) do
