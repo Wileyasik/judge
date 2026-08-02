@@ -19,7 +19,7 @@ SWEP.AttachmentPos = Vector(3.5,-0.2,-0.05)
 SWEP.AttachmentAng = Angle(0,0,0)
 SWEP.StartAtt = {"optic3"}
 
-SWEP.ViewPunchDiv = 235
+SWEP.ViewPunchDiv = 1
 SWEP.FakeBodyGroups = "02111111114"
 SWEP.CantFireFromCollision = true
 
@@ -90,7 +90,7 @@ SWEP.RHAng = Angle(0, -5, 90)
 SWEP.LHPos = Vector(15, -1, -3)
 SWEP.LHAng = Angle(-110, -90, -90)
 SWEP.UseCustomWorldModel = true
-SWEP.ViewPunchDiv = 115
+SWEP.ViewPunchDiv = 1
 
 -- Характеристики
 SWEP.Primary.ClipSize = 10
@@ -105,6 +105,7 @@ SWEP.Primary.Spread = 0
 -- Исправленные пути к звукам выстрела (SVDS)
 SWEP.Primary.Sound = {"weapons/darsu_eft/svds/svd_fire_close.ogg", 85, 100, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/svds/svd_fire_silenced_close.ogg", 65, 100, 100}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.45 
 SWEP.NumBullet = 1
 

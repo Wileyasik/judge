@@ -31,7 +31,9 @@ SWEP.Primary.Damage = 16
 SWEP.Primary.Spread = Vector(0.02, 0.02, 0.02)
 SWEP.Primary.Force = 12
 SWEP.Primary.Sound = {"sound/weapons/darsu_eft/mr43/mr43_fire_indoor_close1.wav", 80, 100, 75}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_hammer.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0
+SWEP.ReloadTime = 8
 SWEP.OpenBolt = true
 
 SWEP.FakePos = Vector(-14, 1.75, 3)
@@ -56,7 +58,7 @@ SWEP.MagModel = "models/weapons/upgrades/w_magazine_m1a1_30.mdl"
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 70
+SWEP.ViewPunchDiv = 1
 
 SWEP.AnimList = {
 	["idle"] = "idle",
@@ -141,7 +143,7 @@ SWEP.animposmul = 1
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_UpperArm"
-SWEP.ViewPunchDiv = 30
+SWEP.ViewPunchDiv = 1
 
 SWEP.ReloadHold = "pistol"
 

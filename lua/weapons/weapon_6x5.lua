@@ -13,7 +13,7 @@ SWEP.DroppedWorldModel = "models/weapons/w_melee_6x5.mdl"
 SWEP.modelscale = 1.15
 SWEP.basebone = 76
 SWEP.weaponPos = Vector(2.6, 1.2, 3.3)
-SWEP.weaponAng = Angle(-15, 180, 180)
+SWEP.weaponAng = Angle(-16, 180, 180)
 
 function SWEP:Reload()
     local owner = self:GetOwner()

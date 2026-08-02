@@ -25,7 +25,7 @@ SWEP.FakeBodyGroupsPresets = {
 SWEP.FakeVPShouldUseHand = false
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_Forearm"
-SWEP.ViewPunchDiv = 50
+SWEP.ViewPunchDiv = 1
 
 SWEP.AnimList = {
 	["idle"] = "base_idle",
@@ -49,11 +49,14 @@ SWEP.AnimsEvents = {
 	},
     ["reload"] = {
         [0.1] = function(self) self:EmitSound("zcitysnd/sound/weapons/m9/handling/m9_magout.wav") end,
+        [0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in1.ogg") end,
+        [0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out1.ogg") end,
         [0.6] = function(self) self:EmitSound("zcitysnd/sound/weapons/m9/handling/m9_magin.wav") end,
     },
     ["reload_empty"] = {
         [0.025] = function(self) self:EmitSound("zcitysnd/sound/weapons/m9/handling/m9_boltrelease.wav") end,
 		[0.1] = function(self) self:EmitSound("zcitysnd/sound/weapons/m9/handling/m9_magout.wav") end,
+		[0.23] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out1.ogg") end,
 		[0.5] = function(self) self:EmitSound("zcitysnd/sound/weapons/m9/handling/m9_magin.wav") end,
 		[0.8] = function(self) self:EmitSound("zcitysnd/sound/weapons/m9/handling/m9_boltrelease.wav") end,
     },
@@ -90,7 +93,7 @@ SWEP.Primary.Ammo = "9x19 mm Parabellum"
 SWEP.Primary.Cone = 0
 SWEP.Primary.Damage = 25
 SWEP.Primary.Sound = {"weapons/darsu_eft/p226/p226_fire_close.ogg", 75, 90, 100}
-SWEP.Primary.SoundEmpty = {"weapons/darsu_eft/p226/p226_fire_silenced_indoor_distant.ogg", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_hammer.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Force = 22
 SWEP.Primary.Wait = PISTOLS_WAIT
 SWEP.ReloadTime = 3.5

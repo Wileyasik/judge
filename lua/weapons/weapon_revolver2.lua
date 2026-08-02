@@ -27,7 +27,7 @@ SWEP.AnimList = {
 SWEP.FakeAttachment = "1"
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 70
+SWEP.ViewPunchDiv = 1
 
 SWEP.FakeReloadSounds = {
 	[0.16] = "weapons/universal/uni_crawl_l_03.wav",

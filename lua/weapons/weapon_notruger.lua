@@ -28,7 +28,7 @@ SWEP.FakeBodyGroupsPresets = {
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_L_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 30
+SWEP.ViewPunchDiv = 1
 
 
 
@@ -52,7 +52,7 @@ SWEP.weaponInvCategory = 1
 SWEP.ShellEject = "ShotgunShellEject"
 SWEP.AutomaticDraw = false
 SWEP.UseCustomWorldModel = true
-SWEP.ViewPunchDiv = 115
+SWEP.ViewPunchDiv = 1
 
 -- РҐР°СЂР°РєС‚РµСЂРёСЃС‚РёРєРё
 SWEP.Primary.ClipSize = 15

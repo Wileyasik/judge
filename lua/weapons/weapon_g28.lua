@@ -1,4 +1,6 @@
 SWEP.Base = "homigrad_base"
+SWEP.ARC9ActionLHIKFadeOutTime = 0.1
+SWEP.ARC9ActionLHIKFadeInTime = 1
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "G28"
@@ -48,7 +50,7 @@ SWEP.FakeEjectBrassATT = "2"
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 45
+SWEP.ViewPunchDiv = 1
 SWEP.punchmul = 4
 SWEP.punchspeed = 0.7
 
@@ -164,7 +166,7 @@ SWEP.Primary.Spread = 0
 SWEP.Primary.Force = 30
 SWEP.Primary.Sound = {"weapons/darsu_eft/g28/g28_fire_outdoor_close.wav", 85, 90, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/g28/g28_fire_outdoor_silenced_close.wav", 65, 90, 100}
-SWEP.Primary.SoundEmpty = {"weapons/mk18/mk18_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.2
 SWEP.ReloadTime = 3.5
 

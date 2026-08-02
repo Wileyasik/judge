@@ -1,4 +1,6 @@
 SWEP.Base = "homigrad_base"
+SWEP.ARC9ActionLHIKFadeOutTime = 0.1
+SWEP.ARC9ActionLHIKFadeInTime = 0.3
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "RD-704"
@@ -83,7 +85,7 @@ SWEP.GunCamAng = Angle(190, -5, -100)
 SWEP.FakeEjectBrassATT = "2"
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 70
+SWEP.ViewPunchDiv = 1
 
 SWEP.AnimsEvents = {
 	["inspect"] = {
@@ -93,11 +95,14 @@ SWEP.AnimsEvents = {
 	},
 	["reload762"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/ak/akm_magout_metal.ogg") end,
+		[0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in3.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,
 		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/ak/akm_magin_metal.ogg") end,
 	},
 	["reload762_empty"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/ak/ak74_magrelease_button.ogg") end,
 		[0.15] = function(self) self:EmitSound("weapons/darsu_eft/ak/akm_magout_metal.ogg") end,
+		[0.23] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,
 		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/ak/akm_magin_metal.ogg") end,
 		[0.75] = function(self) self:EmitSound("weapons/darsu_eft/ak/akms_slider_up.ogg") end,
 		[0.83] = function(self) self:EmitSound("weapons/darsu_eft/ak/akms_slider_down.ogg") end,
@@ -193,7 +198,7 @@ SWEP.ShockMultiplier = 2
 SWEP.animposmul = 2
 SWEP.Primary.Sound = {"ak74/ak74_fp.wav", 85, 90, 100}
 SWEP.SupressedSound = {"ak74/ak74_suppressed_fp.wav", 65, 90, 100}
-SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/ak47/handling/ak47_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.1
 SWEP.ReloadTime = 3
 
@@ -228,11 +233,14 @@ SWEP.lengthSub = 25
 SWEP.handsAng = Angle(1, -1.5, 0)
 SWEP.DistSound = "ak74/ak74_dist.wav"
 
+SWEP.StartAtt = {"stock_ar15_fab_defense_gl_core_s"}
 SWEP.availableAttachments = {
+	stock = hg.GetAR15StockProfile(),
 	sight = {
 		["mountType"] = {"picatinny"},
 		["mount"] = {["picatinny"] = Vector(-17, 0.12, 1.7)},
-		["mountAngle"] = Angle(0, 0, 90)
+		["mountAngle"] = Angle(0, 0, 90),
+		["akScopeCorrections"] = true,
 	},
 	barrel = {
 		[1] = {"supressor8", Vector(0, 0, 0), {}},
@@ -285,6 +293,7 @@ function SWEP:DrawPost()
 		if not istable(partData) then return end
 
 		local modelPath = partName == "magazine" and self:GetActiveMagazineModel(partData.model, "held") or partData.model
+		if partName == "stock" then modelPath = self:GetActiveStockModel(modelPath) end
 		if not isstring(modelPath) or modelPath == "" then return end
 		local model = self.HeldARC9PartModels[partName]
 		if IsValid(model) and self.HeldARC9PartPaths[partName] ~= modelPath then
@@ -365,6 +374,7 @@ if CLIENT then
 		for partName, partData in pairs(self.ARC9Parts) do
 			if not istable(partData) or not isstring(partData.model) or partData.model == "" then continue end
 			local modelPath = partName == "magazine" and self:GetActiveMagazineModel(partData.model, "world") or partData.model
+			if partName == "stock" then modelPath = self:GetActiveStockModel(modelPath) end
 			local model = self.BC_DroppedPartModels[partName]
 
 			if IsValid(model) and self.BC_DroppedPartPaths[partName] ~= modelPath then
@@ -372,7 +382,7 @@ if CLIENT then
 				model = nil
 			end
 
-			if not IsValid(model) then
+			if modelPath ~= "" and not IsValid(model) then
 				model = ClientsideModel(modelPath, RENDERGROUP_BOTH)
 				if IsValid(model) then
 					model:SetNoDraw(true)

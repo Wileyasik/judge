@@ -135,7 +135,7 @@ SWEP.SightSlideOffset = 0.8
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_Forearm"
-SWEP.ViewPunchDiv = 50
+SWEP.ViewPunchDiv = 1
 SWEP.FakeMagDropBone = "magazine"
 SWEP.MagModel = "models/weapons/upgrades/a_magazine_fnp45_15.mdl"
 

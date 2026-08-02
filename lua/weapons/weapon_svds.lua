@@ -26,7 +26,7 @@ SWEP.lmagpos = Vector(0, 0, 0)
 SWEP.lmagang = Angle(0, 0, 0)
 SWEP.lmagpos2 = Vector(0, 0.3, 0)
 SWEP.lmagang2 = Angle(0, 0, 0)
-SWEP.ViewPunchDiv = 1000
+SWEP.ViewPunchDiv = 1
 
 
 local vector_full = Vector(1, 1, 1)
@@ -94,7 +94,7 @@ SWEP.WepSelectIcon2box = true
 SWEP.IconOverride = "entities/arc9_eft_svds.png"
 SWEP.weight = 4
 SWEP.weaponInvCategory = 1
-SWEP.CustomShell = "762x54"
+SWEP.CustomShell = "762x51"
 
 SWEP.AutomaticDraw = true
 SWEP.UseCustomWorldModel = false
@@ -108,6 +108,7 @@ SWEP.Primary.Damage = 70
 SWEP.Primary.Force = 70
 SWEP.Primary.Sound = {"weapons/darsu_eft/svds/svd_fire_close.ogg", 85, 100, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/svds/svd_fire_close_silenced.ogg", 65, 100, 100}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.DisableMuzzleDevices = true
 SWEP.availableAttachments = {
 	barrel = {

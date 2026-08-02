@@ -1,4 +1,6 @@
 SWEP.Base = "homigrad_base"
+SWEP.ARC9ActionLHIKFadeOutTime = 0.1
+SWEP.ARC9ActionLHIKFadeInTime = 1
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "SIG MCX SPEAR"
@@ -64,7 +66,7 @@ SWEP.FakeEjectBrassATT = "2"
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 70
+SWEP.ViewPunchDiv = 1
 
 local path = "weapons/darsu_eft/spear/"
 
@@ -76,11 +78,14 @@ SWEP.AnimsEvents = {
 	},
 	["reload0"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/aug/g36_mag_out.ogg") end,
+		[0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in3.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,
 		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/aug/g36_mag_in.ogg") end,
 	},
 	["reload_empty0_0"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/g36/g36_mag_releasebutton.ogg") end,
 		[0.15] = function(self) self:EmitSound("weapons/darsu_eft/g36/g36_mag_out.ogg") end,
+		[0.23] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,
 		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/g36/g36_mag_in.ogg") end,
 		[0.65] = function(self) self:EmitSound("weapons/darsu_eft/g36/g36_bolt_catchrelease.ogg") end,
 	},
@@ -186,8 +191,8 @@ SWEP.Primary.Force = 28
 SWEP.animposmul = 2
 SWEP.Primary.Sound = {"weapons/darsu_eft/spear/fire_new/mcx_spear_outdoor_silenced_close_loop3.wav", 85, 90, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/spear/fire_new/mcx_spear_outdoor_silenced_close_loop3.wav", 65, 90, 100}
-SWEP.Primary.SoundEmpty = {"weapons/darsu_eft/spear/spear_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
-SWEP.Primary.Wait = 0.085
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.Wait = 0.07792
 SWEP.ReloadTime = 3
 
 SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1"

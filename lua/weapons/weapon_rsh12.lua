@@ -25,7 +25,7 @@ SWEP.FakeBodyGroupsPresets = {
 SWEP.FakeVPShouldUseHand = false
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_Forearm"
-SWEP.ViewPunchDiv = 50
+SWEP.ViewPunchDiv = 1
 
 SWEP.AnimList = {
 	["idle"] = "base_idle",
@@ -52,11 +52,16 @@ SWEP.AnimsEvents = {
 	},
     ["fistful_start__0"] = {
         [0.1] = function(self) self:EmitSound(path .. "rsh_12_reload_start.ogg") end,
+        [0.23] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out1.ogg") end,
         [0.25] = function(self) self:EmitSound(path .. "rsh_12_purge_shells.ogg") end,
     },
     ["sg_reload_start1__0"] = {
         [0.1] = function(self) self:EmitSound(path .. "rsh_12_reload_start.ogg") end,
-        [0.4] = function(self) self:EmitSound(path .. "rsh_12_ammo_out.ogg") end,
+        [0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in1.ogg") end,
+        [0.4] = function(self)
+            self:EmitSound(path .. "rsh_12_ammo_out.ogg")
+            self:EmitSound("arc9_eft_shared/generic_mag_pouch_out1.ogg")
+        end,
         [0.55] = function(self) self:EmitSound(path .. "rsh_12_ammo_out.ogg") end,
         [0.65] = function(self) self:EmitSound(path .. "rsh_12_ammo_out.ogg") end,
         [0.95] = function(self) self:EmitSound(path .. "rsh_12_ammo_out.ogg") end,
@@ -64,17 +69,23 @@ SWEP.AnimsEvents = {
     },
     ["sg_reload_start2__0"] = {
         [0.1] = function(self) self:EmitSound(path .. "rsh_12_reload_start.ogg") end,
+        [0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in1.ogg") end,
+        [0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out1.ogg") end,
         [0.5] = function(self) self:EmitSound(path .. "rsh_12_ammo_out.ogg") end,
         [0.65] = function(self) self:EmitSound(path .. "rsh_12_ammo_out.ogg") end,
         [0.85] = function(self) self:EmitSound(path .. "rsh_12_ammo_out.ogg") end,
     },
     ["sg_reload_start3__0"] = {
         [0.1] = function(self) self:EmitSound(path .. "rsh_12_reload_start.ogg") end,
+        [0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in1.ogg") end,
+        [0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out1.ogg") end,
         [0.5] = function(self) self:EmitSound(path .. "rsh_12_ammo_out.ogg") end,
         [0.75] = function(self) self:EmitSound(path .. "rsh_12_ammo_out.ogg") end,
     },
     ["sg_reload_start4__0"] = {
         [0.1] = function(self) self:EmitSound(path .. "rsh_12_reload_start.ogg") end,
+        [0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in1.ogg") end,
+        [0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out1.ogg") end,
         [0.6] = function(self) self:EmitSound(path .. "rsh_12_ammo_out.ogg") end,
     },
 }
@@ -108,7 +119,7 @@ SWEP.Primary.Cone = 0
 SWEP.Primary.Damage = 55
 SWEP.Primary.Sound = {"weapons/darsu_eft/rsh12/rsh_12_outdoor_close_oneshot.wav", 75, 55, 65}
 SWEP.SupressedSound = false
-SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/makarov/handling/makarov_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_hammer.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Force = 35
 SWEP.Primary.Wait = 0.3
 

@@ -324,10 +324,20 @@ local hg_aimtoshoot = ConVarExists("hg_aimtoshoot") and GetConVar("hg_aimtoshoot
 
 local owner
 local CurTime = CurTime
+function SWEP:IsInspecting()
+	if self.inspect ~= nil or self.attachmentMenuViewPunchMul ~= nil then return true end
+	if not CLIENT then return false end
+
+	local inspectSequence = self.AnimList and self.AnimList.inspect
+	return inspectSequence ~= nil
+		and self.seq == inspectSequence
+		and (self.animtime or 0) > CurTime()
+end
+
 function SWEP:IsZoom()
 	local owner = self:GetOwner()
 	--print( (owner.armors and (hg.armor.head[owner.armors["head"]] and not hg.armor.head[owner.armors["head"]].cantsight)))
-	return self:CanUse() and
+	return not self:IsInspecting() and self:CanUse() and
 		(!hg_aimtoshoot:GetBool() or self:GetNWBool("aiming")) and
 		(self:GetButtstockAttack() - CurTime() < -1) and 
 		(self:GetOwner():IsPlayer() and self:KeyDown(IN_ATTACK2) and not self:IsSprinting()) and
@@ -2291,13 +2301,24 @@ if SERVER then
 end
 
 function SWEP:GetARC9ReloadLHIKWeight()
-	if not self.reload then return 1 end
+	local actionEnd
+	local duration
+	if self.reload then
+		actionEnd = self.reload
+		duration = self.StaminaReloadTime or self.ReloadTime or 1
+	else
+		return 1
+	end
 
-	local duration = self.StaminaReloadTime or self.ReloadTime or 1
-	local blendTime = duration * (self.ARC9ReloadLHIKFraction or 0.17)
-	local remaining = math.max(self.reload - CurTime() - 0.05, 0)
-	local weight = 1 - math.Clamp(remaining / math.max(blendTime, 0.001), 0, 1)
-	return math.ease.InOutSine(weight)
+	duration = math.max(duration, 0.001)
+	local remaining = math.Clamp(actionEnd - CurTime(), 0, duration)
+	local elapsed = duration - remaining
+	local hasGrip = self.HasAttachment and self:HasAttachment("grip")
+	local fadeOutTime = hasGrip and 0.1 or (self.ARC9ActionLHIKFadeOutTime or 0.2)
+	local fadeInTime = hasGrip and 1 or (self.ARC9ActionLHIKFadeInTime or 0.25)
+	local fadeOut = 1 - math.Clamp(elapsed / math.max(fadeOutTime, 0.001), 0, 1)
+	local fadeIn = 1 - math.Clamp(remaining / math.max(fadeInTime, 0.001), 0, 1)
+	return math.ease.InOutSine(math.max(fadeOut, fadeIn))
 end
 
 function SWEP:SetHandPos(noset)
@@ -2463,9 +2484,10 @@ function SWEP:SetHandPos(noset)
 		local model = self:GetAttachmentModel("grip")
 		local inf = self:GetAttachmentInfo("grip")
 		local reloadLHIKWeight = self:GetARC9ReloadLHIKWeight()
-		local usePose = not ply.suiciding and (not self.reload or reloadLHIKWeight > 0)
+		local actionActive = self.reload
+		local usePose = not ply.suiciding and (not actionActive or reloadLHIKWeight > 0)
 		self.lerphand = LerpFT(self.ARC9LHIKTransitionSpeed or 0.04, self.lerphand or 0, usePose and 0 or 1)
-		if self.reload then self.lerphand = math.min(self.lerphand, 1 - reloadLHIKWeight) end
+		if actionActive then self.lerphand = math.min(self.lerphand, 1 - reloadLHIKWeight) end
 
 		if hg.CanUseLeftHand(ply) and self.lhandik then
 			if not inf.ShouldtUseLHand then
@@ -2491,7 +2513,7 @@ function SWEP:SetHandPos(noset)
 				end
 
 				if CLIENT and inf.arc9LHIK ~= false and self.ApplyARC9GripPose then
-					local weight = self.reload and reloadLHIKWeight or 1 - self.lerphand
+					local weight = actionActive and reloadLHIKWeight or 1 - self.lerphand
 					self:ApplyARC9GripPose(ent, model, weight)
 				end
 			end
@@ -2500,16 +2522,17 @@ function SWEP:SetHandPos(noset)
 
 	if CLIENT and self.ARC9DefaultLHIKPart and not self:HasAttachment("grip") then
 		local reloadLHIKWeight = self:GetARC9ReloadLHIKWeight()
+		local actionActive = self.reload
 		local usePose = hg.CanUseLeftHand(ply)
 			and self.lhandik
 			and not ply.suiciding
-			and (not self.reload or reloadLHIKWeight > 0)
+			and (not actionActive or reloadLHIKWeight > 0)
 
 		self.ARC9DefaultLHIKWeight = LerpFT(self.ARC9LHIKTransitionSpeed or 0.04, self.ARC9DefaultLHIKWeight or 0, usePose and 1 or 0)
-		if self.reload then self.ARC9DefaultLHIKWeight = math.max(self.ARC9DefaultLHIKWeight, reloadLHIKWeight) end
+		if actionActive then self.ARC9DefaultLHIKWeight = math.max(self.ARC9DefaultLHIKWeight, reloadLHIKWeight) end
 		local source = self:GetARC9DefaultLHIKSource()
 		if IsValid(source) then
-			local weight = self.reload and reloadLHIKWeight or self.ARC9DefaultLHIKWeight
+			local weight = actionActive and reloadLHIKWeight or self.ARC9DefaultLHIKWeight
 			self:ApplyARC9GripPose(ent, source, weight, self.ARC9DefaultLHIKFullArm)
 		end
 	end

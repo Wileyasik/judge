@@ -1,4 +1,6 @@
 SWEP.Base = "homigrad_base"
+SWEP.ARC9ActionLHIKFadeOutTime = 0.1
+SWEP.ARC9ActionLHIKFadeInTime = 1
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "SR-25"
@@ -72,7 +74,7 @@ SWEP.FakeEjectBrassATT = "2"
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 45
+SWEP.ViewPunchDiv = 1
 SWEP.punchmul = 4
 SWEP.punchspeed = 0.7
 
@@ -203,7 +205,7 @@ SWEP.Primary.Spread = 0
 SWEP.Primary.Force = 30
 SWEP.Primary.Sound = {"weapons/darsu_eft/sr25/sr25_fire_outdoor_close.wav", 85, 90, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/sr25/sr25_fire_outdoor_silenced_close.wav", 65, 90, 100}
-SWEP.Primary.SoundEmpty = {"weapons/mk18/mk18_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.2
 SWEP.ReloadTime = 3.5
 
@@ -226,8 +228,9 @@ SWEP.ScrappersSlot = "Primary"
 
 SWEP.DistSound = "weapons/darsu_eft/sr25/sr25_fire_outdoor_distant.wav"
 
-SWEP.StartAtt = {"optic2"}
+SWEP.StartAtt = {"optic2", "stock_ar15_hk_slim_line"}
 SWEP.availableAttachments = {
+	stock = hg.GetAR15StockProfile("stock_ar15_hk_slim_line"),
 		barrel = {
 		[1] = {"supressor9", Vector(0, 0, 0), {}},
 		[2] = {"supressor16", Vector(0, 0, 0), {}},
@@ -340,8 +343,13 @@ function SWEP:DrawPost()
 	end
 
 	-- Stock1
-	if not IsValid(self.HeldStock1CSModel) then
-		self.HeldStock1CSModel = ClientsideModel(self.HeldStock1Model, RENDERGROUP_BOTH)
+	local heldStockModel = self:GetActiveStockModel(self.HeldStock1Model)
+	if IsValid(self.HeldStock1CSModel) and self.HeldStock1CSModelPath ~= heldStockModel then
+		self.HeldStock1CSModel:Remove()
+	end
+	if heldStockModel ~= "" and not IsValid(self.HeldStock1CSModel) then
+		self.HeldStock1CSModel = ClientsideModel(heldStockModel, RENDERGROUP_BOTH)
+		self.HeldStock1CSModelPath = heldStockModel
 		if IsValid(self.HeldStock1CSModel) then self.HeldStock1CSModel:SetNoDraw(true) end
 	end
 	if IsValid(self.HeldStock1CSModel) then
@@ -455,21 +463,22 @@ if CLIENT then
 				continue
 			end
 
+			local modelPath = partName == "stock1" and self:GetActiveStockModel(partData.model) or partData.model
 			local model = self.BC_DroppedPartModels[partName]
 			local oldPath = self.BC_DroppedPartPaths[partName]
 
-			if IsValid(model) and oldPath ~= partData.model then
+			if IsValid(model) and oldPath ~= modelPath then
 				model:Remove()
 				model = nil
 			end
 
-			if not IsValid(model) then
-				model = ClientsideModel(partData.model, RENDERGROUP_BOTH)
+			if modelPath ~= "" and not IsValid(model) then
+				model = ClientsideModel(modelPath, RENDERGROUP_BOTH)
 				if IsValid(model) then
 					model:SetNoDraw(true)
 					model:DrawShadow(true)
 					self.BC_DroppedPartModels[partName] = model
-					self.BC_DroppedPartPaths[partName] = partData.model
+					self.BC_DroppedPartPaths[partName] = modelPath
 				end
 			end
 		end

@@ -238,7 +238,7 @@ local function easedLerp(fraction, from, to)
 end
 
 function SWEP:AnimationReload(time, staminaReload)
-	if self:ShouldUseFakeModel() then
+	if self:ShouldUseFakeModel() and not self.DisableFakeReloadAnimation then
 		return
 	end
 	
@@ -363,10 +363,20 @@ function SWEP:AnimationReload(time, staminaReload)
 	--self.angvel:Add((self.WepAngOffset-oldang)/2)
 	--self.angvel = self.angvel * 0.99
 	if CLIENT and self:GetOwner() == LocalPlayer() and self.reload then
-		local addang = (self.WepAngOffset-oldang)/12
-		addang[3] = addang[3] / 12
-		ViewPunch2(addang)
-		ViewPunch(addang)
+		local delta = self.WepAngOffset - oldang
+		local length = math.sqrt(delta.p * delta.p + delta.y * delta.y + delta.r * delta.r)
+		if length > (self.ReloadViewPunchBoneDeadzone or 0.001) then
+			local progressDelta = math.abs(time - (self.proceduralReloadViewPunchTime or time))
+			if progressDelta <= (self.ReloadViewPunchMaxCycleStep or 0.2) then
+				local amount = math.min((self.ReloadViewPunchTravel or 13) * progressDelta, self.ReloadViewPunchMaxStep or 0.22)
+				local addang = Angle(delta.p / length * amount, delta.y / length * amount, delta.r / length * amount * (self.ReloadViewPunchRollMul or 0.35))
+				ViewPunch2(addang)
+				ViewPunch(addang)
+			end
+		end
+		self.proceduralReloadViewPunchTime = time
+	else
+		self.proceduralReloadViewPunchTime = nil
 	end
 
 	local anims2 = wep.ReloadSlideAnim

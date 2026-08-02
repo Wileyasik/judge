@@ -1,4 +1,6 @@
 SWEP.Base = "homigrad_base"
+SWEP.ARC9ActionLHIKFadeOutTime = 0.1
+SWEP.ARC9ActionLHIKFadeInTime = 0.45
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "CZ Scorpion EVO 3"
@@ -50,7 +52,7 @@ SWEP.FakeEjectBrassATT = "2"
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 1800
+SWEP.ViewPunchDiv = 1
 
 local path = "weapons/darsu_eft/scorpion/"
 
@@ -62,11 +64,14 @@ SWEP.AnimsEvents = {
 	},
 	["reload1"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/scorpion/ump_mag_out.ogg") end,
+		[0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in3.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,		
 		[0.50] = function(self) self:EmitSound("weapons/darsu_eft/scorpion/ump_mag_in.ogg") end,
 	},
 	["reload_empty1_0"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/scorpion/ump_magrelease_button.ogg") end,
 		[0.15] = function(self) self:EmitSound("weapons/darsu_eft/scorpion/ump_mag_out.ogg") end,
+		[0.23] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,
 		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/scorpion/ump_mag_in.ogg") end,
 		[0.65] = function(self) self:EmitSound("weapons/darsu_eft/scorpion/ump_bolt_in.ogg") end,
 		[0.75] = function(self) self:EmitSound("weapons/darsu_eft/scorpion/ump_bolt_out.ogg") end,
@@ -152,8 +157,8 @@ SWEP.HeldHandguardOffsetAng = Angle(0, 0, 0)
 
 SWEP.weaponInvCategory = 1
 SWEP.CustomEjectAngle = Angle(0, 0, 90)
-SWEP.Primary.ClipSize = 30
-SWEP.Primary.DefaultClip = 30
+SWEP.Primary.ClipSize = 50
+SWEP.Primary.DefaultClip = 50
 SWEP.Primary.Automatic = true
 SWEP.Primary.Ammo = "9x19 mm Parabellum"
 SWEP.Primary.Cone = 0
@@ -163,7 +168,8 @@ SWEP.Primary.Force = 18
 SWEP.animposmul = 2
 SWEP.Primary.Sound = {"weapons/darsu_eft/scorpion/fire_new/cz_scorpion_outdoors_close_loop1.wav", 85, 120, 130}
 SWEP.SupressedSound = {"weapons/darsu_eft/scorpion/fire_new/cz_scorpion_outdoors_close_silenced_loop1.wav", 75, 90, 100}
-SWEP.Primary.Wait = 0.075
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.Wait = 0.04743
 SWEP.ReloadTime = 3
 
 SWEP.PPSMuzzleEffect = "muzzleflash_smg"

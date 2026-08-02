@@ -162,7 +162,7 @@ SWEP.HoldAng = Angle(0,0,0)
 
 SWEP.ViewBobCamBase = "ValveBiped.Bip01_L_UpperArm"
 SWEP.ViewBobCamBone = "ValveBiped.Bip01_R_Hand"
-SWEP.ViewPunchDiv = 120
+SWEP.ViewPunchDiv = 1
 
 SWEP.CallbackTimeAdjust = 0.1
 SWEP.NoTrap = false

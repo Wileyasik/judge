@@ -41,7 +41,7 @@ SWEP.FakeEjectBrassATT = "2"
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 45
+SWEP.ViewPunchDiv = 1
 SWEP.punchmul = 4
 SWEP.punchspeed = 0.7
 
@@ -153,7 +153,7 @@ SWEP.Primary.Spread = 0
 SWEP.Primary.Force = 28
 SWEP.Primary.Sound = {"weapons/darsu_eft/rfb/rfb_fire_close.ogg", 85, 90, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/rfb/rfb_fire_silenced_close.ogg", 65, 90, 100}
-SWEP.Primary.SoundEmpty = {"weapons/mk18/mk18_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.15
 SWEP.ReloadTime = 3
 

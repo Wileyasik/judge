@@ -33,8 +33,9 @@ SWEP.Primary.Damage = 16
 SWEP.Primary.Spread = Vector(0.01, 0.01, 0.01)
 SWEP.Primary.Force = 12
 SWEP.Primary.Sound = {"sound/weapons/darsu_eft/mr43/mr43_fire_indoor_close1.wav", 80, 100, 75}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_hammer.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0
-SWEP.ReloadTime = 3
+SWEP.ReloadTime = 8
 SWEP.OpenBolt = true
 
 function SWEP:ModelCreated(model)

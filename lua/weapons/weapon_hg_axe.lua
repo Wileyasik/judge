@@ -276,4 +276,4 @@ SWEP.MinSensivity = 0.7
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeVPShouldUseHand = false
 SWEP.FakeViewBobBaseBone = "base"
-SWEP.ViewPunchDiv = 50
+SWEP.ViewPunchDiv = 1

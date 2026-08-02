@@ -49,7 +49,7 @@ SWEP.AnimTime2 = 0.7
 SWEP.WaitTime2 = 0.8
 SWEP.ViewPunch2 = Angle(1,2,-2)
 
-SWEP.ViewPunchDiv = -50
+SWEP.ViewPunchDiv = 1
 
 SWEP.attack_ang = Angle(0,0,0)
 SWEP.sprint_ang = Angle(15,0,0)

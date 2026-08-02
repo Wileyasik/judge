@@ -48,6 +48,10 @@ function SWEP:SetupMuzzleAttachments()
 end
 
 local modifierSlots = {"barrel", "sight", "grip", "underbarrel", "gp25", "magwell", "stock"}
+local noStockModifiers = {
+	recoilMul = 2,
+	ergonomicsMul = 0.55,
+}
 
 function SWEP:GetAttachmentModifierMul(field)
 	local mul = 1
@@ -57,6 +61,8 @@ function SWEP:GetAttachmentModifierMul(field)
 			local value = data[field]
 			if field == "recoilMul" and value == nil and placement == "grip" then value = data.recoilReduction end
 			mul = mul * (value or 1)
+		elseif placement == "stock" and self.availableAttachments and istable(self.availableAttachments.stock) then
+			mul = mul * (noStockModifiers[field] or 1)
 		end
 	end
 	return mul
@@ -204,7 +210,7 @@ end
 
 function SWEP:GetActiveStockModel(fallback)
 	local previewFrame = CLIENT and hg.attachmentsMenuPanel
-	if IsValid(previewFrame) and previewFrame.weapon == self and previewFrame.previewPlacement == "stock" then return "" end
+	if IsValid(previewFrame) and previewFrame.weapon == self and previewFrame.previewPlacement == "stock" and IsValid(previewFrame.previewModel) then return "" end
 	local data = self:GetAttachmentInfo("stock")
 	if data then return data[2] or fallback end
 	return self.availableAttachments and self.availableAttachments.stock and "" or fallback
@@ -212,7 +218,7 @@ end
 
 function SWEP:GetActiveStockMountModel(fallback)
 	local previewFrame = CLIENT and hg.attachmentsMenuPanel
-	if IsValid(previewFrame) and previewFrame.weapon == self and previewFrame.previewPlacement == "stock" then return "" end
+	if IsValid(previewFrame) and previewFrame.weapon == self and previewFrame.previewPlacement == "stock" and IsValid(previewFrame.previewModel) then return "" end
 	local data = self:GetAttachmentInfo("stock")
 	if data then return data.stockMountModel or "" end
 	return self.availableAttachments and self.availableAttachments.stock and "" or fallback
@@ -420,10 +426,24 @@ end
 
 local mount3ScopeCorrections = {
 	optic2 = Vector(0, -1.5, 1.4),
+	optic3 = Vector(0, -0, 0),
+	optic4 = Vector(0, -0, 0),
 	optic5 = Vector(0, -1.5, 1.4),
 	optic6 = Vector(0, -1.5, 1.4),
+	optic7 = Vector(0, -0, 0),
+	optic8 = Vector(0, -0, 0),
+	optic9 = Vector(0, -0, 0),
+	optic11 = Vector(0, -0, 0),
+	optic12 = Vector(0, -0, 0),
+	optic13 = Vector(0, -0, 0),
+	optic14 = Vector(0, 0.25, 0),
+	optic15 = Vector(0, -0, 0),
+	optic16 = Vector(0, -0, 0),
+	optic17 = Vector(0, -0, 0),
+	optic18 = Vector(0, -0, 0),
 	optic19 = Vector(0, -1.3, 1.4),
 	optic21 = Vector(0, -1.3, 1.4),
+	optic22 = Vector(0, 0, 0),
 	optic23 = Vector(0, -1.3, 1.4),
 }
 
@@ -469,9 +489,10 @@ function SWEP:Attachment_Transform(model,pos,ang,plc,att,attdata,available)
 	if plc == "sight" and not dovetail and isnumber(att.sightSlide) then vecadd.x = vecadd.x + math.Clamp(att.sightSlide, -1, 3) end
 	if isvector(mountOffset) then vecadd:Add(mountOffset) end
 	if attdata.offset and isvector(attdata.offset) then vecadd:Add(attdata.offset) end
+	local usesAKScopeCorrections = slot.akScopeCorrections
+		or istable(activeMount) and activeMount[1] == "mount3"
 	local mount3Correction = plc == "sight"
-		and istable(activeMount)
-		and activeMount[1] == "mount3"
+		and usesAKScopeCorrections
 		and mount3ScopeCorrections[att[1]]
 	if mount3Correction then vecadd:Add(mount3Correction) end
 	local addAng = attdata[3] + (slotAngle or angZero)
@@ -1065,7 +1086,7 @@ if CLIENT then
 	local attachmentLineColor = Color(255, 255, 255)
 	local previewColor = Color(85, 190, 215)
 	local attachmentFont = "Mx437 IBM PS/55 re."
-	local attachmentUIScale = math.Clamp(math.min(ScrW() / 2560, ScrH() / 1440) * 1.08, 0.5, 1.25)
+	local attachmentUIScale = math.Clamp(math.min(ScrW() / 2560, ScrH() / 1440) * 1.05, 0.5, 1.25)
 	local function attachmentPx(value)
 		return math.max(1, math.floor(value * attachmentUIScale + 0.5))
 	end
@@ -1280,6 +1301,58 @@ if CLIENT then
 		return x, y
 	end
 
+	local function getManagedPartTransform(wep, wm, partName, resolved, resolving)
+		local part = wep.ARC9Parts and wep.ARC9Parts[partName]
+		if not istable(part) then return end
+
+		resolved = resolved or {}
+		resolving = resolving or {}
+		if resolved[partName] then return resolved[partName].pos, resolved[partName].ang end
+		if resolving[partName] then return end
+		resolving[partName] = true
+
+		local basePos, baseAng
+		if part.parent then
+			basePos, baseAng = getManagedPartTransform(wep, wm, part.parent, resolved, resolving)
+		else
+			local bone = wm:LookupBone(part.bone or "")
+			local matrix = bone and wm:GetBoneMatrix(bone)
+			if matrix then
+				basePos = matrix:GetTranslation()
+				baseAng = matrix:GetAngles()
+			end
+		end
+
+		resolving[partName] = nil
+		if not basePos or not baseAng then return end
+		local pos, ang = LocalToWorld(part.pos or vector_origin, part.ang or angle_zero, basePos, baseAng)
+		resolved[partName] = {pos = pos, ang = ang}
+		return pos, ang
+	end
+
+	local function getManagedStockTransform(wep, wm)
+		if isstring(wep.HeldStock1Bone) then
+			local bone = wm:LookupBone(wep.HeldStock1Bone)
+			local matrix = bone and wm:GetBoneMatrix(bone)
+			if matrix then
+				return LocalToWorld(
+					wep.HeldStock1OffsetPos or vector_origin,
+					wep.HeldStock1OffsetAng or angle_zero,
+					matrix:GetTranslation(),
+					matrix:GetAngles()
+				)
+			end
+		end
+
+		local parts = wep.ARC9Parts
+		if not istable(parts) then return end
+		local partName = wep.ARC9ManagedStockPart
+			or istable(parts.stock2) and "stock2"
+			or istable(parts.stock1) and "stock1"
+			or istable(parts.stock) and "stock"
+		if partName then return getManagedPartTransform(wep, wm, partName) end
+	end
+
 	local function getSlotAnchor(wep, placement, previewID, previewModel)
 		local slot = wep.availableAttachments and wep.availableAttachments[placement]
 		if not slot then return end
@@ -1303,6 +1376,15 @@ if CLIENT then
 				return anchorPos, rendered.ang
 			end
 			return rendered.pos, rendered.ang
+		end
+		if placement == "stock" and definition and definition.weaponManagedModel then
+			local managedPos, managedAng = getManagedStockTransform(wep, wm)
+			if managedPos and managedAng then
+				if definition and isvector(definition.uiAnchor) then
+					managedPos = LocalToWorld(definition.uiAnchor, angle_zero, managedPos, managedAng)
+				end
+				return managedPos, managedAng
+			end
 		end
 
 		local pos, ang
@@ -1372,11 +1454,16 @@ if CLIENT then
 		if previewID and definition and wep.availableAttachments.mount then
 			activeMount = wep.availableAttachments.mount[definition.mountType] or activeMount
 		end
+		local usesMount3 = istable(activeMount) and activeMount[1] == "mount3"
+		local attachmentID = previewID or installedID
 		local mount3Correction = placement == "sight"
-			and istable(activeMount)
-			and activeMount[1] == "mount3"
-			and (mount3ScopeCorrections[installedID] or mount3PreviewCorrections[installedID])
+			and (slot.akScopeCorrections or usesMount3)
+			and mount3ScopeCorrections[attachmentID]
 		if mount3Correction then offset:Add(mount3Correction) end
+		local mount3PreviewCorrection = placement == "sight"
+			and usesMount3
+			and mount3PreviewCorrections[attachmentID]
+		if mount3PreviewCorrection then offset:Add(mount3PreviewCorrection) end
 
 		offset:Rotate(ang)
 		pos:Add(offset)
@@ -1446,6 +1533,11 @@ if CLIENT then
 			frame.previewMount:SetAngles(mountAng)
 			frame.previewMount:SetupBones()
 		end
+		if IsValid(frame.previewStockMount) then
+			frame.previewStockMount:SetPos(pos)
+			frame.previewStockMount:SetAngles(ang)
+			frame.previewStockMount:SetupBones()
+		end
 
 		if IsValid(frame.previewHolo) and definition then
 			local holoPos, holoAng = LocalToWorld(definition.addholovec or vector_origin, definition.addholoang or angle_zero, pos, ang)
@@ -1468,6 +1560,7 @@ if CLIENT then
 		add(frame.previewModel)
 		add(frame.previewAdapter)
 		add(frame.previewMount)
+		add(frame.previewStockMount)
 		add(frame.previewHolo)
 		local modelAttachments = IsValid(frame.weapon) and frame.weapon.modelAtt
 		if modelAttachments then
@@ -1550,6 +1643,7 @@ if CLIENT then
 		if inspectSequence and IsValid(wm) and wm:LookupSequence(inspectSequence) >= 0 then
 			frame.inspectDuration = 5
 			frame.inspectStarted = CurTime()
+			wep.attachmentMenuViewPunchMul = 0.05
 			wep.SuppressAnimEvents = true
 			wep:PlayAnim("inspect", frame.inspectDuration, false)
 			wep.SuppressAnimEvents = nil
@@ -1646,11 +1740,13 @@ if CLIENT then
 			if IsValid(self.previewModel) then self.previewModel:Remove() end
 			if IsValid(self.previewAdapter) then self.previewAdapter:Remove() end
 			if IsValid(self.previewMount) then self.previewMount:Remove() end
+			if IsValid(self.previewStockMount) then self.previewStockMount:Remove() end
 			if IsValid(self.previewHolo) then self.previewHolo:Remove() end
 			self.previewModel = nil
 			self.previewAdapter = nil
 			self.previewAdapterID = nil
 			self.previewMount = nil
+			self.previewStockMount = nil
 			self.previewHolo = nil
 			self.previewPlacement = nil
 			self.previewID = nil
@@ -1688,6 +1784,10 @@ if CLIENT then
 			if isstring(definition.mount) and definition.mount != "" then
 				self.previewMount = ClientsideModel(definition.mount)
 				if IsValid(self.previewMount) then self.previewMount:SetNoDraw(false) end
+			end
+			if isstring(definition.stockMountModel) and definition.stockMountModel != "" then
+				self.previewStockMount = ClientsideModel(definition.stockMountModel)
+				if IsValid(self.previewStockMount) then self.previewStockMount:SetNoDraw(false) end
 			end
 			if isstring(definition.holomodel) and definition.holomodel != "" then
 				self.previewHolo = ClientsideModel(definition.holomodel)
@@ -2042,14 +2142,22 @@ if CLIENT then
 				weapon.reverseanim = true
 				weapon.callback = function(currentWeapon)
 					if IsValid(currentWeapon) and not currentWeapon.reload then
+						currentWeapon.attachmentMenuViewPunchMul = nil
 						currentWeapon:PlayAnim("idle", 1, not currentWeapon.NoIdleLoop)
 					end
 				end
+			elseif IsValid(self.weapon) then
+				self.weapon.attachmentMenuViewPunchMul = nil
 			end
 		end
 	end
 
-	concommand.Add("hg_get_attachments", function(ply, cmd, args)
+	concommand.Add("hg_get_attachments", function()
+		if IsValid(hg.attachmentsMenuPanel) then
+			hg.attachmentsMenuPanel:Close()
+			return
+		end
+
 		CreateMenu()
 	end)
 end

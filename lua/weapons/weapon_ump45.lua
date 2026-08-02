@@ -40,7 +40,7 @@ SWEP.FakeEjectBrassATT = "2"
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 70
+SWEP.ViewPunchDiv = 1
 
 local path = "weapons/darsu_eft/ump45/"
 
@@ -52,11 +52,14 @@ SWEP.AnimsEvents = {
 	},
 	["reload"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/ump/ump_mag_out.ogg") end,
+		[0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in3.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,	
 		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/ump/ump_mag_in.ogg") end,
 	},
 	["reload_empty"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/ump/ump_magrelease_button.ogg") end,
 		[0.15] = function(self) self:EmitSound("weapons/darsu_eft/ump/ump_mag_out.ogg") end,
+		[0.23] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,
 		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/ump/ump_mag_in.ogg") end,
 		[0.75] = function(self) self:EmitSound("weapons/darsu_eft/ump/ump_magrelease_button.ogg") end,
 	},
@@ -148,7 +151,8 @@ SWEP.Primary.Spread = 0
 SWEP.Primary.Force = 25
 SWEP.Primary.Sound = {"weapons/darsu_eft/ump/fire_new/ump_outdoor_close1.wav", 85, 120, 130}
 SWEP.SupressedSound = {"weapons/darsu_eft/ump/fire_new/ump_outdoor_silenced_close1.wav", 75, 90, 100}
-SWEP.Primary.Wait = 0.1
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.Wait = 0.09091
 SWEP.ReloadTime = 2.7
 
 SWEP.PPSMuzzleEffect = "muzzleflash_smg"

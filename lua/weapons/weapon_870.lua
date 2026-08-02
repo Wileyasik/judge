@@ -39,7 +39,7 @@ SWEP.FakeBodyGroupsPresets = {
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_L_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 30
+SWEP.ViewPunchDiv = 1
 
 -- Фейковые звуки
 SWEP.FakeReloadSounds = {
@@ -85,6 +85,7 @@ SWEP.Primary.NumShots = 8
 local path = "weapons/darsu_eft/m870/" 
 SWEP.Primary.Sound = {path .. "rem870_fire_close1.ogg", 85, 100, 100}
 SWEP.SupressedSound = {path .. "rem870_fire_indoor_close.ogg", 65, 100, 100}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_hammer.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.8
 SWEP.NumBullet = 8
 

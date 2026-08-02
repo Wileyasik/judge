@@ -196,7 +196,7 @@ SWEP.SightSlideOffset = 0.8
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_Forearm"
-SWEP.ViewPunchDiv = 50
+SWEP.ViewPunchDiv = 1
 SWEP.FakeMagDropBone = "vm_mag"
 SWEP.MagModel = "models/weapons/arccw/c_ur_m1911.mdl"
 

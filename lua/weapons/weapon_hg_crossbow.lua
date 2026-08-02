@@ -29,7 +29,7 @@ SWEP.AnimList = {
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_UpperArm"
-SWEP.ViewPunchDiv = 40
+SWEP.ViewPunchDiv = 1
 
 SWEP.FakeReloadSounds = {}
 

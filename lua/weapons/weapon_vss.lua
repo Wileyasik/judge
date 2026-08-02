@@ -40,7 +40,7 @@ SWEP.FakeEjectBrassATT = "2"
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 70
+SWEP.ViewPunchDiv = 1
 
 SWEP.DOZVUK = true
 SWEP.dwr_customIsSuppressed = true
@@ -153,10 +153,10 @@ SWEP.Primary.Force = 42
 SWEP.animposmul = 2
 SWEP.Primary.Sound = {"weapons/darsu_eft/val/fire_new/vss_loop_close2.wav", 65, 90, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/val/fire_new/vss_loop_close2.wav", 65, 90, 100}
-SWEP.Primary.SoundEmpty = {"weapons/darsu_eft/vss/vss_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
-	SWEP.Primary.Wait = 0.075
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.Wait = 0.075
 
-	SWEP.ReloadTime = 3
+SWEP.ReloadTime = 3
 SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1"
 
 SWEP.CustomShell = "9x39"

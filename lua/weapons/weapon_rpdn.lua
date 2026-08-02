@@ -15,8 +15,8 @@ SWEP.Primary.Spread = 0
 SWEP.Primary.Force = 70
 SWEP.Primary.Sound = {"weapons/darsu_eft/rpd/fire/rpd_indoor_distant_loop1.wav", 75, 100, 110}
 SWEP.SupressedSound = {"weapons/darsu_eft/rpd/fire/rpd_indoor_silenced_distant_loop1.wav", 75, 100, 110}
-SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/ak47/handling/ak47_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
-SWEP.Primary.Wait = 0.10
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.Wait = 0.08392
 SWEP.ReloadTime = 8
 
 function SWEP:PostFireBullet(bullet)
@@ -135,7 +135,7 @@ SWEP.GunCamAng = Angle(190, 0, -90)
 SWEP.FakeBodyGroups = "11113020111"
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_UpperArm"
-SWEP.ViewPunchDiv = 40
+SWEP.ViewPunchDiv = 1
 SWEP.NoIdleLoop = true
 SWEP.GetDebug = false
 

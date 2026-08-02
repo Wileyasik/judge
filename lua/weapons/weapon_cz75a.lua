@@ -8,5 +8,5 @@ SWEP.Category = "Weapons - Pistols"
 SWEP.WepSelectIcon2 = Material("pwb/sprites/cz75.png")
 SWEP.IconOverride = "entities/weapon_pwb_cz75.png"
 
-SWEP.Primary.Wait = 0.05
+SWEP.Primary.Wait = 0.05455
 SWEP.Primary.Automatic = true

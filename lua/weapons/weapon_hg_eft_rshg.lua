@@ -46,7 +46,7 @@ end
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_UpperArm"
-SWEP.ViewPunchDiv = 40
+SWEP.ViewPunchDiv = 1
 
 SWEP.lmagpos = Vector(1.8,0,-0.3)
 SWEP.lmagang = Angle(-10,0,0)

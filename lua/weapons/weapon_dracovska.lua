@@ -1,4 +1,6 @@
 SWEP.Base = "weapon_vpo136"
+SWEP.ARC9ActionLHIKFadeOutTime = 0.1
+SWEP.ARC9ActionLHIKFadeInTime = 0.5
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "VSKA Draco"

@@ -420,29 +420,72 @@ local function DrawWorldModel(self, force)
 
 	if IsValid(self.worldModel) and willdraw then
 		if self:ShouldUseFakeModel() then
-			if self:IsLocal2() then
-				local WorldModel = self.worldModel
-				if not IsValid(WorldModel) then return end
-				--[[reloadlerp = Lerp(FrameTime() * 3, reloadlerp, self.reload == nil and 0 or 2)
-				if reloadlerp >= 0.3 then
-					DrawBokehDOF(reloadlerp, 2, 0)
-				end]]
-				local camBone = (WorldModel:LookupBone(self.FakeViewBobBone) or (self.FakeVPShouldUseHand and WorldModel:LookupBone("ValveBiped.Bip01_R_Hand") or WorldModel:LookupBone("Weapon"))) or WorldModel:LookupBone("ValveBiped.Bip01_R_Hand")
-				if camBone then
-					local matrix = WorldModel:GetBoneMatrix(camBone)
-					if matrix then
-						local gAngles = matrix:GetAngles()
-						local _,gAngles = WorldToLocal(vector_origin,gAngles, WorldModel:GetPos(), WorldModel:GetBoneMatrix(WorldModel:LookupBone(self.FakeViewBobBaseBone) or 0):GetAngles())
-						self.OldAngPunch = self.OldAngPunch or gAngles
-						local punch = ( self.OldAngPunch - gAngles )/(self.ViewPunchDiv or 50)
-						--print(punch)
-						ViewPunch2( -punch )
-						ViewPunch( punch )
-						self.OldAngPunch = gAngles
+			local animList = self.AnimList or {}
+			local function resolveSequence(animation)
+				return animation and (animList[animation] or animation)
+			end
+
+			local manualAction = self.ManualCycle and not self.ShotgunTubeReload and self.seq and (
+				self.seq == animList.cycle
+				or self.seq == animList.reload
+				or self.seq == animList.reload_empty
+				or self.seq == animList.start
+				or self.seq == animList.start_empty
+				or self.seq == animList.insert
+				or self.seq == animList.insert_empty
+				or self.seq == animList.finish
+				or self.seq == animList.finish_empty
+			)
+			local shotgunReloadAction = self.ShotgunTubeReload and self.seq and (
+				self.seq == resolveSequence(self.ShotgunReloadStartAnim or "start")
+				or self.seq == resolveSequence(self.ShotgunReloadInsertAnim or "insert")
+				or self.seq == resolveSequence(self.ShotgunReloadFinishAnim or "finish")
+			)
+			if self.ShotgunTubeReload and self.seq and not shotgunReloadAction then
+				for _, animation in ipairs(self.ShotgunReloadInsertAnims or {}) do
+					if self.seq == resolveSequence(animation) then
+						shotgunReloadAction = true
+						break
 					end
 				end
 			end
-			
+			local shotgunCycleAction = self.ShotgunTubeReload and self.ShotgunManualCycle and self.seq
+				and self.seq == resolveSequence(self.ShotgunCycleAnim or "cycle")
+			local shotgunMagazineReloadAction = self.IsShotgun and self.reload
+			local gp25ReloadAction = self.IsGP25Active and self:IsGP25Active() and self.seq == "gp34_reload"
+			local normalizedAction = self.reload or manualAction or shotgunReloadAction or shotgunCycleAction or gp25ReloadAction
+
+			if self:IsLocal2() and not normalizedAction and not self.DisableFakeViewPunch then
+				local WorldModel = self.worldModel
+				local camBone = (WorldModel:LookupBone(self.FakeViewBobBone) or (self.FakeVPShouldUseHand and WorldModel:LookupBone("ValveBiped.Bip01_R_Hand") or WorldModel:LookupBone("Weapon"))) or WorldModel:LookupBone("ValveBiped.Bip01_R_Hand")
+				local matrix = camBone and WorldModel:GetBoneMatrix(camBone)
+				local baseMatrix = WorldModel:GetBoneMatrix(WorldModel:LookupBone(self.FakeViewBobBaseBone) or 0)
+				if matrix and baseMatrix then
+					local gAngles = matrix:GetAngles()
+					local _, localAngles = WorldToLocal(vector_origin, gAngles, WorldModel:GetPos(), baseMatrix:GetAngles())
+					gAngles = localAngles
+					self.OldAngPunch = self.OldAngPunch or gAngles
+					local inspecting = self:IsInspecting()
+					local viewPunchDiv = inspecting and 1 or (self.ViewPunchDiv or 50)
+					local punch = (self.OldAngPunch - gAngles) / viewPunchDiv
+					if self.attachmentMenuViewPunchMul then
+						punch:Mul(self.attachmentMenuViewPunchMul)
+					elseif inspecting then
+						local inspectMul = self:IsPistolHoldType()
+							and (self.PistolInspectViewPunchMul or 0.01)
+							or (self.InspectViewPunchMul or 0.05)
+						punch:Mul(inspectMul)
+					end
+					ViewPunch2(-punch)
+					ViewPunch(punch)
+					self.OldAngPunch = gAngles
+				end
+				self.reloadViewPunchActive = nil
+				self.reloadViewPunchSequence = nil
+				self.reloadViewPunchAngles = nil
+				self.reloadViewPunchCycle = nil
+			end
+
 			if self.seq then self:GetWM():SetSequence(self.seq) end
 			local timing
 			if not self.cycling then
@@ -457,6 +500,71 @@ local function DrawWorldModel(self, force)
 			else
 				timing = ((CurTime() - (self.animtime - self.animspeed)) % self.animspeed) / self.animspeed
 				self.worldModel:SetCycle(timing)
+			end
+			self.worldModel:SetupBones()
+
+			if self:IsLocal2() and normalizedAction and not self.DisableFakeViewPunch then
+				local WorldModel = self.worldModel
+				if not IsValid(WorldModel) then return end
+				--[[reloadlerp = Lerp(FrameTime() * 3, reloadlerp, self.reload == nil and 0 or 2)
+				if reloadlerp >= 0.3 then
+					DrawBokehDOF(reloadlerp, 2, 0)
+				end]]
+				local camBone = (WorldModel:LookupBone(self.FakeViewBobBone) or (self.FakeVPShouldUseHand and WorldModel:LookupBone("ValveBiped.Bip01_R_Hand") or WorldModel:LookupBone("Weapon"))) or WorldModel:LookupBone("ValveBiped.Bip01_R_Hand")
+				if camBone then
+					local matrix = WorldModel:GetBoneMatrix(camBone)
+					local baseMatrix = WorldModel:GetBoneMatrix(WorldModel:LookupBone(self.FakeViewBobBaseBone) or 0)
+					if matrix and baseMatrix then
+						local gAngles = matrix:GetAngles()
+						local _, localAngles = WorldToLocal(vector_origin, gAngles, WorldModel:GetPos(), baseMatrix:GetAngles())
+						gAngles = localAngles
+						local reloadViewPunchReset = not self.reloadViewPunchActive or self.reloadViewPunchSequence ~= self.seq
+						if not reloadViewPunchReset then
+							local oldAngles = self.reloadViewPunchAngles
+							local cycleDelta = math.abs(timing - self.reloadViewPunchCycle)
+							local maxCycleStep = shotgunCycleAction and (self.ShotgunCycleViewPunchMaxCycleStep or 0.12)
+								or shotgunReloadAction and (self.ShotgunReloadViewPunchMaxCycleStep or 0.16)
+								or manualAction and (self.ManualCycleViewPunchMaxCycleStep or 0.12)
+								or (self.ReloadViewPunchMaxCycleStep or 0.2)
+							if oldAngles and cycleDelta <= maxCycleStep then
+								local pitch = math.AngleDifference(oldAngles.p, gAngles.p)
+								local yaw = math.AngleDifference(oldAngles.y, gAngles.y)
+								local roll = math.AngleDifference(oldAngles.r, gAngles.r)
+								local length = math.sqrt(pitch * pitch + yaw * yaw + roll * roll)
+								local deadzone = manualAction and (self.ManualCycleViewPunchBoneDeadzone or 0.001) or (self.ReloadViewPunchBoneDeadzone or 0.001)
+								if length > deadzone then
+									local travel = gp25ReloadAction and (self.GP25ReloadViewPunchTravel or 4)
+										or shotgunCycleAction and (self.ShotgunCycleViewPunchTravel or 6.5)
+										or shotgunReloadAction and (self.ShotgunReloadViewPunchTravel or 4.5)
+										or shotgunMagazineReloadAction and (self.ShotgunMagazineReloadViewPunchTravel or 5.5)
+										or manualAction and (self.ManualCycleViewPunchTravel or 8)
+										or (self.ReloadViewPunchTravel or 13)
+									local maxStep = gp25ReloadAction and (self.GP25ReloadViewPunchMaxStep or 0.08)
+										or shotgunCycleAction and (self.ShotgunCycleViewPunchMaxStep or 0.12)
+										or shotgunReloadAction and (self.ShotgunReloadViewPunchMaxStep or 0.075)
+										or shotgunMagazineReloadAction and (self.ShotgunMagazineReloadViewPunchMaxStep or 0.09)
+										or manualAction and (self.ManualCycleViewPunchMaxStep or 0.14)
+										or (self.ReloadViewPunchMaxStep or 0.22)
+									local rollMul = gp25ReloadAction and (self.GP25ReloadViewPunchRollMul or 0.25)
+										or shotgunCycleAction and (self.ShotgunCycleViewPunchRollMul or 0.25)
+										or shotgunReloadAction and (self.ShotgunReloadViewPunchRollMul or 0.2)
+										or shotgunMagazineReloadAction and (self.ShotgunMagazineReloadViewPunchRollMul or 0.22)
+										or manualAction and (self.ManualCycleViewPunchRollMul or 0.25)
+										or (self.ReloadViewPunchRollMul or 0.35)
+									local amount = math.min(travel * cycleDelta, maxStep)
+									local punch = Angle(pitch / length * amount, yaw / length * amount, roll / length * amount * rollMul)
+									ViewPunch2(-punch)
+									ViewPunch(punch)
+								end
+							end
+						end
+						self.reloadViewPunchActive = true
+						self.reloadViewPunchSequence = self.seq
+						self.reloadViewPunchAngles = Angle(gAngles.p, gAngles.y, gAngles.r)
+						self.reloadViewPunchCycle = timing
+						self.OldAngPunch = gAngles
+					end
+				end
 			end
 		end
 		
@@ -505,7 +613,7 @@ local function DrawWorldModel(self, force)
 			if IsValid(self.OwOmodel) then self.OwOmodel:Remove() end
 		end
 		--hg.StartCaptureRender()
-		self.worldModel:SetupBones()
+		if not self:ShouldUseFakeModel() then self.worldModel:SetupBones() end
 		self.worldModel:DrawModel()
 
 		if not owner:IsNPC() then self:DrawPost() end

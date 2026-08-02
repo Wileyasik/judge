@@ -24,7 +24,7 @@ SWEP.CantFireFromCollision = true
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_L_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 30
+SWEP.ViewPunchDiv = 1
 
 
 

@@ -40,7 +40,7 @@ SWEP.FakeEjectBrassATT = "2"
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 2000
+SWEP.ViewPunchDiv = 1
 
 local path = "weapons/eft/"
 
@@ -52,12 +52,15 @@ SWEP.AnimsEvents = {
 	},
     ["reload"] = {
         [0.10] = function(self) self:EmitSound("weapons/darsu_eft/sr2m/sr2m_mag_out.ogg") end,
+		[0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in3.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,	
 		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/sr2m/sr2m_mag_in.ogg") end,
 
     },
     ["reload_empty"] = {
         [0.10] = function(self) self:EmitSound("weapons/darsu_eft/mp7/mp7_mag_button.ogg") end,
         [0.15] = function(self) self:EmitSound("weapons/darsu_eft/sr2m/sr2m_mag_out.ogg") end,
+		[0.23] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,
 		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/sr2m/sr2m_mag_in.ogg") end,
 		[0.65] = function(self) self:EmitSound("weapons/darsu_eft/sr2m/sr2m_slider_in.ogg") end,
 		[0.75] = function(self) self:EmitSound("weapons/darsu_eft/sr2m/sr2m_slider_out.ogg") end,
@@ -158,20 +161,21 @@ SWEP.CustomEjectAngle = Angle(0, 0, 90)
 SWEP.Primary.ClipSize = 30
 SWEP.Primary.DefaultClip = 30
 SWEP.Primary.Automatic = true
-SWEP.Primary.Ammo = ".45 ACP"
+SWEP.Primary.Ammo = "9x21 mm"
 SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 30
+SWEP.Primary.Damage = 31
 SWEP.Primary.Spread = 0
-SWEP.Primary.Force = 28
+SWEP.Primary.Force = 31
 SWEP.animposmul = 2
 SWEP.Primary.Sound = {"weapons/darsu_eft/sr2m/fire_new/sr2m_outdoor_close_loop1.wav", 85, 120, 130}
 SWEP.SupressedSound = {"weapons/darsu_eft/sr2m/fire_new/sr2m_outdoor_close_loop_silenced1.wav", 75, 90, 100}
-SWEP.Primary.Wait = 0.067
-SWEP.ReloadTime = 2.6
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.Wait = 0.06061
+SWEP.ReloadTime = 3.3
 
 SWEP.PPSMuzzleEffect = "muzzleflash_smg"
 
-SWEP.CustomShell = "9x39"
+SWEP.CustomShell = "9x21"
 SWEP.ShellEject = "EjectBrass_9mm"
 
 SWEP.LocalMuzzlePos = Vector(12.5, -2.25, 4.6)
@@ -202,7 +206,7 @@ SWEP.availableAttachments = {
 
 SWEP.RHandPos = Vector(0, -1, 0)
 SWEP.LHandPos = Vector(7, -2, -2)
-SWEP.Penetration = 10
+SWEP.Penetration = 11
 SWEP.Spray = {}
 for i = 1, 30 do
 	SWEP.Spray[i] = Angle(-0.0, 0, 0) * 1

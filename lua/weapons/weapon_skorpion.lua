@@ -52,7 +52,7 @@ SWEP.lmagang2 = Angle(0,90,-30)
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_UpperArm"
-SWEP.ViewPunchDiv = 60
+SWEP.ViewPunchDiv = 1
 SWEP.FakeMagDropBone = 13
 
 SWEP.FakeReloadEvents = {
@@ -108,7 +108,7 @@ SWEP.Primary.Damage = 17
 SWEP.Primary.Sound = {"hndg_beretta92fs/beretta92_fire1.wav", 75, 90, 100}
 SWEP.Primary.Force = 25
 SWEP.animposmul = 2
-SWEP.Primary.Wait = 0.066
+SWEP.Primary.Wait = 0.06417
 SWEP.ReloadTime = 4.7
 SWEP.ReloadSoundes = {
 	"none",

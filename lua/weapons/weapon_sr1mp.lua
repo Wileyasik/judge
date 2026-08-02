@@ -3,7 +3,7 @@ SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "SR1MP"
 SWEP.Author = "TsNIITochMash"
-SWEP.Instructions = "A modern Russian combat pistol chambered in 9x19mm Parabellum"
+SWEP.Instructions = "A modern Russian combat pistol chambered in 9x21 mm"
 SWEP.Category = "Weapons - Pistols"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
@@ -28,7 +28,7 @@ SWEP.FakeBodyGroupsPresets = {
 SWEP.FakeVPShouldUseHand = false
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_Forearm"
-SWEP.ViewPunchDiv = 50
+SWEP.ViewPunchDiv = 1
 
 SWEP.AnimList = {
 	["idle"] = "base_idle",
@@ -45,11 +45,14 @@ SWEP.AnimsEvents = {
 	},
     ["reload"] = {
         [0.15] = function(self) self:EmitSound("weapons/darsu_eft/aps/aps_mag_out.ogg") end,
+        [0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in1.ogg") end,
+        [0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out1.ogg") end,
         [0.7] = function(self) self:EmitSound("weapons/darsu_eft/aps/aps_mag_in.ogg") end,
     },
     ["reload_empty"] = {
         [0.025] = function(self) self:EmitSound("weapons/darsu_eft/sr1mp/gyrza_slide_out.ogg") end,
 		[0.2] = function(self) self:EmitSound("weapons/darsu_eft/aps/aps_mag_out.ogg") end,
+		[0.23] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out1.ogg") end,
 		[0.56] = function(self) self:EmitSound("weapons/darsu_eft/aps/aps_mag_in.ogg") end,
 		[0.7] = function(self) self:EmitSound("weapons/darsu_eft/sr1mp/gyrza_slide_in.ogg") end,
     },
@@ -70,7 +73,7 @@ SWEP.WepSelectIcon2 = Material("entities/arc9_eft_sr1mp.png")
 SWEP.IconOverride = "entities/arc9_eft_sr1mp.png"
 SWEP.WepSelectIcon2box = true
 
-SWEP.CustomShell = "9x39"
+SWEP.CustomShell = "9x21"
 SWEP.EjectPos = Vector(4.5, 3, -21)
 SWEP.EjectAng = Angle(0,0,0)
 
@@ -81,13 +84,13 @@ SWEP.ShellEject = "EjectBrass_9mm"
 SWEP.Primary.ClipSize = 18
 SWEP.Primary.DefaultClip = 18
 SWEP.Primary.Automatic = false
-SWEP.Primary.Ammo = "9x19 mm Parabellum"
+SWEP.Primary.Ammo = "9x21 mm"
 SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 26
+SWEP.Primary.Damage = 31
 SWEP.Primary.Sound = {"weapons/darsu_eft/sr1mp/gyrza_indoor_close1.wav", 75, 90, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/sr1mp/gyrza_silenced_indoor_close1.wav", 65, 90, 100}
-SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/m1911/handling/m1911_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
-SWEP.Primary.Force = 26
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_hammer.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.Force = 31
 SWEP.Primary.Wait = PISTOLS_WAIT
 SWEP.ReloadTime = 3.5
 
@@ -99,7 +102,7 @@ SWEP.RHandPos = Vector(-5, -1.5, 2)
 SWEP.LHandPos = false
 SWEP.SprayRand = {Angle(-0.02, -0.02, 0), Angle(-0.03, 0.02, 0)}
 SWEP.Ergonomics = 1.2
-SWEP.Penetration = 7
+SWEP.Penetration = 11
 SWEP.ShockMultiplier = 1
 SWEP.punchmul = 1.5
 SWEP.punchspeed = 3

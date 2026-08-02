@@ -220,7 +220,7 @@ SWEP.GunCamAng = Angle(190,-5,-100)
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 70
+SWEP.ViewPunchDiv = 1
 
 SWEP.FakeMagDropBone = 52
 

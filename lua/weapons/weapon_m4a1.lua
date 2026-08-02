@@ -1,4 +1,6 @@
 SWEP.Base = "homigrad_base"
+SWEP.ARC9ActionLHIKFadeOutTime = 0.1
+SWEP.ARC9ActionLHIKFadeInTime = 0.45
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "M4A1"
@@ -105,7 +107,7 @@ SWEP.FakeEjectBrassATT = "2"
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 1000
+SWEP.ViewPunchDiv = 1
 
 local path = "weapons/darsu_eft/m4a1/"
 
@@ -117,11 +119,14 @@ SWEP.AnimsEvents = {
 	},
 	["reload3"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_mag_out1.ogg") end,
+		[0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in3.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,
 		[0.5] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_mag_in1.ogg") end,
 	},
 	["reload_empty3"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_magrelease_button.ogg") end,
 		[0.15] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_mag_out1.ogg") end,
+		[0.23] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,
 		[0.5] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_mag_in1.ogg") end,
 		[0.65] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_bolt_in.ogg") end,
 	},
@@ -253,8 +258,8 @@ SWEP.Primary.Force = 28
 SWEP.animposmul = 2
 SWEP.Primary.Sound = {"weapons/darsu_eft/m4a1/fire_new/m4a1_outdoor_close_onseshot_01.wav", 85, 90, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/m4a1/fire_new/m4a1_fire_silenced_close_loop2.wav", 65, 90, 100}
-SWEP.Primary.SoundEmpty = {"weapons/mk18/mk18_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
-SWEP.Primary.Wait = 0.075
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.Wait = 0.07273
 SWEP.ReloadTime = 3
 
 SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1"
@@ -276,7 +281,9 @@ SWEP.ScrappersSlot = "Primary"
 
 SWEP.DistSound = "weapons/darsu_eft/m4a1/fire_new/tx15_fire_outdoor_close.wav"
 
+SWEP.StartAtt = {"stock_ar15_hk_slim_line"}
 SWEP.availableAttachments = {
+	stock = hg.GetAR15StockProfile("stock_ar15_hk_slim_line"),
 	barrel = {
 		[1] = {"supressor5", Vector(-0.4, 0, 0), {}},
 		[2] = {"supressor6", Vector(-0.3, 0, 0), {}},
@@ -420,8 +427,13 @@ function SWEP:DrawPost()
 	end
 
 	-- Stock1
-	if not IsValid(self.HeldStock1CSModel) then
-		self.HeldStock1CSModel = ClientsideModel(self.HeldStock1Model, RENDERGROUP_BOTH)
+	local heldStockModel = self:GetActiveStockModel(self.HeldStock1Model)
+	if IsValid(self.HeldStock1CSModel) and self.HeldStock1CSModelPath ~= heldStockModel then
+		self.HeldStock1CSModel:Remove()
+	end
+	if heldStockModel ~= "" and not IsValid(self.HeldStock1CSModel) then
+		self.HeldStock1CSModel = ClientsideModel(heldStockModel, RENDERGROUP_BOTH)
+		self.HeldStock1CSModelPath = heldStockModel
 		if IsValid(self.HeldStock1CSModel) then self.HeldStock1CSModel:SetNoDraw(true) end
 	end
 	if IsValid(self.HeldStock1CSModel) then
@@ -597,6 +609,7 @@ if CLIENT then
 				continue
 			end
 			local modelPath = partName == "magazine" and self:GetActiveMagazineModel(partData.model, "world") or partData.model
+			if partName == "stock2" then modelPath = self:GetActiveStockModel(modelPath) end
 
 			local model = self.BC_DroppedPartModels[partName]
 			local oldPath = self.BC_DroppedPartPaths[partName]
@@ -606,7 +619,7 @@ if CLIENT then
 				model = nil
 			end
 
-			if not IsValid(model) then
+			if modelPath ~= "" and not IsValid(model) then
 				model = ClientsideModel(modelPath, RENDERGROUP_BOTH)
 				if IsValid(model) then
 					model:SetNoDraw(true)

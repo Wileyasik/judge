@@ -29,7 +29,7 @@ SWEP.EpicRunPos = Vector(1,2,2)
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 20
+SWEP.ViewPunchDiv = 1
 
 SWEP.weaponInvCategory = 1
 SWEP.ShellEject = ""

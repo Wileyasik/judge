@@ -1,4 +1,6 @@
 SWEP.Base = "homigrad_base"
+SWEP.ARC9ActionLHIKFadeOutTime = 0.1
+SWEP.ARC9ActionLHIKFadeInTime = 0.5
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "TX-15"
@@ -88,7 +90,7 @@ SWEP.FakeEjectBrassATT = "2"
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 1000
+SWEP.ViewPunchDiv = 1
 
 local path = "weapons/darsu_eft/m4a1/"
 
@@ -100,11 +102,14 @@ SWEP.AnimsEvents = {
 	},
 	["reload3"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_mag_out1.ogg") end,
+		[0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in3.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,
 		[0.5] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_mag_in1.ogg") end,
 	},
 	["reload_empty3"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_magrelease_button.ogg") end,
 		[0.15] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_mag_out1.ogg") end,
+		[0.23] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,
 		[0.5] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_mag_in1.ogg") end,
 		[0.65] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_bolt_in.ogg") end,
 	},
@@ -229,7 +234,7 @@ SWEP.Primary.Force = 28
 SWEP.animposmul = 2
 SWEP.Primary.Sound = {"weapons/darsu_eft/m4a1/fire_new/tx15_fire_outdoor_close.wav", 85, 90, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/m4a1/fire_new/tx15_fire_outdoor_silenced_close.wav", 65, 90, 100}
-SWEP.Primary.SoundEmpty = {"weapons/mk18/mk18_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.1
 SWEP.ReloadTime = 3
 

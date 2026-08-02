@@ -27,7 +27,7 @@ SWEP.FakeBodyGroupsPresets = {
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_L_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 30
+SWEP.ViewPunchDiv = 1
 
 -- Фейковые звуки (для совместимости)
 SWEP.FakeReloadSounds = {
@@ -61,7 +61,7 @@ SWEP.weaponInvCategory = 1
 SWEP.ShellEject = "RifleShellEject"
 SWEP.AutomaticDraw = false
 SWEP.UseCustomWorldModel = true
-SWEP.ViewPunchDiv = 115
+SWEP.ViewPunchDiv = 1
 
 -- Характеристики
 SWEP.Primary.ClipSize = 20
@@ -75,7 +75,7 @@ SWEP.Primary.Spread = 0
 -- Звуки выстрела (ASH-12)
 SWEP.Primary.Sound = {"weapons/darsu_eft/ash12/fire/ash12_outdoor_close_1.wav", 85, 100, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/ash12/fire/ash12_indoor_distant_loop_tail.wav", 65, 100, 100}
-SWEP.Primary.Wait = 0.085 -- ~700 RPM
+SWEP.Primary.Wait = 0.08392 -- ~650 RPM
 SWEP.NumBullet = 1
 
 SWEP.availableAttachments = {

@@ -28,7 +28,7 @@ SWEP.FakeBodyGroupsPresets = {
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_L_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 30
+SWEP.ViewPunchDiv = 1
 
 -- Фейковые звуки
 SWEP.FakeMagDropBone = 50
@@ -99,6 +99,7 @@ SWEP.Primary.Spread = 0
 -- Звуки выстрела
 SWEP.Primary.Sound = {"weapons/darsu_eft/axmc/aiax_outdoor_close.ogg", 85, 100, 100} 
 SWEP.SupressedSound = {"weapons/darsu_eft/axmc/aiax_outdoor_silenced_close.ogg", 65, 100, 100}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.15
 SWEP.NumBullet = 1
 

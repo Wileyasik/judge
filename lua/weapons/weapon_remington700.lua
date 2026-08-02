@@ -28,7 +28,7 @@ SWEP.FakeBodyGroupsPresets = {
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_L_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 30
+SWEP.ViewPunchDiv = 1
 
 SWEP.MagModel = "models/weapons/upgrades/w_magazine_m1a1_30.mdl"
 SWEP.FakeReloadEvents = {}
@@ -65,6 +65,7 @@ SWEP.Primary.Cone = 0
 SWEP.Primary.Spread = 0
 SWEP.Primary.Sound = {"weapons/darsu_eft/m700/rem700_outdoor_close1.ogg", 80, 90, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/m700/rem700_outdoor_silenced_close.ogg", 65, 90, 100}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 
 SWEP.DisableMuzzleDevices = true
 SWEP.availableAttachments = {

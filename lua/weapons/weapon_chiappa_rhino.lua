@@ -25,7 +25,7 @@ SWEP.FakeBodyGroupsPresets = {
 SWEP.FakeVPShouldUseHand = false
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_Forearm"
-SWEP.ViewPunchDiv = 50
+SWEP.ViewPunchDiv = 1
 SWEP.ReloadTime = 3
 
 SWEP.AnimList = {
@@ -43,13 +43,18 @@ SWEP.AnimsEvents = {
 	},
     ["reload"] = {
         [0.025] = function(self) self:EmitSound("weapons/darsu_eft/rhino/rhino_drum_out.ogg") end,
-		[0.2] = function(self) self:EmitSound("weapons/darsu_eft/rhino/rhino_drum_purge_all.ogg") end,
+		[0.2] = function(self)
+			self:EmitSound("weapons/darsu_eft/rhino/rhino_drum_purge_all.ogg")
+			self:EmitSound("arc9_eft_shared/generic_mag_pouch_in1.ogg")
+		end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out1.ogg") end,
 		[0.56] = function(self) self:EmitSound("weapons/darsu_eft/rhino/rhino_drum_extractor.ogg") end,
 		[0.7] = function(self) self:EmitSound("weapons/darsu_eft/rhino/rhino_drum_in.ogg") end,
     },
     ["reload_empty"] = {
         [0.025] = function(self) self:EmitSound("weapons/darsu_eft/rhino/rhino_drum_out.ogg") end,
 		[0.2] = function(self) self:EmitSound("weapons/darsu_eft/rhino/rhino_drum_purge_all.ogg") end,
+		[0.23] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out1.ogg") end,
 		[0.56] = function(self) self:EmitSound("weapons/darsu_eft/rhino/rhino_drum_extractor.ogg") end,
 		[0.7] = function(self) self:EmitSound("weapons/darsu_eft/rhino/rhino_drum_in.ogg") end,
     },
@@ -83,7 +88,7 @@ SWEP.Primary.Ammo = ".357 Magnum"
 SWEP.Primary.Cone = 0
 SWEP.Primary.Damage = 45
 SWEP.Primary.Sound = {"weapons/darsu_eft/rhino/rhino_fire_indoor_close.wav", 75, 75, 70}
-SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/makarov/handling/makarov_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_hammer.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Force = 25
 SWEP.Primary.Wait = 0.25
 

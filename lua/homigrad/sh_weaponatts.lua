@@ -1,5 +1,32 @@
 hg.attachments = {}
 
+function hg.GetAK74SightProfile()
+	return {
+		mountType = {"dovetail", "picatinny"},
+		mount = {
+			dovetail = Vector(-22, -0.25, 1.8),
+			picatinny = Vector(-21, 0, 2.35),
+		},
+		mountAngle = Angle(0, 0, 90),
+	}, {
+		mountAngle = Angle(0, 90, 0),
+		picatinny = {"mount3", Vector(-22, 0.85, 0.3), {}, mountType = "picatinny"},
+		dovetail = {"empty", Vector(0, 0, 0), {}, mountType = "dovetail"},
+	}
+end
+
+function hg.GetAR15StockProfile(defaultStock)
+	local profile = {
+		[1] = {"stock_ar15_dd_enhanced", Vector(0, 0, 0), {}},
+		[2] = {"stock_ar15_fab_defense_gl_core_s", Vector(0, 0, 0), {}},
+		[3] = {"stock_ar15_magpul_moe_sl_k", Vector(0, 0, 0), {}},
+		[4] = {"stock_ar15_magpul_moe_carbine", Vector(0, 0, 0), {}},
+		mountType = "ar15_stock",
+	}
+	if defaultStock then profile[5] = {defaultStock, Vector(0, 0, 0), {}} end
+	return profile
+end
+
 hg.attachments.sight = {
 	["empty"] = {"sight", "", Angle(0, 0, 0), {}},
 	["holo0"] = {
@@ -1426,7 +1453,7 @@ hg.attachments.sight = {
 		"sight",
 		"models/weapons/mods/scope_vulcan_mg35x.mdl",
 		Angle(0, 0, -90),
-		offset = Vector(-1, 0.4, -0.08),
+		offset = Vector(-1, 0.4, -0.05),
 		offsetView = Vector(-1.6, 0, 10),
 		{},
 		mountType = "picatinny",
@@ -2544,6 +2571,30 @@ hg.attachments.magwell = {
 	},
 }
 hg.attachments.stock = {
+	["stock_ar15_dd_enhanced"] = {
+		"stock", "models/weapons/mods/stock_ar15_dd_enhanced.mdl", Angle(0, 0, 0), {},
+		mountType = "ar15_stock", weaponManagedModel = true, recoilMul = 0.9, ergonomicsMul = 1.05, valid = true,
+	},
+	["stock_ar15_fab_defense_gl_core_s"] = {
+		"stock", "models/weapons/mods/stock_ar15_fab_defense_gl_core_s.mdl", Angle(0, 0, 0), {},
+		mountType = "ar15_stock", weaponManagedModel = true, recoilMul = 0.9, ergonomicsMul = 1.05, valid = true,
+	},
+	["stock_ar15_magpul_moe_sl_k"] = {
+		"stock", "models/weapons/mods/stock_ar15_magpul_moe_sl_k.mdl", Angle(0, 0, 0), {},
+		mountType = "ar15_stock", weaponManagedModel = true, recoilMul = 0.9, ergonomicsMul = 1.05, valid = true,
+	},
+	["stock_ar15_magpul_moe_carbine"] = {
+		"stock", "models/weapons/mods/stock_ar15_magpul_moe_carbine.mdl", Angle(0, 0, 0), {},
+		mountType = "ar15_stock", weaponManagedModel = true, recoilMul = 0.9, ergonomicsMul = 1.05, valid = true,
+	},
+	["stock_ar15_ak12_std"] = {
+		"stock", "models/weapons/mods/stock_ar15_izhmash_ak12_std.mdl", Angle(0, 0, 0), {},
+		mountType = "ar15_stock", weaponManagedModel = true, recoilMul = 0.9, ergonomicsMul = 1.05, standard = true, valid = true,
+	},
+	["stock_ar15_hk_slim_line"] = {
+		"stock", "models/weapons/mods/stock_ar15_hk_slim_line.mdl", Angle(0, 0, 0), {},
+		mountType = "ar15_stock", weaponManagedModel = true, recoilMul = 0.9, ergonomicsMul = 1.05, standard = true, valid = true,
+	},
 	["stock_akm_std"] = {
 		"stock",
 		"models/weapons/mods/ak_stock_ak74_std_wood.mdl",
@@ -2551,6 +2602,8 @@ hg.attachments.stock = {
 		{},
 		mountType = "ak_stock",
 		weaponManagedModel = true,
+		recoilMul = 0.9,
+		ergonomicsMul = 1.05,
 		standard = true,
 		valid = true,
 	},
@@ -2562,6 +2615,8 @@ hg.attachments.stock = {
 		mountType = "ak_stock",
 		stockMountModel = "models/weapons/mods/ak_stock_zenit_pt1_lock.mdl",
 		weaponManagedModel = true,
+		recoilMul = 0.9,
+		ergonomicsMul = 1.05,
 		standard = true,
 		valid = true,
 	},
@@ -2572,6 +2627,8 @@ hg.attachments.stock = {
 		{},
 		mountType = "ak_stock",
 		weaponManagedModel = true,
+		recoilMul = 0.9,
+		ergonomicsMul = 1.05,
 		standard = true,
 		valid = true,
 	},
@@ -2582,6 +2639,7 @@ hg.attachments.stock = {
 		{},
 		mountType = "ak_stock",
 		weaponManagedModel = true,
+		recoilMul = 0.94,
 		ergonomicsMul = 1.12,
 		valid = true,
 	},
@@ -2593,7 +2651,7 @@ hg.attachments.stock = {
 		mountType = "ak_stock",
 		weaponManagedModel = true,
 		recoilMul = 0.82,
-		ergonomicsMul = 0.95,
+		ergonomicsMul = 1.03,
 		valid = true,
 	},
 	["stock_ak74_plum"] = {
@@ -2603,6 +2661,8 @@ hg.attachments.stock = {
 		{},
 		mountType = "ak_stock",
 		weaponManagedModel = true,
+		recoilMul = 0.9,
+		ergonomicsMul = 1.05,
 		standard = true,
 		valid = true,
 	},
@@ -2613,6 +2673,8 @@ hg.attachments.stock = {
 		{},
 		mountType = "ak_stock",
 		weaponManagedModel = true,
+		recoilMul = 0.9,
+		ergonomicsMul = 1.05,
 		standard = true,
 		valid = true,
 	},
@@ -2623,6 +2685,8 @@ hg.attachments.stock = {
 		{},
 		mountType = "ak12_stock",
 		weaponManagedModel = true,
+		recoilMul = 0.9,
+		ergonomicsMul = 1.05,
 		standard = true,
 		valid = true,
 	},
@@ -2728,6 +2792,12 @@ end
 
 local attNames = {
 	-- Suppressors
+	["stock_ar15_dd_enhanced"] = "Daniel Defense Enhanced stock",
+	["stock_ar15_fab_defense_gl_core_s"] = "FAB Defense GL-CORE S stock",
+	["stock_ar15_magpul_moe_sl_k"] = "Magpul MOE SL-K stock",
+	["stock_ar15_magpul_moe_carbine"] = "Magpul MOE Carbine stock",
+	["stock_ar15_ak12_std"] = "Standard AK-12 stock",
+	["stock_ar15_hk_slim_line"] = "HK Slim Line stock",
 	["stock_akm_std"] = "Стандартный деревянный приклад АКМ",
 	["stock_ak_zenit_pt3"] = "Приклад Зенит ПТ-3",
 	["stock_ak74_std"] = "Стандартный приклад АК-74",
@@ -3016,6 +3086,12 @@ local attachmentsIcons = {
 	["mag9"] = "entities/76210rnd.png",
 	["mag11"] = "entities/556x45_magpul_pmag_10_gen_m3_stanag_10round_magazine.png",
 	["gp25"] = "entities/eft_ak_attachments/gp25real.png",
+	["stock_ar15_dd_enhanced"] = "",
+	["stock_ar15_fab_defense_gl_core_s"] = "",
+	["stock_ar15_magpul_moe_sl_k"] = "",
+	["stock_ar15_magpul_moe_carbine"] = "",
+	["stock_ar15_ak12_std"] = "",
+	["stock_ar15_hk_slim_line"] = "",
 	["stock_ak74_std"] = "",
 	["stock_ak74_plum"] = "",
 	["stock_ak_evo"] = "",

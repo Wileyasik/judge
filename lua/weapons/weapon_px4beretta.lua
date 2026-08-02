@@ -74,7 +74,7 @@ SWEP.FakeVPShouldUseHand = false
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_Forearm"
-SWEP.ViewPunchDiv = 50
+SWEP.ViewPunchDiv = 1
 
 SWEP.WepSelectIcon2 = Material("vgui/wep_jack_hmcd_smallpistol")
 SWEP.IconOverride = "vgui/wep_jack_hmcd_smallpistol"

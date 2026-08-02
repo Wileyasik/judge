@@ -25,7 +25,7 @@ SWEP.ARC9Parts = {
 	},
 }
 
-SWEP.FakePos = Vector(-11.5, 1, 10)
+SWEP.FakePos = Vector(-13, 1, 12)
 SWEP.FakeAng = Angle(0, 0, -0.5)
 SWEP.AttachmentPos = Vector(0,0,-0)
 SWEP.AttachmentAng = Angle(0,0,0)
@@ -40,7 +40,7 @@ SWEP.FakeEjectBrassATT = "2"
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 50
+SWEP.ViewPunchDiv = 150
 
 SWEP.MagModel = "models/weapons/mods/mag_ak_molot_556x45_45.mdl"
 SWEP.FakeMagDropBone = 50
@@ -55,14 +55,17 @@ SWEP.AnimsEvents = {
 	},
 	["reload0"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/ak/saiga_magout_plastic.ogg") end,
+		[0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in2.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out2.ogg") end,
 		[0.50] = function(self) self:EmitSound("weapons/darsu_eft/ak/saiga_magin_plastic.ogg") end,
 	},
 	["reload0_empty"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/ak/saiga_magrelease_button.ogg") end,
 		[0.15] = function(self) self:EmitSound("weapons/darsu_eft/ak/saiga_magout_plastic.ogg") end,
+		[0.25] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out2.ogg") end,
 		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/ak/saiga_magin_plastic.ogg") end,
 		[0.70] = function(self) self:EmitSound("weapons/darsu_eft/ak/saiga_slider_down.ogg") end,
-		[0.85] = function(self) self:EmitSound("weapons/darsu_eft/ak/saiga_slider_up.ogg") end,
+		[0.8] = function(self) self:EmitSound("weapons/darsu_eft/ak/saiga_slider_up.ogg") end,
 	},
 }
 
@@ -108,11 +111,13 @@ SWEP.Primary.ClipSize = 10
 SWEP.Primary.DefaultClip = 10
 SWEP.Primary.Automatic = true
 SWEP.Primary.Ammo = "12/70 gauge"
+SWEP.IsShotgun = true
 SWEP.Primary.Cone = 0
 SWEP.Primary.Damage = 16
 SWEP.Primary.Spread = Vector(0.01, 0.01, 0.01)
 SWEP.Primary.Force = 12
 SWEP.Primary.Sound = {"weapons/darsu_eft/saiga12/fire_close.wav", 80, 70, 75}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_hammer.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.15
 SWEP.NumBullet = 8
 SWEP.AnimShootMul = 3

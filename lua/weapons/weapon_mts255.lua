@@ -23,7 +23,7 @@ SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
 SWEP.AttachmentPos = Vector(-0, 0, 0.3)
 SWEP.AttachmentAng = Angle(0, 0, 0)
-SWEP.ViewPunchDiv = 425
+SWEP.ViewPunchDiv = 1
 
 -- БОДИГРУППЫ
 SWEP.FakeBodyGroups = "011111011111"
@@ -75,13 +75,14 @@ SWEP.AnimDurations = {
 -- ЗВУКИ ВЫСТРЕЛА
 SWEP.Primary.Sound = {path .. "mts255_outdoor_close.ogg", 90, 100, 100}
 SWEP.SupressedSound = {path .. "mts255_indoor_close.ogg", 80, 100, 100}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_hammer.wav", 75, 100, 105, CHAN_WEAPON, 2}
 
 SWEP.DeploySnd = {path .. "mr133_draw.ogg", 55, 100, 100}
 SWEP.HolsterSnd = {path .. "mr133_holster.ogg", 55, 100, 100}
 
 SWEP.AnimShootMul = 3
 SWEP.AnimShootHandMul = 10
-SWEP.HoldType = "shotgun"
+SWEP.HoldType = "rpg"
 SWEP.ZoomPos = Vector(0, -0.69, 5.2)
 SWEP.RHandPos = Vector(0, 0, -1)
 SWEP.LHandPos = Vector(7, 0, -2)

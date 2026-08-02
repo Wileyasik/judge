@@ -15,8 +15,8 @@ SWEP.Primary.Spread = 0
 SWEP.Primary.Force = 65
 SWEP.Primary.Sound = {"homigrad/weapons/rifle/hmg2.wav", 75, 100, 110}
 SWEP.SupressedSound = {"homigrad/weapons/rifle/hmg2.wav", 75, 100, 110}
-SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/fnfal/handling/fnfal_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
-SWEP.Primary.Wait = 0.11
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.Wait = 0.10909
 SWEP.ReloadTime = 8
 
 function SWEP:PostFireBullet(bullet)
@@ -89,7 +89,7 @@ SWEP.GunCamAng = Angle(190, 0, -90)
 SWEP.FakeBodyGroups = "111141322121"
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_UpperArm"
-SWEP.ViewPunchDiv = 45
+SWEP.ViewPunchDiv = 1
 SWEP.NoIdleLoop = true
 SWEP.GetDebug = false
 

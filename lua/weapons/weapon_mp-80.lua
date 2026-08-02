@@ -67,7 +67,7 @@ SWEP.FakeVPShouldUseHand = false
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_Forearm"
-SWEP.ViewPunchDiv = 50
+SWEP.ViewPunchDiv = 1
 SWEP.FakeMagDropBone = "magazine"
 SWEP.MagModel = "models/weapons/upgrades/w_magazine_makarov_8.mdl"
 SWEP.PPSMuzzleEffect = "pcf_jack_mf_tpistol" -- shared in sh_effects.lua

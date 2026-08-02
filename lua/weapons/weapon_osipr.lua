@@ -39,7 +39,7 @@ local vecPochtiZero = Vector(0.01,0.01,0.01)
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_L_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_UpperArm"
-SWEP.ViewPunchDiv = 50
+SWEP.ViewPunchDiv = 1
 
 SWEP.internalholo = Vector(15, 0, 0)
 SWEP.holo = Material("effects/sun_textures/birthshock")

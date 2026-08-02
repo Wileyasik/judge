@@ -35,7 +35,7 @@ SWEP.lmagang2 = Angle(0, 0, 0)
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_UpperArm"
-SWEP.ViewPunchDiv = 20
+SWEP.ViewPunchDiv = 1
 
 SWEP.FakeVPShouldUseHand = false
 SWEP.FakeMagDropBone = 50
@@ -53,11 +53,13 @@ local path = "weapons/darsu_eft/p90/"
 SWEP.AnimsEvents = {
 	["reload"] = {
 		[0.15] = function(self) self:EmitSound("weapons/darsu_eft/p90/p90_mag_out.ogg") end,
+		[0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in3.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,	
 		[0.5] = function(self) self:EmitSound("weapons/darsu_eft/p90/p90_mag_in_01_slide.ogg") end,
-
 	},
 	["reload_empty"] = {
 		[0.15] = function(self) self:EmitSound("weapons/darsu_eft/p90/p90_mag_out.ogg") end,
+		[0.23] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,
 		[0.5] = function(self) self:EmitSound("weapons/darsu_eft/p90/p90_mag_in_01_slide.ogg") end,
 		[0.7] = function(self) self:EmitSound("weapons/darsu_eft/p90/p90_bolt_in.ogg") end,
 		[0.75] = function(self) self:EmitSound("weapons/darsu_eft/p90/p90_bolt_out.ogg") end,
@@ -132,8 +134,8 @@ SWEP.Primary.Spread = 0
 SWEP.Primary.Force = 25
 SWEP.Primary.Sound = {"weapons/darsu_eft/p90/fire/p90_indoor1.wav", 75, 120, 130}
 SWEP.SupressedSound = {"weapons/darsu_eft/p90/fire/p90_silenced1.ogg", 75, 120, 130}
-SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/m14/handling/m14_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
-SWEP.Primary.Wait = 0.05
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.Wait = 0.06417
 SWEP.ReloadTime = 2.7
 
 SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1"
@@ -239,7 +241,7 @@ function SWEP:UpdateMagazineBodygroup(overideClip)
 		local clipSize = self.Primary.ClipSize
 		local currentAmmo = overideClip or self:Clip1()
 
-		local bodygroup = math.SnapTo(currentAmmo / 5, 1)
+		local bodygroup = math.max(math.SnapTo(currentAmmo / 5, 1), 1)
 
 		self:GetWM():SetBodygroup(1, bodygroup)
 	end

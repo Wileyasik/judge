@@ -19,7 +19,7 @@ SWEP.AttachmentAng = Angle(0, 0, 90)
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_pkp.png")
 SWEP.IconOverride = "entities/arc9_eft_pkp.png"
 
-SWEP.CustomShell = "762x54"
+SWEP.CustomShell = "762x51"
 SWEP.CustomSecShell = "m60len"
 SWEP.EjectPos = Vector(5.2, 17, -4.5)
 SWEP.EjectAng = Angle(0, -90, 0)
@@ -41,8 +41,8 @@ SWEP.Primary.Spread = 0
 SWEP.Primary.Force = 65
 SWEP.Primary.Sound = {"weapons/darsu_eft/pkm/pkm_outdoor_close_loop1.wav", 75, 80, 90}
 SWEP.SupressedSound = {"weapons/darsu_eft/rpd/fire/rpd_outdoor_silenced_close_loop4.wav", 75, 80, 90}
-SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/ak47/handling/ak47_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
-SWEP.Primary.Wait = 0.09
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.Wait = 0.09091
 SWEP.ReloadTime = 8
 
 SWEP.DeploySnd = {"homigrad/weapons/draw_hmg.mp3", 55, 100, 110}
@@ -125,7 +125,7 @@ SWEP.GunCamAng = Angle(190, 0, -90)
 SWEP.FakeBodyGroups = "0111101022131"
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_UpperArm"
-SWEP.ViewPunchDiv = 40
+SWEP.ViewPunchDiv = 1
 
 SWEP.NoIdleLoop = true
 SWEP.GetDebug = false

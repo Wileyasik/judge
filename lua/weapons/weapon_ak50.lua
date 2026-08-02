@@ -1,5 +1,7 @@
 --ByLazzy
 SWEP.Base = "homigrad_base"
+SWEP.ARC9ActionLHIKFadeOutTime = 0.1
+SWEP.ARC9ActionLHIKFadeInTime = 0.5
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "AK-50"
@@ -28,7 +30,7 @@ SWEP.FakeBodyGroupsPresets = {
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_L_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 30
+SWEP.ViewPunchDiv = 1
 
 
 SWEP.FakeMagDropBone = 50
@@ -124,7 +126,7 @@ SWEP.RHAng = Angle(0, -5, 90)
 SWEP.LHPos = Vector(15, -1, -3)
 SWEP.LHAng = Angle(-110, -90, -90)
 SWEP.UseCustomWorldModel = true
-SWEP.ViewPunchDiv = 115
+SWEP.ViewPunchDiv = 1
 
 -- Характеристики
 SWEP.Primary.ClipSize = 5
@@ -138,6 +140,7 @@ SWEP.Primary.Spread = 0
 -- Звуки выстрела (AK50)
 SWEP.Primary.Sound = {"weapons/darsu_eft/ak50/ak50_outdoor_close.ogg", 85, 100, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/ak50/ak50_outdoor_close.ogg", 65, 100, 100} -- Глушителя у AK50 вроде нет, но пусть будет тот же
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.25 
 SWEP.NumBullet = 1
 

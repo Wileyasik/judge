@@ -40,7 +40,7 @@ SWEP.FakeEjectBrassATT = "2"
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 70
+SWEP.ViewPunchDiv = 1
 
 SWEP.FakeMagDropBone = 50
 SWEP.MagModel = "models/weapons/mods/mag_vpo101_10.mdl"
@@ -55,10 +55,13 @@ SWEP.AnimsEvents = {
 	},
 	["reload1"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/vpo101/ak74_magout_plastic.ogg") end,
+		[0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in3.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,
 		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/vpo101/ak74_magin_plastic.ogg") end,
 	},
 	["reload_empty1_0"] = {
 		[0.15] = function(self) self:EmitSound("weapons/darsu_eft/vpo101/ak74_magout_plastic.ogg") end,
+		[0.23] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,
 		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/vpo101/ak74_magin_plastic.ogg") end,
 		[0.65] = function(self) self:EmitSound("weapons/darsu_eft/vpo101/vpo101_slider_na_tebya.ogg") end,
 		[0.75] = function(self) self:EmitSound("weapons/darsu_eft/vpo101/vpo101_slider_ot_tebya.ogg") end,
@@ -147,7 +150,7 @@ SWEP.Primary.Force = 25
 SWEP.animposmul = 2
 SWEP.Primary.Sound = {"weapons/darsu_eft/vpo101/dvl_fire_indoor_close.wav", 85, 90, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/vpo101/vpo101_fire_indoor_silenced_close.wav", 65, 90, 100}
-SWEP.Primary.SoundEmpty = {"weapons/ak74/ak74_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.12
 SWEP.ReloadTime = 3
 

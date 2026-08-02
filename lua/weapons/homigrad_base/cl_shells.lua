@@ -1,5 +1,6 @@
 local Shells = {}
 Shells["9x19"] = {m = "models/shells/fhell_9x19mm.mdl", s = "Shell"}
+Shells["9x21"] = {m = "models/shells/fhell_9x19mm.mdl", s = "Shell"}
 Shells["9x18"] = {m = "models/shells/fhell_9x18mm.mdl", s = "Shell"}
 Shells["45acp"] = {m = "models/shells/fhell_45cal.mdl", s = "Shell"}
 Shells["380acp"] = {m = "models/shells/fhell_380acp.mdl", s = "Shell"}

@@ -1,4 +1,6 @@
 SWEP.Base = "homigrad_base"
+SWEP.ARC9ActionLHIKFadeOutTime = 0.1
+SWEP.ARC9ActionLHIKFadeInTime = 0.5
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "RPK-74"
@@ -56,7 +58,7 @@ SWEP.lmagang2 = Angle(90,0,-90)
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_UpperArm"
-SWEP.ViewPunchDiv = 70
+SWEP.ViewPunchDiv = 1
 
 SWEP.FakeMagDropBone = 57
 
@@ -147,7 +149,7 @@ SWEP.Primary.Spread = 0
 SWEP.Primary.Force = 35
 SWEP.Primary.Sound = {"weapons/newsndw/rpk2_fp.wav", 75, 120, 140}
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/ak74/handling/ak74_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
-SWEP.Primary.Wait = 0.0827
+SWEP.Primary.Wait = 0.09091
 SWEP.ReloadTime = 5.5
 SWEP.ReloadSoundes = {
 	"none",

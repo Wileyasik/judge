@@ -58,7 +58,7 @@ SWEP.MagModel = "models/bhl/weapons/magazines/w_usas12_mag.mdl"
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 70
+SWEP.ViewPunchDiv = 1
 
 SWEP.FakeMagDropBone = 57
 
@@ -124,6 +124,7 @@ SWEP.Primary.ClipSize = 8
 SWEP.Primary.DefaultClip = 8
 SWEP.Primary.Automatic = true
 SWEP.Primary.Ammo = "12/70 gauge"
+SWEP.IsShotgun = true
 
 SWEP.CustomShell = "12x70"
 --SWEP.EjectPos = Vector(1,5,3.5)
@@ -137,7 +138,7 @@ SWEP.NumBullet = 8
 SWEP.Primary.Force = 35
 SWEP.Primary.Sound = {"weapons/usas_fire.wav", 75, 120, 140}
 SWEP.Primary.SoundEmpty = {"weapons/usas_dryfire.wav", 75, 100, 105, CHAN_WEAPON, 2}
-SWEP.Primary.Wait = 0.300
+SWEP.Primary.Wait = 0.13636
 SWEP.ReloadTime = 3.5
 
 

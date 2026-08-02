@@ -42,11 +42,14 @@ SWEP.AnimsEvents = {
 	},
     ["reload"] = {
         [0.1] = function(self) self:EmitSound("weapons/darsu_eft/deagle/deagle_mag_out.ogg") end,
+        [0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in1.ogg") end,
+        [0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out1.ogg") end,
         [0.55] = function(self) self:EmitSound("weapons/darsu_eft/deagle/deagle_mag_in.ogg") end,
     },
     ["reload_empty"] = {
         [0.025] = function(self) self:EmitSound("weapons/darsu_eft/deagle/deagle_chamber_out.ogg") end,
 		[0.2] = function(self) self:EmitSound("weapons/darsu_eft/deagle/deagle_mag_out_all.ogg") end,
+		[0.23] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out1.ogg") end,
 		[0.5] = function(self) self:EmitSound("weapons/darsu_eft/deagle/deagle_mag_in.ogg") end,
 		[0.7] = function(self) self:EmitSound("weapons/darsu_eft/deagle/deagle_chamber_in.ogg") end,
     },
@@ -130,7 +133,7 @@ SWEP.Primary.Cone = 0
 SWEP.Primary.Damage = 24
 SWEP.Primary.Sound = {"weapons/darsu_eft/pl15/pl_fire_indoor_distant.wav", 75, 90, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/pl15/pl_fire_silenced_indoor_close.wav", 65, 90, 100}
-SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/makarov/handling/makarov_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_hammer.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Force = 23
 SWEP.Primary.Wait = PISTOLS_WAIT
 SWEP.ReloadTime = 3.5

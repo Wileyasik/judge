@@ -14,7 +14,7 @@ SWEP.WepSelectIcon2 = Material("entities/arc9_eft_glock18c.png")
 SWEP.IconOverride = "entities/arc9_eft_glock18c.png"
 
 SWEP.Primary.Automatic = true
-SWEP.Primary.Wait = 0.05
+SWEP.Primary.Wait = 0.04545
 SWEP.AnimShootHandMul = 0.01
 
 SWEP.punchmul = 0.5

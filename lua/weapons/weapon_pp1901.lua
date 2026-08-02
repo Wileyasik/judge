@@ -61,7 +61,7 @@ SWEP.FakeEjectBrassATT = "2"
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 70
+SWEP.ViewPunchDiv = 1
 
 SWEP.FakeMagDropBone = 50
 SWEP.MagModel = "models/weapons/mods/mag_vityaz_sb7.mdl"
@@ -76,11 +76,14 @@ SWEP.AnimsEvents = {
 	},
 	["reload"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/ak/saiga_magout_plastic.ogg") end,
+		[0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in3.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,	
 		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/ak/saiga_magin_plastic.ogg") end,
 	},
 	["reload_empty"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/ak/saiga_magrelease_button.ogg") end,
 		[0.15] = function(self) self:EmitSound("weapons/darsu_eft/ak/saiga_magout_plastic.ogg") end,
+		[0.23] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,
 		[0.40] = function(self) self:EmitSound("weapons/darsu_eft/ak/saiga_magin_plastic.ogg") end,
 		[0.60] = function(self) self:EmitSound("weapons/darsu_eft/ak/saiga_slider_up.ogg") end,
 		[0.70] = function(self) self:EmitSound("weapons/darsu_eft/ak/saiga_slider_down.ogg") end,
@@ -187,7 +190,8 @@ SWEP.Primary.Force = 20
 SWEP.animposmul = 2
 SWEP.Primary.Sound = {"weapons/darsu_eft/ak/fire_new/vityaz_outdoor_close_loop_1.wav", 85, 120, 130}
 SWEP.SupressedSound = {"weapons/darsu_eft/ak/fire_new/vityaz_outdoor_close_silenced_loop_1.wav", 75, 90, 100}
-SWEP.Primary.Wait = 0.08
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.Wait = 0.07792
 SWEP.ReloadTime = 3
 
 SWEP.PPSMuzzleEffect = "muzzleflash_smg"

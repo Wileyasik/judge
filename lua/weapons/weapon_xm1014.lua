@@ -61,7 +61,7 @@ SWEP.FakeReloadEvents = {
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_L_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 10
+SWEP.ViewPunchDiv = 1
 
 
 SWEP.availableAttachments = {

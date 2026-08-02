@@ -26,7 +26,7 @@ SWEP.FakeReloadEvents = {}
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_L_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 30
+SWEP.ViewPunchDiv = 1
 
 SWEP.FakeVPShouldUseHand = false
 
@@ -59,6 +59,7 @@ SWEP.Primary.Cone = 0
 SWEP.Primary.Spread = 0
 SWEP.Primary.Sound = {"weapons/darsu_eft/mosin/mosin_outdoor_close1.ogg", 80, 90, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/mosin/mosin_outdoor_silenced_close1.ogg", 65, 90, 100}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 
 SWEP.DisableMuzzleDevices = true
 SWEP.availableAttachments = {

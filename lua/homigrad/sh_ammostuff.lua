@@ -1220,6 +1220,39 @@ hg.ammotypes = {
 			Icon = matPistolAmmo
 		}
 	},
+	["9x21mm"] = {
+		name = "9x21 mm",
+		allowed = true,
+		dmgtype = DMG_BULLET,
+		tracer = TRACER_LINE,
+		plydmg = 0,
+		npcdmg = 0,
+		force = 110,
+		maxcarry = 80,
+		minsplash = 1,
+		maxsplash = 1,
+		TracerSetings = {
+			TracerBody = Material("particle/fire"),
+			TracerTail = Material("effects/laser_tracer"),
+			TracerHeadSize = 1,
+			TracerLength = 45,
+			TracerWidth = 1,
+			TracerColor = Color(255, 237, 155),
+			TracerTPoint1 = 0.25,
+			TracerTPoint2 = 1,
+			TracerSpeed = 15000
+		},
+		BulletSettings = {
+			Damage = 31,
+			Force = 31,
+			Penetration = 11,
+			Shell = "9x21",
+			Speed = 410,
+			Diameter = 9,
+			Mass = 6.7,
+			Icon = matPistolAmmo
+		}
+	},
 	["9x19mmqm"] = {
 		name = "9x19 mm QuakeMaker",
 		allowed = true,
@@ -2828,6 +2861,12 @@ local ammoents = {
 		Icon = "vgui/hud/hmcd_round_9",
 		Material = "models/hmcd_ammobox_9",
 		Scale = 0.8,
+	},
+	["9x21mm"] = {
+		Icon = "vgui/hud/hmcd_round_9",
+		Material = "models/hmcd_ammobox_9",
+		Scale = 0.8,
+		Count = 30,
 	},
 	["9x19mmgreentracer"] = {
 		Icon = "vgui/hud/9x19greentracerzcity",

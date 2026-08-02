@@ -27,7 +27,7 @@ SWEP.StartAtt = {"14"}
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_UpperArm"
-SWEP.ViewPunchDiv = 40
+SWEP.ViewPunchDiv = 1
 
 SWEP.AnimList = {
 	["deploy"] = { "draw", 1.1, false },
@@ -70,6 +70,7 @@ SWEP.LHandPos = false
 SWEP.SprayRand = {Angle(-0.03, -0.03, 0), Angle(-0.05, 0.03, 0)}
 SWEP.Ergonomics = 1
 SWEP.Penetration = 7
+SWEP.ReloadTime = 3
 
 SWEP.weight = 3
 SWEP.ScrappersSlot = "Primary"
@@ -229,18 +230,3 @@ function SWEP:PrimaryShootPost()
 		self:PlayAnim("idle", 1, not self.NoIdleLoop)
 	end)
 end
-
-SWEP.InspectAnimWepAng = {
-	Angle(0, 0, 0),
-	Angle(4, 4, 15),
-	Angle(10, 15, 25),
-	Angle(10, 15, 25),
-	Angle(10, 15, 25),
-	Angle(-6, -15, -15),
-	Angle(1, 15, -45),
-	Angle(15, 25, -55),
-	Angle(15, 25, -55),
-	Angle(15, 25, -55),
-	Angle(0, 0, 0),
-	Angle(0, 0, 0)
-}

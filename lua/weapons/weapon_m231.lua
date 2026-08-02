@@ -1,4 +1,6 @@
 SWEP.Base = "homigrad_base"
+SWEP.ARC9ActionLHIKFadeOutTime = 0.1
+SWEP.ARC9ActionLHIKFadeInTime = 1
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "Patriot"
@@ -102,7 +104,7 @@ SWEP.ZoomPos = Vector(0, -1.751, 6.6749)
 
 SWEP.GunCamPos = Vector(4,-15,-6)
 SWEP.GunCamAng = Angle(190,-5,-100)
-SWEP.ViewPunchDiv = 1000
+SWEP.ViewPunchDiv = 1
 
 SWEP.FakeEjectBrassATT = "2"
 
@@ -225,8 +227,8 @@ SWEP.Primary.Force = 28
 SWEP.animposmul = 2
 SWEP.Primary.Sound = {"weapons/darsu_eft/m4a1/fire_new/m4a1_outdoor_close_onseshot_01.wav", 85, 90, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/m4a1/fire_new/m4a1_fire_silenced_close_loop2.wav", 65, 90, 100}
-SWEP.Primary.SoundEmpty = {"weapons/mk18/mk18_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
-SWEP.Primary.Wait = 0.075
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.Wait = 0.04453
 SWEP.ReloadTime = 4
 
 SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1"

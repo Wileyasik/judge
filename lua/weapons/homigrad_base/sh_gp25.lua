@@ -5,8 +5,9 @@ local GP25_LOAD_TIME = 0.4
 local GP25_FIRE_TIME = 0.8
 local GP25_SWITCH_TIME = 0.7
 
-SWEP.GP25MuzzlePos = Vector(-7, 0, -3)
-SWEP.GP25MuzzleAng = Angle(35, 0, 0)
+SWEP.GP25MuzzlePos = Vector(-7, 0, -2)
+SWEP.GP25MuzzleAng = Angle(0, 0, 0)
+SWEP.GP25ClipSize = 1
 SWEP.GP25AimTransitionSpeed = 0.04
 SWEP.GP25ViewPunch = Angle(-2, 0, 0)
 SWEP.GP25CameraKickDistance = 0.7
@@ -91,13 +92,14 @@ if CLIENT then
 
 		local owner = self:GetOwner()
 		local reloadLHIKWeight = self:GetARC9ReloadLHIKWeight()
+		local actionActive = self.reload
 		local usePose = IsValid(owner)
 			and not owner.suiciding
 			and self.lhandik
 			and hg.CanUseLeftHand(owner)
-			and (not self.reload or reloadLHIKWeight > 0)
+			and (not actionActive or reloadLHIKWeight > 0)
 		self.GP25LHIKWeight = LerpFT(self.ARC9LHIKTransitionSpeed or 0.04, self.GP25LHIKWeight or 0, usePose and 1 or 0)
-		if self.reload then self.GP25LHIKWeight = math.max(self.GP25LHIKWeight, reloadLHIKWeight) end
+		if actionActive then self.GP25LHIKWeight = math.max(self.GP25LHIKWeight, reloadLHIKWeight) end
 
 		local model = self:GetAttachmentModel("gp25")
 		if not IsValid(model) then return end
@@ -117,7 +119,7 @@ if CLIENT then
 		model:SetCycle(cycle)
 
 		if self.GP25LHIKWeight <= 0.001 then return end
-		self:ApplyARC9GripPose(target, model, self.reload and reloadLHIKWeight or self.GP25LHIKWeight)
+		self:ApplyARC9GripPose(target, model, actionActive and reloadLHIKWeight or self.GP25LHIKWeight)
 	end
 end
 
@@ -147,10 +149,13 @@ if SERVER then
 	function SWEP:GP25Reload()
 		if not self:IsGP25Active() then return false end
 		if (self.GP25NextAction or 0) > CurTime() then return false end
-		if self:GetNW2Int("GP25Clip", 0) > 0 then return false end
+		local clip = self:GetNW2Int("GP25Clip", 0)
+		local clipSize = self.GP25ClipSize or 1
+		if clip >= clipSize then return false end
 
 		local owner = self:GetOwner()
 		if not IsValid(owner) or owner:GetAmmoCount(GP25_AMMO) < 1 then return false end
+		local loadCount = math.min(clipSize - clip, owner:GetAmmoCount(GP25_AMMO))
 
 		self.GP25ActionSerial = (self.GP25ActionSerial or 0) + 1
 		local serial = self.GP25ActionSerial
@@ -160,10 +165,10 @@ if SERVER then
 
 		timer.Simple(GP25_LOAD_TIME, function()
 			if not IsValid(self) or self.GP25ActionSerial ~= serial or not self:HasGP25() then return end
-			if not IsValid(owner) or self:GetOwner() ~= owner or owner:GetAmmoCount(GP25_AMMO) < 1 then return end
+			if not IsValid(owner) or self:GetOwner() ~= owner or owner:GetAmmoCount(GP25_AMMO) < loadCount then return end
 
-			owner:RemoveAmmo(1, GP25_AMMO)
-			self:SetNW2Int("GP25Clip", 1)
+			owner:RemoveAmmo(loadCount, GP25_AMMO)
+			self:SetNW2Int("GP25Clip", clip + loadCount)
 			self:EmitSound("weapons/darsu_eft/ak/gp34/gp_25_vog_in.ogg", 65, 100)
 		end)
 
@@ -238,7 +243,7 @@ if SERVER then
 		end
 
 		phys:SetVelocity(owner:GetVelocity() + aimDirection * 4000)
-		self:SetNW2Int("GP25Clip", 0)
+		self:SetNW2Int("GP25Clip", math.max(self:GetNW2Int("GP25Clip", 1) - 1, 0))
 		self:SetLastShootTime(CurTime())
 		self.GP25ActionSerial = (self.GP25ActionSerial or 0) + 1
 		local serial = self.GP25ActionSerial

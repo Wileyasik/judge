@@ -1,4 +1,6 @@
 SWEP.Base = "homigrad_base"
+SWEP.ARC9ActionLHIKFadeOutTime = 0.1
+SWEP.ARC9ActionLHIKFadeInTime = 0.3
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "AK-12"
@@ -67,7 +69,7 @@ SWEP.GunCamAng = Angle(190, -5, -100)
 SWEP.FakeEjectBrassATT = "2"
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 70
+SWEP.ViewPunchDiv = 150
 
 SWEP.AnimsEvents = {
 	["inspect"] = {
@@ -77,14 +79,17 @@ SWEP.AnimsEvents = {
 	},
 	["reload545"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/ak/akm_magout_metal.ogg") end,
-		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/ak/akm_magin_metal.ogg") end,
+		[0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in3.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,
+		[0.55] = function(self) self:EmitSound("weapons/darsu_eft/ak/akm_magin_metal.ogg") end,
 	},
 	["reload545_empty"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/ak/ak74_magrelease_button.ogg") end,
 		[0.15] = function(self) self:EmitSound("weapons/darsu_eft/ak/akm_magout_metal.ogg") end,
+		[0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,
 		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/ak/akm_magin_metal.ogg") end,
 		[0.75] = function(self) self:EmitSound("weapons/darsu_eft/ak/akms_slider_up.ogg") end,
-		[0.83] = function(self) self:EmitSound("weapons/darsu_eft/ak/akms_slider_down.ogg") end,
+		[0.82] = function(self) self:EmitSound("weapons/darsu_eft/ak/akms_slider_down.ogg") end,
 	},
 }
 
@@ -195,8 +200,8 @@ SWEP.Primary.Force = 32
 SWEP.animposmul = 2
 SWEP.Primary.Sound = {"weapons/darsu_eft/ak/fire_new/ak74_outdoor_close_loop_1.wav", 85, 90, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/ak/fire_new/ak74_loop_outdoor_close_silenced_4.wav", 65, 90, 100}
-SWEP.Primary.SoundEmpty = {"weapons/newakm/akmm_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
-SWEP.Primary.Wait = 0.085
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.Wait = 0.07792
 SWEP.ReloadTime = 3
 
 SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1"
@@ -229,8 +234,9 @@ SWEP.lengthSub = 25
 SWEP.handsAng = Angle(7, 2, 0)
 SWEP.DistSound = "weapons/newakm/akmm_dist.wav"
 
-SWEP.StartAtt = {"grip4", "stock_ak12_std"}
+SWEP.StartAtt = {"stock_ar15_ak12_std"}
 SWEP.availableAttachments = {
+	stock = hg.GetAR15StockProfile("stock_ar15_ak12_std"),
 	barrel = {
 		[1] = {"supressor3", Vector(0, 0, 0), {}},
 		[2] = {"supressor4", Vector(0, 0, 0), {}},
@@ -240,7 +246,8 @@ SWEP.availableAttachments = {
 	sight = {
 		["mountType"] = "picatinny",
 		["mount"] = Vector(-17, 0, 1.75),
-		["mountAngle"] = Angle(0, 0, 90)
+		["mountAngle"] = Angle(0, 0, 90),
+		["akScopeCorrections"] = true,
 	},
 	grip = {
 		["mount"] = {["picatinny"] = Vector(8, 1.3, -1)},
@@ -254,12 +261,6 @@ SWEP.availableAttachments = {
 	},
 	magwell = {
 		["mountType"] = {"ak_545_60", "ak_545"},
-	},
-	stock = {
-		[1] = {"stock_ak12_std", Vector(0, 0, 0), {}},
-		["mountType"] = "ak12_stock",
-		["mountBone"] = "mod_reciever",
-		["mount"] = Vector(-0.7, 3, -0.66),
 	},
 }
 

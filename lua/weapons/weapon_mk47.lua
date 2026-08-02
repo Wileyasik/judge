@@ -1,4 +1,6 @@
 SWEP.Base = "homigrad_base"
+SWEP.ARC9ActionLHIKFadeOutTime = 0.1
+SWEP.ARC9ActionLHIKFadeInTime = 1
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "CMMG Mk47 Mutant"
@@ -71,7 +73,7 @@ SWEP.FakeEjectBrassATT = "2"
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 70
+SWEP.ViewPunchDiv = 150
 
 local path = "weapons/darsu_eft/mk47/"
 
@@ -83,11 +85,14 @@ SWEP.AnimsEvents = {
 	},
 	["reload_762"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/mk47/akm_magout_metal.ogg") end,
+		[0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in3.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,
 		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/mk47/akm_magin_metal.ogg") end,
 	},
 	["reload_empty_762"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/mk47/mutant_magrelease_button.ogg") end,
 		[0.15] = function(self) self:EmitSound("weapons/darsu_eft/mk47/akm_magout_metal.ogg") end,
+		[0.23] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,
 		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/mk47/akm_magin_metal.ogg") end,
 		[0.65] = function(self) self:EmitSound("weapons/darsu_eft/mk47/mutant_bolt_na_tebya.ogg") end,
 		[0.75] = function(self) self:EmitSound("weapons/darsu_eft/mk47/mutant_bolt_ot_tebya.ogg") end,
@@ -204,7 +209,7 @@ SWEP.Primary.Force = 28
 SWEP.animposmul = 2
 SWEP.Primary.Sound = {"weapons/darsu_eft/mk47/fire_new/mutant_outdoor_close1.wav", 85, 90, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/mk47/fire_new/mutant_outdoor_silenced_close2.wav", 65, 90, 100}
-SWEP.Primary.SoundEmpty = {"weapons/darsu_eft/mk47/mk47_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.085
 SWEP.ReloadTime = 3
 
@@ -228,8 +233,9 @@ SWEP.ScrappersSlot = "Primary"
 SWEP.DistSound = "weapons/darsu_eft/mk47/mk47_dist.wav"
 
 
-SWEP.StartAtt = {"holo4"}
+SWEP.StartAtt = {"holo4", "stock_ar15_fab_defense_gl_core_s"}
 SWEP.availableAttachments = {
+	stock = hg.GetAR15StockProfile(),
 	barrel = {
 		[1] = {"supressor9", Vector(0, 0, 0), {}},
 		[2] = {"supressor16", Vector(0, 0, 0), {}},
@@ -341,8 +347,13 @@ function SWEP:DrawPost()
 	end
 
 	-- Stock1
-	if not IsValid(self.HeldStock1CSModel) then
-		self.HeldStock1CSModel = ClientsideModel(self.HeldStock1Model, RENDERGROUP_BOTH)
+	local heldStockModel = self:GetActiveStockModel(self.HeldStock1Model)
+	if IsValid(self.HeldStock1CSModel) and self.HeldStock1CSModelPath ~= heldStockModel then
+		self.HeldStock1CSModel:Remove()
+	end
+	if heldStockModel ~= "" and not IsValid(self.HeldStock1CSModel) then
+		self.HeldStock1CSModel = ClientsideModel(heldStockModel, RENDERGROUP_BOTH)
+		self.HeldStock1CSModelPath = heldStockModel
 		if IsValid(self.HeldStock1CSModel) then self.HeldStock1CSModel:SetNoDraw(true) end
 	end
 	if IsValid(self.HeldStock1CSModel) then
@@ -456,6 +467,7 @@ if CLIENT then
 				continue
 			end
 			local modelPath = partName == "magazine" and self:GetActiveMagazineModel(partData.model, "world") or partData.model
+			if partName == "stock1" then modelPath = self:GetActiveStockModel(modelPath) end
 
 			local model = self.BC_DroppedPartModels[partName]
 			local oldPath = self.BC_DroppedPartPaths[partName]
@@ -465,7 +477,7 @@ if CLIENT then
 				model = nil
 			end
 
-			if not IsValid(model) then
+			if modelPath ~= "" and not IsValid(model) then
 				model = ClientsideModel(modelPath, RENDERGROUP_BOTH)
 				if IsValid(model) then
 					model:SetNoDraw(true)

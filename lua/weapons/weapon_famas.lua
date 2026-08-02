@@ -54,7 +54,7 @@ SWEP.lmagang2 = Angle(0,0,0)
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_UpperArm"
-SWEP.ViewPunchDiv = 60
+SWEP.ViewPunchDiv = 1
 SWEP.FakeMagDropBone = 14
 
 SWEP.FakeReloadEvents = {
@@ -119,7 +119,7 @@ SWEP.animposmul = 2
 SWEP.Primary.Sound       = {"weapons/tfa_ins2/famas/famas_fp.wav", 85, 100, 110}
 SWEP.Primary.SoundEmpty  = {"weapons/tfa_ins2/famas/famas_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.SupressedSound = {"weapons/tfa_ins2/famas/famas_suppressed_fp.wav", 75, 90, 100}
-SWEP.Primary.Wait = 0.085
+SWEP.Primary.Wait = 0.06061
 
 
 SWEP.availableAttachments = {

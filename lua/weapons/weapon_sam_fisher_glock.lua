@@ -46,6 +46,7 @@ SWEP.MagModel = "models/weapons/mods/mag_glock_magex_30.mdl"
 SWEP.HeldMagModel = "models/weapons/mods/mag_glock_magex_30.mdl"
 SWEP.Primary.Sound = {"weapons/darsu_eft/glock/glock17_close.wav", 75, 90, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/glock/glock17_close_silenced.ogg", 65, 90, 100}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_hammer.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.ClipSize = 30
 SWEP.Primary.DefaultClip = 30
 
@@ -54,9 +55,11 @@ SWEP.IconOverride = "entities/sam.png"
 
 SWEP.SetSupressor = true
 SWEP.SupressorOnly = true
+SWEP.DisableMuzzleDevices = true
 SWEP.StartAtt = {"holo16"}
 
 SWEP.availableAttachments = {
+	barrel = false,
 	magwell = {
 		["mountType"] = "glock_mag",
 	},

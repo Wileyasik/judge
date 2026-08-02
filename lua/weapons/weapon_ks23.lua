@@ -60,7 +60,7 @@ SWEP.FakeReloadEvents = {
 
 SWEP.FakeViewBobBone = "Camera_animated"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_Spine4"
-SWEP.ViewPunchDiv = 5
+SWEP.ViewPunchDiv = 1
 
 
 SWEP.FakeVPShouldUseHand = false
@@ -92,6 +92,7 @@ SWEP.Primary.Cone = 0
 SWEP.Primary.Spread = Vector(0.01, 0.01, 0.01)
 SWEP.Primary.Sound = {"weapons/darsu_eft/ks23/ks23_fire_outdoor_close.ogg", 80, 90, 100}
 SWEP.SupressedSound = {"toz_shotgun/toz_suppressed_fp.wav", 65, 90, 100}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_hammer.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.availableAttachments = {}
 
 --models/weapons/tfa_ins2/upgrades/att_suppressor_12ga.mdl

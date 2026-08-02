@@ -26,7 +26,7 @@ SWEP.FakeBodyGroupsPresets = {
 SWEP.FakeVPShouldUseHand = false
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_Forearm"
-SWEP.ViewPunchDiv = 50
+SWEP.ViewPunchDiv = 1
 SWEP.ReloadTime = 3
 
 SWEP.AnimList = {
@@ -58,9 +58,9 @@ SWEP.Primary.Cone = 0
 SWEP.Primary.Damage = 12
 SWEP.Primary.Sound = {"weapons/darsu_eft/aps/aps_outdoor_close_loop3.wav", 75, 90, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/aps/aps_outdoor_close_loop3.wav", 65, 90, 100}
-SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/makarov/handling/makarov_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_hammer.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Force = 15
-SWEP.Primary.Wait = 0.08
+SWEP.Primary.Wait = 0.07273
 
 SWEP.DeploySnd = {"homigrad/weapons/draw_pistol.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/holster_pistol.mp3", 55, 100, 110}
@@ -111,12 +111,17 @@ SWEP.AnimsEvents = {
 		[0.8] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin6.ogg") end,
 	},
     ["reload"] = {
-        [0.2] = function(self) self:EmitSound("weapons/darsu_eft/aps/aps_mag_out.ogg") end,
+        [0.2] = function(self)
+            self:EmitSound("weapons/darsu_eft/aps/aps_mag_out.ogg")
+            self:EmitSound("arc9_eft_shared/generic_mag_pouch_in1.ogg")
+        end,
+        [0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out1.ogg") end,
         [0.7] = function(self) self:EmitSound("weapons/darsu_eft/aps/aps_mag_in.ogg") end,
     },
     ["reload_empty"] = {
         [0.025] = function(self) self:EmitSound("weapons/darsu_eft/aps/aps_slider_out.ogg") end,
 		[0.2] = function(self) self:EmitSound("weapons/darsu_eft/aps/aps_mag_out.ogg") end,
+		[0.23] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out1.ogg") end,
 		[0.56] = function(self) self:EmitSound("weapons/darsu_eft/aps/aps_mag_in.ogg") end,
 		[0.7] = function(self) self:EmitSound("weapons/darsu_eft/aps/aps_slider_in.ogg") end,
     },

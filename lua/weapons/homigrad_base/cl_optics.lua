@@ -100,13 +100,13 @@ end)
 function IsAimingNoScope(ply)
 	local wep = ply:GetActiveWeapon()
 
-	return IsValid(wep) and ishgweapon(wep) and hg.KeyDown(ply, IN_ATTACK2) and wep:CanUse()
+	return IsValid(wep) and ishgweapon(wep) and wep:IsZoom()
 end
 
 function IsAiming(ply)
 	local wep = ply:GetActiveWeapon()
 
-	return IsValid(wep) and ishgweapon(wep) and hg.KeyDown(ply, IN_ATTACK2) and wep.attachments and wep:HasAttachment("sight","optic")
+	return IsValid(wep) and ishgweapon(wep) and wep:IsZoom() and wep.attachments and wep:HasAttachment("sight","optic")
 end
 
 local rtsize = 640

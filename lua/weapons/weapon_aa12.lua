@@ -39,7 +39,7 @@ SWEP.MagModel = "models/weapons/mods/mag_aa12_20.mdl"
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 70
+SWEP.ViewPunchDiv = 1
 
 SWEP.FakeMagDropBone = 50
 
@@ -58,13 +58,16 @@ SWEP.AnimList = {
 SWEP.AnimsEvents = {
 	["reload0"] = {
 		[0.15] = function(self) self:EmitSound("weapons/darsu_eft/aa12/aa12_drum_out_0.ogg") end,
+		[0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in2.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out2.ogg") end,	
 		[0.60] = function(self) self:EmitSound("weapons/darsu_eft/aa12/aa12_drum_in_0.ogg") end,
 	},
 	["reload_empty0_0"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/aa12/aa12_bolt_out.ogg") end,
 		[0.15] = function(self) self:EmitSound("weapons/darsu_eft/aa12/aa12_bolt_in.ogg") end,
 		[0.25] = function(self) self:EmitSound("weapons/darsu_eft/aa12/aa12_drum_out_0.ogg") end,
-		[0.70] = function(self) self:EmitSound("weapons/darsu_eft/aa12/aa12_drum_in_0.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out2.ogg") end,
+		[0.65] = function(self) self:EmitSound("weapons/darsu_eft/aa12/aa12_drum_in_0.ogg") end,
 	},
 	["inspect"] = {
 		[0.01] = function(self) self:EmitSound("arc9_eft_shared/weap_handon.ogg") end,
@@ -82,6 +85,7 @@ SWEP.Primary.ClipSize = 20
 SWEP.Primary.DefaultClip = 20
 SWEP.Primary.Automatic = true
 SWEP.Primary.Ammo = "12/70 gauge"
+SWEP.IsShotgun = true
 
 SWEP.CustomShell = "12x70"
 
@@ -93,8 +97,8 @@ SWEP.NumBullet = 8
 SWEP.Primary.Force = 35
 SWEP.Primary.Sound = {"sound/weapons/darsu_eft/aa12_outdoor_close_loop1.wav", 75, 120, 140}
 SWEP.SupressedSound = {"weapons/darsu_eft/m3s90/m3_fire_outdoor_silenced_close.wav", 65, 100, 100}
-SWEP.Primary.SoundEmpty = {"sound/weapons/darsu_eft/aa12_outdoor_close_loop1.wav", 75, 100, 105, CHAN_WEAPON, 2}
-SWEP.Primary.Wait = 0.300
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_hammer.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.Wait = 0.18182
 SWEP.ReloadTime = 6.5
 
 SWEP.PPSMuzzleEffect = "pcf_jack_mf_mshotgun"

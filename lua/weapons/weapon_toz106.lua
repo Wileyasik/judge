@@ -111,6 +111,7 @@ SWEP.weight = 2
 SWEP.weaponInvCategory = 1
 SWEP.CustomShell = "20/70"
 
+SWEP.ReloadTime = 3
 SWEP.EjectAng = Angle(-45,0,0)
 SWEP.AutomaticDraw = false
 SWEP.UseCustomWorldModel = false
@@ -124,6 +125,7 @@ SWEP.Primary.Damage = 12
 SWEP.Primary.Force = 12
 SWEP.Primary.Sound = {"weapons/darsu_eft/toz106/toz_fire_close1.ogg", 65, 90, 100}
 SWEP.SupressedSound = {"homigrad/weapons/rifle/m4a1-1.wav", 65, 90, 100}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_hammer.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.availableAttachments = {
 	barrel = {
 		[1] = {"", Vector(0,0,0), {}},
@@ -205,7 +207,7 @@ SWEP.FOVScoped = 40
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_L_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 90
+SWEP.ViewPunchDiv = 1
 
 SWEP.DistSound = "weapons/tfa_ins2/sks/sks_dist.wav"
 

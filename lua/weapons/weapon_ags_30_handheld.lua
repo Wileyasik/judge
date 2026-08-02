@@ -42,7 +42,7 @@ SWEP.Primary.Spread = Vector(0,0,0)
 SWEP.Primary.Force = 125
 SWEP.Primary.Sound = {"snds_jack_gmod/ez_weapons/heavy_autoloader.wav", 75, 80, 90}
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/fnfal/handling/fnfal_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
-SWEP.Primary.Wait = 0.2
+SWEP.Primary.Wait = 0.13636
 SWEP.ReloadTime = 7.5
 SWEP.ReloadSoundes = {
 	"none",
