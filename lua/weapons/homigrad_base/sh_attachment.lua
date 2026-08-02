@@ -1065,7 +1065,7 @@ if CLIENT then
 	local attachmentLineColor = Color(255, 255, 255)
 	local previewColor = Color(85, 190, 215)
 	local attachmentFont = "Mx437 IBM PS/55 re."
-	local attachmentUIScale = math.Clamp(math.min(ScrW() / 2560, ScrH() / 1440), 0.5, 1.25)
+	local attachmentUIScale = math.Clamp(math.min(ScrW() / 2560, ScrH() / 1440) * 1.08, 0.5, 1.25)
 	local function attachmentPx(value)
 		return math.max(1, math.floor(value * attachmentUIScale + 0.5))
 	end
