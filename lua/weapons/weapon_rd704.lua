@@ -321,6 +321,7 @@ function SWEP:DrawPost()
 		end
 
 		local pos, ang = LocalToWorld(partData.pos or vector_origin, partData.ang or angle_zero, basePos, baseAng)
+		pos, ang = self:ApplyManagedStockPartOffset(partName, pos, ang)
 		model:SetRenderOrigin(pos)
 		model:SetRenderAngles(ang)
 		model:SetPos(pos)
@@ -463,6 +464,7 @@ if CLIENT then
 				local localAngles = Angle((partData.ang or BC_ANGLE_ZERO).p, (partData.ang or BC_ANGLE_ZERO).y, (partData.ang or BC_ANGLE_ZERO).r)
 				localAngles:Add(extraAngles)
 				local position, angles = LocalToWorld(localPosition, localAngles, partBasePosition, partBaseAngles)
+				position, angles = self:ApplyManagedStockPartOffset(partName, position, angles)
 
 				model:SetRenderOrigin(position)
 				model:SetRenderAngles(angles)

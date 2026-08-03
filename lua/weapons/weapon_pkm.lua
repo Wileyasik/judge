@@ -159,7 +159,7 @@ SWEP.LocalMuzzlePos = Vector(38, -1.4, 2.3)
 SWEP.LocalMuzzleAng = Angle(0, 0, 0)
 SWEP.WeaponEyeAngles = Angle(0, 0, 0)
 
-SWEP.Ergonomics = 0.6
+SWEP.Ergonomics = 0.5
 SWEP.OpenBolt = true
 SWEP.Penetration = 20
 SWEP.WorldPos = Vector(-1, -0.5, 0)
@@ -181,7 +181,7 @@ SWEP.availableAttachments = {
 	},
 }
 
-SWEP.RecoilMul = 0.3
+SWEP.RecoilMul = 1
 
 SWEP.RHPos = Vector(4, -7, 4)
 SWEP.RHAng = Angle(0, -12, 90)

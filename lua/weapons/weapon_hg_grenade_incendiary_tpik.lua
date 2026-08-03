@@ -1,5 +1,7 @@
 if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_tpik_base"
+SWEP.DeployViewPunchDiv = 1500
+SWEP.ThrowViewPunchDiv = 150
 SWEP.PrintName = "AN M14"
 SWEP.Instructions = 
 [[The AN M14 is an incendiary grenade used by the United States Army and Navy forces (AN). It has a pyrotechnic delay of 1.2 to 2.3 seconds.
@@ -162,7 +164,7 @@ SWEP.HoldAng = Angle(0,0,0)
 
 SWEP.ViewBobCamBase = "ValveBiped.Bip01_L_UpperArm"
 SWEP.ViewBobCamBone = "ValveBiped.Bip01_R_Hand"
-SWEP.ViewPunchDiv = 1
+SWEP.ViewPunchDiv = 1500
 
 SWEP.CallbackTimeAdjust = 0.1
 SWEP.NoTrap = false
@@ -298,7 +300,7 @@ function SWEP:Throw(mul, time, nosound, throwPosAdjust, throwAngAdjust)
 	end
 
 	if IsValid(owner) then
-		owner:ViewPunch(Angle(3,0,0))
+		owner:ViewPunch(Angle(3,0,0) / (self.ThrowViewPunchDiv or self.ViewPunchDiv or 1))
 		owner:AnimRestartGesture(GESTURE_SLOT_GRENADE, ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE, true)
 	end
 	ent:SetCollisionGroup( COLLISION_GROUP_WEAPON )

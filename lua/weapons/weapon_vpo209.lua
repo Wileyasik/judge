@@ -47,7 +47,7 @@ SWEP.ARC9Parts = {
 		ang = Angle(0, 0, 0)
 	},
 	stock = {
-		model = "models/weapons/mods/ak_stock_ak74_std_plum.mdl",
+		model = "models/weapons/mods/ak_stock_ak74_std_plastic.mdl",
 		bonemerge = false,
 		bone = "weapon",
 		pos = Vector(0.65, -9.6, -0.8),
@@ -196,7 +196,7 @@ SWEP.HeldPistolgripBone = "weapon"
 SWEP.HeldPistolgripOffsetPos = Vector(0, -12.3, -1.3)
 SWEP.HeldPistolgripOffsetAng = Angle(0, 0, 0)
 
-SWEP.HeldStockModel = "models/weapons/mods/ak_stock_ak74_std_plum.mdl"
+SWEP.HeldStockModel = "models/weapons/mods/ak_stock_ak74_std_plastic.mdl"
 SWEP.HeldStockBone = "weapon"
 SWEP.HeldStockOffsetPos = Vector(0.65, -9.6, -0.8)
 SWEP.HeldStockOffsetAng = Angle(0, 0, 0)
@@ -240,7 +240,7 @@ SWEP.ScrappersSlot = "Primary"
 
 SWEP.DistSound = "weapons/ak74/ak74_dist.wav"
 
-SWEP.StartAtt = {"stock_ak74_plum"}
+SWEP.StartAtt = {"stock_ak74_std"}
 local sightProfile, sightMountProfile = hg.GetAK74SightProfile()
 SWEP.availableAttachments = {
 	barrel = {
@@ -255,7 +255,7 @@ SWEP.availableAttachments = {
 		["mountType"] = {"ak_762", "ak_762_75"},
 	},
 	stock = {
-		[1] = {"stock_ak74_plum", Vector(0, 0, 0), {}},
+		[1] = {"stock_ak74_std", Vector(0, 0, 0), {}},
 		["mountType"] = "ak_stock",
 		["mountBone"] = "weapon",
 		["mount"] = Vector(0.65, -9.6, -0.8),
@@ -406,6 +406,7 @@ function SWEP:DrawPost()
 			local boneMatrix = wm:GetBoneMatrix(boneID)
 			if boneMatrix then
 				local lpos, lang = LocalToWorld(self.HeldStockOffsetPos, self.HeldStockOffsetAng, boneMatrix:GetTranslation(), boneMatrix:GetAngles())
+				lpos, lang = self:ApplyStockAttachmentOffset(lpos, lang)
 				self.HeldStockCSModel:SetRenderOrigin(lpos)
 				self.HeldStockCSModel:SetRenderAngles(lang)
 				self.HeldStockCSModel:SetPos(lpos)
@@ -604,6 +605,7 @@ if CLIENT then
 				localAngles:Add(extraAngles)
 
 				local position, angles = LocalToWorld(localPosition, localAngles, partBasePosition, partBaseAngles)
+				position, angles = self:ApplyManagedStockPartOffset(partName, position, angles)
 
 				model:SetRenderOrigin(position)
 				model:SetRenderAngles(angles)

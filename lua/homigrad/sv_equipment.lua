@@ -934,7 +934,7 @@ hg.organism.input_list = hg.organism.input_list or {}
 -- Scale overrides preserving original per-armor balance for non-bullet melee
 local torsoDmgScale = {
 	vest1 = 0.6, vest2 = 1.0, vest3 = 0.8, vest4 = 0.8,
-	vest5 = 0.8, vest6 = 0.8, vest7 = 0.8, vest8 = 0.7,
+	vest5 = 0.8, vest8 = 0.7,
 }
 local headDmgScale = {
 	helmet1 = 1.0, helmet2 = 1.0, helmet3 = 1.0,

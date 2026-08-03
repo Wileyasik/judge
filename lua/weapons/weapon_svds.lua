@@ -27,6 +27,7 @@ SWEP.lmagang = Angle(0, 0, 0)
 SWEP.lmagpos2 = Vector(0, 0.3, 0)
 SWEP.lmagang2 = Angle(0, 0, 0)
 SWEP.ViewPunchDiv = 1
+SWEP.InspectViewPunchMul = 0.005
 
 
 local vector_full = Vector(1, 1, 1)

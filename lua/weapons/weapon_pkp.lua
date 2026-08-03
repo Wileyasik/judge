@@ -62,7 +62,7 @@ SWEP.LocalMuzzleAng = Angle(0, 0, 0)
 SWEP.WeaponEyeAngles = Angle(0, 0, 0)
 
 SWEP.weaponInvCategory = 1
-SWEP.Ergonomics = 0.6
+SWEP.Ergonomics = 0.5
 SWEP.OpenBolt = true
 SWEP.Penetration = 20
 SWEP.WorldPos = Vector(-1, -0.5, 0)
@@ -76,7 +76,7 @@ SWEP.DistSound = "weapons/darsu_eft/pkm/fire/pkm_indoor_distant_loop1.wav"
 SWEP.bipodAvailable = true
 SWEP.bipodsub = 15
 
-SWEP.RecoilMul = 0.3
+SWEP.RecoilMul = 1
 
 SWEP.FakeVPShouldUseHand = true
 SWEP.AnimList = {

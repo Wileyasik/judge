@@ -362,6 +362,7 @@ function SWEP:DrawPost()
 			local boneMatrix = wm:GetBoneMatrix(boneID)
 			if boneMatrix then
 				local lpos, lang = LocalToWorld(self.HeldStock1OffsetPos, self.HeldStock1OffsetAng, boneMatrix:GetTranslation(), boneMatrix:GetAngles())
+				lpos, lang = self:ApplyStockAttachmentOffset(lpos, lang)
 				self.HeldStock1CSModel:SetRenderOrigin(lpos)
 				self.HeldStock1CSModel:SetRenderAngles(lang)
 				self.HeldStock1CSModel:SetPos(lpos)
@@ -589,6 +590,7 @@ if CLIENT then
 				localAngles:Add(extraAngles)
 
 				local position, angles = LocalToWorld(localPosition, localAngles, partBasePosition, partBaseAngles)
+				if partName == "stock1" then position, angles = self:ApplyStockAttachmentOffset(position, angles) end
 
 				model:SetRenderOrigin(position)
 				model:SetRenderAngles(angles)

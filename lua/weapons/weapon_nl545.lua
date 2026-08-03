@@ -181,7 +181,7 @@ SWEP.HeldStockOffsetAng = Angle(0, -90, 0)
 
 SWEP.HeldStock1Model = "models/weapons/mods/stock_ar15_magpul_moe_carbine.mdl"
 SWEP.HeldStock1Bone = "weapon"
-SWEP.HeldStock1OffsetPos = Vector(0, -5, -0.8)
+SWEP.HeldStock1OffsetPos = Vector(0, -4.7, -0.8)
 SWEP.HeldStock1OffsetAng = Angle(0, -90, 0)
 
 SWEP.HeldHandguardModel = "models/weapons/mods/handguard_ar15_cgnl_ar15_105_inch.mdl"
@@ -375,6 +375,7 @@ function SWEP:DrawPost()
 			local boneMatrix = wm:GetBoneMatrix(boneID)
 			if boneMatrix then
 				local lpos, lang = LocalToWorld(self.HeldStock1OffsetPos, self.HeldStock1OffsetAng, boneMatrix:GetTranslation(), boneMatrix:GetAngles())
+				lpos, lang = self:ApplyStockAttachmentOffset(lpos, lang)
 				self.HeldStock1CSModel:SetRenderOrigin(lpos)
 				self.HeldStock1CSModel:SetRenderAngles(lang)
 				self.HeldStock1CSModel:SetPos(lpos)
@@ -581,6 +582,7 @@ if CLIENT then
 				localAngles:Add(extraAngles)
 
 				local position, angles = LocalToWorld(localPosition, localAngles, partBasePosition, partBaseAngles)
+				if partName == "stock2" then position, angles = self:ApplyStockAttachmentOffset(position, angles) end
 
 				model:SetRenderOrigin(position)
 				model:SetRenderAngles(angles)

@@ -47,7 +47,7 @@ SWEP.ARC9Parts = {
 		ang = Angle(0, -90, 0)
 	},
 	stock2 = {
-		model = "models/weapons/mods/stock_ar15_hk_e1.mdl",
+		model = "models/weapons/mods/stock_ar15_hk_slim_line.mdl",
 		bonemerge = false,
 		bone = "mod_stock",
 		pos = Vector(0, 2.25, -0.8),
@@ -201,7 +201,7 @@ SWEP.HeldStockBone = "mod_stock"
 SWEP.HeldStockOffsetPos = Vector(0, 0, 0)
 SWEP.HeldStockOffsetAng = Angle(0, -90, 0)
 
-SWEP.HeldStock1Model = "models/weapons/mods/stock_ar15_hk_e1.mdl"
+SWEP.HeldStock1Model = "models/weapons/mods/stock_ar15_hk_slim_line.mdl"
 SWEP.HeldStock1Bone = "mod_stock"
 SWEP.HeldStock1OffsetPos = Vector(0, 2.8, -0.8)
 SWEP.HeldStock1OffsetAng = Angle(0, -90, 0)
@@ -257,7 +257,7 @@ SWEP.ScrappersSlot = "Primary"
 
 SWEP.DistSound = "weapons/darsu_eft/m4a1/fire_new/tx15_fire_outdoor_close.wav"
 
-SWEP.StartAtt = {"optic8"}
+SWEP.StartAtt = {"optic8", "stock_ar15_hk_slim_line"}
 SWEP.availableAttachments = {
 	barrel = {
 		[1] = {"supressor5", Vector(-0.4, 0, 0), {}},
@@ -282,6 +282,7 @@ SWEP.availableAttachments = {
 	magwell = {
 		["mountType"] = {"stanag_556_60", "stanag_556_100"},
 	},
+	stock = hg.GetAR15StockProfile("stock_ar15_hk_slim_line"),
 }
 
 SWEP.RHandPos = Vector(0, -1, 0)
@@ -412,8 +413,13 @@ function SWEP:DrawPost()
 	end
 
 	-- Stock1
-	if not IsValid(self.HeldStock1CSModel) then
-		self.HeldStock1CSModel = ClientsideModel(self.HeldStock1Model, RENDERGROUP_BOTH)
+	local heldStockModel = self:GetActiveStockModel(self.HeldStock1Model)
+	if IsValid(self.HeldStock1CSModel) and self.HeldStock1CSModelPath ~= heldStockModel then
+		self.HeldStock1CSModel:Remove()
+	end
+	if heldStockModel ~= "" and not IsValid(self.HeldStock1CSModel) then
+		self.HeldStock1CSModel = ClientsideModel(heldStockModel, RENDERGROUP_BOTH)
+		self.HeldStock1CSModelPath = heldStockModel
 		if IsValid(self.HeldStock1CSModel) then self.HeldStock1CSModel:SetNoDraw(true) end
 	end
 	if IsValid(self.HeldStock1CSModel) then
@@ -422,6 +428,7 @@ function SWEP:DrawPost()
 			local boneMatrix = wm:GetBoneMatrix(boneID)
 			if boneMatrix then
 				local lpos, lang = LocalToWorld(self.HeldStock1OffsetPos, self.HeldStock1OffsetAng, boneMatrix:GetTranslation(), boneMatrix:GetAngles())
+				lpos, lang = self:ApplyStockAttachmentOffset(lpos, lang)
 				self.HeldStock1CSModel:SetRenderOrigin(lpos)
 				self.HeldStock1CSModel:SetRenderAngles(lang)
 				self.HeldStock1CSModel:SetPos(lpos)
@@ -548,6 +555,7 @@ if CLIENT then
 				continue
 			end
 			local modelPath = partName == "magazine" and self:GetActiveMagazineModel(partData.model, "world") or partData.model
+			if partName == "stock2" then modelPath = self:GetActiveStockModel(modelPath) end
 
 			local model = self.BC_DroppedPartModels[partName]
 			local oldPath = self.BC_DroppedPartPaths[partName]
@@ -557,7 +565,7 @@ if CLIENT then
 				model = nil
 			end
 
-			if not IsValid(model) then
+			if modelPath ~= "" and not IsValid(model) then
 				model = ClientsideModel(modelPath, RENDERGROUP_BOTH)
 				if IsValid(model) then
 					model:SetNoDraw(true)
@@ -669,6 +677,7 @@ if CLIENT then
 				localAngles:Add(extraAngles)
 
 				local position, angles = LocalToWorld(localPosition, localAngles, partBasePosition, partBaseAngles)
+				position, angles = self:ApplyManagedStockPartOffset(partName, position, angles)
 
 				model:SetRenderOrigin(position)
 				model:SetRenderAngles(angles)

@@ -184,7 +184,8 @@ SWEP.WepSelectIcon2 = Material("pwb2/vgui/weapons/rpk")
 SWEP.WepSelectIcon2box = false
 SWEP.IconOverride = "pwb2/vgui/weapons/rpk"
 
-SWEP.Ergonomics = 1
+SWEP.Ergonomics = 0.5
+SWEP.RecoilMul = 1
 SWEP.WorldPos = Vector(5, -0.8, -1.1)
 SWEP.WorldAng = Angle(0, 0, 0)
 SWEP.UseCustomWorldModel = true
@@ -243,16 +244,6 @@ SWEP.LHPos = Vector(15,1,-3.3)
 SWEP.LHAng = Angle(-110,-180,0)
 
 local finger1 = Angle(25,0, 40)
-
-function SWEP:ThinkAdd()
-	if CLIENT and self:GetWM() and not isbool(self:GetWM()) and isstring(self.FakeBodyGroups) then
-		if self:HasAttachment("grip", "grip_akdong") then
-			self:GetWM():SetBodyGroups("02300051022")
-		else
-			self:GetWM():SetBodyGroups(self.FakeBodyGroups)
-		end
-	end
-end
 
 SWEP.ShootAnimMul = 3
 function SWEP:DrawPost()

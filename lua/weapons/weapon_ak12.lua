@@ -234,9 +234,9 @@ SWEP.lengthSub = 25
 SWEP.handsAng = Angle(7, 2, 0)
 SWEP.DistSound = "weapons/newakm/akmm_dist.wav"
 
-SWEP.StartAtt = {"stock_ar15_ak12_std"}
+SWEP.StartAtt = {"stock_ak12_std"}
 SWEP.availableAttachments = {
-	stock = hg.GetAR15StockProfile("stock_ar15_ak12_std"),
+	stock = hg.GetAR15StockProfile("stock_ak12_std"),
 	barrel = {
 		[1] = {"supressor3", Vector(0, 0, 0), {}},
 		[2] = {"supressor4", Vector(0, 0, 0), {}},
@@ -332,6 +332,7 @@ function SWEP:DrawPost()
 		end
 
 		local pos, ang = LocalToWorld(partData.pos or vector_origin, partData.ang or angle_zero, basePos, baseAng)
+		pos, ang = self:ApplyManagedStockPartOffset(partName, pos, ang)
 		model:SetRenderOrigin(pos)
 		model:SetRenderAngles(ang)
 		model:SetPos(pos)
@@ -484,6 +485,7 @@ if CLIENT then
 				local localAngles = Angle((partData.ang or BC_ANGLE_ZERO).p, (partData.ang or BC_ANGLE_ZERO).y, (partData.ang or BC_ANGLE_ZERO).r)
 				localAngles:Add(extraAngles)
 				local position, angles = LocalToWorld(localPosition, localAngles, partBasePosition, partBaseAngles)
+				position, angles = self:ApplyManagedStockPartOffset(partName, position, angles)
 
 				model:SetRenderOrigin(position)
 				model:SetRenderAngles(angles)

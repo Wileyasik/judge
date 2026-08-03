@@ -158,7 +158,7 @@ SWEP.LocalMuzzlePos = Vector(26.5, -1.92, 3.7)
 SWEP.LocalMuzzleAng = Angle(0.15, 0, 0)
 SWEP.WeaponEyeAngles = Angle(0, 0, 0)
 
-SWEP.Ergonomics = 0.6
+SWEP.Ergonomics = 0.5
 SWEP.OpenBolt = true
 SWEP.Penetration = 20
 SWEP.WorldPos = Vector(4, 0, 0)
@@ -171,7 +171,7 @@ SWEP.lengthSub = 15
 SWEP.DistSound = "m249/m249_dist.wav"
 SWEP.bipodAvailable = true
 SWEP.bipodsub = 15
-SWEP.RecoilMul = 0.3
+SWEP.RecoilMul = 1
 
 SWEP.availableAttachments = {
 	barrel = {

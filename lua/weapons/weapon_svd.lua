@@ -26,7 +26,8 @@ SWEP.lmagpos = Vector(0, 0, 0)
 SWEP.lmagang = Angle(0, 0, 0)
 SWEP.lmagpos2 = Vector(0, 0.3, 0)
 SWEP.lmagang2 = Angle(0, 0, 0)
-SWEP.ViewPunchDiv = 1
+SWEP.ViewPunchDiv = 1500
+SWEP.InspectViewPunchMul = 0.005
 
 local vector_full = Vector(1, 1, 1)
 local vecPochtiZero = Vector(0.01, 0.01, 0.01)
@@ -94,7 +95,8 @@ SWEP.WepSelectIcon2box = true
 SWEP.IconOverride = "entities/arc9_eft_svd.png"
 SWEP.weight = 4
 SWEP.weaponInvCategory = 1
-SWEP.CustomShell = "762x51"
+SWEP.CustomShell = "762x39"
+SWEP.ShellEject = "EjectBrass_762"
 
 SWEP.AutomaticDraw = true
 SWEP.UseCustomWorldModel = false

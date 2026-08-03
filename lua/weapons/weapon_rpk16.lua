@@ -241,7 +241,8 @@ for i = 1, 30 do
 	SWEP.Spray[i] = Angle(-0.0, 0, 0) * 1
 end
 
-SWEP.Ergonomics = 0.85
+SWEP.Ergonomics = 0.5
+SWEP.RecoilMul = 1
 SWEP.WorldPos = Vector(4, -0.8, -0.5)
 SWEP.WorldAng = Angle(0, 0, 0)
 SWEP.UseCustomWorldModel = true

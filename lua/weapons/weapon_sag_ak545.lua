@@ -233,6 +233,7 @@ SWEP.lengthSub = 25
 SWEP.handsAng = Angle(7, 2, 0)
 SWEP.DistSound = "weapons/newakm/akmm_dist.wav"
 
+SWEP.StartAtt = {"stock_ak12_std"}
 SWEP.availableAttachments = {
 	barrel = {
 		[1] = {"supressor3", Vector(0, 0, 0), {}},
@@ -259,6 +260,7 @@ SWEP.availableAttachments = {
 	magwell = {
 		["mountType"] = {"ak_545_60", "ak_545"},
 	},
+	stock = hg.GetAR15StockProfile("stock_ak12_std"),
 }
 
 SWEP.weight = 3.6
@@ -292,8 +294,14 @@ function SWEP:DrawPost()
 		if not istable(partData) then return end
 
 		local modelPath = partName == "magazine" and self:GetActiveMagazineModel(partData.model, "held") or partData.model
-		if not isstring(modelPath) or modelPath == "" then return end
+		if partName == "stock" then modelPath = self:GetActiveStockModel(modelPath) end
 		local model = self.HeldARC9PartModels[partName]
+		if not isstring(modelPath) or modelPath == "" then
+			if IsValid(model) then model:Remove() end
+			self.HeldARC9PartModels[partName] = nil
+			self.HeldARC9PartPaths[partName] = nil
+			return
+		end
 		if IsValid(model) and self.HeldARC9PartPaths[partName] ~= modelPath then
 			model:Remove()
 			model = nil
@@ -319,6 +327,7 @@ function SWEP:DrawPost()
 		end
 
 		local pos, ang = LocalToWorld(partData.pos or vector_origin, partData.ang or angle_zero, basePos, baseAng)
+		pos, ang = self:ApplyManagedStockPartOffset(partName, pos, ang)
 		model:SetRenderOrigin(pos)
 		model:SetRenderAngles(ang)
 		model:SetPos(pos)
@@ -372,6 +381,7 @@ if CLIENT then
 		for partName, partData in pairs(self.ARC9Parts) do
 			if not istable(partData) or not isstring(partData.model) or partData.model == "" then continue end
 			local modelPath = partName == "magazine" and self:GetActiveMagazineModel(partData.model, "world") or partData.model
+			if partName == "stock" then modelPath = self:GetActiveStockModel(modelPath) end
 			local model = self.BC_DroppedPartModels[partName]
 
 			if IsValid(model) and self.BC_DroppedPartPaths[partName] ~= modelPath then
@@ -379,7 +389,7 @@ if CLIENT then
 				model = nil
 			end
 
-			if not IsValid(model) then
+			if modelPath ~= "" and not IsValid(model) then
 				model = ClientsideModel(modelPath, RENDERGROUP_BOTH)
 				if IsValid(model) then
 					model:SetNoDraw(true)
@@ -460,6 +470,7 @@ if CLIENT then
 				local localAngles = Angle((partData.ang or BC_ANGLE_ZERO).p, (partData.ang or BC_ANGLE_ZERO).y, (partData.ang or BC_ANGLE_ZERO).r)
 				localAngles:Add(extraAngles)
 				local position, angles = LocalToWorld(localPosition, localAngles, partBasePosition, partBaseAngles)
+				position, angles = self:ApplyManagedStockPartOffset(partName, position, angles)
 
 				model:SetRenderOrigin(position)
 				model:SetRenderAngles(angles)

@@ -169,7 +169,7 @@ SWEP.LocalMuzzlePos = Vector(23, -1.95, 5)
 SWEP.LocalMuzzleAng = Angle(0.3, 0.02, 0)
 SWEP.WeaponEyeAngles = Angle(0, 0, 0)
 
-SWEP.Ergonomics = 0.75
+SWEP.Ergonomics = 0.5
 SWEP.OpenBolt = true
 SWEP.Penetration = 15
 SWEP.WorldPos = Vector(4, -0.5, 1)
@@ -205,7 +205,7 @@ SWEP.punchmul = 15
 SWEP.punchspeed = 0.11
 SWEP.podkid = 0.05
 
-SWEP.RecoilMul = 0.1
+SWEP.RecoilMul = 1
 
 SWEP.bipodAvailable = true
 SWEP.bipodsub = 15

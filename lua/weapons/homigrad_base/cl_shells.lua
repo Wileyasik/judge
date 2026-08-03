@@ -11,7 +11,7 @@ Shells["556x45"] = {m = "models/shells/fhell_556.mdl", s = "Shell"}
 Shells["762x39"] = {m = "models/shells/fhell_762x39.mdl", s = "Shell"}
 Shells["366tkm"] = {m = "models/weapons/arccw/uc_shells/366tkm.mdl", s = "Shell", vCustomScale = 0.6} -- models/weapons/arccw/uc_shells/366tkm.mdl
 Shells["762x51"] = {m = "models/shells/fhell_762x51.mdl", s = "Shell"}
-Shells["762x54"] = {m = "models/weapons/shells/762x54r.mdl", s = "Shell"}
+Shells["762x54"] = {m = "models/shells/fhell_762x51.mdl", s = "Shell"}
 Shells[".338Lapua"] = {m = "models/shells/shell_338mag.mdl", s = "Shell"}
 Shells["12x70"] = {m = "models/weapons/shells/patron_12x70_shell.mdl", s = "12Guage"}
 Shells["Pulse"] = {m = "models/weapons/arccw/irifleshell.mdl", s = "12Guage"}

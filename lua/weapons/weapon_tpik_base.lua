@@ -241,7 +241,13 @@ if CLIENT then
                     local gAngles = camMat:GetAngles()
                     local _,gAngles = WorldToLocal(vector_origin,gAngles, WorldModel:GetPos(), baseMat:GetAngles())
                     self.OldAngPunch = self.OldAngPunch or gAngles
-                    ViewPunch( ( self.OldAngPunch - gAngles )/(self.ViewPunchDiv or 100) )
+                    local viewPunchDiv = self.ViewPunchDiv or 100
+                    if self.anim == "deploy" and self.DeployViewPunchDiv then
+                        viewPunchDiv = self.DeployViewPunchDiv
+                    elseif (self.anim == "attack" or self.anim == "attack2") and self.ThrowViewPunchDiv then
+                        viewPunchDiv = self.ThrowViewPunchDiv
+                    end
+                    ViewPunch((self.OldAngPunch - gAngles) / viewPunchDiv)
                     self.OldAngPunch = gAngles
                 end
             end

@@ -224,6 +224,26 @@ function SWEP:GetActiveStockMountModel(fallback)
 	return self.availableAttachments and self.availableAttachments.stock and "" or fallback
 end
 
+function SWEP:ApplyStockAttachmentOffset(pos, ang, definition)
+	definition = definition or self:GetAttachmentInfo("stock")
+	if not definition or not isvector(definition.offset) then return pos, ang end
+
+	return LocalToWorld(definition.offset, angle_zero, pos, ang)
+end
+
+function SWEP:ApplyManagedStockPartOffset(partName, pos, ang)
+	local parts = self.ARC9Parts
+	if not istable(parts) then return pos, ang end
+
+	local stockPart = self.ARC9ManagedStockPart
+		or istable(parts.stock2) and "stock2"
+		or istable(parts.stock1) and "stock1"
+		or istable(parts.stock) and "stock"
+	if partName ~= stockPart and partName ~= "stock_mount" then return pos, ang end
+
+	return self:ApplyStockAttachmentOffset(pos, ang)
+end
+
 function SWEP:DrawActiveHeldStockMount(wm, boneName, offsetPos, offsetAng)
 	if not CLIENT or not IsValid(wm) then return end
 
@@ -246,6 +266,7 @@ function SWEP:DrawActiveHeldStockMount(wm, boneName, offsetPos, offsetAng)
 	if not boneMatrix then return end
 
 	local pos, ang = LocalToWorld(offsetPos or vector_origin, offsetAng or angle_zero, boneMatrix:GetTranslation(), boneMatrix:GetAngles())
+	pos, ang = self:ApplyStockAttachmentOffset(pos, ang)
 	self.HeldStockMountCSModel:SetRenderOrigin(pos)
 	self.HeldStockMountCSModel:SetRenderAngles(ang)
 	self.HeldStockMountCSModel:SetPos(pos)
@@ -1380,6 +1401,7 @@ if CLIENT then
 		if placement == "stock" and definition and definition.weaponManagedModel then
 			local managedPos, managedAng = getManagedStockTransform(wep, wm)
 			if managedPos and managedAng then
+				managedPos, managedAng = wep:ApplyStockAttachmentOffset(managedPos, managedAng, definition)
 				if definition and isvector(definition.uiAnchor) then
 					managedPos = LocalToWorld(definition.uiAnchor, angle_zero, managedPos, managedAng)
 				end
@@ -1563,7 +1585,7 @@ if CLIENT then
 		add(frame.previewStockMount)
 		add(frame.previewHolo)
 		local modelAttachments = IsValid(frame.weapon) and frame.weapon.modelAtt
-		if modelAttachments then
+		if modelAttachments and frame.previewPlacement == "sight" then
 			add(modelAttachments.mount)
 			add(modelAttachments.mountex_sight)
 		end

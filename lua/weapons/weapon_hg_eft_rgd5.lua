@@ -1,0 +1,15 @@
+if SERVER then AddCSLuaFile() end
+
+SWEP.Base = "weapon_hg_eft_grenade_base"
+SWEP.PrintName = "RGD-5"
+SWEP.Category = "Weapons - Explosive"
+SWEP.Instructions = [[RGD-5 is an offensive fragmentation grenade.
+
+LMB - High throw
+RMB - Low throw
+R on surface - Set tripwire]]
+SWEP.Spawnable = true
+
+SWEP.WorldModel = "models/weapons/arc9/darsu_eft/w_rgd5_unthrowed.mdl"
+SWEP.WorldModelReal = "models/weapons/arc9/darsu_eft/c_rgd5_2.mdl"
+SWEP.ENT = "ent_hg_eft_rgd5"
