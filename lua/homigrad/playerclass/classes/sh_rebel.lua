@@ -143,7 +143,6 @@ local helmet_list = {
 
 local face_list = {
     "mask1",
-	"mask3",
     "nightvision1",
     "",
     "",
@@ -170,10 +169,9 @@ local bulldozer_helmets = {
 
 local bulldozer_vests = {
     "vest13",
-    "vest19",
     "vest11",
     "vest16",
-    "vest17"
+    "vest24"
 }
 
 local rebel_subclasses = {
@@ -292,7 +290,7 @@ local function giveSubClassLoadout(ply, subClass)
         hg.AddArmor(ply, pick.helmet)
         if pick.mask ~= "" then hg.AddArmor(ply, pick.mask) end
     else
-        local mainVest = (subClass == "medic") and "vest20" or "vest21"
+        local mainVest = (subClass == "medic") and "vest31" or "vest32"
         hg.AddArmor(ply, mainVest)
 
         local randFace = face_list[math.random(#face_list)]

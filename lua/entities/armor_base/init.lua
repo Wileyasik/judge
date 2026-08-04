@@ -92,6 +92,8 @@ end
 		local armorData = placement and hg.armor[placement] and hg.armor[placement][equipment]
 		ply.armors_durability[equipment] = self.armorDurability or (armorData and armorData.durability) or 450
 		ply.armors_regions[equipment] = table.Copy(self.armorRegions or {})
+		ply.armor_states = ply.armor_states or {}
+		ply.armor_states[equipment] = table.Copy(self.armorState or {})
 	end
 
 	function ENT:ReciveData(ply,equipment)
@@ -106,6 +108,7 @@ end
 		self.armorHealth = ply.armors_health and ply.armors_health[equipment]
 		self.armorDurability = ply.armors_durability and ply.armors_durability[equipment]
 		self.armorRegions = ply.armors_regions and table.Copy(ply.armors_regions[equipment] or {})
+		self.armorState = ply.armor_states and table.Copy(ply.armor_states[equipment] or {}) or nil
 		if ply.armors_broken and ply.armors_broken[equipment] then
 			hg.SetArmorBrokenEntity(self)
 			self.shotsLeft = nil
@@ -121,6 +124,8 @@ hook.Add("ItemsTransfered","TransferMats",function(ply, ragdoll)
 	ragdoll.armors_regions = ply.armors_regions
 	ragdoll.armors_broken = ply.armors_broken
 	ragdoll.armors_broken_mul = ply.armors_broken_mul
+	ragdoll.armor_states = table.Copy(ply.armor_states or {})
+	ragdoll:SetNetVar("ArmorStates", table.Copy(ragdoll.armor_states))
 	for k,v in pairs(armors) do
 		ragdoll:SetNWString("ArmorMaterials" .. v, ply:GetNWString("ArmorMaterials" .. v))
 		ply:SetNWString("ArmorMaterials" .. v, nil)
@@ -147,7 +152,9 @@ hook.Add("ItemsTransfered","TransferMats",function(ply, ragdoll)
 		fakeRag.armors_regions = ragdoll.armors_regions
 		fakeRag.armors_broken = ragdoll.armors_broken
 		fakeRag.armors_broken_mul = ragdoll.armors_broken_mul
+		fakeRag.armor_states = table.Copy(ragdoll.armor_states or {})
 		fakeRag:SetNetVar("Armor", ragdoll:GetNetVar("Armor", {}))
+		fakeRag:SetNetVar("ArmorStates", table.Copy(fakeRag.armor_states))
 		fakeRag:SetNetVar("HideArmorRender", ply:GetNetVar("HideArmorRender", false))
 	end
 end)
@@ -168,6 +175,9 @@ hook.Add("ItemTransfer", "TransferMats", function(ply, ent, placement, armor)
 	ply.armors_durability = ply.armors_durability or {}
 	ply.armors_health[armor] = ent.armors_health and ent.armors_health[armor] or ply.armors_health[armor]
 	ply.armors_durability[armor] = ent.armors_durability and ent.armors_durability[armor] or ply.armors_durability[armor]
+	ply.armor_states = ply.armor_states or {}
+	ply.armor_states[armor] = ent.armor_states and table.Copy(ent.armor_states[armor] or {}) or ply.armor_states[armor]
+	if ent.armor_states then ent.armor_states[armor] = nil end
 
 	if hg.SyncArmorWear then hg.SyncArmorWear(ply, armor, placement) end
 end)

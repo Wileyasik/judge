@@ -63,6 +63,8 @@ if CLIENT then
 		bind = bind:lower()
 
 		if (bind:find("messagemode") and pressed) then
+			if not IsValid(hg.chat) then CreateChat() end
+			if not IsValid(hg.chat) then return end
 			hg.chat:SetActive(true)
 
 			return true
@@ -70,7 +72,7 @@ if CLIENT then
 	end)
 
 	hook.Add("OnShowZCityPause", "ZChat", function()
-		if !hg.chat:GetActive() then return end
+		if not IsValid(hg.chat) or !hg.chat:GetActive() then return end
 		hg.chat:SetActive(false)
 
 		return false

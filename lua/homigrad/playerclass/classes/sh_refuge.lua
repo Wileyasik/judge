@@ -129,7 +129,6 @@ local secondary = {
 }
 
 local helmet = {
-    "helmet1",
     "",
     "",
 }

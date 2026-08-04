@@ -108,7 +108,7 @@ SWEP.AnimsEvents = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/g36/g36_mag_out.ogg") end,
 		[0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in3.ogg") end,
 		[0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,
-		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/g36/g36_mag_in.ogg") end,,
+		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/g36/g36_mag_in.ogg") end,
 	},
 	["reload_empty3"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_magrelease_button.ogg") end,

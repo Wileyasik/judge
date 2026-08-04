@@ -78,6 +78,7 @@ hook.Add("Player Spawn", "homigrad-inventory", function(ply)
     hg.CreateInv(ply)
     ply.armors = {}
     ply.armors_health = {}
+	ply.armor_states = {}
     ply:SyncArmor()
 end)
 
