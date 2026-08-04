@@ -135,7 +135,7 @@ function SpawnMeatGore(mainent, pos, count, force, scale, spawnEyes, models)
 			net.WriteUInt(entIndex, 16)
 			net.WriteFloat(math.Rand(1, 2))
 			net.WriteBool(false)
-			net.Broadcast()
+			net.SendPVS(ent:GetPos())
 		end)
 	end
 
@@ -240,7 +240,7 @@ local function sendGibBloodSpill(ent, stump)
 	net.WriteUInt(ent:EntIndex(), 16)
 	net.WriteFloat(math.Rand(5, 10))
 	net.WriteBool(stump or false)
-	net.Broadcast()
+	net.SendPVS(ent:GetPos())
 end
 
 local function getHeadGoreStage(damage)
@@ -359,7 +359,7 @@ function Gib_Input(rag, bone, force, damage)
 		net.Start("addfountain")
 		net.WriteEntity(rag)
 		net.WriteVector(force or vector_origin)
-		net.Broadcast()
+		net.SendPVS(rag:GetPos())
 
 		hg.fountains[rag] = {bone = rag:LookupBone("ValveBiped.Bip01_Neck1"), lpos = ThatPlyIsFemale(rag) and Vector(4,0,0) or Vector(5,0,0),lang = Angle(0,0,0)}
 
@@ -592,60 +592,6 @@ function hg.FullBodyExplode(target, force, dmgInfo)
 	ent:Remove()
 	return true
 end
-
-local fullBodyRemoveTrack = {}
-
-hook.Add("PreCleanupMap", "HG_BlockFullBodyCleanupGib", function()
-	hg.CleaningUpMap = true
-	table.Empty(fullBodyRemoveTrack)
-end)
-
-hook.Add("PostCleanupMap", "HG_BlockFullBodyCleanupGib", function()
-	timer.Simple(0, function() hg.CleaningUpMap = nil end)
-end)
-
-function hg.TrackFullBodyRagdollRemove(rag)
-	if not IsValid(rag) or not rag:IsRagdoll() or rag.hg_fullbody_remove_track then return end
-	rag.hg_fullbody_remove_track = true
-	fullBodyRemoveTrack[rag] = {
-		pos = getFullBodyPos(rag),
-		vel = rag:GetVelocity(),
-		org = rag.organism,
-		owner = IsValid(rag.ply) and rag.ply or rag:GetNWEntity("ply"),
-	}
-
-	rag:CallOnRemove("HG_FullBodyRemoveGib", function(ent)
-		local data = fullBodyRemoveTrack[ent]
-		fullBodyRemoveTrack[ent] = nil
-		if hg.CleaningUpMap or ent.fullbodyexploded or ent.override or ent.hg_no_fullbody_remove_gib then return end
-		local org = data and data.org or ent.organism
-		if org and (org.godmode or org.fullbodyexploded) then return end
-		local owner = data and data.owner
-		if not hg.CanFullBodyGib(ent, org, owner, true) then return end
-		local pos = data and data.pos or vector_origin
-		local vel = data and data.vel or vector_origin
-		if IsValid(ent) then
-			pos = getFullBodyPos(ent)
-			vel = ent:GetVelocity()
-		end
-		fullBodyExplodeAt(pos, vel, vel, org, nil, owner)
-	end)
-end
-
-hook.Add("Ragdoll_Create", "HG_TrackFullBodyRemoveGib", function(_, rag) hg.TrackFullBodyRagdollRemove(rag) end)
-hook.Add("RagdollDeath", "HG_TrackFullBodyRemoveDeathGib", function(_, rag) hg.TrackFullBodyRagdollRemove(rag) end)
-local nextFullBodyTrackUpdate = 0
-hook.Add("Think", "HG_UpdateFullBodyRemoveTrack", function()
-	if nextFullBodyTrackUpdate > CurTime() then return end
-	nextFullBodyTrackUpdate = CurTime() + 0.15
-	for rag, data in pairs(fullBodyRemoveTrack) do
-		if not IsValid(rag) then fullBodyRemoveTrack[rag] = nil continue end
-		data.pos = getFullBodyPos(rag)
-		data.vel = rag:GetVelocity()
-		data.org = rag.organism or data.org
-		data.owner = IsValid(rag.ply) and rag.ply or data.owner
-	end
-end)
 
 function hg.AttachStomachGore(target, force)
 	if not IsValid(target) then return end

@@ -180,8 +180,6 @@ local IsValid, math_Clamp = IsValid, math.Clamp
 
 		hg.RenderBandages(ent, ply)
 
-		if hg.RenderDefibs then hg.RenderDefibs(ent, ply) end
-
 		hg.RenderBandageGloves(ent, ply)
 
 		hg.RenderTourniquets(ent, ply)

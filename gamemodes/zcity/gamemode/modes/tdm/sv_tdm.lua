@@ -23,6 +23,7 @@ MODE.ForBigMaps = true
 
 util.AddNetworkString("tdm_start")
 util.AddNetworkString("arena_round_start")
+util.AddNetworkString("arena_cleanup_start")
 util.AddNetworkString("arena_loadout_sync")
 util.AddNetworkString("arena_announcer")
 util.AddNetworkString("arena_start_vote")
@@ -41,13 +42,32 @@ local function BroadcastArenaAnnouncer(eventType, index)
 	net.Broadcast()
 end
 
+local announcerBags = {}
+local announcerLast = {}
+local function NextArenaAnnouncerIndex(eventType)
+	local bag = announcerBags[eventType]
+	if not bag or #bag == 0 then
+		bag = {}
+		for index = 1, 10 do bag[index] = index end
+		table.Shuffle(bag)
+		if #bag > 1 and bag[#bag] == announcerLast[eventType] then
+			bag[1], bag[#bag] = bag[#bag], bag[1]
+		end
+		announcerBags[eventType] = bag
+	end
+
+	local index = table.remove(bag)
+	announcerLast[eventType] = index
+	return index
+end
+
 hook.Add("Player_Death", "ArenaKillAnnouncer", function(victim)
 	local attacker = victim.ArenaLastAttacker
 	local attackTime = victim.ArenaLastAttackTime or 0
 	victim.ArenaLastAttacker = nil
 	victim.ArenaLastAttackTime = nil
 	if zb.CROUND ~= "tdm" or zb.ROUND_STATE ~= 1 or CurTime() - attackTime > 20 or not IsValid(attacker) or attacker == victim then return end
-	BroadcastArenaAnnouncer(0, math.random(1, 10))
+	BroadcastArenaAnnouncer(0, NextArenaAnnouncerIndex(0))
 
 	if not MODE.CleanupActive then
 		zb.ROUND_TIME = (zb.ROUND_TIME or MODE.ROUND_TIME) + 30
@@ -155,7 +175,8 @@ hook.Add("SetupPlayerVisibility", "ArenaCleanupTargets", function(ply)
 
 	for _, target in player.Iterator() do
 		if target:Alive() and target:GetNWBool("ArenaCleanupTarget") then
-			AddOriginToPVS(target:GetPos())
+			local character = hg.GetCurrentCharacter(target)
+			AddOriginToPVS(IsValid(character) and character:GetPos() or target:GetPos())
 		end
 	end
 end)
@@ -259,9 +280,16 @@ local function ValidateArenaLoadout(ply)
 		selected[#selected + 1] = weaponId
 		weight = weight + info.weight
 	end
-	if #selected == 0 then
-		selected = {ply:Team() == 1 and "weapon_m4a1" or "weapon_akm", "weapon_p22"}
-		weight = MODE.ArenaWeapons[selected[1]].weight + MODE.ArenaWeapons[selected[2]].weight
+	if not usedSlots.primary then
+		local primary = ply:Team() == 1 and "weapon_m4a1" or "weapon_akm"
+		table.insert(selected, 1, primary)
+		usedSlots.primary = true
+		weight = weight + MODE.ArenaWeapons[primary].weight
+	end
+	if not usedSlots.secondary then
+		selected[#selected + 1] = "weapon_p22"
+		usedSlots.secondary = true
+		weight = weight + MODE.ArenaWeapons.weapon_p22.weight
 	end
 
 	local requestedAttachments = istable(parsed.attachments) and parsed.attachments or {}
@@ -416,7 +444,9 @@ function MODE:StartCleanup()
 	hg.UpdateRoundTime(90, cleanupStart, cleanupStart)
 	SetGlobalBool("ArenaCleanupActive", true)
 	SetGlobalFloat("ArenaCleanupDeadline", self.CleanupDeadline)
-	BroadcastArenaAnnouncer(3, math.random(1, 10))
+	net.Start("arena_cleanup_start")
+	net.Broadcast()
+	BroadcastArenaAnnouncer(3, NextArenaAnnouncerIndex(3))
 
 	for _, ply in ipairs(targets) do
 		ply:SetNWBool("ArenaCleanupTarget", true)
@@ -428,9 +458,21 @@ function MODE:StartCleanup()
 		ply:Spawn()
 		ply:SetTeam(oldTeam)
 		ply:GetRandomSpawn()
+		ply:SetPlayerClass("arena_cleaner")
 		ply:SetNWBool("ArenaCleanupTarget", false)
 		ply:SetNWBool("ArenaCleanupCleaner", true)
-		ApplyCleanupLoadout(ply)
+		ply:Freeze(false)
+		ply:SetMoveType(MOVETYPE_WALK)
+
+		timer.Simple(0.2, function()
+			if not IsValid(ply) or not MODE.CleanupActive or not ply:Alive() then return end
+			ply:SetTeam(oldTeam)
+			ply:SetNWBool("ArenaCleanupTarget", false)
+			ply:SetNWBool("ArenaCleanupCleaner", true)
+			ply:Freeze(false)
+			ply:SetMoveType(MOVETYPE_WALK)
+			ApplyCleanupLoadout(ply)
+		end)
 	end
 
 	return true
@@ -440,6 +482,12 @@ function MODE:ShouldRoundEnd()
 	if self.VoteInProgress or self.RoundSetupTime and CurTime() < self.RoundSetupTime then return false end
 
 	if self.CleanupActive then
+		local teamEliminated = zb:CheckWinner(self:CheckAlivePlayers())
+		if teamEliminated then
+			self.CleanupWinner = nil
+			return true
+		end
+
 		if not IsCleanupRoleAlive("ArenaCleanupTarget") then
 			self.CleanupWinner = "cleaners"
 			return true
@@ -545,9 +593,9 @@ function MODE:EndRound()
 	local cleanupWinner = self.CleanupWinner
 	if not cleanupWinner then
 		if winner == 0 then
-			BroadcastArenaAnnouncer(1, math.random(1, 10))
+			BroadcastArenaAnnouncer(1, NextArenaAnnouncerIndex(1))
 		elseif winner == 1 then
-			BroadcastArenaAnnouncer(2, math.random(1, 10))
+			BroadcastArenaAnnouncer(2, NextArenaAnnouncerIndex(2))
 		end
 	end
 

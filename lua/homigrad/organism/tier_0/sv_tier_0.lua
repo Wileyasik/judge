@@ -75,6 +75,10 @@ hook.Add("Think", "homigrad-organism", function()
 
 	start = SysTime()
 	for owner, org in pairs(hg.organism.list) do -- теперь ясно почему от трупов лагает...
+		if not IsValid(owner) or not org or org.owner ~= owner then
+			hg.organism.list[owner] = nil
+			continue
+		end
 		if org.godmode then continue end
 		hook_Run("Org Think", owner, org, mulTime)
 	end

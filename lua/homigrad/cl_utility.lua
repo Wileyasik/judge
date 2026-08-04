@@ -604,31 +604,37 @@ players : 1 humans, 0 bots (20 max)
 	local math_rad = math.rad
 	local util_DistanceToLine = util.DistanceToLine
 	local table_Add = table.Add
+	local table_Empty = table.Empty
+	local modelBounds = {}
+	local nextVisibilityCheck = 0
 
 	hook.Add("Think", "CanBeSeenOrNot", function()
-		--if checkcd > CurTime() then return end
-		--checkcd = CurTime() + 1
+		local curTime = CurTime()
+		if nextVisibilityCheck > curTime then return end
+		nextVisibilityCheck = curTime + 0.05
 		local entities = ents_FindByClass("prop_ragdoll")
 		table_Add(entities, player_GetAll())
 
-		local orgents = {}
 		for ent in pairs(hg.organism_ents) do
 			if !IsValid(ent) then hg.organism_ents[ent] = nil continue end
 
 			table.insert(entities, ent)
 		end
 
-		hg.seenents = {}
-		hg.seenents2 = {}
+		table_Empty(hg.seenents)
+		table_Empty(hg.seenents2)
 
 		if g_VR and g_VR.active then return end
 
 		local view = render_GetViewSetup()
 		local origin = view.origin
 		local angles = view.angles
+		local forward = angles:Forward()
+		local viewEnd = origin + forward * 9999
+		local fovCos = math_cos(math_rad(hg_fov:GetInt()))
 
 		for i = 1, #entities do
-			v = entities[i]
+			local v = entities[i]
 			if v.shouldTransmit then
 				hg.seenents2[#hg.seenents2 + 1] = v
 			end
@@ -641,14 +647,19 @@ players : 1 humans, 0 bots (20 max)
 				continue
 			end
 
-			local min,max = v:GetModelBounds()
-			local len = (max - min):Length()
+			local model = v:GetModel() or ""
+			local len = modelBounds[model]
+			if not len then
+				local min, max = v:GetModelBounds()
+				len = (max - min):Length()
+				modelBounds[model] = len
+			end
 			local vPos = v:GetPos()
-			local _, point, _ = util_DistanceToLine(origin, origin + angles:Forward() * 9999, vPos)
+			local _, point = util_DistanceToLine(origin, viewEnd, vPos)
 			local vSize = (point - vPos):GetNormalized() * len
 			local diff = (vPos + vSize - origin):GetNormalized()
 
-			if !v.shouldTransmit or (angles:Forward():Dot(diff) <= math_cos(math_rad(hg_fov:GetInt()))) then
+			if !v.shouldTransmit or forward:Dot(diff) <= fovCos then
 				if not nochange then v.NotSeen = true end
 				if v == lply then LocalPlayerSeen = false end
 			else

@@ -506,22 +506,24 @@ function hg.ProcessBulletNearMiss(data)
 		shotPlayers = nearMissShots[data.ShotID] or {}
 		nearMissShots[data.ShotID] = shotPlayers
 	end
+	local shooterCharacter = hg.GetCurrentCharacter(shooter)
+	local traceFilter = {data.Inflictor, nil, nil, shooter, shooterCharacter}
+	local traceData = {filter = traceFilter, mask = MASK_SHOT}
 
 	for i,ply in player.Iterator() do--five pebbles
 		if ply == shooter or ply == hitPlayer or shotPlayers and shotPlayers[ply] then continue end
 		if !ply:Alive() then continue end
-		local dist,pos = util.DistanceToLine(startPos, endPos, ply:EyePos())
+		local eyePos = ply:EyePos()
+		local dist,pos = util.DistanceToLine(startPos, endPos, eyePos)
 		local org = ply.organism
 		if not org then continue end
-		local eyePos = ply:EyePos()
 		if dist > 120 then continue end
 
-		local isVisible = !util.TraceLine({
-			start = pos,
-			endpos = eyePos,
-			filter = {data.Inflictor, ply, hg.GetCurrentCharacter(ply), shooter, hg.GetCurrentCharacter(shooter)},
-			mask = MASK_SHOT
-		}).Hit
+		traceData.start = pos
+		traceData.endpos = eyePos
+		traceFilter[2] = ply
+		traceFilter[3] = hg.GetCurrentCharacter(ply)
+		local isVisible = !util.TraceLine(traceData).Hit
 
 		if !isVisible then continue end
 
@@ -556,7 +558,7 @@ hook.Add("PostEntityFireBullets","bulletsuppression",function(ent,bullet)
 end)
 
 timer.Create("hg_nearmiss_cleanup", 1, 0, function()
-	nearMissShots = {}
+	table.Empty(nearMissShots)
 end)
 
 --//

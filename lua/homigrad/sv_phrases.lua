@@ -235,6 +235,7 @@ local file, math, table, CurTime, timer, string = file, math, table, CurTime, ti
 
 local function GetPlayerClassPhrases(ply, phraseType)
 	local playerClass = ply.PlayerClassName
+	if playerClass == "terrorist" or playerClass == "swat" or playerClass == "arena_cleaner" then return nil end
 
 	if playerClass == "terrorist" and terrorist_phrases[phraseType] then
 		return terrorist_phrases[phraseType]
@@ -418,6 +419,11 @@ local painScreamFolders = {
 local painScreamRestartFade = 0.6
 local painScreamEndFade = 0.05
 local painScreamChance = 0.42
+local silentCombatClasses = {
+	arena_cleaner = true,
+	terrorist = true,
+	swat = true,
+}
 
 function hg.AssignPainScreamFolder(ply)
 	if !IsValid(ply) or !ply:IsPlayer() then return end
@@ -446,6 +452,7 @@ end)
 
 local function canPainScream(ply)
 	if !IsValid(ply) or !ply:IsPlayer() or !ply:Alive() then return false end
+	if silentCombatClasses[ply.PlayerClassName] then return false end
 
 	local org = ply.organism
 	if !org or org.otrub or ply:WaterLevel() >= 3 then return false end
@@ -766,6 +773,7 @@ hook.Add("HGReloading", "Perezaryad", function(wep)
 	
 	local playerClass = ply.PlayerClassName
 	if !(playerClass == "terrorist" or playerClass == "nationalguard" or playerClass == "swat") then return end
+	if silentCombatClasses[playerClass] then return end
 	
 	ply.ClassReloadSND_CD = ply.ClassReloadSND_CD or 0
 	if ply.ClassReloadSND_CD > CurTime() then return end

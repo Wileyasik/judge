@@ -1640,22 +1640,10 @@ duplicator.Allow( "homigrad_base" )
 
 --\\ Explosion Trace
 	function hg.ExplosionTrace(start,endpos,filter)
-		local filter1 = {}
-		filter = filter or {}
-		for _,ent in ipairs(filter) do
-			filter1[ent] = true
-		end
 		return util.TraceLine({
 			start = start,
 			endpos = endpos,
-			filter = function(ent) -- i think this too shit, need edit...
-				--print(ent:GetModel())
-				if filter1[ent] then return false end 
-				local phys = ent:GetPhysicsObject()
-				--print(ent:GetModel(),phys:GetMass())
-				if not ent:IsPlayer() and IsValid(phys) and phys:GetMass() > 50 then return true end
-				return true
-		end,
+			filter = filter,
 		mask = MASK_SHOT
 	})
 end
