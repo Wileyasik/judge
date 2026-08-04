@@ -727,6 +727,7 @@ players : 1 humans, 0 bots (20 max)
 			})
 
 			local volume = (talker:WaterLevel() == 3) and 0.25 or (trace.Hit and 0.5 or 1)
+			if hg.IsVoiceMuffled and hg.IsVoiceMuffled(talker) then volume = volume * 0.65 end
 
 			talker:SetVoiceVolumeScale(!hg.muteall and math.min(hg.playerInfo[talker:SteamID()] and hg.playerInfo[talker:SteamID()][2] or 1, volume) or 0)
 		end

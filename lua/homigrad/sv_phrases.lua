@@ -268,7 +268,7 @@ local function PlayClassPhrase(ply, phraseType)
 
 	local randomPhrase = classPhrases[mRandom(#classPhrases)]
 	local ent = hg.GetCurrentCharacter(ply)
-	local muffed = ply.armors and ply.armors["face"] == "mask2"
+	local muffed = hg.IsVoiceMuffled and hg.IsVoiceMuffled(ply)
 
 	ent:EmitSound(randomPhrase, muffed and 75 or 85, ply.VoicePitch or 100, 1, CHAN_AUTO, 0, muffed and 14 or 0)
 
@@ -647,7 +647,7 @@ hook.Add("Org Think", "WhatsSoFunny",function(owner, org, timeValue)
 	if (owner.lastBerserkLaughSoundCD or 0) < CurTime() and !org.otrub and owner:IsBerserk() and mRandom(1, 50) == 1 then
 		local phrase = (ThatPlyIsFemale(owner) and table.Random(f_laugh)) or table.Random(laugh)
 
-		local muffed = owner.armors["face"] == "mask2"
+		local muffed = hg.IsVoiceMuffled and hg.IsVoiceMuffled(owner)
 
 		owner:EmitSound(phrase, muffed and 90 or 100,owner.VoicePitch or 100,1 * math.min(2, org.berserk),CHAN_AUTO,0, pitch and 56 or muffed and 16 or 0)
 

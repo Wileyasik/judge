@@ -1867,6 +1867,52 @@ function hg.IsVisorLowered(ent, armor, armorData)
 	return hg.GetArmorItemState(ent, armor, "lowered", armorData.defaultLowered ~= false)
 end
 
+local voiceMufflingArmor = {
+	mandible_caiman = true,
+	mask2 = true,
+	mask4 = true,
+	visor_exfil_black = true,
+	visor_fast_shield = true,
+	visor_heavy_trooper = true,
+	visor_kolpak = true,
+	visor_lshz2dtm = true,
+	visor_maska = true,
+	visor_riot = true,
+	visor_rys_t = true,
+	visor_sobr1 = true,
+	visor_sobr2 = true,
+	visor_vulkan = true,
+	visor_zsh = true,
+}
+
+function hg.IsVoiceMuffled(ent)
+	if not IsValid(ent) or not ent.armors then return false end
+	for placement, armor in pairs(ent.armors) do
+		if not voiceMufflingArmor[armor] then continue end
+		local armorData = hg.armor[placement] and hg.armor[placement][armor]
+		if not armorData or not armorData.toggleableVisor or hg.IsVisorLowered(ent, armor, armorData) then return true end
+	end
+	return false
+end
+
+if CLIENT then
+	local hearingMufflingHelmets = {
+		helmet11 = true,
+		helmet12 = true,
+		helmet27 = true,
+		helmet28 = true,
+		helmet29 = true,
+		helmet_riot = true,
+	}
+
+	hook.Add("EntityEmitSound", "ArmorHelmetHearingMuffle", function(soundData)
+		local ply = LocalPlayer()
+		if not IsValid(ply) or not ply:Alive() or not ply.armors or not hearingMufflingHelmets[ply.armors.head] then return end
+		soundData.Volume = (soundData.Volume or 1) * 0.82
+		return true
+	end)
+end
+
 local function DrawNoise(amt, alpha)
 	local W, H = ScrW(), ScrH()
 

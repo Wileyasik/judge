@@ -371,6 +371,7 @@ net.Receive("hg_toggle_visor", function(_, ply)
 		ply.armor_states = ply.armor_states or {}
 		ply.armor_states[armor] = ply.armor_states[armor] or {}
 		ply.armor_states[armor].lowered = not lowered
+		ply:EmitSound(lowered and "glassshield_off.wav" or "glassshield_on.wav", 65, 100, 1, CHAN_ITEM)
 		ply:SyncArmor()
 	end)
 end)

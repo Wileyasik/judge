@@ -270,6 +270,7 @@ local function ValidateArenaLoadout(ply)
 	local parsed = ParseArenaLoadout(ply)
 	local selected, usedSlots, selectedAttachments = {}, {}, {}
 	local selectedArmor, selectedMedical, usedArmorSlots = {}, {}, {}
+	local selectedArmorIds = {}
 	local weight = 0
 
 	for _, weaponId in ipairs(istable(parsed.weapons) and parsed.weapons or {}) do
@@ -317,9 +318,24 @@ local function ValidateArenaLoadout(ply)
 
 	for _, armorId in ipairs(istable(parsed.armor) and parsed.armor or {}) do
 		local info = MODE.ArenaArmor[armorId]
+		if info and info.helmets then continue end
 		if not info or usedArmorSlots[info.slot] or weight + info.weight > MODE.ArenaMaxWeight then continue end
 		usedArmorSlots[info.slot] = true
 		selectedArmor[#selectedArmor + 1] = armorId
+		selectedArmorIds[armorId] = true
+		weight = weight + info.weight
+	end
+	for _, armorId in ipairs(istable(parsed.armor) and parsed.armor or {}) do
+		local info = MODE.ArenaArmor[armorId]
+		if not info or not info.helmets or usedArmorSlots[info.slot] or weight + info.weight > MODE.ArenaMaxWeight then continue end
+		local compatible = false
+		for helmetId in pairs(info.helmets) do
+			if selectedArmorIds[helmetId] then compatible = true break end
+		end
+		if not compatible then continue end
+		usedArmorSlots[info.slot] = true
+		selectedArmor[#selectedArmor + 1] = armorId
+		selectedArmorIds[armorId] = true
 		weight = weight + info.weight
 	end
 
@@ -370,7 +386,12 @@ local function ApplyArenaLoadout(ply)
 	end)
 	if hg.AddArmor then
 		for _, armorId in ipairs(armor) do hg.AddArmor(ply, armorId) end
-		hg.AddArmor(ply, "headphones1")
+		local blocksHeadphones = false
+		for placement, armorId in pairs(ply.armors or {}) do
+			local armorData = hg.armor[placement] and hg.armor[placement][armorId]
+			if armorData and armorData.blocksHeadphones then blocksHeadphones = true break end
+		end
+		if not blocksHeadphones then hg.AddArmor(ply, "headphones1") end
 	end
 	for _, medicalId in ipairs(medical) do ply:Give(medicalId) end
 
@@ -454,9 +475,8 @@ function MODE:StartCleanup()
 	end
 
 	for _, ply in ipairs(cleaners) do
-		local oldTeam = ply:Team()
 		ply:Spawn()
-		ply:SetTeam(oldTeam)
+		ply:SetTeam(1)
 		ply:GetRandomSpawn()
 		ply:SetPlayerClass("arena_cleaner")
 		ply:SetNWBool("ArenaCleanupTarget", false)
@@ -466,7 +486,7 @@ function MODE:StartCleanup()
 
 		timer.Simple(0.2, function()
 			if not IsValid(ply) or not MODE.CleanupActive or not ply:Alive() then return end
-			ply:SetTeam(oldTeam)
+			ply:SetTeam(1)
 			ply:SetNWBool("ArenaCleanupTarget", false)
 			ply:SetNWBool("ArenaCleanupCleaner", true)
 			ply:Freeze(false)

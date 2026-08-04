@@ -745,7 +745,7 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		org.uncon_timer = 0
 	end
 	local just_went_uncon = not org.otrub and org.needotrub
-	local just_woke_up = not org.needotrub and org.otrub and (org.uncon_timer or 0) > 6
+	local just_woke_up = not org.needotrub and org.otrub
 	if isPly and just_went_uncon then hook.Run("HG_OnOtrub", owner); hook.Run("PlayerDropWeapon", owner) end
 	if isPly and just_woke_up then hook.Run("HG_OnWakeOtrub", owner) end
 	org.canmove = (org.spine2 < hg.organism.fake_spine2 and org.spine3 < hg.organism.fake_spine3) and not org.otrub

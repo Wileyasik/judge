@@ -1455,7 +1455,7 @@ end
 local function SanitizeArenaLoadout(loadout)
     local mode = GetArenaMode()
     local catalog = mode and mode.ArenaWeapons or {}
-    local maxWeight = mode and mode.ArenaMaxWeight or 50
+    local maxWeight = mode and mode.ArenaMaxWeight or 60
     local normalized = {weapons = {}, attachments = {}, armor = {}, medical = {}}
     local usedSlots, weight = {}, 0
 
@@ -1488,14 +1488,28 @@ local function SanitizeArenaLoadout(loadout)
         end
     end
 
-	local usedArmorSlots = {}
+	local usedArmorSlots, selectedArmorIds = {}, {}
 	for _, armorId in ipairs(istable(loadout.armor) and loadout.armor or {}) do
 		local info = mode and mode.ArenaArmor and mode.ArenaArmor[armorId]
-		if info and not usedArmorSlots[info.slot] and weight + info.weight <= maxWeight then
+		if info and not info.helmets and not usedArmorSlots[info.slot] and weight + info.weight <= maxWeight then
 			normalized.armor[#normalized.armor + 1] = armorId
 			usedArmorSlots[info.slot] = true
+			selectedArmorIds[armorId] = true
 			weight = weight + info.weight
 		end
+	end
+	for _, armorId in ipairs(istable(loadout.armor) and loadout.armor or {}) do
+		local info = mode and mode.ArenaArmor and mode.ArenaArmor[armorId]
+		if not info or not info.helmets or usedArmorSlots[info.slot] or weight + info.weight > maxWeight then continue end
+		local compatible = false
+		for helmetId in pairs(info.helmets) do
+			if selectedArmorIds[helmetId] then compatible = true break end
+		end
+		if not compatible then continue end
+		normalized.armor[#normalized.armor + 1] = armorId
+		usedArmorSlots[info.slot] = true
+		selectedArmorIds[armorId] = true
+		weight = weight + info.weight
 	end
 
 	local usedMedical = {}
@@ -1537,33 +1551,33 @@ local ArenaPresets = ReadArenaPresets()
 local ArenaDefaultPresets = {
 	{
 		name = "RIFLEMAN",
-		desc = "M4A1 / heavy armor / drum",
+		desc = "M4A1 / class IV armor / drum",
 		accent = Color(62, 112, 190),
 		loadout = {
 			weapons = {"weapon_m4a1", "weapon_p22"},
-			armor = {"vest30", "helmet14", "mask1"},
+			armor = {"vest9", "helmet14", "visor_exfil_black"},
 			medical = {"weapon_bandage_sh", "weapon_tourniquet", "weapon_bigbandage_sh", "weapon_medkit_sh", "weapon_painkillers", "weapon_morphine", "weapon_adrenaline", "weapon_bloodbag", "weapon_needle"},
 			attachments = {weapon_m4a1 = {"optic5", "supressor5", "mag2"}},
 		},
 	},
 	{
 		name = "BREACHER",
-		desc = "AK-74 / drum / field aid",
+		desc = "AK-74 / face shield / field aid",
 		accent = Color(190, 72, 42),
 		loadout = {
 			weapons = {"weapon_ak74", "weapon_cz75"},
-			armor = {"vest26", "helmet14", "mask1"},
+			armor = {"vest7", "helmet12", "visor_lshz2dtm"},
 			medical = {"weapon_bandage_sh", "weapon_tourniquet", "weapon_bigbandage_sh", "weapon_medkit_sh", "weapon_morphine", "weapon_adrenaline", "weapon_bloodbag"},
 			attachments = {weapon_ak74 = {"optic11", "supressor3", "mag4", "stock_ak_evo"}},
 		},
 	},
 	{
 		name = "SCOUT",
-		desc = "MP7 / Glock / heavy armor",
+		desc = "MP7 / armored helmet / light vest",
 		accent = Color(42, 160, 140),
 		loadout = {
 			weapons = {"weapon_mp7", "weapon_glock17"},
-			armor = {"vest30", "helmet14", "mask1"},
+			armor = {"vest4", "helmet17", "visor_fast_shield"},
 			medical = {"weapon_bandage_sh", "weapon_tourniquet", "weapon_morphine", "weapon_adrenaline", "weapon_bloodbag"},
 			attachments = {
 				weapon_mp7 = {"optic5", "laser2", "supressor2"},
@@ -1573,11 +1587,11 @@ local ArenaDefaultPresets = {
 	},
 	{
 		name = "MARKSMAN",
-		desc = "SVD / sidearm / full aid",
+		desc = "SVD / class III armor / full aid",
 		accent = Color(142, 82, 190),
 		loadout = {
 			weapons = {"weapon_svd", "weapon_p22"},
-			armor = {"vest26", "helmet14", "mask1"},
+			armor = {"vest7", "helmet9"},
 			medical = {"weapon_tourniquet", "weapon_bigbandage_sh", "weapon_medkit_sh", "weapon_morphine", "weapon_adrenaline", "weapon_bloodbag", "weapon_needle", "weapon_betablock"},
 			attachments = {
 				weapon_svd = {"optic4", "supressor9"},
@@ -1871,48 +1885,86 @@ local function OpenArenaEditor(rootPanel)
             end
         end
 
-		local armorHeader = list:Add("DLabel")
-		armorHeader:Dock(TOP)
-		armorHeader:DockMargin(0, MenuUnit(12), 0, MenuUnit(5))
-		armorHeader:SetFont(TRAITOR_MENU_FONT)
-		armorHeader:SetTextColor(Color(220, 220, 220))
-		armorHeader:SetText("ARMOR")
-		armorHeader:SizeToContentsY()
+		local function AddArmorHeader(text, marginTop)
+			local header = list:Add("DLabel")
+			header:Dock(TOP)
+			header:DockMargin(0, MenuUnit(marginTop or 12), 0, MenuUnit(5))
+			header:SetFont(TRAITOR_MENU_FONT)
+			header:SetTextColor(Color(220, 220, 220))
+			header:SetText(text)
+			header:SizeToContentsY()
+		end
 
-		for armorId, info in SortedPairsByMemberValue(mode.ArenaArmor or {}, "name") do
+		local function ToggleArmor(armorId, info)
+			ArenaLoadout.armor = ArenaLoadout.armor or {}
+			if table.HasValue(ArenaLoadout.armor, armorId) then
+				table.RemoveByValue(ArenaLoadout.armor, armorId)
+			else
+				for _, otherId in ipairs(table.Copy(ArenaLoadout.armor)) do
+					local other = mode.ArenaArmor[otherId]
+					if other and other.slot == info.slot then table.RemoveByValue(ArenaLoadout.armor, otherId) end
+				end
+				ArenaLoadout.armor[#ArenaLoadout.armor + 1] = armorId
+			end
+			SaveArenaLoadout()
+			RefreshWeapons()
+			surface.PlaySound(SOUND_MENU_SELECT)
+		end
+
+		local function AddArmorButton(armorId, info, compact)
 			local button = list:Add("DButton")
 			local armorMaterial = hg.armorIcons and hg.armorIcons[armorId] and Material(hg.armorIcons[armorId])
 			button:Dock(TOP)
-			button:DockMargin(0, 0, 0, MenuUnit(4))
-			button:SetTall(MenuUnit(38))
+			button:DockMargin(compact and MenuUnit(24) or 0, 0, compact and MenuUnit(8) or 0, MenuUnit(compact and 3 or 4))
+			button:SetTall(MenuUnit(compact and 30 or 38))
 			button:SetText("")
 			button.Paint = function(self, w, h)
 				local selected = table.HasValue(ArenaLoadout.armor or {}, armorId)
-				draw.RoundedBox(0, 0, 0, w, h, selected and Color(100, 100, 100, 150) or (self:IsHovered() and Color(150, 150, 150, 150) or Color(30, 30, 30, 150)))
+				local base = compact and Color(22, 30, 34, 205) or Color(30, 30, 30, 150)
+				draw.RoundedBox(0, 0, 0, w, h, selected and Color(80, 112, 105, 210) or (self:IsHovered() and Color(105, 120, 122, 190) or base))
+				if compact then
+					surface.SetDrawColor(selected and Color(105, 220, 180) or Color(90, 120, 125))
+					surface.DrawRect(0, 0, MenuUnit(2), h)
+				end
 				if armorMaterial then
 					surface.SetDrawColor(255, 255, 255, 230)
 					surface.SetMaterial(armorMaterial)
-					surface.DrawTexturedRect(MenuUnit(6), MenuUnit(4), h - MenuUnit(8), h - MenuUnit(8))
+					surface.DrawTexturedRect(MenuUnit(6), MenuUnit(compact and 3 or 4), h - MenuUnit(compact and 6 or 8), h - MenuUnit(compact and 6 or 8))
 				end
-				draw.SimpleText(info.name, TRAITOR_MENU_FONT, MenuUnit(42), h / 2, color_whitey, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-				draw.SimpleText(info.weight .. " W", TRAITOR_MENU_FONT, w - MenuUnit(12), h / 2, Color(200, 255, 200), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+				draw.SimpleText(info.name, compact and ARENA_DESC_FONT or TRAITOR_MENU_FONT, MenuUnit(compact and 34 or 42), h / 2, color_whitey, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+				draw.SimpleText(info.weight .. " W", compact and ARENA_DESC_FONT or TRAITOR_MENU_FONT, w - MenuUnit(12), h / 2, Color(200, 255, 200), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
 			end
 			button.OnCursorEntered = function() PreviewItem(armorId, info, true) end
 			button.OnCursorExited = RestoreSelectedPreview
-			button.DoClick = function()
-				ArenaLoadout.armor = ArenaLoadout.armor or {}
-				if table.HasValue(ArenaLoadout.armor, armorId) then
-					table.RemoveByValue(ArenaLoadout.armor, armorId)
-				else
-					for _, otherId in ipairs(table.Copy(ArenaLoadout.armor)) do
-						local other = mode.ArenaArmor[otherId]
-						if other and other.slot == info.slot then table.RemoveByValue(ArenaLoadout.armor, otherId) end
+			button.DoClick = function() ToggleArmor(armorId, info) end
+		end
+
+		AddArmorHeader("VESTS")
+		for armorId, info in SortedPairsByMemberValue(mode.ArenaArmor or {}, "name") do
+			if info.slot == "vest" then AddArmorButton(armorId, info, false) end
+		end
+
+		AddArmorHeader("HELMETS")
+		for armorId, info in SortedPairsByMemberValue(mode.ArenaArmor or {}, "name") do
+			if info.slot ~= "helmet" then continue end
+			AddArmorButton(armorId, info, false)
+
+			if not table.HasValue(ArenaLoadout.armor or {}, armorId) then continue end
+			local hasAddons = false
+			for addonId, addonInfo in SortedPairsByMemberValue(mode.ArenaArmor or {}, "name") do
+				if addonInfo.slot == "visor" and (not addonInfo.helmets or addonInfo.helmets[armorId]) then
+					if not hasAddons then
+						local addonHeader = list:Add("DLabel")
+						addonHeader:Dock(TOP)
+						addonHeader:DockMargin(MenuUnit(24), MenuUnit(2), 0, MenuUnit(3))
+						addonHeader:SetFont(ARENA_DESC_FONT)
+						addonHeader:SetTextColor(Color(145, 175, 175))
+						addonHeader:SetText("HELMET ADDONS")
+						addonHeader:SizeToContentsY()
+						hasAddons = true
 					end
-					ArenaLoadout.armor[#ArenaLoadout.armor + 1] = armorId
+					AddArmorButton(addonId, addonInfo, true)
 				end
-				SaveArenaLoadout()
-				RefreshWeapons()
-				surface.PlaySound(SOUND_MENU_SELECT)
 			end
 		end
 
@@ -1970,7 +2022,7 @@ local function OpenArenaEditor(rootPanel)
 				surface.DrawRect(0, 0, MenuUnit(3), h)
 				draw.SimpleText(string.upper(name), TRAITOR_MENU_FONT, MenuUnit(10), MenuUnit(17), color_whitey, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 				draw.SimpleText(desc, ARENA_META_FONT, MenuUnit(10), MenuUnit(36), Color(175, 185, 190), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-				draw.SimpleText(presetWeight .. " / 50 W", ARENA_META_FONT, w - MenuUnit(8), h - MenuUnit(10), Color(200, 255, 200), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+				draw.SimpleText(presetWeight .. " / " .. (mode.ArenaMaxWeight or 60) .. " W", ARENA_META_FONT, w - MenuUnit(8), h - MenuUnit(10), Color(200, 255, 200), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
 			end
 			card.DoClick = function()
 				ArenaLoadout = table.Copy(loadout)
