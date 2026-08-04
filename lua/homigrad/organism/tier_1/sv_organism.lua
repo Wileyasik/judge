@@ -531,6 +531,18 @@ hook.Add("HomigradDamage", "PanicAttackDamage", function(ply, dmgInfo)
 	if dmgInfo:GetDamage() <= 0 and not dmgInfo:IsDamageType(DMG_BLAST) then return end
 	panic_witness_event(ply, attacker, math.Clamp(amount * 0.75, 0.04, 0.2), panicattack_witness_radius)
 end)
+local function stopNeckSlitSound(owner, org)
+	if not org or not org.neckslitSoundName then return end
+	if IsValid(org.neckslitSoundEnt) then org.neckslitSoundEnt:StopSound(org.neckslitSoundName) end
+	if IsValid(owner) then owner:StopSound(org.neckslitSoundName) end
+	org.neckslitSoundName = nil
+	org.neckslitSoundEnt = nil
+end
+
+hook.Add("PlayerDeath", "HG_StopNeckSlitSound", function(ply)
+	stopNeckSlitSound(ply, ply.organism)
+end)
+
 hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	if not IsValid(owner) then
 		hg.organism.list[owner] = nil
@@ -760,15 +772,8 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	end
 	if not org.otrub and isPly and org.owner:Alive() then
 	end
-	if org.neckslitSoundName and (org.otrub or org.needotrub) then
-		if IsValid(org.neckslitSoundEnt) then
-			org.neckslitSoundEnt:StopSound(org.neckslitSoundName)
-		end
-		if IsValid(owner) then
-			owner:StopSound(org.neckslitSoundName)
-		end
-		org.neckslitSoundName = nil
-		org.neckslitSoundEnt = nil
+	if org.neckslitSoundName and (not org.alive or org.otrub or org.needotrub or isPly and not owner:Alive()) then
+		stopNeckSlitSound(owner, org)
 	end
 
 	if isPly and org.otrub and org.incapacitated then

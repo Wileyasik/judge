@@ -1143,6 +1143,16 @@ local function randomArteryPitch()
 	return math.random(arterySoundPitchMin, arterySoundPitchMax)
 end
 
+local function isArterySoundAlive(ent)
+	if not IsValid(ent) then return false end
+	local owner = ent:IsRagdoll() and hg.RagdollOwner(ent) or ent
+	if IsValid(owner) and owner:IsPlayer() then
+		return owner:Alive() and (not owner.organism or owner.organism.alive ~= false)
+	end
+	local org = ent.organism
+	return org and org.alive ~= false or ent.Health and ent:Health() > 0
+end
+
 local function playRandomArteryDrip(ent, wound, vol)
 	local pos = getArterialWoundPos(ent, wound)
 	if not pos then return end
@@ -1151,13 +1161,13 @@ local function playRandomArteryDrip(ent, wound, vol)
 end
 
 function hg.queueArterialWoundSound(ent, wound)
-	if not IsValid(ent) or not wound then return end
+	if not IsValid(ent) or not wound or not isArterySoundAlive(ent) then return end
 
 	local delay = math.Rand(arterySoundDelayMin, arterySoundDelayMax)
 	local artery = wound[7]
 	local org = ent.organism or {}
 
-	if artery == "arteria" and (not ent:IsPlayer() or ent:Alive() and not org.otrub) then
+	if artery == "arteria" and isArterySoundAlive(ent) and not org.otrub then
 		local _, target = getArterialWoundPos(ent, wound)
 		if IsValid(target) then
 			local snd = CreateSound(target, arteryNeckSlitSound)
@@ -1173,7 +1183,7 @@ function hg.queueArterialWoundSound(ent, wound)
 	end
 
 	timer.Simple(delay, function()
-		if not IsValid(ent) then return end
+		if not isArterySoundAlive(ent) then return end
 		playRandomArteryDrip(ent, wound, artery == "arteria" and 0.85 or 1)
 	end)
 end

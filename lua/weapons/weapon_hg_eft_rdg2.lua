@@ -10,8 +10,8 @@ RMB - Low throw]]
 SWEP.Spawnable = true
 SWEP.NoTrap = true
 
-SWEP.WorldModel = "models/weapons/arc9/darsu_eft/w_rdg2_unthrowed.mdl"
-SWEP.WorldModelReal = "models/weapons/arc9/darsu_eft/c_rdg2.mdl"
+SWEP.WorldModel = "models/weapons/w_rdg2_unthrowed.mdl"
+SWEP.WorldModelReal = "models/weapons/c_rdg2.mdl"
 SWEP.ENT = "ent_hg_eft_rdg2b"
 
 SWEP.AnimList = {

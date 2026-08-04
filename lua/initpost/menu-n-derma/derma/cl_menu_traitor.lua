@@ -1783,7 +1783,9 @@ local function OpenArenaEditor(rootPanel)
 						surface.DrawTexturedRect(MenuUnit(5), MenuUnit(3), h - MenuUnit(6), h - MenuUnit(6))
 					end
 					draw.SimpleText((hg.attachmentslaunguage and hg.attachmentslaunguage[attachmentId]) or attachmentId, ARENA_META_FONT, MenuUnit(34), h / 2, color_whitey, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-					draw.SimpleText("+" .. mode:GetArenaAttachmentWeight(attachmentId) .. " W", TRAITOR_MENU_FONT, w - MenuUnit(10), h / 2, Color(200, 255, 200), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+					local attachmentWeight = mode:GetArenaAttachmentWeight(attachmentId)
+					local weightText = attachmentWeight < 0 and "+" .. math.abs(attachmentWeight) .. " W" or "-" .. attachmentWeight .. " W"
+					draw.SimpleText(weightText, TRAITOR_MENU_FONT, w - MenuUnit(10), h / 2, Color(200, 255, 200), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
                 end
                 button.DoClick = function()
                     ArenaLoadout.attachments[weaponId] = ArenaLoadout.attachments[weaponId] or {}

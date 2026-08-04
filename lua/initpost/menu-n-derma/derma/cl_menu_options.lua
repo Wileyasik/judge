@@ -608,7 +608,6 @@ function SettingsRefreshContent()
     local entryWidth = settings_sw - sidebarWidth
 
     for convarName, settingData in SortedPairs(hg.settings.tbl[settings_active_category]) do
-        if convarName == "hg_gollavo_headshot_effect" and not InfoHasLocalAchievement("gollavo") then continue end
         local convar = GetConVar(settingData[2])
         if not convar then continue end
 

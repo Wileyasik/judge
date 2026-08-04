@@ -1341,10 +1341,6 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	end
 	org.dmgstack[hitgroup][1] = headGoreStack or gibStack
 	if hitgroup == HITGROUP_HEAD and ent.headexploded and Gib_UpdateHeadGoreStage then Gib_UpdateHeadGoreStage(ent, headGoreStack or gibStack) end
-	if hitgroup == HITGROUP_STOMACH and not org.stomachgibbed and hg.AttachStomachGore and gibStack >= player_stomach_gib_threshold then
-		hg.AttachStomachGore(ent, dirCool * len)
-	end
-
 	local translatedBone = ent:TranslatePhysBoneToBone(bone or 0)
 	local mat = translatedBone and translatedBone >= 0 and ent:GetBoneMatrix(translatedBone) or nil
 	local hitgroup_max = 100

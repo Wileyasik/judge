@@ -150,6 +150,21 @@ local function EmitDebris(ent, count)
 	EmitSound(DebrisSounds[math_random(#DebrisSounds)], ent:GetPos(), ent:EntIndex(), CHAN_AUTO, 1, 80)
 end
 
+local pendingBlastStuns = {}
+local blastStunQueued = false
+local function QueueBlastStun(ply)
+	pendingBlastStuns[ply] = true
+	if blastStunQueued then return end
+	blastStunQueued = true
+	timer.Simple(0, function()
+		blastStunQueued = false
+		for target in pairs(pendingBlastStuns) do
+			pendingBlastStuns[target] = nil
+			if IsValid(target) then hg.LightStunPlayer(target) end
+		end
+	end)
+end
+
 local function ApplyBlastDamage(data, enta, tracePos, len)
 	local force = tracePos - data.Pos
 	local forceLen = force:Length()
@@ -192,8 +207,8 @@ local function ApplyBlastDamage(data, enta, tracePos, len)
 	local dmginfo = DamageInfo()
 	dmginfo:SetDamage(data.Damage * damageFrac)
 	dmginfo:SetDamageType(data.DamageType)
-	dmginfo:SetAttacker(IsValid(data.Owner) and data.Owner or game.GetWorld())
-	dmginfo:SetInflictor(IsValid(data.Ent) and data.Ent or (IsValid(data.Owner) and data.Owner or game.GetWorld()))
+	dmginfo:SetAttacker(data.Attacker)
+	dmginfo:SetInflictor(data.Inflictor)
 	dmginfo:SetDamagePosition(tracePos)
 	dmginfo:SetDamageForce(forceadd)
 	enta:TakeDamageInfo(dmginfo)
@@ -201,11 +216,7 @@ local function ApplyBlastDamage(data, enta, tracePos, len)
 	if enta:IsPlayer() then
 		hg.AddForceRag(enta, 0, forceadd * 0.5, 0.5)
 		hg.AddForceRag(enta, 1, forceadd * 0.5, 0.5)
-		timer.Simple(0, function()
-			if IsValid(enta) then
-				hg.LightStunPlayer(enta)
-			end
-		end)
+		QueueBlastStun(enta)
 	end
 
 	local phys = enta:GetPhysicsObject()
@@ -233,15 +244,19 @@ local function ApplyBlastBurst(data)
 	data.DisorientPower = data.DisorientPower or 5
 	data.DisorientTime = data.DisorientTime or 6
 	data.BehindWallDisorientDiv = data.BehindWallDisorientDiv or 1
+	data.DistanceSqr = data.Distance * data.Distance
+	data.Attacker = IsValid(data.Owner) and data.Owner or game.GetWorld()
+	data.Inflictor = IsValid(data.Ent) and data.Ent or data.Attacker
+	local maxTargets = data.MaxTargets or BlastMaxTargets
 	local hitCount = 0
 
 	for _, enta in ipairs(ents_FindInSphere(data.Pos, data.Distance)) do
-		if hitCount >= (data.MaxTargets or BlastMaxTargets) then break end
+		if hitCount >= maxTargets then break end
 		if enta == data.Ent or not IsValid(enta) or data.HitEnts[enta] then continue end
 		data.HitEnts[enta] = true
 		local tracePos = enta:IsPlayer() and (enta:GetPos() + enta:OBBCenter()) or enta:GetPos()
 		local lenSqr = tracePos:DistToSqr(data.Pos)
-		if lenSqr > data.Distance * data.Distance then continue end
+		if lenSqr > data.DistanceSqr then continue end
 		ApplyBlastDamage(data, enta, tracePos, math_sqrt(lenSqr))
 		hitCount = hitCount + 1
 	end
@@ -617,9 +632,10 @@ local function AddGasCloud(data, holePos, dir, cloudType)
 	if not istable(data) then return end
 	local idx = data.EntIndex
 	if not idx then return end
+	local curTime = CurTime()
 	local pos = holePos + dir * 26
 	local radius = GasTankSmokeSettings.CloudRadius
-	local expireAt = CurTime() + GasTankSmokeSettings.CloudLife
+	local expireAt = curTime + GasTankSmokeSettings.CloudLife
 	local spreadDistance = GasTankSmokeSettings.SpreadDistance
 	local affectRadius = GasTankSmokeSettings.SmokeAffectRadius
 	if cloudType == "ground" then
@@ -635,7 +651,7 @@ local function AddGasCloud(data, holePos, dir, cloudType)
 			pos = holePos
 		end
 		radius = GasTankSmokeSettings.CloudRadius * 0.9
-		expireAt = CurTime() + GasTankSmokeSettings.GroundCloudLife
+		expireAt = curTime + GasTankSmokeSettings.GroundCloudLife
 		affectRadius = GasTankSmokeSettings.GroundAffectRadius
 	elseif cloudType == "air" then
 		pos = holePos + dir * GasTankSmokeSettings.AirCloudLift + vector_up * 14
@@ -649,7 +665,7 @@ local function AddGasCloud(data, holePos, dir, cloudType)
 		ExpireAt = expireAt,
 		NextPlayerAt = 0,
 		NextIgniteAt = 0,
-		NextSpreadAt = CurTime() + GasTankSmokeSettings.SpreadTick,
+		NextSpreadAt = curTime + GasTankSmokeSettings.SpreadTick,
 		TankEntIndex = idx,
 		Owner = data.Owner,
 		LeakMode = data.LeakMode,
@@ -659,9 +675,10 @@ local function AddGasCloud(data, holePos, dir, cloudType)
 	})
 end
 
-local function SpreadGasCloud(cloud)
+local function SpreadGasCloud(cloud, curTime)
 	if not cloud or (cloud.SpreadLeft or 0) <= 0 then return end
-	cloud.NextSpreadAt = CurTime() + GasTankSmokeSettings.SpreadTick
+	curTime = curTime or CurTime()
+	cloud.NextSpreadAt = curTime + GasTankSmokeSettings.SpreadTick
 	for i = 1, GasTankSmokeSettings.SpreadChildrenPerTick do
 		if #hg.GasTank.ActiveClouds >= GasTankMaxClouds then break end
 		local offset = VectorRand() * (cloud.SpreadDistance or GasTankSmokeSettings.SpreadDistance)
@@ -687,10 +704,10 @@ local function SpreadGasCloud(cloud)
 			Pos = pos,
 			Radius = math_max((cloud.Radius or GasTankSmokeSettings.CloudRadius) * 0.88, GasTankSmokeSettings.MinSpreadRadius),
 			AffectRadius = math_max((cloud.AffectRadius or GasTankSmokeSettings.SmokeAffectRadius) * 0.9, GasTankSmokeSettings.GroundAffectRadius * 0.75),
-			ExpireAt = math_min(cloud.ExpireAt, CurTime() + GasTankSmokeSettings.CloudLife * 0.6),
+			ExpireAt = math_min(cloud.ExpireAt, curTime + GasTankSmokeSettings.CloudLife * 0.6),
 			NextPlayerAt = 0,
 			NextIgniteAt = 0,
-			NextSpreadAt = CurTime() + GasTankSmokeSettings.SpreadTick,
+			NextSpreadAt = curTime + GasTankSmokeSettings.SpreadTick,
 			TankEntIndex = cloud.TankEntIndex,
 			Owner = cloud.Owner,
 			LeakMode = cloud.LeakMode,
@@ -896,35 +913,39 @@ timer.Simple(0, function()
 	end
 end)
 
+local nextGasCloudThink = 0
 hook.Add("Think", "hg_gastank_mainloop", function()
 	local curTime = CurTime()
 
-	for i = #hg.GasTank.ActiveClouds, 1, -1 do
-		local cloud = hg.GasTank.ActiveClouds[i]
-		if not cloud or curTime > (cloud.ExpireAt or 0) then
-			table.remove(hg.GasTank.ActiveClouds, i)
-			continue
-		end
+	if curTime >= nextGasCloudThink then
+		nextGasCloudThink = curTime + GasTankMainThinkInterval
+		for i = #hg.GasTank.ActiveClouds, 1, -1 do
+			local cloud = hg.GasTank.ActiveClouds[i]
+			if not cloud or curTime > (cloud.ExpireAt or 0) then
+				table.remove(hg.GasTank.ActiveClouds, i)
+				continue
+			end
 
-		if curTime >= (cloud.NextSpreadAt or 0) then
-			SpreadGasCloud(cloud)
-		end
+			if curTime >= (cloud.NextSpreadAt or 0) then
+				SpreadGasCloud(cloud, curTime)
+			end
 
-		if curTime >= (cloud.NextPlayerAt or 0) then
-			cloud.NextPlayerAt = curTime + GasTankSmokeSettings.PlayerTick
-			for _, ply in ipairs(ents_FindInSphere(cloud.Pos, cloud.AffectRadius or cloud.Radius)) do
-				if ply:IsPlayer() and ply:Alive() and ply.organism then
-					ply.organism.lastCOBreathe = curTime
+			if curTime >= (cloud.NextPlayerAt or 0) then
+				cloud.NextPlayerAt = curTime + GasTankSmokeSettings.PlayerTick
+				for _, ply in ipairs(ents_FindInSphere(cloud.Pos, cloud.AffectRadius or cloud.Radius)) do
+					if ply:IsPlayer() and ply:Alive() and ply.organism then
+						ply.organism.lastCOBreathe = curTime
+					end
 				end
 			end
-		end
 
-		if curTime >= (cloud.NextIgniteAt or 0) then
-			cloud.NextIgniteAt = curTime + GasTankSmokeSettings.IgniteTick
-			for _, ent in ipairs(ents_FindInSphere(cloud.Pos, cloud.Radius)) do
-				if IsGasIgnitionSourceForCloud(ent, cloud) then
-					IgniteGasCloud(cloud, ent)
-					break
+			if curTime >= (cloud.NextIgniteAt or 0) then
+				cloud.NextIgniteAt = curTime + GasTankSmokeSettings.IgniteTick
+				for _, ent in ipairs(ents_FindInSphere(cloud.Pos, cloud.Radius)) do
+					if IsGasIgnitionSourceForCloud(ent, cloud) then
+						IgniteGasCloud(cloud, ent)
+						break
+					end
 				end
 			end
 		end

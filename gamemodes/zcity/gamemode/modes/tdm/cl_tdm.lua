@@ -95,6 +95,8 @@ net.Receive("arena_start_vote", function()
 	voteEndTime = net.ReadFloat()
 	selectedVote = 0
 	voteResults = {[1] = 0, [2] = 0, [3] = 0}
+	MODE.ShowRoundIntro = false
+	MODE.IntroStartTime = nil
 	OpenArenaVoteMenu()
 end)
 
@@ -122,7 +124,14 @@ end
 net.Receive("arena_round_start",function()
 	local showIntro = net.ReadBool()
 	MODE.ShowRoundIntro = showIntro
+	MODE.IntroStartTime = showIntro and CurTime() or nil
 	if showIntro then StartArenaIntro() end
+end)
+
+net.Receive("arena_cleanup_start", function()
+	MODE.ShowRoundIntro = false
+	MODE.IntroStartTime = nil
+	if IsValid(ArenaVoteMenu) then ArenaVoteMenu:Remove() end
 end)
 
 net.Receive("tdm_start",function()
@@ -142,16 +151,21 @@ net.Receive("arena_announcer", function()
 	if eventType == 3 then path = "arena/cleaning/zachistka" .. index .. ".mp3" end
 	if not path then return end
 
-	for copy = 1, 2 do
-		sound.PlayFile("sound/" .. path, "noplay", function(channel)
-			if not IsValid(channel) then
-				if copy == 1 then surface.PlaySound(path) end
-				return
-			end
-			channel:SetVolume(1)
-			channel:Play()
-		end)
-	end
+	MODE.AnnouncerSequence = (MODE.AnnouncerSequence or 0) + 1
+	local sequence = MODE.AnnouncerSequence
+	if IsValid(MODE.AnnouncerChannel) then MODE.AnnouncerChannel:Stop() end
+	MODE.AnnouncerChannel = nil
+
+	sound.PlayFile("sound/" .. path, "noplay", function(channel)
+		if sequence ~= MODE.AnnouncerSequence then
+			if IsValid(channel) then channel:Stop() end
+			return
+		end
+		if not IsValid(channel) then surface.PlaySound(path) return end
+		MODE.AnnouncerChannel = channel
+		channel:SetVolume(1)
+		channel:Play()
+	end)
 end)
 
 hook.Add("PreDrawHalos", "ArenaCleanupTargets", function()
@@ -160,9 +174,15 @@ hook.Add("PreDrawHalos", "ArenaCleanupTargets", function()
 	if not IsValid(localPlayer) or not localPlayer:GetNWBool("ArenaCleanupCleaner") then return end
 
 	local targets = {}
+	local added = {}
 	for _, ply in player.Iterator() do
 		if ply:Alive() and ply:GetNWBool("ArenaCleanupTarget") then
-			targets[#targets + 1] = ply
+			local character = hg.GetCurrentCharacter(ply)
+			character = IsValid(character) and character or ply
+			if not added[character] then
+				added[character] = true
+				targets[#targets + 1] = character
+			end
 		end
 	end
 
@@ -186,7 +206,8 @@ local teams = {
 
 hook.Add( "StartCommand", "TDM_DisallowMoveOrShoting", function( ply, mv )
 	--; BLYAT NY NAXUA PISAT VSE V ODNY LINIY BLYAAA
-	if zb.CROUND == "tdm" and (zb.ROUND_START or 0) + MODE.start_time > CurTime() then 
+	local isCleaner = ply:GetNWBool("ArenaCleanupCleaner") or ply.PlayerClassName == "arena_cleaner"
+	if zb.CROUND == "tdm" and not isCleaner and not GetGlobalBool("ArenaCleanupActive") and (zb.ROUND_START or 0) + MODE.start_time > CurTime() then 
 		mv:RemoveKey(IN_ATTACK)
 		mv:RemoveKey(IN_ATTACK2)
 		mv:RemoveKey(IN_FORWARD)
@@ -213,7 +234,7 @@ end
 
 function MODE:RenderScreenspaceEffects()
 	if self.ShowRoundIntro == false then return end
-    local StartTime = zb.ROUND_START or CurTime()
+	local StartTime = self.IntroStartTime or zb.ROUND_START or CurTime()
 	if StartTime + 7.5 < CurTime() then return end
     local fade = math.Clamp(StartTime + 7.5 - CurTime(),0,1)
 
@@ -222,22 +243,22 @@ function MODE:RenderScreenspaceEffects()
 end
 
 function MODE:HUDPaint()
-    local StartTime = zb.ROUND_START or CurTime()
+	local RoundStartTime = zb.ROUND_START or CurTime()
+	local StartTime = self.IntroStartTime or RoundStartTime
 	self:AddHudPaint()
 	if GetGlobalBool("ArenaCleanupActive") then
 		local time = string.FormattedTime(math.max(GetGlobalFloat("ArenaCleanupDeadline") - CurTime(), 0), "%02i:%02i:%02i")
 		local objective = lply:GetNWBool("ArenaCleanupCleaner") and "ELIMINATE THE SURVIVORS" or "SURVIVE THE CLEANUP"
 		draw.SimpleText(time, "ZB_HomicideMedium", sw * 0.5, sh * 0.92, Color(230, 45, 35), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 		draw.SimpleText(objective, "ZB_HomicideMedium", sw * 0.5, sh * 0.96, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-	elseif StartTime + self.start_time > CurTime() then
-		draw.SimpleText( string.FormattedTime(StartTime + self.start_time - CurTime(), "%02i:%02i:%02i"	), "ZB_HomicideMedium", sw * 0.5, sh * 0.95, Color(255,255,255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	elseif RoundStartTime + self.start_time > CurTime() then
+		draw.SimpleText( string.FormattedTime(RoundStartTime + self.start_time - CurTime(), "%02i:%02i:%02i"	), "ZB_HomicideMedium", sw * 0.5, sh * 0.95, Color(255,255,255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 	else
-		local time = string.FormattedTime( math.max(StartTime + (zb.ROUND_TIME or 400) - CurTime(), 0), "%02i:%02i:%02i" )
+		local time = string.FormattedTime( math.max(RoundStartTime + (zb.ROUND_TIME or 400) - CurTime(), 0), "%02i:%02i:%02i" )
 		draw.SimpleText( time, "ZB_HomicideMedium", sw * 0.5, sh * 0.95, ColorObj, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 	end
 
-	if self.ShowRoundIntro == false then return end
-    if StartTime + self.start_time < CurTime() then return end
+	if self.ShowRoundIntro == false or RoundStartTime + self.start_time < CurTime() then return end
 	 
 	if not lply:Alive() then return end
 	zb.RemoveFade()
