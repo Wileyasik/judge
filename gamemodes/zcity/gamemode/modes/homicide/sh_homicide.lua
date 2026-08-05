@@ -27,13 +27,11 @@ local HeroWeaponData = {
 }
 
 local HeroUpgradeData = {
-	["hero_px4_silencer"] = {parent = "weapon_px4beretta", type = "attachment", attachment = "supressor6"},
 	["hero_px4_ammo"] = {parent = "weapon_px4beretta", type = "ammo", extraClips = 1},
 	["hero_glock_silencer"] = {parent = "weapon_glock17", type = "attachment", attachment = "supressor2"},
 	["hero_glock_rmr"] = {parent = "weapon_glock17", type = "attachment", attachment = "holo16"},
 	["hero_glock_laser"] = {parent = "weapon_glock17", type = "attachment", attachment = "laser3"},
 	["hero_glock_ammo"] = {parent = "weapon_glock17", type = "ammo", extraClips = 1},
-	["hero_usp_silencer"] = {parent = "weapon_hk_usp", type = "attachment", attachment = "supressor2"},
 	["hero_usp_ammo"] = {parent = "weapon_hk_usp", type = "ammo", extraClips = 1},
 	["hero_remington_sight"] = {parent = "weapon_remington870", type = "attachment", attachment = "holo16"},
 	["hero_remington_ammo"] = {parent = "weapon_remington870", type = "ammo", extraClips = 1},
@@ -44,10 +42,8 @@ local HeroUpgradeData = {
 	["hero_kar98_scope"] = {parent = "weapon_kar98", type = "attachment", attachment = "optic12"},
 	["hero_kar98_ammo"] = {parent = "weapon_kar98", type = "ammo", extraClips = 1},
 	["hero_vpo209_silencer"] = {parent = "weapon_vpo209", type = "attachment", attachment = "supressor3"},
-	["hero_vpo209_optic"] = {parent = "weapon_vpo209", type = "attachment", attachment = "holo16"},
 	["hero_vpo209_ammo"] = {parent = "weapon_vpo209", type = "ammo", extraClips = 1},
 	["hero_vpo136_silencer"] = {parent = "weapon_vpo136", type = "attachment", attachment = "supressor7"},
-	["hero_vpo136_optic"] = {parent = "weapon_vpo136", type = "attachment", attachment = "holo16"},
 	["hero_vpo136_ammo"] = {parent = "weapon_vpo136", type = "ammo", extraClips = 1},
 	["hero_mosin_silencer"] = {parent = "weapon_mosin", type = "attachment", attachment = "supressor9"},
 	["hero_mosin_scope"] = {parent = "weapon_mosin", type = "attachment", attachment = "optic12"},

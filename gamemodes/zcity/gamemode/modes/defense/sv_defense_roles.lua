@@ -153,8 +153,8 @@ function MODE:AssignPlayerRoles()
                 wep.bloodtype = "o-" 
             end 
         end)
-        ply:Give("weapon_painkillers")
-        ply:Give("weapon_betablock")
+        ply:Give("weapon_painkillers_tpik")
+        ply:Give("weapon_betablock_tpik")
         ply:Give("weapon_adrenaline")
         ply:Give("weapon_morphine")
     end

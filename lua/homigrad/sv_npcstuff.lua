@@ -19,7 +19,7 @@ local math_random, math_Rand = math.random, math.Rand
 		["npc_citizen"] = {
 			"weapon_smallconsumable",
 			"weapon_bandage_sh",
-			"weapon_painkillers"
+			"weapon_painkillers_tpik"
 		}
 	}
 

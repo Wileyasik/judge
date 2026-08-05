@@ -202,10 +202,10 @@ local rebel_subclasses = {
             ply:Give("weapon_mannitol")
             ply:Give("weapon_morphine")
             ply:Give("weapon_naloxone")
-            ply:Give("weapon_painkillers")
+            ply:Give("weapon_painkillers_tpik")
             ply:Give("weapon_tourniquet")
             ply:Give("weapon_needle")
-            ply:Give("weapon_betablock")
+            ply:Give("weapon_betablock_tpik")
             ply:Give("weapon_adrenaline")
 
             local wep1 = ply:Give(primary_weapons[math.random(#primary_weapons)])
@@ -304,7 +304,7 @@ local function giveSubClassLoadout(ply, subClass)
 
     if subClass ~= "medic" then
         ply:Give("weapon_bigbandage_sh")
-        ply:Give("weapon_painkillers")
+        ply:Give("weapon_painkillers_tpik")
     end
 
     ply:Give("weapon_combatknife")

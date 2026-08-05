@@ -18,7 +18,7 @@ SWEP.AnimList = {
 	["idle"] = "idle",
 }
 
-SWEP.ARC9Parts = {
+SWEP.ModularParts = {
 	magazine = {
 		model = "models/weapons/mods/mag_glock_bigstick_31.mdl",
 		bonemerge = false,

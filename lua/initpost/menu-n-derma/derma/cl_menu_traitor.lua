@@ -274,9 +274,9 @@ local RoleConfigs = {
         saveFile = "zcity_hero_loadout.txt",
         presetFile = "zcity_hero_presets.txt",
         items = {
-            ["weapon_px4beretta"] = {cost = 4, name = "Beretta PX4", desc = "Reliable sidearm with room for ammo or a suppressor."},
+            ["weapon_px4beretta"] = {cost = 4, name = "Beretta PX4", desc = "Reliable sidearm with room for extra ammo."},
             ["weapon_glock17"] = {cost = 5, name = "Glock 17", desc = "Flexible pistol with strong attachment options."},
-            ["weapon_hk_usp"] = {cost = 5, name = "HK USP", desc = "Steady .45 pistol with suppressor support."},
+            ["weapon_hk_usp"] = {cost = 5, name = "HK USP", desc = "Steady .45 pistol, accurate and reliable."},
             ["weapon_remington870"] = {cost = 8, name = "Remington 870", desc = "Close range stopper with extra shell support."},
             ["weapon_kar98"] = {cost = 8, name = "Karabiner 98k", desc = "Heavy marksman pick that can take a scope and extra rounds."},
             ["ent_armor_vest3"] = {cost = 4, name = "Kevlar IIIA Vest", icon = "vgui/icons/armor01.png", desc = "Body armor that soaks torso hits."},
@@ -292,13 +292,11 @@ local RoleConfigs = {
             ["weapon_mosin"] = {cost = 8, name = "Mosin-Nagant M38", desc = "Bolt-action rifle chambered in 7.62x54mm."}
         },
         addons = {
-            ["hero_px4_silencer"] = {cost = 2, name = "PX4 Suppressor", parent = "weapon_px4beretta", attachment = "supressor6", desc = "Keep the PX4 quieter."},
             ["hero_px4_ammo"] = {cost = 2, name = "PX4 Extra Ammo", parent = "weapon_px4beretta", desc = "Start with extra magazine."},
             ["hero_glock_silencer"] = {cost = 2, name = "Glock Suppressor", parent = "weapon_glock17", attachment = "supressor2", desc = "Suppress the Glock 17."},
             ["hero_glock_rmr"] = {cost = 2, name = "Glock RMR", parent = "weapon_glock17", attachment = "holo16", desc = "Adds a compact red dot."},
             ["hero_glock_laser"] = {cost = 1, name = "Glock Laser", parent = "weapon_glock17", attachment = "laser3", desc = "Adds a visible aiming laser."},
             ["hero_glock_ammo"] = {cost = 2, name = "Glock Extra Ammo", parent = "weapon_glock17", desc = "Start with extra magazine."},
-            ["hero_usp_silencer"] = {cost = 2, name = "USP Suppressor", parent = "weapon_hk_usp", attachment = "supressor2", desc = "Suppress the USP."},
             ["hero_usp_ammo"] = {cost = 2, name = "USP Extra Ammo", parent = "weapon_hk_usp", desc = "Start with extra magazine."},
             ["hero_remington_ammo"] = {cost = 2, name = "870 Extra Shells", parent = "weapon_remington870", desc = "Start with extra shells."},
             ["hero_kar98_scope"] = {cost = 2, name = "Kar98 Scope", parent = "weapon_kar98", attachment = "optic12", desc = "Adds the Kar98 scope."},
@@ -309,25 +307,23 @@ local RoleConfigs = {
             ["hero_remington_sawedoff_ammo"] = {cost = 2, name = "870 Sawed-off Extra Shells", parent = "weapon_remington870_sawed_off", desc = "Start with extra shells."},
             ["hero_remington_sawedoff_sight"] = {cost = 2, name = "870 Sawed-off Sight", parent = "weapon_remington870_sawed_off", attachment = "holo16", desc = "Adds a sight to the sawed-off 870."},
             ["hero_vpo209_silencer"] = {cost = 2, name = "VPO-209 Suppressor", parent = "weapon_vpo209", attachment = "supressor3", desc = "Suppress the VPO-209."},
-            ["hero_vpo209_optic"] = {cost = 2, name = "VPO-209 Red Dot", parent = "weapon_vpo209", attachment = "holo16", desc = "Adds a red dot sight to the VPO-209."},
             ["hero_vpo209_ammo"] = {cost = 2, name = "VPO-209 Extra Ammo", parent = "weapon_vpo209", desc = "Start with extra magazine."},
             ["hero_vpo136_silencer"] = {cost = 2, name = "VPO-136 Suppressor", parent = "weapon_vpo136", attachment = "supressor7", desc = "Suppress the VPO-136."},
-            ["hero_vpo136_optic"] = {cost = 2, name = "VPO-136 Red Dot", parent = "weapon_vpo136", attachment = "holo16", desc = "Adds a red dot sight to the VPO-136."},
             ["hero_vpo136_ammo"] = {cost = 2, name = "VPO-136 Extra Ammo", parent = "weapon_vpo136", desc = "Start with extra magazine."},
             ["hero_mosin_silencer"] = {cost = 2, name = "Mosin Suppressor", parent = "weapon_mosin", attachment = "supressor9", desc = "Suppress the Mosin."},
             ["hero_mosin_scope"] = {cost = 2, name = "Mosin Scope", parent = "weapon_mosin", attachment = "optic12", desc = "Adds a scope to the Mosin."},
             ["hero_mosin_ammo"] = {cost = 2, name = "Mosin Extra Ammo", parent = "weapon_mosin", desc = "Start with extra rounds."}
         },
         addonOrder = {
-            ["weapon_px4beretta"] = {"hero_px4_silencer", "hero_px4_ammo"},
+            ["weapon_px4beretta"] = {"hero_px4_ammo"},
             ["weapon_glock17"] = {"hero_glock_silencer", "hero_glock_rmr", "hero_glock_laser", "hero_glock_ammo"},
-            ["weapon_hk_usp"] = {"hero_usp_silencer", "hero_usp_ammo"},
+            ["weapon_hk_usp"] = {"hero_usp_ammo"},
             ["weapon_remington870"] = {"hero_remington_sight", "hero_remington_ammo"},
             ["weapon_remington870_long"] = {"hero_remington_long_sight", "hero_remington_long_ammo"},
             ["weapon_remington870_sawed_off"] = {"hero_remington_sawedoff_sight", "hero_remington_sawedoff_ammo"},
             ["weapon_kar98"] = {"hero_kar98_scope", "hero_kar98_ammo"},
-            ["weapon_vpo209"] = {"hero_vpo209_silencer", "hero_vpo209_optic", "hero_vpo209_ammo"},
-            ["weapon_vpo136"] = {"hero_vpo136_silencer", "hero_vpo136_optic", "hero_vpo136_ammo"},
+            ["weapon_vpo209"] = {"hero_vpo209_silencer", "hero_vpo209_ammo"},
+            ["weapon_vpo136"] = {"hero_vpo136_silencer", "hero_vpo136_ammo"},
             ["weapon_mosin"] = {"hero_mosin_silencer", "hero_mosin_scope", "hero_mosin_ammo"}
         },
         exclusions = {},
@@ -560,6 +556,74 @@ local function GetLoadoutPoints(config, loadout)
     return currentPoints
 end
 
+local function RandomHomicideLoadout(config)
+    local loadout = {weapons = {}}
+
+    if config.skillsets then
+        local skillPool = {}
+        for id in pairs(config.skillsets) do skillPool[#skillPool + 1] = id end
+        if math.random() < 0.55 and config.skillsets.none then
+            loadout.skillset = "none"
+        else
+            loadout.skillset = skillPool[math.random(#skillPool)]
+        end
+    end
+
+    local totalPoints = 0
+    if config.skillsets and config.skillsets[loadout.skillset] then
+        totalPoints = config.skillsets[loadout.skillset].cost
+    end
+
+    local function ShuffleList(list)
+        for i = #list, 2, -1 do
+            local j = math.random(i)
+            list[i], list[j] = list[j], list[i]
+        end
+        return list
+    end
+
+    -- Force one real weapon (cost >= 4) if affordable.
+    local weaponPool = {}
+    for id, info in pairs(config.items or {}) do
+        if not IsArmorItem(id) and (info.cost or 0) >= 4 then
+            weaponPool[#weaponPool + 1] = id
+        end
+    end
+    ShuffleList(weaponPool)
+    for _, weaponId in ipairs(weaponPool) do
+        if totalPoints + config.items[weaponId].cost <= config.maxPoints then
+            table.insert(loadout.weapons, weaponId)
+            totalPoints = totalPoints + config.items[weaponId].cost
+            break
+        end
+    end
+
+    -- Greedy fill with the rest of the items and addons.
+    local pool = {}
+    for id, info in pairs(config.items or {}) do
+        pool[#pool + 1] = {id = id, cost = info.cost, addon = false}
+    end
+    for id, info in pairs(config.addons or {}) do
+        pool[#pool + 1] = {id = id, cost = info.cost, addon = true, parent = info.parent}
+    end
+    ShuffleList(pool)
+
+    local used = {}
+    for _, weaponId in ipairs(loadout.weapons) do used[weaponId] = true end
+
+    for _, entry in ipairs(pool) do
+        if used[entry.id] then continue end
+        if entry.addon and not used[entry.parent] then continue end
+        if HasWeaponConflict(config, loadout.weapons, entry.id) then continue end
+        if totalPoints + entry.cost > config.maxPoints then continue end
+        table.insert(loadout.weapons, entry.id)
+        used[entry.id] = true
+        totalPoints = totalPoints + entry.cost
+    end
+
+    return SanitizeLoadout(config, loadout)
+end
+
 local RoleState = {}
 
 for roleId, config in pairs(RoleConfigs) do
@@ -775,6 +839,25 @@ local function OpenRoleEditor(parentPanel, roleId, returnPanel)
     end
     clearBtn.Think = ThinkAnimatedLabel
     clearBtn.Paint = PaintAnimatedLabel
+
+    local randomBtn = vgui.Create("DLabel", sidebar)
+    randomBtn:Dock(BOTTOM)
+    randomBtn:DockMargin(MenuUnit(15), MenuUnit(2), 0, MenuUnit(4))
+    randomBtn:SetFont("ZCity_Menu_Settings_Small")
+    randomBtn:SetTextColor(Color(210, 200, 140))
+    randomBtn:SetTall(MenuUnit(42))
+    SetupAnimatedLabel(randomBtn, "Random Loadout", 0, 15)
+
+    function randomBtn:DoClick()
+        surface.PlaySound(SOUND_MENU_SELECT)
+        state.loadout = RandomHomicideLoadout(config)
+        SaveLoadout(roleId)
+        if UpdateUI then
+            UpdateUI()
+        end
+    end
+    randomBtn.Think = ThinkAnimatedLabel
+    randomBtn.Paint = PaintAnimatedLabel
 
     local presetsScroll = vgui.Create("DScrollPanel", sidebar)
     presetsScroll:Dock(FILL)
@@ -1452,6 +1535,14 @@ local function ReadArenaLoadout()
     return ok and istable(parsed) and parsed or {weapons = {}, attachments = {}, armor = {}, medical = {}}
 end
 
+local function ArenaWeaponAvailable(info)
+    if not info or not info.unlock then return true end
+    if not hg or not hg.achievements or not hg.achievements.IsUnlocked then return true end
+    local unlocked = hg.achievements.IsUnlocked(info.unlock)
+    if unlocked == nil then return true end
+    return unlocked == true
+end
+
 local function SanitizeArenaLoadout(loadout)
     local mode = GetArenaMode()
     local catalog = mode and mode.ArenaWeapons or {}
@@ -1461,7 +1552,7 @@ local function SanitizeArenaLoadout(loadout)
 
     for _, weaponId in ipairs(istable(loadout.weapons) and loadout.weapons or {}) do
         local info = catalog[weaponId]
-        if info and not usedSlots[info.slot] and weight + info.weight <= maxWeight then
+        if info and not usedSlots[info.slot] and weight + info.weight <= maxWeight and ArenaWeaponAvailable(info) then
             normalized.weapons[#normalized.weapons + 1] = weaponId
             usedSlots[info.slot] = true
             weight = weight + info.weight
@@ -1537,6 +1628,130 @@ local function SaveArenaLoadout()
 	net.SendToServer()
 end
 
+local function RandomArenaLoadout()
+    local mode = GetArenaMode()
+    if not mode or not mode.ArenaWeapons then return SanitizeArenaLoadout(ArenaLoadout) end
+    local maxWeight = mode.ArenaMaxWeight or 60
+    local loadout = {weapons = {}, attachments = {}, armor = {}, medical = {}}
+    local weight = 0
+
+    local function ShuffleList(list)
+        for i = #list, 2, -1 do
+            local j = math.random(i)
+            list[i], list[j] = list[j], list[i]
+        end
+        return list
+    end
+
+    local function RandomFrom(list)
+        return list[math.random(#list)]
+    end
+
+    local function CollectWeapons(slot)
+        local result = {}
+        for id, info in pairs(mode.ArenaWeapons) do
+            if info.slot == slot and ArenaWeaponAvailable(info) then result[#result + 1] = id end
+        end
+        return result
+    end
+
+    local primary = RandomFrom(CollectWeapons("primary"))
+    loadout.weapons[#loadout.weapons + 1] = primary
+    weight = weight + mode.ArenaWeapons[primary].weight
+
+    local secondary = RandomFrom(CollectWeapons("secondary"))
+    loadout.weapons[#loadout.weapons + 1] = secondary
+    weight = weight + mode.ArenaWeapons[secondary].weight
+
+    if math.random() < 0.35 then
+        local grenades = CollectWeapons("grenade")
+        local grenade = RandomFrom(grenades)
+        if weight + mode.ArenaWeapons[grenade].weight <= maxWeight then
+            loadout.weapons[#loadout.weapons + 1] = grenade
+            weight = weight + mode.ArenaWeapons[grenade].weight
+        end
+    end
+
+    for _, weaponId in ipairs(loadout.weapons) do
+        local info = mode.ArenaWeapons[weaponId]
+        local byPlacement = {}
+        for _, attachmentId in ipairs(info.attachments or {}) do
+            local placement
+            for placementId, definitions in pairs(hg.attachments or {}) do
+                if definitions[attachmentId] then placement = placementId break end
+            end
+            if placement then
+                byPlacement[placement] = byPlacement[placement] or {}
+                byPlacement[placement][#byPlacement[placement] + 1] = attachmentId
+            end
+        end
+        local placements = {}
+        for placement in pairs(byPlacement) do placements[#placements + 1] = placement end
+        ShuffleList(placements)
+        local attachmentCount = math.random(0, math.min(3, #placements))
+        for i = 1, attachmentCount do
+            local pool = byPlacement[placements[i]]
+            local attachmentId = pool[math.random(#pool)]
+            local attachmentWeight = mode:GetArenaAttachmentWeight(attachmentId)
+            if weight + attachmentWeight <= maxWeight then
+                loadout.attachments[weaponId] = loadout.attachments[weaponId] or {}
+                loadout.attachments[weaponId][#loadout.attachments[weaponId] + 1] = attachmentId
+                weight = weight + attachmentWeight
+            end
+        end
+    end
+
+    local vests, helmets = {}, {}
+    for armorId, info in pairs(mode.ArenaArmor or {}) do
+        if info.slot == "vest" then vests[#vests + 1] = armorId
+        elseif info.slot == "helmet" then helmets[#helmets + 1] = armorId end
+    end
+    if #vests > 0 and #helmets > 0 then
+        local vest = vests[math.random(#vests)]
+        local helmet = helmets[math.random(#helmets)]
+        local vestWeight = mode.ArenaArmor[vest].weight
+        local helmetWeight = mode.ArenaArmor[helmet].weight
+        if weight + vestWeight + helmetWeight <= maxWeight then
+            loadout.armor[#loadout.armor + 1] = vest
+            loadout.armor[#loadout.armor + 1] = helmet
+            weight = weight + vestWeight + helmetWeight
+
+            if math.random() < 0.6 then
+                local visors = {}
+                for armorId, info in pairs(mode.ArenaArmor or {}) do
+                    if info.slot == "visor" and info.helmets and info.helmets[helmet] then
+                        visors[#visors + 1] = armorId
+                    end
+                end
+                if #visors > 0 then
+                    local visor = visors[math.random(#visors)]
+                    if weight + mode.ArenaArmor[visor].weight <= maxWeight then
+                        loadout.armor[#loadout.armor + 1] = visor
+                        weight = weight + mode.ArenaArmor[visor].weight
+                    end
+                end
+            end
+        end
+    end
+
+    local medicalIds = {}
+    for medicalId in pairs(mode.ArenaMedical or {}) do
+        medicalIds[#medicalIds + 1] = medicalId
+    end
+    ShuffleList(medicalIds)
+    local medicalCount = math.random(3, math.min(#medicalIds, 6))
+    for i = 1, medicalCount do
+        local medicalId = medicalIds[i]
+        local medicalWeight = mode.ArenaMedical[medicalId].weight
+        if weight + medicalWeight <= maxWeight then
+            loadout.medical[#loadout.medical + 1] = medicalId
+            weight = weight + medicalWeight
+        end
+    end
+
+    return SanitizeArenaLoadout(loadout)
+end
+
 timer.Simple(1, function()
 	if IsValid(LocalPlayer()) and GetArenaMode() then SaveArenaLoadout() end
 end)
@@ -1551,24 +1766,24 @@ local ArenaPresets = ReadArenaPresets()
 local ArenaDefaultPresets = {
 	{
 		name = "RIFLEMAN",
-		desc = "M4A1 / class IV armor / drum",
+		desc = "M4A1 / class III armor / drum",
 		accent = Color(62, 112, 190),
 		loadout = {
 			weapons = {"weapon_m4a1", "weapon_p22"},
-			armor = {"vest9", "helmet14", "visor_exfil_black"},
-			medical = {"weapon_bandage_sh", "weapon_tourniquet", "weapon_bigbandage_sh", "weapon_medkit_sh", "weapon_painkillers", "weapon_morphine", "weapon_adrenaline", "weapon_bloodbag", "weapon_needle"},
-			attachments = {weapon_m4a1 = {"optic5", "supressor5", "mag2"}},
+			armor = {"vest7", "helmet14", "visor_exfil_black"},
+			medical = {"weapon_bandage_sh", "weapon_tourniquet", "weapon_bigbandage_sh", "weapon_medkit_sh", "weapon_painkillers_tpik", "weapon_bloodbag"},
+			attachments = {weapon_m4a1 = {"optic5", "supressor5", "mag7"}},
 		},
 	},
 	{
 		name = "BREACHER",
-		desc = "AK-74 / face shield / field aid",
+		desc = "AK-74 / face shield / frag",
 		accent = Color(190, 72, 42),
 		loadout = {
-			weapons = {"weapon_ak74", "weapon_cz75"},
+			weapons = {"weapon_ak74", "weapon_cz75", "weapon_hg_eft_v40"},
 			armor = {"vest7", "helmet12", "visor_lshz2dtm"},
-			medical = {"weapon_bandage_sh", "weapon_tourniquet", "weapon_bigbandage_sh", "weapon_medkit_sh", "weapon_morphine", "weapon_adrenaline", "weapon_bloodbag"},
-			attachments = {weapon_ak74 = {"optic11", "supressor3", "mag4", "stock_ak_evo"}},
+			medical = {"weapon_bandage_sh", "weapon_tourniquet", "weapon_bigbandage_sh", "weapon_medkit_sh", "weapon_morphine", "weapon_adrenaline"},
+			attachments = {weapon_ak74 = {"optic4", "supressor3", "mag8", "stock_ak_zenit_pt3"}},
 		},
 	},
 	{
@@ -1578,10 +1793,10 @@ local ArenaDefaultPresets = {
 		loadout = {
 			weapons = {"weapon_mp7", "weapon_glock17"},
 			armor = {"vest4", "helmet17", "visor_fast_shield"},
-			medical = {"weapon_bandage_sh", "weapon_tourniquet", "weapon_morphine", "weapon_adrenaline", "weapon_bloodbag"},
+			medical = {"weapon_bandage_sh", "weapon_tourniquet", "weapon_bigbandage_sh", "weapon_bloodbag"},
 			attachments = {
 				weapon_mp7 = {"optic5", "laser2", "supressor2"},
-				weapon_glock17 = {"optic24", "laser3", "supressor1", "mag1"},
+				weapon_glock17 = {"laser3"},
 			},
 		},
 	},
@@ -1592,11 +1807,33 @@ local ArenaDefaultPresets = {
 		loadout = {
 			weapons = {"weapon_svd", "weapon_p22"},
 			armor = {"vest7", "helmet9"},
-			medical = {"weapon_tourniquet", "weapon_bigbandage_sh", "weapon_medkit_sh", "weapon_morphine", "weapon_adrenaline", "weapon_bloodbag", "weapon_needle", "weapon_betablock"},
+			medical = {"weapon_bandage_sh", "weapon_tourniquet", "weapon_bigbandage_sh", "weapon_medkit_sh", "weapon_painkillers_tpik", "weapon_morphine", "weapon_adrenaline", "weapon_bloodbag", "weapon_needle", "weapon_betablock_tpik"},
 			attachments = {
 				weapon_svd = {"optic4", "supressor9"},
-				weapon_p22 = {"supressor1", "laser2"},
+				weapon_p22 = {"laser2"},
 			},
+		},
+	},
+	{
+		name = "HEAVY",
+		desc = "M249 / class VI armor",
+		accent = Color(190, 142, 62),
+		loadout = {
+			weapons = {"weapon_m249", "weapon_p22"},
+			armor = {"vest18", "helmet11"},
+			medical = {"weapon_bandage_sh", "weapon_tourniquet"},
+			attachments = {weapon_m249 = {"optic5"}},
+		},
+	},
+	{
+		name = "SHOTGUNNER",
+		desc = "SPAS-12 / class III / frag",
+		accent = Color(62, 170, 90),
+		loadout = {
+			weapons = {"weapon_spas12", "weapon_p226", "weapon_hg_grenade_tpik"},
+			armor = {"vest8", "helmet8", "visor_fast"},
+			medical = {"weapon_bandage_sh", "weapon_tourniquet", "weapon_bigbandage_sh", "weapon_medkit_sh", "weapon_adrenaline", "weapon_bloodbag"},
+			attachments = {weapon_spas12 = {"supressor5", "holo2"}},
 		},
 	},
 }
@@ -1606,6 +1843,7 @@ local function SaveArenaPresets()
 end
 
 local function RestorePanel(panel, returnPanel)
+    hg.ArenaMenuRefresh = nil
     panel:Remove()
     if IsValid(returnPanel) then
         returnPanel:SetVisible(true)
@@ -1616,6 +1854,10 @@ end
 local function OpenArenaEditor(rootPanel)
     local mode = GetArenaMode()
     if not mode or not mode.ArenaWeapons then return end
+
+    if hg and hg.achievements and hg.achievements.LoadAchievements then
+        hg.achievements.LoadAchievements()
+    end
 
     local host = IsValid(rootPanel:GetParent()) and rootPanel:GetParent() or rootPanel
     local panel = vgui.Create("DPanel", host)
@@ -1674,7 +1916,7 @@ local function OpenArenaEditor(rootPanel)
 	sidebarInfo:SetFont(TRAITOR_MENU_FONT)
 	sidebarInfo:SetTextColor(Color(200, 200, 200))
 	sidebarInfo:SetWrap(true)
-	sidebarInfo:SetText("Primary + sidearm.\nLMB equip / RMB modify.\n50 weight maximum.")
+ 	sidebarInfo:SetText("Primary + sidearm.\nLMB equip / RMB modify.\n" .. (mode.ArenaMaxWeight or 60) .. " weight maximum.")
 
     local weightLabel = vgui.Create("DLabel", sidebar)
 	 weightLabel:SetPos(MenuUnit(15), MenuUnit(215))
@@ -1683,15 +1925,24 @@ local function OpenArenaEditor(rootPanel)
 	local RefreshWeapons
 	local RefreshPresetList
 
+	local randomBtn = vgui.Create("DButton", sidebar)
+	randomBtn:SetPos(MenuUnit(15), MenuUnit(240))
+	randomBtn:SetSize(sidebarWidth - MenuUnit(30), MenuUnit(26))
+	randomBtn:SetText("")
+	randomBtn.Paint = function(self, w, h)
+		draw.RoundedBox(0, 0, 0, w, h, self:IsHovered() and Color(95, 90, 50, 170) or Color(30, 30, 30, 150))
+		draw.SimpleText("RANDOM LOADOUT", TRAITOR_MENU_FONT, w / 2, h / 2, Color(215, 200, 130), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	end
+
 	local presetLabel = vgui.Create("DLabel", sidebar)
-	presetLabel:SetPos(MenuUnit(15), MenuUnit(265))
+	presetLabel:SetPos(MenuUnit(15), MenuUnit(272))
 	presetLabel:SetFont(TRAITOR_MENU_FONT)
 	presetLabel:SetTextColor(Color(170, 185, 185))
 	presetLabel:SetText("PRESETS")
 	presetLabel:SizeToContents()
 
 	local savePreset = vgui.Create("DButton", sidebar)
-	savePreset:SetPos(MenuUnit(15), MenuUnit(292))
+	savePreset:SetPos(MenuUnit(15), MenuUnit(299))
 	savePreset:SetSize(sidebarWidth - MenuUnit(30), MenuUnit(30))
 	savePreset:SetText("")
 	savePreset.Paint = function(self, w, h)
@@ -1700,8 +1951,8 @@ local function OpenArenaEditor(rootPanel)
 	end
 
 	local presetList = vgui.Create("DScrollPanel", sidebar)
-	presetList:SetPos(MenuUnit(15), MenuUnit(330))
-	presetList:SetSize(sidebarWidth - MenuUnit(30), ScrH() - MenuUnit(404))
+	presetList:SetPos(MenuUnit(15), MenuUnit(337))
+	presetList:SetSize(sidebarWidth - MenuUnit(30), ScrH() - MenuUnit(411))
 
     local list = vgui.Create("DScrollPanel", panel)
 	 list:SetPos(sidebarWidth + MenuUnit(20), MenuUnit(20))
@@ -1735,6 +1986,14 @@ local function OpenArenaEditor(rootPanel)
 	attachmentList:SetSize(detail:GetWide() - MenuUnit(28), detail:GetTall() - MenuUnit(229))
 
     local selectedWeapon
+	randomBtn.DoClick = function()
+		ArenaLoadout = RandomArenaLoadout()
+		SaveArenaLoadout()
+		selectedWeapon = nil
+		attachmentList:Clear()
+		RefreshWeapons()
+		surface.PlaySound(SOUND_MENU_SELECT)
+	end
 	local function PreviewItem(itemId, info, isArmor)
 		previewName = info.name
 		previewMaterial = nil
@@ -1843,6 +2102,7 @@ local function OpenArenaEditor(rootPanel)
 
             for weaponId, info in SortedPairsByMemberValue(mode.ArenaWeapons, "name") do
                 if info.category ~= category then continue end
+                if not ArenaWeaponAvailable(info) then continue end
                 local button = list:Add("DButton")
                 button:Dock(TOP)
 			button:DockMargin(0, 0, 0, MenuUnit(4))
@@ -2074,6 +2334,9 @@ local function OpenArenaEditor(rootPanel)
 
 	RefreshPresetList()
     RefreshWeapons()
+    hg.ArenaMenuRefresh = function()
+        if IsValid(list) then RefreshWeapons() end
+    end
 end
 
 local function AddModeCard(parent, x, y, w, h, title, points, description, align, onClick)

@@ -18,7 +18,7 @@ local armorBreakSound = "rem_armorbreak.mp3"
 local armorBreakSoundLevel = 160
 local armorBreakSoundVolume = 2
 
-local DEFAULT_HELMET_DURABILITY = 45
+local DEFAULT_HELMET_DURABILITY = 27
 local DEFAULT_HELMET_BREAK_THRESHOLD = 65
 local DEFAULT_HELMET_ABSORB_MULTIPLIER = 0.2
 local DEFAULT_HELMET_DURABILITY_DAMAGE_MUL = 5
@@ -265,6 +265,26 @@ function hg.BreakArmor(ent, equipment, pos, dmgInfo)
 	hg.SetArmorBrokenEntity(equipmentEnt)
 	hg.PlayArmorBreakSound(equipmentEnt)
 
+	if placement == "visor" then
+		local visorTr = util.TraceLine({
+			start = equipmentEnt:GetPos() + Vector(0, 0, 8),
+			endpos = equipmentEnt:GetPos() - Vector(0, 0, 120),
+			mask = MASK_SOLID,
+			filter = {equipmentEnt, ent}
+		})
+		if visorTr.Hit then
+			equipmentEnt:SetPos(visorTr.HitPos + visorTr.HitNormal * 2)
+		end
+
+		local visorPhys = equipmentEnt:GetPhysicsObject()
+		if IsValid(visorPhys) then
+			visorPhys:EnableMotion(false)
+			visorPhys:EnableCollisions(false)
+		end
+		equipmentEnt:SetNotSolid(true)
+		equipmentEnt:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+	end
+
 	return true
 end
 
@@ -374,6 +394,11 @@ net.Receive("hg_toggle_visor", function(_, ply)
 		ply:EmitSound(lowered and "glassshield_off.wav" or "glassshield_on.wav", 65, 100, 1, CHAN_ITEM)
 		ply:SyncArmor()
 	end)
+end)
+
+hook.Add("Fake", "SyncArmorToFakeRagdoll", function(ply)
+	if not IsValid(ply) or not ply.armors then return end
+	ply:SyncArmor()
 end)
 
 function hg.AddArmor(ply, equipment, ent)

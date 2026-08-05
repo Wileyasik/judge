@@ -495,7 +495,7 @@ local function CreateLootPollingMenu()
             menu:SetSkin("Default")
             menu:AddOption("Medkit", function() classEntry:SetValue("weapon_medkit_sh") end)
             menu:AddOption("Bandages", function() classEntry:SetValue("weapon_bandage_sh") end)
-            menu:AddOption("Painkillers", function() classEntry:SetValue("weapon_painkillers") end)
+            menu:AddOption("Painkillers", function() classEntry:SetValue("weapon_painkillers_tpik") end)
             menu:Open()
         end
     )

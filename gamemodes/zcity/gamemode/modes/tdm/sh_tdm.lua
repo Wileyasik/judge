@@ -100,8 +100,9 @@ MODE.ArenaWeapons = {
 	weapon_g28 = {name = "G28", category = "Marksman", slot = "primary", weight = 14, clips = 3, attachments = {}},
 	weapon_vpo101 = {name = "VPO-101", category = "Marksman", slot = "primary", weight = 9, clips = 4, attachments = {"supressor9", "supressor16", "supressor15"}},
 	weapon_glock17 = {name = "Glock 17", category = "Sidearms", slot = "secondary", weight = 4, clips = 3, attachments = {"supressor2", "supressor1", "holo16", "optic24", "laser1", "laser2", "laser3", "laser5", "mag1"}},
+	weapon_sam_fisher_glock = {name = "Sam Fisher Glock", category = "Sidearms", slot = "secondary", weight = 5, clips = 3, attachments = {"holo16", "optic24", "laser1", "laser2", "laser3", "laser5", "mag1"}, unlock = "samfisher"},
 	weapon_px4beretta = {name = "Beretta PX4", category = "Sidearms", slot = "secondary", weight = 3, clips = 3, attachments = {}},
-	weapon_hk_usp = {name = "HK USP", category = "Sidearms", slot = "secondary", weight = 4, clips = 3, attachments = {"supressor1", "supressor2", "holo16", "optic24", "laser1", "laser2", "laser3", "laser5"}},
+	weapon_hk_usp = {name = "HK USP", category = "Sidearms", slot = "secondary", weight = 4, clips = 3, attachments = {"holo16", "optic24", "laser1", "laser2", "laser3", "laser5"}},
 	weapon_p22 = {name = "Walther P22", category = "Sidearms", slot = "secondary", weight = 2, clips = 4, attachments = {"laser1", "laser2", "laser3", "laser5"}},
 	weapon_fn45 = {name = "FNX-45", category = "Sidearms", slot = "secondary", weight = 4, clips = 3, attachments = {"holo16", "optic24", "laser1", "laser2", "laser3", "laser5"}},
 	weapon_cz75 = {name = "CZ 75", category = "Sidearms", slot = "secondary", weight = 3, clips = 3, attachments = {"supressor1", "supressor2"}},
@@ -168,13 +169,13 @@ AddArenaAttachments({"weapon_m4a1mod3", "weapon_nl545", "weapon_mdr"}, muzzleFam
 AddArenaAttachments({"weapon_aek971", "weapon_ak12"}, muzzleFamilies["545"])
 AddArenaAttachments({"weapon_mk47"}, muzzleFamilies["762x39"])
 AddArenaAttachments({"weapon_mcx", "weapon_spear", "weapon_sa58fal", "weapon_sa58dsa", "weapon_rfb"}, muzzleFamilies["762x51"])
-AddArenaAttachments({"weapon_scorpion", "weapon_stm9", "weapon_sag_ak545", "weapon_vpo101"}, picatinnySights)
+AddArenaAttachments({"weapon_scorpion", "weapon_stm9", "weapon_sag_ak545"}, picatinnySights)
 AddArenaAttachments({"weapon_sag_ak545", "weapon_stm9"}, picatinnyGrips)
 AddArenaAttachments({"weapon_sag_ak545", "weapon_stm9"}, smallTactical)
 AddArenaAttachments({"weapon_sag_ak545"}, arStocks)
 AddArenaAttachments({"weapon_sag_ak545"}, {"stock_ak12_std"})
 AddArenaAttachments({"weapon_stm9"}, {"stock_ar15_hk_slim_line"})
-AddArenaAttachments({"weapon_vpo101"}, dovetailSights)
+AddArenaAttachments({"weapon_vpo101"}, {"optic4", "optic11"})
 AddArenaAttachments({"weapon_sag_ak545"}, muzzleFamilies["545"])
 AddArenaAttachments({"weapon_vpo101"}, muzzleFamilies["762x51"])
 
@@ -246,12 +247,13 @@ MODE.ArenaMedical = {
 	weapon_tourniquet = {name = "Tourniquet", weight = 1},
 	weapon_bigbandage_sh = {name = "Large Bandage", weight = 2},
 	weapon_medkit_sh = {name = "Medkit", weight = 4},
-	weapon_painkillers = {name = "Painkillers", weight = 1},
+	weapon_painkillers_tpik = {name = "Painkillers", weight = 1},
 	weapon_morphine = {name = "Morphine", weight = 2},
 	weapon_adrenaline = {name = "Epinephrine", weight = 2},
 	weapon_bloodbag = {name = "Blood Bag", weight = 3},
 	weapon_needle = {name = "Decompression Needle", weight = 1},
-	weapon_betablock = {name = "Beta Blocker", weight = 1},
+	weapon_betablock_tpik = {name = "Beta Blocker", weight = 1},
+	weapon_thiamine_tpik = {name = "Thiamine", weight = 1},
 }
 
 MODE.ArenaCategoryOrder = {"Grenades", "Assault Rifles", "SMGs", "Shotguns", "Marksman", "Heavy", "Sidearms"}

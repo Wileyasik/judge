@@ -127,8 +127,8 @@ local poisonable_entities = {
 	["weapon_bigconsumable"] = true,
 	["weapon_smallconsumable"] = true,
 	["weapon_bandage_sh"] = true,
-	["weapon_painkillers"] = true,
-	["weapon_betablock"] = true,
+	["weapon_painkillers_tpik"] = true,
+	["weapon_betablock_tpik"] = true,
 }
 
 if CLIENT then

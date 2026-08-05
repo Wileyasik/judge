@@ -584,6 +584,36 @@ SWEP.BlockStaminaPerfectBase = 4
 SWEP.BlockStaminaPerfectPerWeight = 2
 SWEP.BlockRegenMul = 0.15
 
+local function PunchPlayer(self, ent, attacktype, trnormal, dmg)
+	if not (ent:IsPlayer() or ent:IsRagdoll()) then return end
+
+	local ply = hg.RagdollOwner(ent) or ent
+	if not ply:IsPlayer() then return end
+
+	local normal = Angle(0, 0, 0)
+	normal:RotateAroundAxis(normal:Forward(), -(self.SwingAng or -5))
+	normal:RotateAroundAxis(normal:Up(), -(self.AttackRads or 65))
+
+	local dot = ply:GetAimVector():Dot(trnormal)
+
+	ply:ViewPunch((normal * -dot) * dmg * (self.HitPunchMul or 0.75) / (self.HitPunchDiv or 40))
+
+	if ply:OnGround() or (ply.organism and ply.organism.superfighter) then
+		local owner = self:GetOwner()
+		local pushDir = IsValid(owner) and (ply:GetPos() - owner:GetPos()) or trnormal
+		pushDir.z = 0
+		if pushDir:LengthSqr() <= 0.001 then
+			pushDir = Vector(trnormal.x, trnormal.y, 0)
+		end
+		if pushDir:LengthSqr() > 0.001 then
+			pushDir:Normalize()
+		end
+		local force = pushDir * math.min(dmg * (self.PlayerKnockbackMul or 3.25), 140)
+		force.z = math.min(dmg * (self.PlayerKnockbackUpMul or 0.45), 22)
+		ply:SetVelocity(force)
+	end
+end
+
 function SWEP:BlockingLogic(ent, mul, attacktype, trace)
 	local ent = hg.RagdollOwner(ent) or ent
 
@@ -617,8 +647,8 @@ function SWEP:BlockingLogic(ent, mul, attacktype, trace)
 			wep:SetLastBlocked(CurTime())
 
 			//viewpunch the attacker maybe?
-			self:PunchPlayer(owner, attacktype, -owner:GetAimVector(), selfdmg / 2)
-			self:PunchPlayer(ent, attacktype, owner:GetAimVector(), selfdmg / 2)
+			PunchPlayer(self, owner, attacktype, -owner:GetAimVector(), selfdmg / 2)
+			PunchPlayer(self, ent, attacktype, owner:GetAimVector(), selfdmg / 2)
 
 			ent:EmitSound("physics/body/body_medium_impact_soft6.wav") -- parry sound
 

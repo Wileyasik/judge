@@ -232,7 +232,7 @@ function SWEP:ApplyStockAttachmentOffset(pos, ang, definition)
 end
 
 function SWEP:ApplyManagedStockPartOffset(partName, pos, ang)
-	local parts = self.ARC9Parts
+	local parts = self.ModularParts
 	if not istable(parts) then return pos, ang end
 
 	local stockPart = self.ARC9ManagedStockPart
@@ -510,7 +510,7 @@ function SWEP:Attachment_Transform(model,pos,ang,plc,att,attdata,available)
 	if plc == "sight" and not dovetail and isnumber(att.sightSlide) then vecadd.x = vecadd.x + math.Clamp(att.sightSlide, -1, 3) end
 	if isvector(mountOffset) then vecadd:Add(mountOffset) end
 	if attdata.offset and isvector(attdata.offset) then vecadd:Add(attdata.offset) end
-	local usesAKScopeCorrections = slot.akScopeCorrections
+	local usesAKScopeCorrections = slot and slot.akScopeCorrections
 		or istable(activeMount) and activeMount[1] == "mount3"
 	local mount3Correction = plc == "sight"
 		and usesAKScopeCorrections
@@ -1323,7 +1323,7 @@ if CLIENT then
 	end
 
 	local function getManagedPartTransform(wep, wm, partName, resolved, resolving)
-		local part = wep.ARC9Parts and wep.ARC9Parts[partName]
+		local part = wep.ModularParts and wep.ModularParts[partName]
 		if not istable(part) then return end
 
 		resolved = resolved or {}
@@ -1365,7 +1365,7 @@ if CLIENT then
 			end
 		end
 
-		local parts = wep.ARC9Parts
+		local parts = wep.ModularParts
 		if not istable(parts) then return end
 		local partName = wep.ARC9ManagedStockPart
 			or istable(parts.stock2) and "stock2"

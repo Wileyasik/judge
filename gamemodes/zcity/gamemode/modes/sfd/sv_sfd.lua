@@ -93,7 +93,7 @@ function MODE:GiveEquipment()
 end
 
 MODE.LootTable = {
-	{50, {
+	{34, {
 		{4,"weapon_leadpipe"},
 		{3,"weapon_hg_crowbar"},
 		{2,"weapon_tomahawk"},
@@ -101,44 +101,53 @@ MODE.LootTable = {
 		{1,"weapon_hg_axe"},
 		{1,"weapon_hg_crossbow"},
 	}},
-	{50, {
+	{46, {
 		{9,"*ammo*"},
-		{9,"weapon_hk_usp"},
-		{8,"weapon_revolver357"},
-		{8,"weapon_deagle"},
-		{8,"weapon_doublebarrel_short"},
-		{8,"weapon_doublebarrel"},
-		{8,"weapon_remington870"},
-		{8,"weapon_glock18c"},
-		{7,"weapon_mp5"},
-		{6,"weapon_xm1014"},
+		{8,"weapon_hk_usp"},
+		{7,"weapon_revolver357"},
+		{7,"weapon_deagle"},
+		{7,"weapon_doublebarrel_short"},
+		{7,"weapon_doublebarrel"},
+		{6,"weapon_remington870"},
+		{6,"weapon_glock18c"},
+		{5,"weapon_mp5"},
+		{4,"weapon_xm1014"},
+		{4,"weapon_mp7"},
+		{4,"weapon_sks"},
 
 		{6,"ent_armor_vest3"},
 		{5,"ent_armor_helmet1"},
-
-		{5,"weapon_mp7"},
-		{5,"weapon_sks"},
-
 		{5,"ent_armor_vest4"},
+		{4,"ent_armor_vest5"},
 
 		{5,"weapon_hg_molotov_tpik"},
 		{5,"weapon_hg_pipebomb_tpik"},
-		{5,"weapon_claymore"},
-		{5,"weapon_hg_f1_tpik"},
-		{5,"weapon_traitor_ied"},
-		{5,"weapon_hg_slam"},
-		{5,"weapon_hg_legacy_grenade_shg"},
-		{5,"weapon_hg_grenade_tpik"},
+		{4,"weapon_claymore"},
+		{4,"weapon_hg_f1_tpik"},
+		{3,"weapon_traitor_ied"},
+		{3,"weapon_hg_slam"},
+		{3,"weapon_hg_legacy_grenade_shg"},
+		{3,"weapon_hg_grenade_tpik"},
 
-		{5,"weapon_ptrd"},
-		{5,"weapon_akm"},
-		-- {5,"weapon_pkm"},
-		-- {5,"weapon_hk21"},
-		{5,"weapon_m98b"},
-		{2,"weapon_hg_rpg"},
+		{3,"weapon_akm"},
+		{3,"weapon_m98b"},
 		{3,"weapon_sr25"},
+		{2,"weapon_ptrd"},
+		{2,"weapon_hg_rpg"},
 	}},
 }
+
+hg.AppendLootPool(MODE.LootTable[1][2], hg.LootPools.MeleeCommon, 1)
+hg.AppendLootPool(MODE.LootTable[1][2], hg.LootPools.MeleeRare, 0.7)
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.Sidearms, 0.6)
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.SMGs, 0.4)
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.Shotguns, 0.4)
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.AssaultRifles, 0.3)
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.Marksman, 0.25)
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.LMG, 0.2)
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.ArmorMedium, 0.5)
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.ArmorHeavy, 0.4)
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.Explosives, 0.5)
 
 function MODE:RoundThink()
 	if (self.nextBoxesThink or 0) < CurTime() then

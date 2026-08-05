@@ -2251,7 +2251,7 @@ if CLIENT then
 		end
 
 		local partName = self.ARC9DefaultLHIKPart
-		local partData = partName and self.ARC9Parts and self.ARC9Parts[partName]
+		local partData = partName and self.ModularParts and self.ModularParts[partName]
 		local modelPath = self.ARC9DefaultLHIKSourceModel or (partData and partData.model)
 		if not isstring(modelPath) then return end
 

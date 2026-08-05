@@ -2180,7 +2180,20 @@ function SWEP:GetAttackHitStopData(attacktype)
     return speedMul, pause, reverse, stopanim
 end
 
-function SWEP:ShouldStopAttackOnWorldHit(attacktype)
+function SWEP:IsBreakableProp(ent)
+	if not IsValid(ent) then return false end
+
+	local class = ent:GetClass()
+	if class == "func_breakable" or class == "func_breakable_surf" then return true end
+	if class == "prop_physics" or class == "prop_physics_multiplayer" then
+		local model = ent:GetModel()
+		return model ~= nil and hg.loot_boxes and hg.loot_boxes[string.lower(model)] ~= nil
+	end
+	return false
+end
+
+function SWEP:ShouldStopAttackOnWorldHit(attacktype, ent)
+    if self:IsBreakableProp(ent) then return false end
     return self.StopOnWorldHit ~= false and not self.noreverse
 end
 
@@ -2196,6 +2209,7 @@ end
 
 function SWEP:HandleChargeWorldHit(trace, attacktype)
     if not self:IsChargeAttackType(attacktype) then return false end
+    if self:IsBreakableProp(trace.Entity) then return false end
     if self.HitWorld then return true end
 
     self.HitWorld = true
@@ -3052,7 +3066,7 @@ function SWEP:CustomThink()
 
             if CLIENT then goto meleeskip1 end
 
-            if not soft and self:ShouldStopAttackOnWorldHit(1) then
+            if not soft and self:ShouldStopAttackOnWorldHit(1, ent) then
                 self:PlayEffects(trace, false)
                 self:SendMeleeHitStop(1, trace.HitNormal)
 
@@ -3097,7 +3111,7 @@ function SWEP:CustomThink()
                 //end
 
                 if self.MultiDmg1 or not self:IsEntSoft(ent) then
-                    dmg = dmg / (self.AttackRads * self.AttackTimeLength)
+                    dmg = dmg / math.max((self.AttackRads or 1) * (self.AttackTimeLength or 0.01), 1)
                 else
                     dmg = dmg / 1.5
                 end
@@ -3213,7 +3227,7 @@ function SWEP:CustomThink()
 
             if CLIENT then goto meleeskip2 end
 
-            if not soft and self:ShouldStopAttackOnWorldHit(2) then
+            if not soft and self:ShouldStopAttackOnWorldHit(2, ent) then
                 self:PlayEffects(trace, true)
                 self:SendMeleeHitStop(2, trace.HitNormal)
 
@@ -3402,7 +3416,7 @@ function SWEP:CustomThink()
                     goto meleeskip3
                 end
 
-                if self:ShouldStopAttackOnWorldHit(3) then
+                if self:ShouldStopAttackOnWorldHit(3, ent) then
                     self:PlayEffects(trace, 3)
                     self:SendMeleeHitStop(3, trace.HitNormal)
 
@@ -3445,7 +3459,7 @@ function SWEP:CustomThink()
             
             if self.MultiDmgCharge or (self.HitEnts[#self.HitEnts] ~= ent) then
                 if self.MultiDmgCharge or not self:IsEntSoft(ent) then
-                    dmg = dmg / ((self.ChargeAttackRads or self.AttackRads) * (self.ChargeAttackTimeLength or self.AttackTimeLength))
+                    dmg = dmg / math.max(((self.ChargeAttackRads or self.AttackRads) or 1) * ((self.ChargeAttackTimeLength or self.AttackTimeLength) or 0.01), 1)
                 else
                     dmg = dmg / 1.5
                 end

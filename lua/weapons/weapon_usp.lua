@@ -10,20 +10,19 @@ SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_usp.mdl"
-SWEP.CanCustomize = true
-SWEP.CustomizeCategory = "HK USP"
 
-SWEP.UseARC9Parts = true
 
-SWEP.ARC9Parts = {
+SWEP.ModularParts = {
 	magazine = {
 		model = "models/weapons/mods/mag_hk_usp_tactical.mdl",
 		bonemerge = false,
 		bone = "mod_magazine",
-		pos = Vector(0, -1.2, -1.25),
+		pos = Vector(0, -1.3, -1.25),
 		ang = Angle(0, -90, 0)
 	},
 }
+SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
+SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
 
 SWEP.FakePos = Vector(-21, 2, 3.22)
 SWEP.FakeAng = Angle(0, 0, 0)
@@ -97,10 +96,6 @@ SWEP.MagModel = "models/weapons/mods/mag_hk_usp_tactical.mdl"
 
 SWEP.ReloadTime = 3
 
-SWEP.HeldMagModel = "models/weapons/mods/mag_hk_usp_tactical.mdl"
-SWEP.HeldMagBone = "mod_magazine"
-SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
-SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
 
 SWEP.lmagpos = Vector(2, 0, 0)
 SWEP.lmagang = Angle(-10, 0, 0)
@@ -231,6 +226,87 @@ SWEP.availableAttachments = {
 	},
 }
 
+function SWEP:GetModularPartModel(partName, fallback, role)
+	if partName == "magazine" then
+		return self:GetActiveMagazineModel(fallback, role)
+	end
+	return fallback
+end
+
+function SWEP:DrawModularParts()
+	local wm = self:GetWM()
+	if not IsValid(wm) then return end
+
+	local parts = self.ModularParts
+	if not istable(parts) then return end
+
+	self.ModularHeldPartModels = self.ModularHeldPartModels or {}
+	self.ModularHeldPartPaths = self.ModularHeldPartPaths or {}
+	local positioned = {}
+
+	local function positionPart(partName)
+		if positioned[partName] then return positioned[partName] end
+		local partData = parts[partName]
+		if not istable(partData) then return end
+
+		local modelPath = self:GetModularPartModel(partName, partData.model, "held")
+		local model = self.ModularHeldPartModels[partName]
+		if not isstring(modelPath) or modelPath == "" then
+			if IsValid(model) then model:Remove() end
+			self.ModularHeldPartModels[partName] = nil
+			self.ModularHeldPartPaths[partName] = nil
+			return
+		end
+		if IsValid(model) and self.ModularHeldPartPaths[partName] ~= modelPath then
+			model:Remove()
+			model = nil
+		end
+		if not IsValid(model) then
+			model = ClientsideModel(modelPath, RENDERGROUP_BOTH)
+			if not IsValid(model) then return end
+			model:SetNoDraw(true)
+			self.ModularHeldPartModels[partName] = model
+			self.ModularHeldPartPaths[partName] = modelPath
+		end
+
+		local basePos, baseAng
+		if partData.parent then
+			local parent = positionPart(partData.parent)
+			if not IsValid(parent) then return end
+			basePos, baseAng = parent:GetPos(), parent:GetAngles()
+		else
+			local boneID = wm:LookupBone(partData.bone or "")
+			local matrix = boneID and wm:GetBoneMatrix(boneID)
+			if not matrix then return end
+			basePos, baseAng = matrix:GetTranslation(), matrix:GetAngles()
+		end
+
+		local partPos, partAng = partData.pos or vector_origin, partData.ang or angle_zero
+		if partName == "magazine" and self.HeldMagOffsetPos then
+			partPos, partAng = self.HeldMagOffsetPos, self.HeldMagOffsetAng or partAng
+		end
+		local pos, ang = LocalToWorld(partPos, partAng, basePos, baseAng)
+		pos, ang = self:ApplyManagedStockPartOffset(partName, pos, ang)
+		model:SetRenderOrigin(pos)
+		model:SetRenderAngles(ang)
+		model:SetPos(pos)
+		model:SetAngles(ang)
+		if partData.skin ~= nil then model:SetSkin(partData.skin) end
+		if isstring(partData.bodygroups) then model:SetBodyGroups(partData.bodygroups) end
+		model:SetupBones()
+		positioned[partName] = model
+		return model
+	end
+
+	for partName in pairs(parts) do positionPart(partName) end
+	for partName in pairs(parts) do
+		local model = positioned[partName]
+		if IsValid(model) then model:DrawModel() end
+	end
+
+	self.HeldMagCSModel = positioned.magazine
+end
+
 function SWEP:DrawPost()
 	local wep = self:GetWeaponEntity()
 	if not IsValid(wep) then return end
@@ -239,29 +315,7 @@ function SWEP:DrawPost()
 	if not IsValid(owner) or not owner:IsPlayer() then return end
 	if not self:ShouldUseFakeModel() then return end
 
-	local wm = self:GetWM()
-	if not IsValid(wm) then return end
-
-	if not IsValid(self.HeldMagCSModel) and self.HeldMagModel then
-		self.HeldMagCSModel = ClientsideModel(self.HeldMagModel, RENDERGROUP_BOTH)
-		if IsValid(self.HeldMagCSModel) then self.HeldMagCSModel:SetNoDraw(true) end
-	end
-	if IsValid(self.HeldMagCSModel) and self.HeldMagBone then
-		local boneID = wm:LookupBone(self.HeldMagBone)
-		if boneID then
-			local boneMatrix = wm:GetBoneMatrix(boneID)
-			if boneMatrix then
-				local lpos, lang = LocalToWorld(self.HeldMagOffsetPos or vector_origin, self.HeldMagOffsetAng or angle_zero, boneMatrix:GetTranslation(), boneMatrix:GetAngles())
-				self.HeldMagCSModel:SetRenderOrigin(lpos)
-				self.HeldMagCSModel:SetRenderAngles(lang)
-				self.HeldMagCSModel:SetPos(lpos)
-				self.HeldMagCSModel:SetAngles(lang)
-				self.HeldMagCSModel:SetupBones()
-				self.HeldMagCSModel:DrawModel()
-			end
-		end
-	end
-
+	self:DrawModularParts()
 end
 
 SWEP.WorldPartsOffsetPos = Vector(-20, 5, 10)
@@ -272,12 +326,12 @@ SWEP.WorldMagazineOffsetPos = Vector(0, -17.3, -0.55)
 SWEP.WorldMagazineOffsetAng = Angle(0, 0, 0)
 
 if CLIENT then
-	local BC_VECTOR_ZERO = Vector(0, 0, 0)
-	local BC_ANGLE_ZERO = Angle(0, 0, 0)
+	local MOD_VECTOR_ZERO = Vector(0, 0, 0)
+	local MOD_ANGLE_ZERO = Angle(0, 0, 0)
 
-	function SWEP:BC_CreateDroppedFakeWorldModel()
+	function SWEP:ModularCreateDroppedFakeModel()
 		if not self.WorldModelFake then return end
-		if IsValid(self.BC_DroppedFakeWorldModel) then return end
+		if IsValid(self.ModularDroppedFakeWorldModel) then return end
 
 		local model = ClientsideModel(self.WorldModelFake, RENDERGROUP_BOTH)
 		if not IsValid(model) then return end
@@ -292,61 +346,70 @@ if CLIENT then
 		if self.FakeBodyGroups then
 			model:SetBodyGroups(self.FakeBodyGroups)
 		end
+		if self.FakeSkin ~= nil then model:SetSkin(self.FakeSkin) end
 
 		if self.ModelCreated then
 			self:ModelCreated(model)
 		end
 
-		self.BC_DroppedFakeWorldModel = model
+		self.ModularDroppedFakeWorldModel = model
 	end
 
-	function SWEP:BC_CreateDroppedPartModels()
-		if not istable(self.ARC9Parts) then return end
+	function SWEP:ModularCreateDroppedModels()
+		local parts = self.ModularParts
+		if not istable(parts) then return end
 
-		self.BC_DroppedPartModels = self.BC_DroppedPartModels or {}
-		self.BC_DroppedPartPaths = self.BC_DroppedPartPaths or {}
+		self.ModularDroppedPartModels = self.ModularDroppedPartModels or {}
+		self.ModularDroppedPartPaths = self.ModularDroppedPartPaths or {}
 
-		for partName, partData in pairs(self.ARC9Parts) do
+		for partName, partData in pairs(parts) do
 			if not istable(partData) or not isstring(partData.model) or partData.model == "" then
 				continue
 			end
+			local modelPath = self:GetModularPartModel(partName, partData.model, "world")
 
-			local model = self.BC_DroppedPartModels[partName]
-			local oldPath = self.BC_DroppedPartPaths[partName]
+			local model = self.ModularDroppedPartModels[partName]
+			local oldPath = self.ModularDroppedPartPaths[partName]
+			if not isstring(modelPath) or modelPath == "" then
+				if IsValid(model) then model:Remove() end
+				self.ModularDroppedPartModels[partName] = nil
+				self.ModularDroppedPartPaths[partName] = nil
+				continue
+			end
 
-			if IsValid(model) and oldPath ~= partData.model then
+			if IsValid(model) and oldPath ~= modelPath then
 				model:Remove()
 				model = nil
 			end
 
 			if not IsValid(model) then
-				model = ClientsideModel(partData.model, RENDERGROUP_BOTH)
+				model = ClientsideModel(modelPath, RENDERGROUP_BOTH)
 				if IsValid(model) then
 					model:SetNoDraw(true)
 					model:DrawShadow(true)
-					self.BC_DroppedPartModels[partName] = model
-					self.BC_DroppedPartPaths[partName] = partData.model
+					self.ModularDroppedPartModels[partName] = model
+					self.ModularDroppedPartPaths[partName] = modelPath
 				end
 			end
 		end
 	end
 
-	function SWEP:BC_RemoveDroppedModels()
-		if self.BC_DroppedPartModels then
-			for partName, model in pairs(self.BC_DroppedPartModels) do
+	function SWEP:ModularRemoveDroppedModels()
+		if self.ModularDroppedPartModels then
+			for partName, model in pairs(self.ModularDroppedPartModels) do
 				if IsValid(model) then model:Remove() end
 			end
 		end
-		self.BC_DroppedPartModels = nil
-		self.BC_DroppedPartPaths = nil
+		self.ModularDroppedPartModels = nil
+		self.ModularDroppedPartPaths = nil
 
-		if IsValid(self.BC_DroppedFakeWorldModel) then
-			self.BC_DroppedFakeWorldModel:Remove()
+		if IsValid(self.ModularDroppedFakeWorldModel) then
+			self.ModularDroppedFakeWorldModel:Remove()
 		end
-		self.BC_DroppedFakeWorldModel = nil
+		self.ModularDroppedFakeWorldModel = nil
 	end
 
-	local function BC_ApplyPartAppearance(model, partData)
+	local function ModularApplyPartAppearance(model, partData)
 		if not IsValid(model) or not istable(partData) then return end
 
 		if partData.skin ~= nil then
@@ -366,24 +429,25 @@ if CLIENT then
 		end
 	end
 
-	function SWEP:BC_DrawDroppedFakeWorldAndParts()
+	function SWEP:ModularDrawDroppedModel()
 		local owner = self:GetOwner()
 		if IsValid(owner) and owner:IsPlayer() then return end
 
-		if not IsValid(self.BC_DroppedFakeWorldModel) then
-			self:BC_CreateDroppedFakeWorldModel()
+		if not IsValid(self.ModularDroppedFakeWorldModel) then
+			self:ModularCreateDroppedFakeModel()
 		end
 
-		self:BC_CreateDroppedPartModels()
+		self:ModularCreateDroppedModels()
 
 		local basePosition, baseAngles = LocalToWorld(
-			self.WorldPartsOffsetPos or BC_VECTOR_ZERO,
-			self.WorldPartsOffsetAng or BC_ANGLE_ZERO,
+			self.WorldPartsOffsetPos or MOD_VECTOR_ZERO,
+			self.WorldPartsOffsetAng or MOD_ANGLE_ZERO,
 			self:GetPos(),
 			self:GetAngles()
 		)
 
-		local fake = self.BC_DroppedFakeWorldModel
+		local fake = self.ModularDroppedFakeWorldModel
+		local parts = self.ModularParts
 
 		if IsValid(fake) then
 			fake:SetRenderOrigin(basePosition)
@@ -393,25 +457,31 @@ if CLIENT then
 			fake:SetupBones()
 		end
 
-		if istable(self.ARC9Parts) and istable(self.BC_DroppedPartModels) then
-			for partName, partData in pairs(self.ARC9Parts) do
-				local model = self.BC_DroppedPartModels[partName]
-				if not IsValid(model) or not istable(partData) then continue end
+		if istable(parts) and istable(self.ModularDroppedPartModels) then
+			local positioned = {}
+			local function positionPart(partName)
+				if positioned[partName] then return positioned[partName] end
+				local partData = parts[partName]
+				local model = self.ModularDroppedPartModels[partName]
+				if not IsValid(model) or not istable(partData) then return end
 
 				local boneName = partData.bone or ""
-				local extraPosition = BC_VECTOR_ZERO
-				local extraAngles = BC_ANGLE_ZERO
+				local extraPosition = MOD_VECTOR_ZERO
+				local extraAngles = MOD_ANGLE_ZERO
 
 				if partName == "magazine" and self.WorldMagazineBoneOverride then
 					boneName = self.WorldMagazineBoneOverride
-					extraPosition = self.WorldMagazineOffsetPos or BC_VECTOR_ZERO
-					extraAngles = self.WorldMagazineOffsetAng or BC_ANGLE_ZERO
+					extraPosition = self.WorldMagazineOffsetPos or MOD_VECTOR_ZERO
+					extraAngles = self.WorldMagazineOffsetAng or MOD_ANGLE_ZERO
 				end
 
-				local partBasePosition = basePosition
-				local partBaseAngles = baseAngles
+				local partBasePosition, partBaseAngles = basePosition, baseAngles
 
-				if IsValid(fake) and isstring(boneName) and boneName ~= "" then
+				if partData.parent then
+					local parent = positionPart(partData.parent)
+					if not IsValid(parent) then return end
+					partBasePosition, partBaseAngles = parent:GetPos(), parent:GetAngles()
+				elseif IsValid(fake) and isstring(boneName) and boneName ~= "" then
 					local boneID = fake:LookupBone(boneName)
 					if boneID ~= nil then
 						local boneMatrix = fake:GetBoneMatrix(boneID)
@@ -422,15 +492,16 @@ if CLIENT then
 					end
 				end
 
-				local localPosition = (partData.pos or BC_VECTOR_ZERO) + extraPosition
+				local localPosition = (partData.pos or MOD_VECTOR_ZERO) + extraPosition
 				local localAngles = Angle(
-					(partData.ang or BC_ANGLE_ZERO).p,
-					(partData.ang or BC_ANGLE_ZERO).y,
-					(partData.ang or BC_ANGLE_ZERO).r
+					(partData.ang or MOD_ANGLE_ZERO).p,
+					(partData.ang or MOD_ANGLE_ZERO).y,
+					(partData.ang or MOD_ANGLE_ZERO).r
 				)
 				localAngles:Add(extraAngles)
 
 				local position, angles = LocalToWorld(localPosition, localAngles, partBasePosition, partBaseAngles)
+				position, angles = self:ApplyManagedStockPartOffset(partName, position, angles)
 
 				model:SetRenderOrigin(position)
 				model:SetRenderAngles(angles)
@@ -438,7 +509,13 @@ if CLIENT then
 				model:SetAngles(angles)
 				model:SetupBones()
 
-				BC_ApplyPartAppearance(model, partData)
+				ModularApplyPartAppearance(model, partData)
+				positioned[partName] = model
+				return model
+			end
+
+			for partName in pairs(parts) do
+				positionPart(partName)
 			end
 		end
 
@@ -446,9 +523,9 @@ if CLIENT then
 			fake:DrawModel()
 		end
 
-		if istable(self.ARC9Parts) and istable(self.BC_DroppedPartModels) then
-			for partName, partData in pairs(self.ARC9Parts) do
-				local model = self.BC_DroppedPartModels[partName]
+		if istable(parts) and istable(self.ModularDroppedPartModels) then
+			for partName, partData in pairs(parts) do
+				local model = self.ModularDroppedPartModels[partName]
 				if IsValid(model) then
 					model:DrawModel()
 				end
@@ -464,17 +541,23 @@ if CLIENT then
 	function SWEP:DrawWorldModel()
 		local owner = self:GetOwner()
 		if IsValid(owner) and owner:IsPlayer() then return end
-		self:BC_DrawDroppedFakeWorldAndParts()
+		self:ModularDrawDroppedModel()
 	end
 
 	function SWEP:DrawWorldModelTranslucent()
 		local owner = self:GetOwner()
 		if IsValid(owner) and owner:IsPlayer() then return end
-		self:BC_DrawDroppedFakeWorldAndParts()
+		self:ModularDrawDroppedModel()
 	end
 
 	function SWEP:OnRemove()
-		self:BC_RemoveDroppedModels()
-		if IsValid(self.HeldMagCSModel) then self.HeldMagCSModel:Remove() end
+		self:ModularRemoveDroppedModels()
+		self:CleanupARC9DefaultLHIKSource()
+		for _, model in pairs(self.ModularHeldPartModels or {}) do
+			if IsValid(model) then model:Remove() end
+		end
+		self.ModularHeldPartModels = nil
+		self.ModularHeldPartPaths = nil
+		self.HeldMagCSModel = nil
 	end
 end

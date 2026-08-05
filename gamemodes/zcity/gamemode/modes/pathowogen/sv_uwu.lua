@@ -466,7 +466,7 @@ function MODE:SpawnDeltaSquad(count)
 		ply:Give("weapon_medkit_sh")
 		ply:Give("weapon_walkie_talkie")
 		ply:Give("weapon_naloxone")
-		ply:Give("weapon_painkillers")
+		ply:Give("weapon_painkillers_tpik")
 		ply:Give("weapon_combatknife")
 
 		local gunString = DeltaGuns[i % 5]
@@ -675,7 +675,7 @@ MODE.LootTable = {
 		{8,"weapon_tourniquet"},
 		{8,"weapon_bandage_sh"},
 		{7,"weapon_ducttape"},
-		{6,"weapon_painkillers"},
+		{6,"weapon_painkillers_tpik"},
 		{5,"weapon_bloodbag"},
 		{5,"weapon_hammer"},
 		{4,"weapon_walkie_talkie"},
@@ -725,15 +725,16 @@ MODE.LootTable = {
 		{0.3,"weapon_smallconsumable"},
 		{0.25,"weapon_bigconsumable"},
 		{0.24,"weapon_walkie_talkie"},
-		{0.23,"weapon_painkillers"},
+		{0.23,"weapon_painkillers_tpik"},
 		{0.2,"weapon_medkit_sh"},
 		-- крутая медицина
 		{0.2,"weapon_morphine"},
 		{0.2,"weapon_mannitol"},
 		{0.2,"weapon_naloxone"},
 		{0.2,"weapon_fentanyl"},
-		{0.2,"weapon_betablock"},
+		{0.2,"weapon_betablock_tpik"},
 		{0.2,"weapon_adrenaline"},
+		{0.15,"weapon_thiamine_tpik"},
 		-- Как никак полезные инструменты для выбивание барикад и дверей
 		{0.15,"weapon_hg_crowbar"},
 		{0.15,"weapon_hatchet"},
@@ -783,6 +784,17 @@ MODE.LootTable = {
 		{1, "weapon_fury13"}
 	}}
 }
+
+hg.AppendLootPool(MODE.LootTable[1][2], hg.LootPools.MeleeCommon, 0.8)
+hg.AppendLootPool(MODE.LootTable[1][2], hg.LootPools.MeleeRare, 0.7)
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.Sidearms, 0.5)
+hg.AppendLootPool(MODE.LootTable[3][2], hg.LootPools.SMGs, 0.4)
+hg.AppendLootPool(MODE.LootTable[3][2], hg.LootPools.Shotguns, 0.4)
+hg.AppendLootPool(MODE.LootTable[3][2], hg.LootPools.ArmorMedium, 0.5)
+hg.AppendLootPool(MODE.LootTable[4][2], hg.LootPools.AssaultRifles, 0.5)
+hg.AppendLootPool(MODE.LootTable[4][2], hg.LootPools.Marksman, 0.4)
+hg.AppendLootPool(MODE.LootTable[4][2], hg.LootPools.LMG, 0.25)
+hg.AppendLootPool(MODE.LootTable[4][2], hg.LootPools.ArmorHeavy, 0.5)
 
 function MODE:CanPlayerEnterVehicle(ply, ent) -- damdn i forgot about the broken mode hooks lmao
 	if ply.PlayerClassName == "furry" then
