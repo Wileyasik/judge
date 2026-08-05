@@ -276,6 +276,7 @@ local function ValidateArenaLoadout(ply)
 	for _, weaponId in ipairs(istable(parsed.weapons) and parsed.weapons or {}) do
 		local info = MODE.ArenaWeapons[weaponId]
 		if not info or usedSlots[info.slot] or weight + info.weight > MODE.ArenaMaxWeight then continue end
+		if info.unlock and (not hg or not hg.achievements or not hg.achievements.IsUnlocked(ply, info.unlock)) then continue end
 
 		usedSlots[info.slot] = true
 		selected[#selected + 1] = weaponId
@@ -553,12 +554,12 @@ function MODE:GiveEquipment()
 			ply.noSound = true
 
 			if ply:Team() == 1 then
-				ply:SetPlayerClass("swat")
-				zb.GiveRole(ply, "Counter Terrorist", Color(0,0,190))
+				ply:SetPlayerClass("arena_blue")
+				zb.GiveRole(ply, "Blue Team", Color(0,0,190))
 				ply:SetNetVar("CurPluv", "pluvberet")
 			else
-				ply:SetPlayerClass("terrorist")
-				zb.GiveRole(ply, "Terrorist", Color(190,0,0))
+				ply:SetPlayerClass("arena_red")
+				zb.GiveRole(ply, "Red Team", Color(190,0,0))
 				ply:SetNetVar("CurPluv", "pluvboss")
 			end
 

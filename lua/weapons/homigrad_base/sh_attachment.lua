@@ -510,7 +510,7 @@ function SWEP:Attachment_Transform(model,pos,ang,plc,att,attdata,available)
 	if plc == "sight" and not dovetail and isnumber(att.sightSlide) then vecadd.x = vecadd.x + math.Clamp(att.sightSlide, -1, 3) end
 	if isvector(mountOffset) then vecadd:Add(mountOffset) end
 	if attdata.offset and isvector(attdata.offset) then vecadd:Add(attdata.offset) end
-	local usesAKScopeCorrections = slot.akScopeCorrections
+	local usesAKScopeCorrections = slot and slot.akScopeCorrections
 		or istable(activeMount) and activeMount[1] == "mount3"
 	local mount3Correction = plc == "sight"
 		and usesAKScopeCorrections

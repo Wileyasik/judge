@@ -889,6 +889,16 @@ function hg.achievements.GetLocalAchievements()
     return hg.achievements.achievements_data.player_achievements[tostring(LocalPlayer():SteamID())]
 end
 
+-- Returns nil while the achievement list is not loaded yet, true/false otherwise.
+function hg.achievements.IsUnlocked(key)
+    local ach = hg.achievements.achievements_data.created_achevements[key]
+    if not ach then return nil end
+
+    local localach = hg.achievements.GetLocalAchievements() or {}
+    local current = localach[key] and tonumber(localach[key].value) or tonumber(ach.start_value) or 0
+    return current >= tonumber(ach.needed_value)
+end
+
 net.Receive("req_ach",function()
     hg.achievements.achievements_data.created_achevements = net.ReadTable()
     hg.achievements.achievements_data.player_achievements[tostring(LocalPlayer():SteamID())] = net.ReadTable()
@@ -896,6 +906,10 @@ net.Receive("req_ach",function()
 
     if IsValid(hg.achievements.MenuPanel) then
         hg.achievements.MenuPanel:UpdateValues()
+    end
+
+    if hg and hg.ArenaMenuRefresh then
+        hg.ArenaMenuRefresh()
     end
 end)
 

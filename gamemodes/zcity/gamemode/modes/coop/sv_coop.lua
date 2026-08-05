@@ -59,8 +59,10 @@ MODE.LootTable = {
 		{4,"ent_ammo_9x19mmparabellum"},
 		{3,"ent_ammo_4.6x30mm"},
 		{3,"weapon_bigconsumable"},
-		{3,"weapon_painkillers"},
+		{3,"weapon_painkillers_tpik"},
 		{3,"weapon_bigbandage_sh"},
+		{2,"weapon_betablock_tpik"},
+		{1.5,"weapon_thiamine_tpik"},
 		
         {2,"weapon_medkit_sh"},
 		{2,"weapon_bloodbag"},
@@ -83,17 +85,18 @@ MODE.LootTable = {
         {6,"ent_ammo_rpg-7projectile"},
         
         {8,"weapon_bigconsumable"},
-		{7,"weapon_painkillers"},
+		{7,"weapon_painkillers_tpik"},
 		{6,"weapon_bigbandage_sh"},
         {5,"weapon_morphine"},
         {5,"weapon_naloxone"},
         {4,"weapon_mannitol"},
+        {4,"weapon_betablock_tpik"},
+        {3,"weapon_thiamine_tpik"},
         
         {9,"weapon_hk_usp"},
         {8,"weapon_revolver357"},
 		{6,"weapon_spas12"},
 		{5,"weapon_mp7"},
-		{5,"weapon_osipr"},
         {2,"weapon_ash12"},
         {4,"weapon_akm"},
         {3,"weapon_rpk"},
@@ -115,6 +118,25 @@ MODE.LootTable = {
 		{5,"weapon_hg_slam"},
 	}},
 }
+
+-- Rebel (civilian) loot: melee + light armor only, weapons stay rare.
+hg.AppendLootPool(MODE.LootTable[1][2], hg.LootPools.MeleeCommon, 1)
+hg.AppendLootPool(MODE.LootTable[1][2], hg.LootPools.MeleeRare, 0.6)
+hg.AppendLootPool(MODE.LootTable[1][2], hg.LootPools.Sidearms, 0.5)
+hg.AppendLootPool(MODE.LootTable[1][2], hg.LootPools.ArmorLight, 0.6)
+
+-- Combine (equipped) loot: full arsenal, heavy stuff still rare.
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.MeleeCommon, 1)
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.MeleeRare, 0.7)
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.Sidearms, 0.6)
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.SMGs, 0.5)
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.Shotguns, 0.5)
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.AssaultRifles, 0.4)
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.Marksman, 0.3)
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.LMG, 0.25)
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.Explosives, 0.4)
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.ArmorMedium, 0.5)
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.ArmorHeavy, 0.4)
 
 local RemoveGordonWeapons = {
     ["weapon_hg_crowbar"] = true,
