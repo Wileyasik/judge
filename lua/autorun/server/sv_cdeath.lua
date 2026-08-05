@@ -55,6 +55,11 @@ hook.Add("PlayerDeath", "DeathEffect_OnDeath", function(ply)
         return
     end
 
+    if ply:GetInfoNum("deatheffect_enabled", 1) == 0 then
+        ply:SetNWBool("DeathEffect_BlockRespawn", false)
+        return
+    end
+
     if not DeathEffectRoundActive() then
         ply:SetNWBool("DeathEffect_BlockRespawn", false)
         return
