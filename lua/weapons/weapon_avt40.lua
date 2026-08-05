@@ -109,7 +109,7 @@ SWEP.Primary.Spread = 0
 SWEP.Primary.Sound = {"weapons/darsu_eft/svt/fire/avt_outdoor_distant_loop2.wav", 85, 100, 100}
 SWEP.SupressedSound = {"weapons/darsu_eft/svt/fire/avt_outdoor_distant_loop2.wav", 65, 100, 100}
 SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
-SWEP.Primary.Wait = 0.07273
+SWEP.Primary.Wait = 0.1
 SWEP.NumBullet = 1
 
 SWEP.availableAttachments = {

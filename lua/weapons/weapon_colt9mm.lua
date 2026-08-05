@@ -146,6 +146,7 @@ if CLIENT then
 		[0.30] = function(self, timeMul)
 			if self:Clip1() < 1 then
 				local ent = hg.CreateMag( self, Vector(0,45,-12), self.FakeBodyGroups or "0", true)
+				if not IsValid(ent) then return end
 				for i = 0, ent:GetBoneCount() - 1 do
 					ent:ManipulateBoneScale(i, vector_origin)
 				end

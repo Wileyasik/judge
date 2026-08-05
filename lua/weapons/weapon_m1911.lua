@@ -121,6 +121,7 @@ SWEP.AnimsEvents = {
 	["reload_empty"] = {
 		[0.2] = function(self)
 			local ent = hg.CreateMag( self, Vector(0,-45,-12), self:GetRandomBodygroups() or "0", true)
+			if not IsValid(ent) then return end
 			for i = 0, ent:GetBoneCount() - 1 do
 				ent:ManipulateBoneScale(i, vector_origin)
 			end

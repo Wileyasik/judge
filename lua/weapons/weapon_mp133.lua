@@ -306,12 +306,8 @@ function SWEP:PrimaryShootPost()
 	if not selectedSequence then return end
 
 	self.AnimList.fire = selectedSequence
-	self:PlayAnim("fire", self.FireAnimTime, false)
-
-	local timerName = "BC_FireAnimation_" .. self:EntIndex()
-	timer.Create(timerName, self.FireAnimTime, 1, function()
-		if not IsValid(self) or self.reload then return end
-		if self.Primary and (self.Primary.Next or 0) > CurTime() then return end
+	self:PlayAnim("fire", self.FireAnimTime, false, function()
+		if not IsValid(self) then return end
 		self:PlayAnim("idle", 1, not self.NoIdleLoop)
 	end)
 end

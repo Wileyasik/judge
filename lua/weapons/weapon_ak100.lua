@@ -11,7 +11,7 @@ SWEP.WorldModelFake = "models/weapons/c_ak100.mdl"
 SWEP.CustomizeCategory = "AK-101"
 SWEP.FakeBodyGroups = "0011030"
 
-SWEP.ARC9Parts = {
+SWEP.ModularParts = {
 	receiver = {
 		model = "models/weapons/mods/ak_dc_fab_defence_pdc.mdl",
 		bonemerge = false,

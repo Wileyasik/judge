@@ -232,7 +232,7 @@ function SWEP:ApplyStockAttachmentOffset(pos, ang, definition)
 end
 
 function SWEP:ApplyManagedStockPartOffset(partName, pos, ang)
-	local parts = self.ARC9Parts
+	local parts = self.ModularParts
 	if not istable(parts) then return pos, ang end
 
 	local stockPart = self.ARC9ManagedStockPart
@@ -1323,7 +1323,7 @@ if CLIENT then
 	end
 
 	local function getManagedPartTransform(wep, wm, partName, resolved, resolving)
-		local part = wep.ARC9Parts and wep.ARC9Parts[partName]
+		local part = wep.ModularParts and wep.ModularParts[partName]
 		if not istable(part) then return end
 
 		resolved = resolved or {}
@@ -1365,7 +1365,7 @@ if CLIENT then
 			end
 		end
 
-		local parts = wep.ARC9Parts
+		local parts = wep.ModularParts
 		if not istable(parts) then return end
 		local partName = wep.ARC9ManagedStockPart
 			or istable(parts.stock2) and "stock2"

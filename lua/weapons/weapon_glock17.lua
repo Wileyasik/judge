@@ -11,8 +11,7 @@ SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_pist_glock18.mdl"
 SWEP.WorldModelFake = "models/weapons/c_glock.mdl"
 
-SWEP.UseARC9Parts = true
-SWEP.ARC9Parts = {
+SWEP.ModularParts = {
 	magazine = {
 		model = "models/weapons/mods/mag_glock_std_17.mdl",
 		bonemerge = false,
@@ -284,7 +283,7 @@ if CLIENT then
 		end
 		self.DroppedGlockParts = self.DroppedGlockParts or {}
 		self.DroppedGlockPartPaths = self.DroppedGlockPartPaths or {}
-		for name, data in pairs(self.ARC9Parts or {}) do
+		for name, data in pairs(self.ModularParts or {}) do
 			if not istable(data) or not isstring(data.model) or data.model == "" then continue end
 			local path = name == "magazine" and self:GetActiveMagazineModel(data.model, "world") or data.model
 			local model = self.DroppedGlockParts[name]
@@ -332,7 +331,7 @@ if CLIENT then
 		fake:SetupBones()
 		fake:DrawModel()
 
-		for name, data in pairs(self.ARC9Parts or {}) do
+		for name, data in pairs(self.ModularParts or {}) do
 			local model = self.DroppedGlockParts and self.DroppedGlockParts[name]
 			if not IsValid(model) or not istable(data) then continue end
 			local partPos, partAng = basePos, baseAng

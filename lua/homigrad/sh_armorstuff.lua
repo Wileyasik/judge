@@ -1091,7 +1091,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_un.mdl",
 		Vector(2, -0.37, 0.15),
 		Angle(180, 100, 90),
-		protection = 7, // бр 1
+		protection = 6, // бр 1
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_un.mdl",
 		femPos = Vector(-0.5, 0, 0.4),
@@ -1113,7 +1113,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_hops_core_fast.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 7, // бр 1
+		protection = 6, // бр 1
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_hops_core_fast.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1134,7 +1134,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_k1c.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 7, // бр 1
+		protection = 6, // бр 1
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_k1c.mdl",
 		blocksHeadphones = true,
@@ -1157,7 +1157,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_s_sh_68.mdl",
 		Vector(2, -1, 0.15),
 		Angle(180, 100, 90),
-		protection = 7, // бр 1
+		protection = 6, // бр 1
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_s_sh_68.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1178,7 +1178,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_6b47_cover.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 11, // бр 3
+		protection = 10, // бр 3
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_6b47_cover.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1199,7 +1199,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_lshz.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 11, // бр 3
+		protection = 10, // бр 3
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_lshz.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1220,7 +1220,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_mich2001.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 11, // бр 3
+		protection = 10, // бр 3
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_mich2001.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1241,7 +1241,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_galvion_applique.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 11, // бр 3
+		protection = 10, // бр 3
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_galvion_applique.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1262,7 +1262,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_zsh_1_2m_v1.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 13, // бр 4
+		protection = 12, // бр 4
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_zsh_1_2m_v1.mdl",
 		blocksHeadphones = true,
@@ -1285,7 +1285,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_lshz2dtm_damper.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 13, // бр 4
+		protection = 12, // бр 4
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_lshz2dtm_damper.mdl",
 		blocksHeadphones = true,
@@ -1308,7 +1308,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_team_wendy_exfil_black.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 13, // бр 4
+		protection = 12, // бр 4
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_team_wendy_exfil_black.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1329,7 +1329,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_team_wendy_exfil_coyote.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 13, // бр 4
+		protection = 12, // бр 4
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_team_wendy_exfil_coyote.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1350,7 +1350,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_galvion_caiman.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 13, // бр 4
+		protection = 12, // бр 4
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_galvion_caiman.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1371,7 +1371,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_diamond_age_bastion_shield.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 16, // бр 5
+		protection = 15, // бр 5
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_diamond_age_bastion_shield.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1392,7 +1392,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_ops_core_fast_black_slaap.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 16, // бр 5
+		protection = 15, // бр 5
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_ops_core_fast_black_slaap.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1414,7 +1414,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_ops_core_fast_tan_slaap.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 16, // бр 5
+		protection = 15, // бр 5
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_ops_core_fast_tan_slaap.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1435,7 +1435,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_rys_t.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 16, // бр 5
+		protection = 15, // бр 5
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_rys_t.mdl",
 		blocksHeadphones = true,
@@ -1458,7 +1458,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_vulkan_5.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 16, // бр 5
+		protection = 15, // бр 5
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_vulkan_5.mdl",
 		blocksHeadphones = true,
@@ -1481,7 +1481,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_maska_1sh.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 16, // бр 5
+		protection = 15, // бр 5
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_maska_1sh.mdl",
 		blocksHeadphones = true,
@@ -1504,7 +1504,7 @@ hg.armor.head = {
 		"models/eft_props/gear/facecover/facecover_boss_welding_ubey.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 16, // бр 5
+		protection = 15, // бр 5
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/facecover/facecover_boss_welding_ubey.mdl",
 		blocksHeadphones = true,
@@ -1527,7 +1527,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_maska_1sh_killa.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 16, // бр 5
+		protection = 15, // бр 5
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_maska_1sh_killa.mdl",
 		blocksHeadphones = true,
@@ -1550,7 +1550,7 @@ hg.armor.head = {
 		"models/gruchk/jmod_dayz/helmets/ht_great_helm.mdl",
 		Vector(1.85, -1, 0.1),
 		Angle(180, 110, 90),
-		protection = 13,
+		protection = 12,
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/gruchk/jmod_dayz/helmets/ht_great_helm.mdl",
 		femPos = Vector(0, 0, -0.5),
@@ -1572,7 +1572,7 @@ hg.armor.head = {
 		"models/gruchk/jmod_dayz/helmets/ht_norsehelm.mdl",
 		Vector(1.1, -1.25, 0.1),
 		Angle(180, 110, 90),
-		protection = 11.5,
+		protection = 10.5,
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/gruchk/jmod_dayz/helmets/ht_norsehelm.mdl",
 		femPos = Vector(0, 0, 0),
@@ -1591,7 +1591,7 @@ hg.armor.head = {
 		"models/gruchk/jmod_dayz/helmets/ht_enduro_helmet.mdl",
 		Vector(0.75, -1, 0.1),
 		Angle(180, 110, 90),
-		protection = 7,
+		protection = 6,
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/gruchk/jmod_dayz/helmets/ht_enduro_helmet.mdl",
 		femPos = Vector(0, 0, 0),
@@ -1627,7 +1627,7 @@ hg.armor.head = {
 		"models/gruchk/jmod_dayz/helmets/ht_ballistic_helmet.mdl",
 		Vector(2.27, -0.7, 0),
 		Angle(180, 100, 90),
-		protection = 8.5,
+		protection = 7.5,
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/gruchk/jmod_dayz/helmets/ht_ballistic_helmet.mdl",
 		skins = {1},
@@ -1658,7 +1658,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_lshz2dtm_damper.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 11,
+		protection = 10,
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_lshz2dtm_damper.mdl",
 		blocksHeadphones = true,
@@ -1678,7 +1678,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_msa_gallet.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 9,
+		protection = 8,
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_msa_gallet.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1696,7 +1696,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_neosteel.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 9,
+		protection = 8,
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_neosteel.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1714,7 +1714,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_zsh_1_2m_v2.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 7,
+		protection = 6,
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_zsh_1_2m_v2.mdl",
 		blocksHeadphones = true,
@@ -1734,7 +1734,7 @@ hg.armor.head = {
 		"models/dpfilms/props/hev_helmet.mdl",
 		Vector(-9, 2.5, 0),
 		Angle(0, 92, 90),
-		protection = 9.6,
+		protection = 8.6,
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/dpfilms/props/hev_helmet.mdl",
 		femPos = Vector(0, 0, 0),
@@ -1757,7 +1757,7 @@ hg.armor.head = {
 		"",
 		Vector(-9, 2.5, 0),
 		Angle(0, 92, 90),
-		protection = 4.8,
+		protection = 3.8,
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "",
 		femPos = Vector(0, 0, 0),
@@ -1776,7 +1776,7 @@ hg.armor.head = {
 		"",
 		Vector(-9, 2.5, 0),
 		Angle(0, 92, 90),
-		protection = 4.2,
+		protection = 3.2,
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "",
 		femPos = Vector(0, 0, 0),
@@ -1795,7 +1795,7 @@ hg.armor.head = {
 		"",
 		Vector(-9, 2.5, 0),
 		Angle(0, 92, 90),
-		protection = 4.8,
+		protection = 3.8,
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "",
 		femPos = Vector(0, 0, 0),

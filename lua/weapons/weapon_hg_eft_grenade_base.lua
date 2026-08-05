@@ -63,7 +63,7 @@ end
 function SWEP:ThrowHigh()
 	if CLIENT then return end
 
-	self:Throw(1200, self.SpoonTime or CurTime(), nil, Vector(2, 4, 0), Angle(-40, 0, 0))
+	self:Throw(self.ThrowHighMul or 1200, self.SpoonTime or CurTime(), nil, Vector(2, 4, 0), Angle(-40, 0, 0))
 	self.InThrowing = false
 	self.ReadyToThrow = false
 	self.SpoonTime = false
@@ -74,7 +74,7 @@ end
 function SWEP:ThrowLow()
 	if CLIENT then return end
 
-	self:Throw(600, self.SpoonTime or CurTime(), nil, Vector(0, 4, -6), Angle(40, 0, 0))
+	self:Throw(self.ThrowLowMul or 600, self.SpoonTime or CurTime(), nil, Vector(0, 4, -6), Angle(40, 0, 0))
 	self.InThrowing = false
 	self.ReadyToThrow = false
 	self.IsLowThrow = false
