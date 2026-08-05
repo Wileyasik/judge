@@ -1,7 +1,7 @@
 hg.armor = {}
 local hg_gopro = ConVarExists("hg_gopro") and GetConVar("hg_gopro") or CreateClientConVar("hg_gopro", "0", true, false, "Toggle GoPro-like first-person camera view", 0, 1)
 
-local vecAdjust2 = Vector(5, -6.3, -5)
+local vecAdjust2 = Vector(0, -0, -0)
 local function DrawFirstPersonHelmet(ply, strModel, vecAdjust, fFov, setMat)
 	if ply:GetNetVar("headcrab") then return end
 	if not ply:Alive() then return end
@@ -774,6 +774,34 @@ hg.armor.torso = {
 		ScrappersSlot = "Armor",
 		nobonemerge = true
 	},
+	["vest_killa"] = {
+		"torso",
+		"models/eft_props/gear/armor/ar_6b13_killa.mdl",
+		Vector(-1, 2.7, 0),
+		Angle(0, 90, 90),
+		protection = 18.5, // бр 5
+		bone = "ValveBiped.Bip01_Spine2",
+		model = "models/eft_props/gear/armor/ar_6b13_killa.mdl",
+		nobonemerge = true,
+		femAng = Angle(0, 100, 90),
+		femPos = Vector(-2, 0, 1.7),
+		scale = 0.91,
+		femscale = 0.82,
+		effect = "Impact",
+		surfaceprop = 67,
+		mass = 8.8,
+		extraModel = {
+			model = "models/eft_props/gear/chestrigs/cr_commando_b.mdl",
+			nobonemerge = true,
+			pos = Vector(-0.5, 2.5, 0),
+			ang = Angle(0, 92, 90),
+			femAng = Angle(0, 100, 90),
+			femPos = Vector(-1.1, 0, 1.5),
+			scale = 0.915,
+			femscale = 0.825
+		},
+		ScrappersSlot = "Armor"
+	},
 	["vest_riot"] = {
 		"torso",
 		"models/gruchk/jmod_dayz/vest/vt_stab_vest.mdl",
@@ -1494,6 +1522,29 @@ hg.armor.head = {
 		mass = 1,
 		ScrappersSlot = "Armor",
 	},
+	["helmet_killa"] = {
+		"head",
+		"models/eft_props/gear/helmets/helmet_maska_1sh_killa.mdl",
+		Vector(2, -0.45, 0.15),
+		Angle(180, 100, 90),
+		protection = 16, // бр 5
+		bone = "ValveBiped.Bip01_Head1",
+		model = "models/eft_props/gear/helmets/helmet_maska_1sh_killa.mdl",
+		blocksHeadphones = true,
+		restricted = {"ears"},
+		femPos = Vector(-1.2, 0, 0.5),
+		scale = 0.95,
+		femscale = 0.93,
+		norender = true,
+		customviewrender = function(ply)
+			DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_maska_1sh_killa.mdl", vectors[4], 13)
+		end,
+		viewmaterial = false,
+		effect = "Impact",
+		surfaceprop = 67,
+		mass = 1,
+		ScrappersSlot = "Armor",
+	},
 	["helmet18"] = {
 		"head",
 		"models/gruchk/jmod_dayz/helmets/ht_great_helm.mdl",
@@ -1843,7 +1894,8 @@ hg.armor.visor = {
 	["visor_heavy_trooper"] = HelmetAccessory("visor", "models/eft_props/gear/helmets/helmet_galactac_heavy_gunner.mdl", 11.5, {helmet17 = true, helmet26 = true}, 0.4, {eyes = true, mouth = true}, nil, true),
 	["visor_rys_t"] = HelmetAccessory("visor", "models/eft_props/gear/helmets/helmet_rys_t_shield.mdl", 18.5, {helmet27 = true}, 1.2, {eyes = true, mouth = true}, "mask_overlays/altyn.png", true),
 	["visor_vulkan"] = HelmetAccessory("visor", "models/eft_props/gear/helmets/helmet_vulkan_shield.mdl", 15.5, {helmet28 = true}, 1.8, {eyes = true, mouth = true}, "mask_overlays/dirty_glass", true),
-	["visor_maska"] = HelmetAccessory("visor", "models/eft_props/gear/helmets/helmet_maska_1sh_shield.mdl", 20.5, {helmet29 = true}, 1.1, {eyes = true, mouth = true}, "mats_jack_gmod_sprites/slit_vignette.png", true)
+	["visor_maska"] = HelmetAccessory("visor", "models/eft_props/gear/helmets/helmet_maska_1sh_shield.mdl", 20.5, {helmet29 = true}, 1.1, {eyes = true, mouth = true}, "mats_jack_gmod_sprites/slit_vignette.png", true),
+	["visor_killa"] = HelmetAccessory("visor", "models/eft_props/gear/helmets/helmet_maska_1sh_shield_killa.mdl", 18.5, {helmet_killa = true}, 1.1, {eyes = true, mouth = true}, "mats_jack_gmod_sprites/slit_vignette.png", true)
 }
 
 hg.armor.helmet_jaw = {
@@ -1876,6 +1928,7 @@ local voiceMufflingArmor = {
 	visor_heavy_trooper = true,
 	visor_kolpak = true,
 	visor_lshz2dtm = true,
+	visor_killa = true,
 	visor_maska = true,
 	visor_riot = true,
 	visor_rys_t = true,
@@ -1992,6 +2045,7 @@ hg.armor.face = {
 		durabilityDamageMul = 4,
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/jmod/ballistic_mask.mdl",
+		restricted = {"head"},
 		femPos = Vector(-1.2, 0, 0.15),
 		material = {"sal/hanker","griggs/models/ballistic_mask_2011x","griggs/models/ballistic_mask_collector",
 					"griggs/models/ballistic_mask_cute","griggs/models/ballistic_mask_golden_guard",
@@ -2211,6 +2265,7 @@ local armorNames = {
 	["helmet28"] = "Vulkan-5 Helmet V",
 	["helmet29"] = "Maska-1Sh Helmet V",
 	["helmet31"] = "\"Ubey\" Welding Mask",
+	["helmet_killa"] = "Killa Maska-1Sh Helmet V",
 	["helmet_riot"] = "RIOT ZSh-1-2M Helmet I",
 	["helmet_sobr1"] = "SOBR LShZ-2DTM Helmet III",
 	["helmet_sobr2"] = "SOBR Gallet TC 800 Helmet II",
@@ -2252,6 +2307,7 @@ local armorNames = {
 	["vest31"] = "Rebel Medic Vest",
 	["vest32"] = "Rebel Vest",
 	["vest33"] = "Iron ChestPlate",
+	["vest_killa"] = "Killa 6B13 M Body Armor V",
 	["vest_riot"] = "MVD RIOT Vest",
 	["vest_sobr1"] = "SOBR Korund-VM Armor IV",
 	["vest_sobr2"] = "SOBR THOR CRV Armor III",
@@ -2261,6 +2317,7 @@ local armorNames = {
 	["visor_fast"] = "FAST MT Visor II",
 	["visor_fast_shield"] = "FAST MT Face Shield III",
 	["visor_heavy_trooper"] = "Heavy Trooper Face Mask II",
+	["visor_killa"] = "Killa Maska-1Sh Face Shield V",
 	["visor_kolpak"] = "Kolpak-1S Visor II",
 	["visor_lshz2dtm"] = "LShZ-2DTM Face Shield IV",
 	["visor_maska"] = "Maska-1Sh Face Shield VI",
@@ -2302,6 +2359,7 @@ local armorIcons = {
 	["helmet28"] = "entities/ent_jack_gmod_ezarmor_vulkan5.png",
 	["helmet29"] = "entities/ent_jack_gmod_ezarmor_maska1sh.png",
 	["helmet31"] = "entities/ent_jack_gmod_ezarmor_weldingkill.png",
+	["helmet_killa"] = "entities/ent_jack_gmod_ezarmor_maska1shkilla.png",
 	["helmet_riot"] = "entities/ent_jack_gmod_ezarmor_zshhelmv2.png",
 	["helmet_sobr1"] = "entities/ent_jack_gmod_ezarmor_lshz2dtmcovered.png",
 	["helmet_sobr2"] = "entities/ent_jack_gmod_ezarmor_tc800.png",
@@ -2343,6 +2401,7 @@ local armorIcons = {
 	["vest31"] = "entities/ent_jack_gmod_ezarmor_rebelmedtorso.png",
 	["vest32"] = "entities/ent_jack_gmod_ezarmor_rebeltorso.png",
 	["vest33"] = "entities/ent_jack_gmod_ezarmor_chestplate.png",
+	["vest_killa"] = "entities/ent_jack_gmod_ezarmor_6b13m.png",
 	["vest_riot"] = "entities/ent_jack_gmod_ezarmor_stab.png",
 	["vest_sobr1"] = "entities/ent_jack_gmod_ezarmor_korundvm.png",
 	["vest_sobr2"] = "entities/ent_jack_gmod_ezarmor_thorcrv.png",
@@ -2352,6 +2411,7 @@ local armorIcons = {
 	["visor_fast"] = "entities/ent_jack_gmod_ezarmor_fastmtvisor.png",
 	["visor_fast_shield"] = "entities/ent_jack_gmod_ezarmor_fastmtshield.png",
 	["visor_heavy_trooper"] = "entities/ent_jack_gmod_ezarmor_tackekhtrooper.png",
+	["visor_killa"] = "entities/ent_jack_gmod_ezarmor_shlemmaskkilla.png",
 	["visor_kolpak"] = "entities/ent_jack_gmod_ezarmor_koplak1svisor.png",
 	["visor_lshz2dtm"] = "entities/ent_jack_gmod_ezarmor_lshz2dtmshield.png",
 	["visor_maska"] = "entities/ent_jack_gmod_ezarmor_shlemmask.png",

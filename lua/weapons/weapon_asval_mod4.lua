@@ -31,7 +31,7 @@ SWEP.AttachmentPos = Vector(3.9, 0, 0.5)
 SWEP.AttachmentAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
 SWEP.FakeBodyGroups = "11141116121"
-SWEP.ZoomPos = Vector(0, -1.7318, 5.5661)
+SWEP.ZoomPos = Vector(0, -1.7688, 5.808)
 
 SWEP.GunCamPos = Vector(4, -15, -6)
 SWEP.GunCamAng = Angle(190, -5, -100)
