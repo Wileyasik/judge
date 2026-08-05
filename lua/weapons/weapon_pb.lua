@@ -108,7 +108,7 @@ SWEP.ShockMultiplier = 1
 SWEP.punchmul = 1.2
 SWEP.punchspeed = 3.5
 
-SWEP.LocalMuzzlePos = Vector(0, 0.4, 2.7)
+SWEP.LocalMuzzlePos = Vector(1.95, -1.8, 1.3)
 SWEP.LocalMuzzleAng = Angle(0.398, 0, 0)
 SWEP.WeaponEyeAngles = Angle(0, 0, 0)
 

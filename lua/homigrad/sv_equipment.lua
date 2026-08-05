@@ -18,7 +18,7 @@ local armorBreakSound = "rem_armorbreak.mp3"
 local armorBreakSoundLevel = 160
 local armorBreakSoundVolume = 2
 
-local DEFAULT_HELMET_DURABILITY = 45
+local DEFAULT_HELMET_DURABILITY = 30
 local DEFAULT_HELMET_BREAK_THRESHOLD = 65
 local DEFAULT_HELMET_ABSORB_MULTIPLIER = 0.2
 local DEFAULT_HELMET_DURABILITY_DAMAGE_MUL = 5
