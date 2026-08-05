@@ -402,6 +402,7 @@ net.Receive("get_karma",function(len, ply)
 end)
 
 concommand.Add("hg_setkarma",function(ply,cmd,args)
+    if not IsValid(ply) then return end
     if not ply:IsAdmin() then return end
     
     local lenargs = #args

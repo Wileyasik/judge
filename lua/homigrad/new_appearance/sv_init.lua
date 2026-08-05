@@ -46,6 +46,7 @@ end
 
 local function ForceApplyAppearance(ply, tbl, noModelChange)
     local classModelLocked = {
+        arena_blue = true,
         bloodz = true,
         combine = true,
         commanderforces = true,
@@ -240,14 +241,39 @@ net.Receive("Get_Appearance",function(len,client)
     ApplyAppearance(client,tAppearance, table.IsEmpty(tAppearance) and true or bRandom,true)
 end)
 
+local function IsRoundActive()
+    return zb and zb.ROUND_STATE == 1
+end
+
 net.Receive("OnlyGet_Appearance",function(len,client)
     local tAppearance = net.ReadTable()
+    local bIsSyncReply = net.ReadBool()
     local bRandom = !tAppearance or table.IsEmpty(tAppearance)
-    --client:ChatPrint(bRandom)
-    client.CachedAppearance = bRandom and APmodule.GetRandomAppearance() or tAppearance
+    local app = bRandom and APmodule.GetRandomAppearance() or tAppearance
+
+    -- User changed their appearance during an active round: defer it to the next round.
+    if not bIsSyncReply and IsRoundActive() then
+        client.PendingAppearance = app
+        return
+    end
+
+    -- Spawn re-sync replies must not re-apply a newer appearance mid-round.
+    if bIsSyncReply and client.PendingAppearance and IsRoundActive() then
+        return
+    end
+
+    client.CachedAppearance = app
     if not bRandom and APmodule.AppearanceValidater(client.CachedAppearance) then
         WearAppearance(client, table.Copy(client.CachedAppearance))
     end
+end)
+
+hook.Add("PlayerSpawn", "HG_ApplyPendingAppearance", function(ply)
+    if not ply.PendingAppearance then return end
+    if IsRoundActive() then return end
+
+    ply.CachedAppearance = ply.PendingAppearance
+    ply.PendingAppearance = nil
 end)
 
 APmodule.ApplyAppearance = ApplyAppearance

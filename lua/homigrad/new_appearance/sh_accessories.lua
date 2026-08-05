@@ -184,7 +184,7 @@ hg.Accessories = {
         fempos = {Vector(1.9,-0.8,0),Angle(0,-85,-90),.95},
         skin = 0,
         norender = true,
-        placement = "spine",
+        placement = "face2",
         bonemerge = true,
     },
 
@@ -2027,7 +2027,7 @@ hg.Accessories = {
         model = "models/eft_props/gear/facecover/facecover_gasmask_gp5.mdl",
         bone = "ValveBiped.Bip01_Head1",
         malepos = {Vector(2,-0.6,0.1),Angle(180,105,90),1},
-        fempos = {Vector(3.5,0.2,0),Angle(180,105,90),1},
+        fempos = {Vector(1,-1,0),Angle(180,105,90),1},
         skin = 4,
         norender = true,
         placement = "head",

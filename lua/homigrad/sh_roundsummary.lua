@@ -909,6 +909,7 @@ end
 
 local function ApplyAppearanceData(ent, ply, appearance, playerClassName)
 	if not IsValid(ent) then return false end
+	ent.CurAppearance = appearance
 	local modelData = GetAppearanceModelData(appearance)
 	if not modelData and (not playerClassName or playerClassName == "") then return false end
 

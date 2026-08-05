@@ -22,11 +22,54 @@ function hg.Appearance.CreateAppearanceFile(strFile_name, tblAppearance)
 	file.Write(appearanceFile, util.TableToJSON(tblAppearance, true))
 end
 
+local function DebugValidateAppearance(tblAppearance)
+	if not istable(tblAppearance) then
+		MsgN("[Appearance] debug: parsed value is not a table (" .. type(tblAppearance) .. ")")
+		return
+	end
+
+	for _, key in ipairs({ "AModel", "AClothes", "AName", "AColor", "AAttachments", "AAttachmentColors", "ABodygroups", "AFacemap" }) do
+		local fn = hg.Appearance.ValidateFunctions and hg.Appearance.ValidateFunctions[key]
+		if not fn then
+			MsgN("[Appearance] debug: no validator registered for field " .. key)
+			continue
+		end
+
+		local ok, err = pcall(fn, tblAppearance[key])
+		if not ok then
+			MsgN("[Appearance] debug: validator " .. key .. " errored: " .. tostring(err))
+		elseif ok == false then
+			MsgN("[Appearance] debug: field " .. key .. " is INVALID (value: " .. tostring(tblAppearance[key]) .. ")")
+		else
+			MsgN("[Appearance] debug: field " .. key .. " OK")
+		end
+	end
+
+	MsgN("[Appearance] debug: ABodySize=" .. tostring(tblAppearance.ABodySize) .. " (" .. type(tblAppearance.ABodySize) .. "), AHeight=" .. tostring(tblAppearance.AHeight) .. " (" .. type(tblAppearance.AHeight) .. "), resize=" .. tostring(tblAppearance.ABodySizeResizeHead) .. "/" .. tostring(tblAppearance.AHeightResizeHead))
+end
+
 function hg.Appearance.LoadAppearanceFile(strFile_name)
 	EnsureAppearanceFile()
 	if not file.Exists(appearanceFile, "DATA") then return false, "file is not found [data/judge/appearance.json]" end
-	local tblAppearance = util.JSONToTable(file.Read(appearanceFile, "DATA"))
-	if not hg.Appearance.AppearanceValidater(tblAppearance) then return false, "data/judge/appearance.json is invalid" end
+
+	local raw = file.Read(appearanceFile, "DATA")
+	if not raw then return false, "data/judge/appearance.json could not be read" end
+
+	local tblAppearance = util.JSONToTable(raw)
+	if not istable(tblAppearance) then
+		MsgN("[Appearance] parse produced a non-table value for data/judge/appearance.json (" .. type(tblAppearance) .. ")")
+		return false, "data/judge/appearance.json is invalid"
+	end
+
+	local normalized = hg.Appearance.NormalizeAppearanceTable and hg.Appearance.NormalizeAppearanceTable(tblAppearance) or tblAppearance
+
+	if not hg.Appearance.AppearanceValidater(normalized) then
+		MsgN("[Appearance] validation failed for data/judge/appearance.json")
+		DebugValidateAppearance(tblAppearance)
+		return false, "data/judge/appearance.json is invalid"
+	end
+
+	tblAppearance = normalized
 
 	if tblAppearance.AAttachments then
 		local norm = {"none","none","none","none","none","none"}
@@ -72,6 +115,7 @@ local function OnlyGetAppearance()
 		end
 
         net.WriteTable(tbl or {})
+        net.WriteBool(true)
 
     net.SendToServer()
 
@@ -224,6 +268,21 @@ local function GetAccessoryColorOverride(ply, ent, accessoryKey)
 	end
 end
 
+local AccessoryBlockedByArmorSlot = {
+	["head1"] = "head",
+	["spine"] = "torso",
+}
+
+local function IsAccessoryBlockedByArmor(ply, accessData)
+	if not ply.armors then return false end
+	local placement = accessData["placement"]
+	if not placement then return false end
+
+	local blockSlot = AccessoryBlockedByArmorSlot[placement] or placement
+
+	return ply.armors[blockSlot] ~= nil
+end
+
 function DrawAccesories(ply, ent, accessories,accessData, islply, force, setup)
 	if not accessories then return end
 	if not accessData then return end
@@ -280,7 +339,7 @@ function DrawAccesories(ply, ent, accessories,accessData, islply, force, setup)
 
 	if not IsValid(model) then ply.modelAccess[accessories] = nil return end
 
-	if ply.armors and accessData["placement"] and ply.armors[accessData["placement"]] then
+	if IsAccessoryBlockedByArmor(ply, accessData) then
 
 		return
 	end
@@ -457,7 +516,7 @@ hook.Add("RenderScreenspaceEffects","AppearanceShitty",function()
 			if not accessoriess or accessoriess == "none" then continue end
 			local accessData = hg.Accessories[accessoriess]
 			if not accessData then continue end
-			if ply.armors and accessData["placement"] and ply.armors[accessData["placement"]] then continue end
+			if IsAccessoryBlockedByArmor(ply, accessData) then continue end
 			if accessData.ScreenSpaceEffects then
 				accessData.ScreenSpaceEffects()
 			end
@@ -465,7 +524,7 @@ hook.Add("RenderScreenspaceEffects","AppearanceShitty",function()
 	elseif acsses then
 		local accessData = hg.Accessories[acsses]
 		if not accessData then return end
-		if ply.armors and accessData["placement"] and ply.armors[accessData["placement"]] then return end
+		if IsAccessoryBlockedByArmor(ply, accessData) then return end
 		if accessData.ScreenSpaceEffects then
 			accessData.ScreenSpaceEffects()
 		end

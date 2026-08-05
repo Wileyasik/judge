@@ -1,0 +1,242 @@
+-- Shared Judge loot pools.
+-- Used by gamemode LootTables so every mode gets the full Judge arsenal
+-- while keeping guns rare: melee > medicine > armor > sidearms > shotguns/smgs > rifles > marksman/lmg.
+
+hg.LootPools = hg.LootPools or {}
+local LP = hg.LootPools
+
+-- Each pool is a list of { weight, entityClass }.
+-- Weights are relative inside a single pool and tuned so that
+-- anything that shoots hard is a rare find.
+
+LP.MeleeCommon = {
+	{4, "weapon_pan"},
+	{4, "weapon_hg_bottle"},
+	{4, "weapon_hg_mug"},
+	{3, "weapon_chair_leg"},
+	{3, "weapon_table_leg"},
+	{3, "weapon_hg_glassshard"},
+	{2.5, "weapon_hg_shovel"},
+	{2.5, "weapon_combatknife"},
+	{2, "weapon_wirebat"},
+	{2, "weapon_ram"},
+	{2, "weapon_hg_tonfa"},
+	{1.5, "weapon_hg_shuriken"},
+	{1.5, "weapon_hg_bottlebroken"},
+}
+
+LP.MeleeRare = {
+	{0.5, "weapon_hg_kukri"},
+	{0.5, "weapon_hg_taiga"},
+	{0.45, "weapon_hg_labrys"},
+	{0.45, "weapon_hg_woodaxe"},
+	{0.4, "weapon_hultafors"},
+	{0.35, "weapon_hg_scythe"},
+	{0.35, "weapon_hg_spear"},
+	{0.3, "weapon_hg_spear_knife"},
+	{0.25, "weapon_hg_spear_pro"},
+	{0.25, "weapon_hg_crowbar_gordon"},
+	{0.2, "weapon_chainsaw"},
+	{0.1, "weapon_hg_gravitygun"},
+}
+
+LP.Sidearms = {
+	{2.5, "weapon_pm"},
+	{2, "weapon_pb"},
+	{2, "weapon_zoraki"},
+	{2, "weapon_p22"},
+	{2, "weapon_apb"},
+	{1.5, "weapon_glock26"},
+	{1.5, "weapon_pl15"},
+	{1.5, "weapon_p226"},
+	{1.5, "weapon_cz75a"},
+	{1.5, "weapon_aps"},
+	{1.5, "weapon_m9a3"},
+	{1.2, "weapon_fn57"},
+	{1.2, "weapon_osapb"},
+	{1.2, "weapon_chiappa_rhino"},
+	{1, "weapon_tkpd"},
+	{1, "weapon_henchman_usp"},
+	{0.8, "weapon_fury16"},
+	{0.6, "weapon_fury13"},
+}
+
+LP.SMGs = {
+	{1.2, "weapon_skorpion"},
+	{1.2, "weapon_kedr"},
+	{1.2, "weapon_uzip"},
+	{1, "weapon_pp1901"},
+	{1, "weapon_sr2"},
+	{1, "weapon_stm9"},
+	{1, "weapon_mp9"},
+	{1, "weapon_scorpion"},
+	{0.8, "weapon_mp5k"},
+	{0.8, "weapon_mp5sd"},
+	{0.8, "weapon_mpx"},
+	{0.8, "weapon_ump45"},
+	{0.7, "weapon_p90"},
+	{0.7, "weapon_mp5"},
+}
+
+LP.Shotguns = {
+	{1, "weapon_mr43"},
+	{1, "weapon_mr43_short"},
+	{0.9, "weapon_toz106"},
+	{0.8, "weapon_mp133"},
+	{0.7, "weapon_mp153"},
+	{0.7, "weapon_m590a1"},
+	{0.6, "weapon_m3super"},
+	{0.5, "weapon_mts255"},
+	{0.5, "weapon_m4super"},
+	{0.5, "weapon_ks23"},
+	{0.4, "weapon_saiga12"},
+	{0.3, "weapon_usas12"},
+	{0.25, "weapon_aa12"},
+}
+
+LP.AssaultRifles = {
+	{0.5, "weapon_ak74u"},
+	{0.5, "weapon_ak74"},
+	{0.5, "weapon_m4a1"},
+	{0.4, "weapon_ak100"},
+	{0.4, "weapon_g36"},
+	{0.4, "weapon_famas"},
+	{0.4, "weapon_aug"},
+	{0.35, "weapon_m16a2"},
+	{0.35, "weapon_ak12"},
+	{0.35, "weapon_ak50"},
+	{0.35, "weapon_rd704"},
+	{0.3, "weapon_hk416"},
+	{0.3, "weapon_mcx"},
+	{0.3, "weapon_mk18"},
+	{0.3, "weapon_mdr"},
+	{0.3, "weapon_scarl"},
+	{0.25, "weapon_scarh"},
+	{0.25, "weapon_m4a1mod3"},
+	{0.25, "weapon_ash12"},
+	{0.25, "weapon_asval"},
+	{0.25, "weapon_vss"},
+	{0.25, "weapon_akAfgan"},
+	{0.2, "weapon_sa58fal"},
+	{0.2, "weapon_sa58dsa"},
+	{0.2, "weapon_m231"},
+	{0.2, "weapon_svt"},
+	{0.15, "weapon_mxlr"},
+	{0.15, "weapon_avt40"},
+}
+
+LP.Marksman = {
+	{0.3, "weapon_mosinnagant"},
+	{0.3, "weapon_vpo209"},
+	{0.3, "weapon_vpo215"},
+	{0.25, "weapon_remington700"},
+	{0.25, "weapon_vpo101"},
+	{0.2, "weapon_sako_trg"},
+	{0.2, "weapon_sv98"},
+	{0.2, "weapon_svd"},
+	{0.2, "weapon_svds"},
+	{0.2, "weapon_vsk94"},
+	{0.2, "weapon_t5000"},
+	{0.15, "weapon_axmc"},
+	{0.15, "weapon_dvl10"},
+	{0.15, "weapon_mk11"},
+	{0.15, "weapon_g28"},
+	{0.15, "weapon_rsass"},
+}
+
+LP.LMG = {
+	{0.2, "weapon_rpk"},
+	{0.15, "weapon_rpk16"},
+	{0.15, "weapon_rpd"},
+	{0.15, "weapon_m249"},
+	{0.12, "weapon_pkm"},
+	{0.1, "weapon_pkp"},
+	{0.1, "weapon_m60"},
+	{0.05, "weapon_kord"},
+	{0.05, "weapon_ptrd"},
+}
+
+LP.Explosives = {
+	{0.5, "weapon_hg_eft_rdg2"},
+	{0.5, "weapon_hg_flashbang_tpik"},
+	{0.5, "weapon_hg_smokenade_tpik"},
+	{0.4, "weapon_hg_eft_rgd5"},
+	{0.4, "weapon_hg_eft_m7920"},
+	{0.3, "weapon_hg_eft_f1"},
+	{0.3, "weapon_hg_eft_v40"},
+	{0.3, "weapon_hg_eft_m67"},
+	{0.3, "weapon_hg_eft_zarya"},
+	{0.3, "weapon_claymore"},
+	{0.25, "weapon_hg_eft_rgo"},
+	{0.25, "weapon_breachcharge"},
+	{0.2, "weapon_hg_eft_vog17"},
+	{0.2, "weapon_hg_eft_rshg"},
+	{0.2, "weapon_traitor_c4"},
+	{0.2, "weapon_hg_holynade"},
+	{0.15, "weapon_hg_legacy_grenade_impact"},
+}
+
+LP.ArmorLight = {
+	{0.6, "ent_armor_vest1"},
+	{0.6, "ent_armor_vest2"},
+	{0.5, "ent_armor_helmet3"},
+	{0.5, "ent_armor_helmet4"},
+	{0.5, "ent_armor_mask1"},
+}
+
+LP.ArmorMedium = {
+	{0.5, "ent_armor_vest5"},
+	{0.4, "ent_armor_vest6"},
+	{0.4, "ent_armor_helmet6"},
+	{0.4, "ent_armor_helmet_sobr3"},
+	{0.4, "ent_armor_helmet25"},
+	{0.3, "ent_armor_vest_sobr3"},
+	{0.3, "ent_armor_helmet_sobr2"},
+	{0.3, "ent_armor_mask5"},
+	{0.25, "ent_armor_vest10"},
+}
+
+LP.ArmorHeavy = {
+	{0.2, "ent_armor_vest9"},
+	{0.15, "ent_armor_vest13"},
+	{0.15, "ent_armor_helmet9"},
+	{0.15, "ent_armor_helmet11"},
+	{0.15, "ent_armor_helmet13"},
+	{0.15, "ent_armor_helmet14"},
+	{0.15, "ent_armor_helmet15"},
+	{0.12, "ent_armor_vest17"},
+	{0.12, "ent_armor_helmet16"},
+	{0.12, "ent_armor_helmet17"},
+	{0.1, "ent_armor_helmet26"},
+	{0.1, "ent_armor_helmet27"},
+	{0.1, "ent_armor_headphones1"},
+	{0.08, "ent_armor_nightvision1"},
+}
+
+LP.Medicine = {
+	{4, "weapon_bandage_sh"},
+	{3, "weapon_bigbandage_sh"},
+	{2.5, "weapon_tourniquet"},
+	{2.5, "weapon_painkillers_tpik"},
+	{2, "weapon_bloodbag"},
+	{1.5, "weapon_medkit_sh"},
+	{1.2, "weapon_morphine"},
+	{1.2, "weapon_naloxone"},
+	{1, "weapon_betablock_tpik"},
+	{1, "weapon_adrenaline"},
+	{0.8, "weapon_mannitol"},
+	{0.6, "weapon_midazolam"},
+	{0.5, "weapon_fentanyl"},
+	{0.4, "weapon_defibrillator"},
+	{0.3, "weapon_thiamine_tpik"},
+}
+
+-- Appends a pool into a destination loot item list, optionally scaling weights.
+function hg.AppendLootPool(dest, pool, mul)
+	if not istable(dest) or not istable(pool) then return dest end
+	mul = mul or 1
+	for _, entry in ipairs(pool) do
+		dest[#dest + 1] = { entry[1] * mul, entry[2] }
+	end
+	return dest
+end

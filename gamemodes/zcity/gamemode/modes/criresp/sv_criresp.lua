@@ -135,7 +135,9 @@ local tblotheritems = {
 	[1] = { 
 		"weapon_bigconsumable", 
 		"weapon_bandage_sh",
-		"weapon_painkillers",
+		"weapon_painkillers_tpik",
+		"weapon_betablock_tpik",
+		"weapon_thiamine_tpik",
         "weapon_sogknife",
 		"weapon_ducttape",
 		"weapon_hammer"

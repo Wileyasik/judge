@@ -207,6 +207,13 @@ function hg.achievements.GetPlayerAchievement(ply, key)
     return hg.achievements.achievements_data.player_achievements[steamID][key] or {}
 end
 
+function hg.achievements.IsUnlocked(ply, key)
+    local ach = hg.achievements.GetAchievementInfo(key)
+    if not ach then return false end
+    local playerAch = hg.achievements.GetPlayerAchievement(ply, key)
+    return (tonumber(playerAch.value) or tonumber(ach.start_value) or 0) >= tonumber(ach.needed_value)
+end
+
 
 local function isAchievementCompleted(ply, key, val)
     local ach = hg.achievements.achievements_data.created_achevements[key]
@@ -330,6 +337,8 @@ end)
     hg.achievements.CreateAchievementType("git_gud", 1, 0, "Kill yourself with your own grenade.", "Git Gud", nil, false)
     hg.achievements.CreateAchievementType("london", 28, 0, "Take 28 knife wounds in one life. OI! Where are you going mate?", "London", nil, true)
     hg.achievements.CreateAchievementType("john_wicks_heir", 439, 0, "Deliver 439 fatal pistol headshots. The Baba Yaga returns.", "John Wick's Heir", nil, true)
+    -- Splinter Cell: unlocks weapon_sam_fisher_glock
+    hg.achievements.CreateAchievementType("samfisher", 10, 0, "Kill 10 enemies with a silenced weapon.", "Splinter Cell", "entities/sam.png", true)
 
     //hg.init_ach = true
 //end
@@ -717,4 +726,39 @@ hook.Add("vFireEntityStartedBurning", "hg_this_is_fine_achievement", function(en
     if IsValid(ply) and ply:IsPlayer() then
         hg.achievements.AddPlayerAchievement(ply, "this_is_fine", 1)
     end
+end)
+
+-- Splinter Cell: kill 10 enemies with a silenced weapon to unlock weapon_sam_fisher_glock.
+local function isSilencedWeapon(wep)
+    if not IsValid(wep) or not wep.HasAttachment or not wep.attachments then return false end
+    if not wep:HasAttachment("barrel", "supressor") then return false end
+
+    local id = wep.attachments.barrel and wep.attachments.barrel[1]
+    if not isstring(id) or id == "supressor0" or id == "empty" then return false end
+
+    return true
+end
+
+hook.Add("HomigradDamage", "hg_splinter_cell_track", function(victim, dmgInfo)
+    if not IsValid(victim) or not victim:IsPlayer() then return end
+    if not (dmgInfo:IsDamageType(DMG_BULLET) or dmgInfo:IsDamageType(DMG_BUCKSHOT)) then return end
+
+    victim.SamFisherLastHit = nil
+
+    local attacker = dmgInfo:GetAttacker()
+    if not IsValid(attacker) or not attacker:IsPlayer() or attacker == victim then return end
+    if (tonumber(dmgInfo:GetDamage()) or 0) <= 0 then return end
+
+    local wep = getDamageWeapon(dmgInfo)
+    if isSilencedWeapon(wep) then
+        victim.SamFisherLastHit = {attacker = attacker, time = CurTime()}
+    end
+end)
+
+hook.Add("Player_Death", "hg_splinter_cell_achievement", function(victim)
+    local hit = victim.SamFisherLastHit
+    victim.SamFisherLastHit = nil
+    if not hit or CurTime() - hit.time > 1 or not IsValid(hit.attacker) then return end
+
+    hg.achievements.AddPlayerAchievement(hit.attacker, "samfisher", 1)
 end)

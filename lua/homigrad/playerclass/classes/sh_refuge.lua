@@ -213,7 +213,7 @@ function CLASS.GiveEquipment(self, class)
     if class == "medic" then
         ply:Give("weapon_bandage_sh")
         ply:Give("weapon_medkit_sh")
-        ply:Give("weapon_painkillers")
+        ply:Give("weapon_painkillers_tpik")
         ply:Give("weapon_tourniquet")
     end
 end

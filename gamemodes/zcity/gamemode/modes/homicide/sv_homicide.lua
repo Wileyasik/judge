@@ -68,7 +68,7 @@ MODE.LootTable = {
 		{8,"weapon_tourniquet"},
 		{8,"weapon_bandage_sh"},
 		{7,"weapon_ducttape"},
-		{6,"weapon_painkillers"},
+		{6,"weapon_painkillers_tpik"},
 		{5,"weapon_bloodbag"},
 		{4,"weapon_walkie_talkie"},
 		{3,"hg_flashlight"},
@@ -81,16 +81,17 @@ MODE.LootTable = {
 		{0.2,"weapon_mannitol"},
 		{0.5,"weapon_naloxone"},
 		{0.1,"weapon_fentanyl"},
-		{0.9,"weapon_betablock"},
+		{0.9,"weapon_betablock_tpik"},
 		{0.6,"weapon_adrenaline"},
 		{0.5,"weapon_midazolam"},
+		{0.5,"weapon_thiamine_tpik"},
 		{0.3,"weapon_defibrillator"},
 		{0.10,"hg_brassknuckles"},
 
 		{0.65,"ent_armor_mask2"},
 		{0.27, "ent_armor_helmet2"},
 	}},
-	{20,{
+	{24,{
 		{12,"weapon_hammer"},
 		{6,"weapon_brick"},
 		{10,"weapon_pocketknife"},
@@ -120,7 +121,7 @@ MODE.LootTable = {
 		{5,"ent_armor_vest7"},
 		{8, "ent_armor_helmet2"},
 	}},
-	{9,{
+	{7,{
 		{6,"*sight*"},
 		{5,"*barrel*"},
 
@@ -134,7 +135,7 @@ MODE.LootTable = {
 		{2,"weapon_fn45"},
 		{2,"weapon_chainsaw"},
 	}},
-	{6, {
+	{4, {
 		{9,"weapon_hk_usp"},
 		{9,"weapon_glock17"},
 		{9,"weapon_cz75"},
@@ -147,13 +148,13 @@ MODE.LootTable = {
 		{5,"weapon_doublebarrel"},
 		{4, "weapon_flintlock"},
 	}},
-	{4,{
+	{5,{
 		{5,"ent_armor_vest3"},
 		{5,"ent_armor_helmet1"},
 		{2,"ent_armor_vest4"},
 		{2, "ent_armor_helmet5"},
 	}},
-	{2, {
+	{3, {
 		{4,"weapon_remington870"},
 
 		{4,"weapon_hg_molotov_tpik"},
@@ -179,6 +180,20 @@ MODE.LootTable = {
 	}},
 }
 
+-- Judge arsenal injected into the loot pool (weights tuned so guns stay rare).
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.MeleeCommon, 1)
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.MeleeRare, 1)
+hg.AppendLootPool(MODE.LootTable[3][2], hg.LootPools.ArmorLight, 0.8)
+hg.AppendLootPool(MODE.LootTable[3][2], hg.LootPools.ArmorMedium, 0.6)
+hg.AppendLootPool(MODE.LootTable[4][2], hg.LootPools.Sidearms, 0.6)
+hg.AppendLootPool(MODE.LootTable[6][2], hg.LootPools.ArmorMedium, 0.7)
+hg.AppendLootPool(MODE.LootTable[6][2], hg.LootPools.ArmorHeavy, 0.5)
+hg.AppendLootPool(MODE.LootTable[7][2], hg.LootPools.SMGs, 0.4)
+hg.AppendLootPool(MODE.LootTable[7][2], hg.LootPools.Shotguns, 0.4)
+hg.AppendLootPool(MODE.LootTable[7][2], hg.LootPools.AssaultRifles, 0.3)
+hg.AppendLootPool(MODE.LootTable[7][2], hg.LootPools.Marksman, 0.3)
+hg.AppendLootPool(MODE.LootTable[7][2], hg.LootPools.LMG, 0.2)
+
 MODE.LootTableStandard = {
 	{65, {
 		{15,"weapon_smallconsumable"},
@@ -186,12 +201,12 @@ MODE.LootTableStandard = {
 		{8,"weapon_tourniquet"},
 		{8,"weapon_bandage_sh"},
 		{7,"weapon_ducttape"},
-		{6,"weapon_painkillers"},
+		{6,"weapon_painkillers_tpik"},
 		{5,"weapon_bloodbag"},
 		{4,"hg_flashlight"},
 		{1,"weapon_matches"},--for dumbasses
 	}},
-	{35, {
+	{30, {
 		{1,"weapon_hammer"},
 		{1,"weapon_brick"},
 		{1,"weapon_pocketknife"},
@@ -208,6 +223,18 @@ MODE.LootTableStandard = {
 		{0.07,"weapon_hg_machete"},
 	}},
 }
+
+-- LootTableStandard only has medical + melee, so inject a rare gun category too.
+hg.AppendLootPool(MODE.LootTableStandard[2][2], hg.LootPools.MeleeCommon, 1)
+hg.AppendLootPool(MODE.LootTableStandard[2][2], hg.LootPools.MeleeRare, 1)
+MODE.LootTableStandard[3] = {10, {}}
+hg.AppendLootPool(MODE.LootTableStandard[3][2], hg.LootPools.Sidearms, 0.5)
+hg.AppendLootPool(MODE.LootTableStandard[3][2], hg.LootPools.ArmorLight, 0.6)
+hg.AppendLootPool(MODE.LootTableStandard[3][2], hg.LootPools.SMGs, 0.25)
+hg.AppendLootPool(MODE.LootTableStandard[3][2], hg.LootPools.Shotguns, 0.25)
+hg.AppendLootPool(MODE.LootTableStandard[3][2], hg.LootPools.ArmorMedium, 0.4)
+hg.AppendLootPool(MODE.LootTableStandard[3][2], hg.LootPools.AssaultRifles, 0.2)
+hg.AppendLootPool(MODE.LootTableStandard[3][2], hg.LootPools.Marksman, 0.15)
 
 MODE.LootTableSingle = MergeLootTables(
 	MODE.LootTableStandard,
@@ -362,7 +389,7 @@ MODE.Types.standard = {
 		ply:Give("weapon_medkit_sh")
 		ply:Give("weapon_walkie_talkie")
 		ply:Give("weapon_naloxone")
-		ply:Give("weapon_painkillers")
+		ply:Give("weapon_painkillers_tpik")
 		ply:Give("weapon_handcuffs")
 		ply:Give("weapon_handcuffs_key")
 		ply:Give("weapon_hg_tonfa")
@@ -498,7 +525,7 @@ MODE.Types.wildwest = {
 		ply:Give("weapon_medkit_sh")
 		ply:Give("weapon_walkie_talkie")
 		ply:Give("weapon_naloxone")
-		ply:Give("weapon_painkillers")
+		ply:Give("weapon_painkillers_tpik")
 		ply:Give("weapon_handcuffs")
 		ply:Give("weapon_handcuffs_key")
 		ply:Give("weapon_hg_tonfa")
@@ -573,7 +600,7 @@ MODE.Types.gunfreezone = {
 		ply:Give("weapon_medkit_sh")
 		ply:Give("weapon_walkie_talkie")
 		ply:Give("weapon_naloxone")
-		ply:Give("weapon_painkillers")
+		ply:Give("weapon_painkillers_tpik")
 		ply:Give("weapon_handcuffs")
 		ply:Give("weapon_handcuffs_key")
 		ply:Give("weapon_hg_tonfa")
@@ -662,7 +689,7 @@ MODE.Types.soe = {
 		ply:Give("weapon_medkit_sh")
 		ply:Give("weapon_bandage_sh")
 		ply:Give("weapon_walkie_talkie")
-		ply:Give("weapon_painkillers")
+		ply:Give("weapon_painkillers_tpik")
 		ply:Give("weapon_morphine")
 	
 		ply.organism.recoilmul = 0.5
@@ -1139,7 +1166,7 @@ function MODE:EquipSWAT(ply, index)
         [4] = function() return "weapon_sr25" end, --;; Marksman
         [5] = function()
             ply:Give("weapon_medkit_sh")
-            ply:Give("weapon_painkillers")
+            ply:Give("weapon_painkillers_tpik")
             ply:Give("weapon_adrenaline")
             ply:Give("weapon_needle")
             ply:Give("weapon_bigbandage_sh")
@@ -1627,7 +1654,7 @@ end)
 util.AddNetworkString("HMCD_UpdateTraitorAssistants")
 
 local TraitorAssistantStarterItems = {
-	"weapon_painkillers",
+	"weapon_painkillers_tpik",
 	"weapon_taser",
 	"weapon_hammer",
 	"weapon_ducttape",
