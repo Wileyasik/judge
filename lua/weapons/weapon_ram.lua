@@ -112,10 +112,12 @@
 
     --end
 
-    SWEP.AttackTimeLength = 0.01
+    SWEP.noreverse = true
+
+    SWEP.AttackTimeLength = 0.15
     SWEP.Attack2TimeLength = 0.1
 
-    SWEP.AttackRads = 0
+    SWEP.AttackRads = 45
     SWEP.AttackRads2 = 0
 
     SWEP.SwingAng = -90

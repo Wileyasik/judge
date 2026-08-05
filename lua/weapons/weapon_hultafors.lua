@@ -175,6 +175,8 @@ SWEP.BlockDirectionalCharge = "overhead"
 
 SWEP.NoHolster = true
 
+SWEP.noreverse = true
+
 SWEP.AnimAlwaysBack = true
 
 SWEP.AttackTimeLength = 0.28

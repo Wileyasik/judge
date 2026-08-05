@@ -48,6 +48,58 @@ end
 function hg.organism.should_gain_fear(org)
 	return ((org.pain > 30) or (org.blood < 3000) or (org.bleed > 1))
 end
+local hypothermia_mild = {
+	"I'm getting cold...",
+	"Chilly out here...",
+	"Need to warm up...",
+	"My fingers are numb...",
+	"Shivering..."
+}
+local hypothermia_moderate = {
+	"I can't stop shaking...",
+	"So cold... can't feel my hands...",
+	"Need warmth... now...",
+	"My body won't stop trembling...",
+	"I'm freezing..."
+}
+local hypothermia_severe = {
+	"I can't... feel anything...",
+	"So... tired... just want to sleep...",
+	"The cold is... numbing everything...",
+	"I'm so sleepy...",
+	"Can't... move..."
+}
+local hypothermia_critical = {
+	"Everything's... going dark...",
+	"So... cold...",
+	"I can't... feel my body...",
+	"Sleep... just... sleep..."
+}
+local hyperthermia_mild = {
+	"It's too hot...",
+	"I'm sweating so much...",
+	"Need water... need shade...",
+	"I'm overheating...",
+	"Can't take this heat..."
+}
+local hyperthermia_moderate = {
+	"I'm burning up...",
+	"Everything's spinning from the heat...",
+	"Can't... think straight... too hot...",
+	"I need to cool down...",
+	"My head is pounding from the heat..."
+}
+local hyperthermia_severe = {
+	"I can't... breathe in this heat...",
+	"Everything's... blurring...",
+	"Need... water...",
+	"I'm going to collapse..."
+}
+local hyperthermia_critical = {
+	"Can't... take it...",
+	"Everything's... fading...",
+	"Too... hot..."
+}
 module[2] = function(owner, org, timeValue)
 	if not org.heartstop and not org.fibrillation and (org.arrhythmia or 0) < 0.25 and (org.myocardialOxygen or 1) > 0.55 then
 		org.heartStrain = Approach(org.heartStrain or 0, 0, timeValue / 45)
@@ -346,58 +398,6 @@ local cardiac_arrest_phrases = {
 	"I can't... feel my pulse...",
 	"Something's wrong with my heart...",
 	"I'm fading... I can feel it..."
-}
-local hypothermia_mild = {
-	"I'm getting cold...",
-	"Chilly out here...",
-	"Need to warm up...",
-	"My fingers are numb...",
-	"Shivering..."
-}
-local hypothermia_moderate = {
-	"I can't stop shaking...",
-	"So cold... can't feel my hands...",
-	"Need warmth... now...",
-	"My body won't stop trembling...",
-	"I'm freezing..."
-}
-local hypothermia_severe = {
-	"I can't... feel anything...",
-	"So... tired... just want to sleep...",
-	"The cold is... numbing everything...",
-	"I'm so sleepy...",
-	"Can't... move..."
-}
-local hypothermia_critical = {
-	"Everything's... going dark...",
-	"So... cold...",
-	"I can't... feel my body...",
-	"Sleep... just... sleep..."
-}
-local hyperthermia_mild = {
-	"It's too hot...",
-	"I'm sweating so much...",
-	"Need water... need shade...",
-	"I'm overheating...",
-	"Can't take this heat..."
-}
-local hyperthermia_moderate = {
-	"I'm burning up...",
-	"Everything's spinning from the heat...",
-	"Can't... think straight... too hot...",
-	"I need to cool down...",
-	"My head is pounding from the heat..."
-}
-local hyperthermia_severe = {
-	"I can't... breathe in this heat...",
-	"Everything's... blurring...",
-	"Need... water...",
-	"I'm going to collapse..."
-}
-local hyperthermia_critical = {
-	"Can't... take it...",
-	"Everything's... fading...",
-	"Too... hot..."
 }
 local vecZero = Vector(0, 0, 0)
 local hold_wound_size_threshold = 4

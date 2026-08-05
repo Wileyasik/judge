@@ -3111,7 +3111,7 @@ function SWEP:CustomThink()
                 //end
 
                 if self.MultiDmg1 or not self:IsEntSoft(ent) then
-                    dmg = dmg / (self.AttackRads * self.AttackTimeLength)
+                    dmg = dmg / math.max((self.AttackRads or 1) * (self.AttackTimeLength or 0.01), 1)
                 else
                     dmg = dmg / 1.5
                 end
@@ -3459,7 +3459,7 @@ function SWEP:CustomThink()
             
             if self.MultiDmgCharge or (self.HitEnts[#self.HitEnts] ~= ent) then
                 if self.MultiDmgCharge or not self:IsEntSoft(ent) then
-                    dmg = dmg / ((self.ChargeAttackRads or self.AttackRads) * (self.ChargeAttackTimeLength or self.AttackTimeLength))
+                    dmg = dmg / math.max(((self.ChargeAttackRads or self.AttackRads) or 1) * ((self.ChargeAttackTimeLength or self.AttackTimeLength) or 0.01), 1)
                 else
                     dmg = dmg / 1.5
                 end

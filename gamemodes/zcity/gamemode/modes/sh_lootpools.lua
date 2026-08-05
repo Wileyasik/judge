@@ -23,6 +23,19 @@ LP.MeleeCommon = {
 	{2, "weapon_hg_tonfa"},
 	{1.5, "weapon_hg_shuriken"},
 	{1.5, "weapon_hg_bottlebroken"},
+
+	{3, "weapon_hammer"},
+	{3, "weapon_bat"},
+	{2.5, "weapon_brick"},
+	{2.5, "weapon_pocketknife"},
+	{2, "weapon_leadpipe"},
+	{2, "weapon_hatchet"},
+	{1.5, "weapon_sogknife"},
+	{1.5, "weapon_buck200knife"},
+	{1.5, "weapon_bars_a2607"},
+	{1.5, "weapon_6x5"},
+	{1.5, "weapon_hg_wire"},
+	{1.5, "weapon_hg_telescop"},
 }
 
 LP.MeleeRare = {
@@ -38,6 +51,17 @@ LP.MeleeRare = {
 	{0.25, "weapon_hg_crowbar_gordon"},
 	{0.2, "weapon_chainsaw"},
 	{0.1, "weapon_hg_gravitygun"},
+
+	{0.8, "weapon_metalbat"},
+	{0.7, "weapon_hg_crowbar"},
+	{0.7, "weapon_hg_axe"},
+	{0.6, "weapon_hg_machete"},
+	{0.6, "weapon_hg_sledgehammer"},
+	{0.5, "weapon_hg_akula"},
+	{0.5, "weapon_hg_nunchuks"},
+	{0.5, "weapon_hg_redrebel"},
+	{0.4, "weapon_hg_stunstick"},
+	{0.35, "weapon_hg_slayersword"},
 }
 
 LP.Sidearms = {
@@ -59,6 +83,26 @@ LP.Sidearms = {
 	{1, "weapon_henchman_usp"},
 	{0.8, "weapon_fury16"},
 	{0.6, "weapon_fury13"},
+
+	{2, "weapon_glock17"},
+	{2, "weapon_cz75"},
+	{2, "weapon_px4beretta"},
+	{1.8, "weapon_m1911"},
+	{1.5, "weapon_usp"},
+	{1.5, "weapon_fn45"},
+	{1.5, "weapon_m9beretta"},
+	{1.5, "weapon_revolver2"},
+	{1.2, "weapon_colt9mm"},
+	{1.2, "weapon_mp-80"},
+	{1.2, "weapon_browninghp"},
+	{1, "weapon_deagle"},
+	{1, "weapon_revolver357"},
+	{1, "weapon_pmb"},
+	{0.8, "weapon_glock18c"},
+	{0.8, "weapon_sr1mp"},
+	{0.8, "weapon_rsh12"},
+	{0.6, "weapon_sam_fisher_glock"},
+	{0.4, "weapon_flintlock"},
 }
 
 LP.SMGs = {
@@ -76,6 +120,15 @@ LP.SMGs = {
 	{0.8, "weapon_ump45"},
 	{0.7, "weapon_p90"},
 	{0.7, "weapon_mp5"},
+
+	{0.8, "weapon_mp7"},
+	{0.7, "weapon_uzi"},
+	{0.6, "weapon_vector"},
+	{0.6, "weapon_vector45"},
+	{0.6, "weapon_mp18"},
+	{0.5, "weapon_asval_mod4"},
+	{0.4, "weapon_draco"},
+	{0.4, "weapon_dracovska"},
 }
 
 LP.Shotguns = {
@@ -92,6 +145,13 @@ LP.Shotguns = {
 	{0.4, "weapon_saiga12"},
 	{0.3, "weapon_usas12"},
 	{0.25, "weapon_aa12"},
+
+	{1, "weapon_870"},
+	{1, "weapon_remington870"},
+	{0.8, "weapon_remington870_long"},
+	{0.7, "weapon_remington870_sawed_off"},
+	{0.5, "weapon_spas12"},
+	{0.4, "weapon_xm1014"},
 }
 
 LP.AssaultRifles = {
@@ -123,6 +183,20 @@ LP.AssaultRifles = {
 	{0.2, "weapon_svt"},
 	{0.15, "weapon_mxlr"},
 	{0.15, "weapon_avt40"},
+
+	{0.5, "weapon_akm"},
+	{0.45, "weapon_akmz"},
+	{0.4, "weapon_akz"},
+	{0.4, "weapon_an94"},
+	{0.35, "weapon_aek971"},
+	{0.3, "weapon_mk47"},
+	{0.3, "weapon_nl545"},
+	{0.3, "weapon_sag_ak545"},
+	{0.25, "weapon_tx15"},
+	{0.25, "weapon_adar215"},
+	{0.25, "weapon_osipr"},
+	{0.2, "weapon_oicw"},
+	{0.2, "weapon_alien3"},
 }
 
 LP.Marksman = {
@@ -142,6 +216,17 @@ LP.Marksman = {
 	{0.15, "weapon_mk11"},
 	{0.15, "weapon_g28"},
 	{0.15, "weapon_rsass"},
+
+	{0.3, "weapon_kar98"},
+	{0.3, "weapon_sks"},
+	{0.25, "weapon_vpo136"},
+	{0.25, "weapon_sr25"},
+	{0.25, "weapon_m1a1"},
+	{0.2, "weapon_rfb"},
+	{0.2, "weapon_combinesniper"},
+	{0.15, "weapon_musket"},
+	{0.15, "weapon_hg_crossbow"},
+	{0.1, "weapon_notruger"},
 }
 
 LP.LMG = {
@@ -154,10 +239,11 @@ LP.LMG = {
 	{0.1, "weapon_m60"},
 	{0.05, "weapon_kord"},
 	{0.05, "weapon_ptrd"},
+
+	{0.15, "weapon_rpdn"},
 }
 
 LP.Explosives = {
-	{0.5, "weapon_hg_eft_rdg2"},
 	{0.5, "weapon_hg_flashbang_tpik"},
 	{0.5, "weapon_hg_smokenade_tpik"},
 	{0.4, "weapon_hg_eft_rgd5"},
@@ -174,6 +260,21 @@ LP.Explosives = {
 	{0.2, "weapon_traitor_c4"},
 	{0.2, "weapon_hg_holynade"},
 	{0.15, "weapon_hg_legacy_grenade_impact"},
+
+	{0.5, "weapon_hg_eft_rgn"},
+	{0.4, "weapon_hg_molotov_tpik"},
+	{0.4, "weapon_hg_pipebomb_tpik"},
+	{0.35, "weapon_hg_grenade_tpik"},
+	{0.3, "weapon_hg_hl2nade_tpik"},
+	{0.3, "weapon_hg_grenade_incendiary_tpik"},
+	{0.3, "weapon_hg_rgd_tpik"},
+	{0.3, "weapon_hg_f1_tpik"},
+	{0.3, "weapon_hg_type59_tpik"},
+	{0.25, "weapon_hg_slam"},
+	{0.25, "weapon_hg_smokenade"},
+	{0.2, "weapon_fn40gl"},
+	{0.2, "weapon_hg_legacy_molotov"},
+	{0.2, "weapon_hg_legacy_smokenade"},
 }
 
 LP.ArmorLight = {
@@ -182,6 +283,14 @@ LP.ArmorLight = {
 	{0.5, "ent_armor_helmet3"},
 	{0.5, "ent_armor_helmet4"},
 	{0.5, "ent_armor_mask1"},
+
+	{0.5, "ent_armor_vest3"},
+	{0.5, "ent_armor_vest4"},
+	{0.4, "ent_armor_helmet5"},
+	{0.4, "ent_armor_helmet20"},
+	{0.35, "ent_armor_helmet_riot"},
+	{0.3, "ent_armor_mask4"},
+	{0.2, "ent_armor_vest_riot"},
 }
 
 LP.ArmorMedium = {
@@ -194,6 +303,33 @@ LP.ArmorMedium = {
 	{0.3, "ent_armor_helmet_sobr2"},
 	{0.3, "ent_armor_mask5"},
 	{0.25, "ent_armor_vest10"},
+
+	{0.4, "ent_armor_vest7"},
+	{0.4, "ent_armor_vest8"},
+	{0.4, "ent_armor_helmet7"},
+	{0.4, "ent_armor_helmet8"},
+	{0.4, "ent_armor_helmet_sobr1"},
+	{0.35, "ent_armor_vest30"},
+	{0.35, "ent_armor_vest31"},
+	{0.35, "ent_armor_vest32"},
+	{0.35, "ent_armor_helmet10"},
+	{0.35, "ent_armor_helmet19"},
+	{0.3, "ent_armor_vest26"},
+	{0.3, "ent_armor_vest_sobr2"},
+	{0.3, "ent_armor_mask2"},
+	{0.25, "ent_armor_mandible_caiman"},
+	{0.25, "ent_armor_chops_airframe"},
+	{0.25, "ent_armor_earcovers_exfil_black"},
+	{0.25, "ent_armor_visor_fast"},
+	{0.25, "ent_armor_visor_caiman"},
+	{0.25, "ent_armor_visor_sobr1"},
+	{0.25, "ent_armor_visor_sobr2"},
+	{0.25, "ent_armor_visor_riot"},
+	{0.25, "ent_armor_visor_kolpak"},
+	{0.25, "ent_armor_visor_heavy_trooper"},
+	{0.25, "ent_armor_visor_zsh"},
+	{0.25, "ent_armor_visor_exfil_black"},
+	{0.25, "ent_armor_visor_fast_shield"},
 }
 
 LP.ArmorHeavy = {
@@ -211,6 +347,33 @@ LP.ArmorHeavy = {
 	{0.1, "ent_armor_helmet27"},
 	{0.1, "ent_armor_headphones1"},
 	{0.08, "ent_armor_nightvision1"},
+
+	{0.15, "ent_armor_helmet12"},
+	{0.15, "ent_armor_helmet18"},
+	{0.12, "ent_armor_vest11"},
+	{0.12, "ent_armor_vest12"},
+	{0.12, "ent_armor_vest_sobr1"},
+	{0.1, "ent_armor_vest14"},
+	{0.1, "ent_armor_vest15"},
+	{0.1, "ent_armor_vest16"},
+	{0.1, "ent_armor_vest24"},
+	{0.1, "ent_armor_vest27"},
+	{0.1, "ent_armor_vest_killa"},
+	{0.1, "ent_armor_helmet28"},
+	{0.1, "ent_armor_helmet29"},
+	{0.1, "ent_armor_helmet31"},
+	{0.08, "ent_armor_vest18"},
+	{0.08, "ent_armor_vest19"},
+	{0.08, "ent_armor_vest20"},
+	{0.08, "ent_armor_vest33"},
+	{0.08, "ent_armor_helmet_killa"},
+	{0.08, "ent_armor_visor_lshz2dtm"},
+	{0.08, "ent_armor_visor_vulkan"},
+	{0.07, "ent_armor_vest21"},
+	{0.07, "ent_armor_vest22"},
+	{0.07, "ent_armor_visor_rys_t"},
+	{0.07, "ent_armor_visor_killa"},
+	{0.06, "ent_armor_visor_maska"},
 }
 
 LP.Medicine = {
