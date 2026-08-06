@@ -873,6 +873,7 @@ function GM:ScoreboardShow()
 	body.List = playersCol
 
 	RefreshRows = function()
+		if not IsValid(playersCol) or not IsValid(playersCol.Scroll) then return end
 		playersCol.Scroll:Clear()
 		local players = {}
 		local requestedXP = false

@@ -53,7 +53,7 @@ SWEP.lerpaddcloseanim = 0
 SWEP.closeanimdis = 40
 SWEP.WepAngOffset = Angle(0,0,0)
 SWEP.weaponAngLerp = Angle(0,0,0)
-SWEP.WeaponInertiaScale = 1
+SWEP.WeaponInertiaScale = 0.5
 
 function SWEP:GetWeaponInertiaFactor()
 	local mass = math.max((self.weight or 1) + (self.addweight or 0), 0.25)
@@ -466,7 +466,8 @@ local function DrawWorldModel(self, force)
 					gAngles = localAngles
 					self.OldAngPunch = self.OldAngPunch or gAngles
 					local inspecting = self:IsInspecting()
-					local viewPunchDiv = inspecting and 1 or (self.ViewPunchDiv or 50)
+					local customReloadActive = self:GetNetVar("shootgunReload", 0) > CurTime()
+					local viewPunchDiv = inspecting and 1 or (customReloadActive and (self.ReloadViewPunchDiv or self.ViewPunchDiv or 50) or (self.ViewPunchDiv or 50))
 					local punch = (self.OldAngPunch - gAngles) / viewPunchDiv
 					if self.attachmentMenuViewPunchMul then
 						punch:Mul(self.attachmentMenuViewPunchMul)

@@ -95,7 +95,7 @@ SWEP.HoldPos = Vector(8, 0.2, -25)
 SWEP.HoldAng = Angle(0, 0, 0)
 SWEP.ViewBobCamBase = "ValveBiped.Bip01_R_UpperArm"
 SWEP.ViewBobCamBone = "ValveBiped.Bip01_R_Hand"
-SWEP.ViewPunchDiv = 1
+SWEP.ViewPunchDiv = 1000
 game.AddDecal("hmcd_jackatape", "decals/mat_jack_hmcd_ducttape")
 
 function SWEP:SetupDataTables()

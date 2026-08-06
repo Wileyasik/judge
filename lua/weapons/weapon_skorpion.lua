@@ -63,16 +63,22 @@ SWEP.FakeReloadEvents = {
 			self:GetWM():ManipulateBoneScale(13, vector_origin)
 			self:GetWM():ManipulateBoneScale(13, vector_origin)
 			self:GetOwner():PullLHTowards("ValveBiped.Bip01_L_Thigh", 1.2 * timeMul,nil,nil,function() 
-				self:GetWM():ManipulateBoneScale(13, vector_full)
-				self:GetWM():ManipulateBoneScale(13, vector_full)
+				local wm = self:GetWM()
+				if IsValid(wm) then
+				wm:ManipulateBoneScale(13, vector_full)
+				wm:ManipulateBoneScale(13, vector_full)
+				end
 			end)
 		end 
 		if CLIENT and self:Clip1() > 0 then
 			self:GetWM():ManipulateBoneScale(13, vector_origin)
 			self:GetWM():ManipulateBoneScale(13, vector_origin)
 			self:GetOwner():PullLHTowards("ValveBiped.Bip01_L_Thigh", 1 * timeMul,nil,nil,function() 
-				self:GetWM():ManipulateBoneScale(13, vector_full)
-				self:GetWM():ManipulateBoneScale(13, vector_full)
+				local wm = self:GetWM()
+				if IsValid(wm) then
+				wm:ManipulateBoneScale(13, vector_full)
+				wm:ManipulateBoneScale(13, vector_full)
+				end
 			end)
 		end 
 	end,

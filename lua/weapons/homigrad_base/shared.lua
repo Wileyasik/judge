@@ -1026,7 +1026,8 @@ if CLIENT then
 	SWEP.AmmoDrawMetod = "Default"
 
 	function SWEP:DrawHUD()
-		if not IsValid(self:GetOwner()) then return end
+		local hudOwner = self:GetOwner()
+		if not IsValid(hudOwner) or not hudOwner:IsPlayer() then return end
 		local ammotype = (hg.ammotypeshuy[self.Primary.Ammo].BulletSettings and hg.ammotypeshuy[self.Primary.Ammo].BulletSettings.Icon) or matPistolAmmo
 		self.DrawAmmoMetods[self.AmmoDrawMetod](self,ammotype)
 		

@@ -115,7 +115,7 @@ SWEP.HoldType = "revolver"
 SWEP.ZoomPos = Vector(-3, 0.5739, 4.4989)
 SWEP.SprayRand = {Angle(-0.03, -0.03, 0), Angle(-0.05, 0.03, 0)}
 SWEP.Ergonomics = 1.3
-SWEP.Penetration = 7
+SWEP.Penetration = 11.5
 SWEP.WorldPos = Vector(-0.1, -0.7, -0.5)
 SWEP.WorldAng = Angle(0, 0, 0)
 

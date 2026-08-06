@@ -471,7 +471,7 @@ function SWEP:Reload(time)
 		local reloadAnim = self:GetMagazineReloadAnimation(empty)
 		local wm = self:GetWM()
 
-		if reloadAnim and (not IsValid(wm) or wm:LookupSequence(reloadAnim) < 0) then
+		if reloadAnim and (not IsValid(wm) or (wm:LookupSequence(reloadAnim) or -1) < 0) then
 			reloadAnim = nil
 		end
 

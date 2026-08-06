@@ -161,7 +161,7 @@ SWEP.RHandPos = Vector(-4, 0, -3)
 SWEP.LHandPos = false
 SWEP.SprayRand = {Angle(-0.03, -0.03, 0), Angle(-0.05, 0.03, 0)}
 SWEP.Ergonomics = 1.2
-SWEP.Penetration = 7
+SWEP.Penetration = 11.5
 
 SWEP.punchmul = 1.5
 SWEP.punchspeed = 3

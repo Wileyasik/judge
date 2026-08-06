@@ -83,9 +83,12 @@ if CLIENT then
 		[0.25] = function(self,timeMul)
 			if self:Clip1() < 1 then
 				self:GetOwner():PullLHTowards("ValveBiped.Bip01_L_Thigh", 1 * timeMul,nil,nil,function()
-					self:GetWM():ManipulateBoneScale(48, vector_full)
+					local wm = self:GetWM()
+					if IsValid(wm) then
+					wm:ManipulateBoneScale(48, vector_full)
 					for i = 49, 55 do
-						self:GetWM():ManipulateBoneScale(i, vector_full)
+						wm:ManipulateBoneScale(i, vector_full)
+					end
 					end
 				end)
 			end
@@ -100,9 +103,12 @@ if CLIENT then
 			end
 			if self:Clip1() > 0 then
 				self:GetOwner():PullLHTowards("ValveBiped.Bip01_L_Thigh", 0.4 * timeMul,nil,nil,function()
-					self:GetWM():ManipulateBoneScale(48, vector_full)
+					local wm = self:GetWM()
+					if IsValid(wm) then
+					wm:ManipulateBoneScale(48, vector_full)
 					for i = 49, 55 do
-						self:GetWM():ManipulateBoneScale(i, vector_full)
+						wm:ManipulateBoneScale(i, vector_full)
+					end
 					end
 				end)
 			end

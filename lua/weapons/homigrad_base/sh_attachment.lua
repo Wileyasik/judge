@@ -70,7 +70,7 @@ end
 
 function SWEP:UpdateAttachmentModifiers()
 	self.BaseErgonomics = self.BaseErgonomics or self.Ergonomics or 1
-	self.Ergonomics = self.BaseErgonomics * self:GetAttachmentModifierMul("ergonomicsMul")
+	self.Ergonomics = self.BaseErgonomics * self:GetAttachmentModifierMul("ergonomicsMul") * 1.5
 end
 
 function SWEP:GetAttachmentRecoilMul()
@@ -507,7 +507,7 @@ function SWEP:Attachment_Transform(model,pos,ang,plc,att,attdata,available)
 	if isvector(entryOffset) then vecadd:Add(entryOffset) end
 	local activeMount = self.attachments and self.attachments.mount
 	local dovetail = attdata.mountType == "dovetail" or istable(activeMount) and activeMount.mountType == "dovetail"
-	if plc == "sight" and not dovetail and isnumber(att.sightSlide) then vecadd.x = vecadd.x + math.Clamp(att.sightSlide, -1, 3) end
+	if plc == "sight" and not dovetail and isnumber(att.sightSlide) and not self:IsPistolHoldType() then vecadd.x = vecadd.x + math.Clamp(att.sightSlide, -1, 3) end
 	if isvector(mountOffset) then vecadd:Add(mountOffset) end
 	if attdata.offset and isvector(attdata.offset) then vecadd:Add(attdata.offset) end
 	local usesAKScopeCorrections = slot and slot.akScopeCorrections
@@ -1862,7 +1862,7 @@ if CLIENT then
 			local installedDefinition = installedID and hg.attachments[placement] and hg.attachments[placement][installedID]
 			local activeMount = attachments.mount
 			local dovetail = installedDefinition and installedDefinition.mountType == "dovetail" or istable(activeMount) and activeMount.mountType == "dovetail"
-			local hasSight = placement == "sight" and installedID and installedID != "empty" and not dovetail
+			local hasSight = placement == "sight" and installedID and installedID != "empty" and not dovetail and not self.weapon:IsPistolHoldType()
 			local baseHeight = section.baseHeight or section:GetTall()
 			section:SetTall(baseHeight + (hasSight and attachmentPx(32) or 0))
 

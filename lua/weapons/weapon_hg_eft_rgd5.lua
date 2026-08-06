@@ -10,6 +10,6 @@ RMB - Low throw
 R on surface - Set tripwire]]
 SWEP.Spawnable = true
 
-SWEP.WorldModel = "models/weapons/arc9/darsu_eft/w_rgd5_unthrowed.mdl"
-SWEP.WorldModelReal = "models/weapons/arc9/darsu_eft/c_rgd5_2.mdl"
+SWEP.WorldModel = "models/weapons/w_rgd5_unthrowed.mdl"
+SWEP.WorldModelReal = "models/weapons/c_rgd5_2.mdl"
 SWEP.ENT = "ent_hg_eft_rgd5"

@@ -305,7 +305,7 @@ if CLIENT then
 		local Size = math.max(math.min(1 - Tr.Fraction, 0.5), 0.1)
 		local x, y = Tr.HitPos:ToScreen().x, Tr.HitPos:ToScreen().y
 		if Tr.Hit then
-			lerpthing = Lerp(0.1, lerpthing, 1)
+			lerpthing = Lerp(0.1, lerpthing or 1, 1)
 			colWhite.a = 255 * Size
 			surface.SetDrawColor(colGray)
 			draw.NoTexture()

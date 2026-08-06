@@ -410,7 +410,7 @@ if CLIENT then
 			table.sort(keys,function(a,b)
 				local atbl = weapons.Get(a)
 				local wep = atbl and atbl.holsteredBone and not atbl.shouldntDrawHolstered
-				return (ent.foundloot[a] and 1 or 0) > (ent.foundloot[b] and 1 or 0)//(hg.TraitorLoot[a] or 0) < (hg.TraitorLoot[b] or (wep and 1 or 0) or 0)
+				return (ent.foundloot and ent.foundloot[a] and 1 or 0) > (ent.foundloot and ent.foundloot[b] and 1 or 0)//(hg.TraitorLoot[a] or 0) < (hg.TraitorLoot[b] or (wep and 1 or 0) or 0)
 			end)
 			
 			for k, i in ipairs(keys) do
@@ -444,13 +444,14 @@ if CLIENT then
 				button:SetPos(gap + (blockX - 1) * (cell + gap), gap + (blockY - 1) * (cell + gap))
 				button:SetSize(blockW * cell + (blockW - 1) * gap, blockH * cell + (blockH - 1) * gap)
 				button.RevealTime = math.Clamp(0.45 + revealWeight * 0.24, 0.65, 4)
-				button.Think = function(self)
-					if ent.foundloot[i] then return end
-					if self:IsHovered() and input.IsMouseDown(MOUSE_LEFT) then
-						self.RevealStart = self.RevealStart or CurTime()
-						self.RevealProgress = math.Clamp((CurTime() - self.RevealStart) / self.RevealTime, 0, 1)
-						if self.RevealProgress >= 1 then
-							ent.foundloot[i] = true
+			button.Think = function(self)
+				if ent.foundloot and ent.foundloot[i] then return end
+				if self:IsHovered() and input.IsMouseDown(MOUSE_LEFT) then
+					self.RevealStart = self.RevealStart or CurTime()
+					self.RevealProgress = math.Clamp((CurTime() - self.RevealStart) / self.RevealTime, 0, 1)
+					if self.RevealProgress >= 1 then
+						ent.foundloot = ent.foundloot or {}
+						ent.foundloot[i] = true
 							self.HoldLock = true
 							surface.PlaySound("arc9_eft_shared/generic_mag_pouch_in" .. math.random(7) .. ".ogg")
 						end
@@ -461,9 +462,9 @@ if CLIENT then
 					end
 				end
 				
-				button.DoClick = function()
-					if button.HoldLock then button.HoldLock = nil return end
-					if not ent.foundloot[i] then return end
+			button.DoClick = function()
+				if button.HoldLock then button.HoldLock = nil return end
+				if not (ent.foundloot and ent.foundloot[i]) then return end
 					if cooldown > CurTime() then return end
 
 					cooldown = CurTime() + 0.5
@@ -487,8 +488,8 @@ if CLIENT then
 					--end)
 				end
 
-				button.DoRightClick = function()
-					if not ent.foundloot[i] then return end
+			button.DoRightClick = function()
+				if not (ent.foundloot and ent.foundloot[i]) then return end
 					if cooldown > CurTime() then return end
 
 					cooldown = CurTime() + 0.5
@@ -518,7 +519,7 @@ if CLIENT then
 				local name = nameThings(i, thing)
 				button.col1 = 100
 				button.Paint = function(self, w, h)
-					local found = ent.foundloot[i]
+					local found = ent.foundloot and ent.foundloot[i]
 					button.col1 = Lerp(0.1, button.col1, button:IsHovered() and 180 or 100)
 					if button:IsHovered() then
 						button.SoundKD = button.SoundKD or 0

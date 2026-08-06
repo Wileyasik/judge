@@ -23,7 +23,7 @@ SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.FakeAttachment = "1"
 SWEP.AttachmentPos = Vector(-0, 0, 0.3)
 SWEP.AttachmentAng = Angle(0, 0, 0)
-SWEP.ViewPunchDiv = 1
+SWEP.ViewPunchDiv = 150
 
 -- БОДИГРУППЫ
 SWEP.FakeBodyGroups = "011111011111"
@@ -87,6 +87,10 @@ SWEP.ZoomPos = Vector(0, -0.69, 5.2)
 SWEP.RHandPos = Vector(0, 0, -1)
 SWEP.LHandPos = Vector(7, 0, -2)
 SWEP.Ergonomics = 0.8
+SWEP.InspectViewPunchMul = 0
+SWEP.ReloadViewPunchTravel = 4
+SWEP.ReloadViewPunchMaxStep = 0.08
+SWEP.ReloadViewPunchRollMul = 0.15
 SWEP.Penetration = 5
 
 SWEP.GunCamPos = Vector(6, -12, -5)

@@ -177,10 +177,12 @@ local RoleConfigs = {
         },
         items = {
             ["weapon_p22"] = {cost = 6, name = "Walther P22"},
+            ["weapon_pb"] = {cost = 8, name = "PB"},
             ["weapon_taser"] = {cost = 6, name = "Taser"},
-            ["weapon_buck200knife"] = {cost = 2, name = "Buck 200 Knife"},
-            ["weapon_sogknife"] = {cost = 2, name = "SOG Knife"},
-            ["weapon_hg_rgd_tpik"] = {cost = 4, name = "RGD-5 Grenade"},
+            ["weapon_6x5"] = {cost = 2, name = "6x5 Bayonet"},
+            ["weapon_buck200knife"] = {cost = 2, name = "Buck 120 General"},
+            ["weapon_hg_ritual"] = {cost = 5, name = "Ritual Knife"},
+            ["weapon_hg_eft_rgd5"] = {cost = 4, name = "RGD-5 Grenade"},
             ["weapon_adrenaline"] = {cost = 3, name = "Epipen"},
             ["weapon_hg_shuriken"] = {cost = 1, name = "Shuriken"},
             ["weapon_hg_smokenade_tpik"] = {cost = 2, name = "Smoke Grenade"},
@@ -202,8 +204,9 @@ local RoleConfigs = {
             ["weapon_p22"] = {"weapon_p22_silencer", "weapon_p22_ammo"}
         },
         exclusions = {
-            ["weapon_buck200knife"] = {["weapon_sogknife"] = true},
-            ["weapon_sogknife"] = {["weapon_buck200knife"] = true}
+            ["weapon_6x5"] = {["weapon_buck200knife"] = true, ["weapon_hg_ritual"] = true},
+            ["weapon_buck200knife"] = {["weapon_6x5"] = true, ["weapon_hg_ritual"] = true},
+            ["weapon_hg_ritual"] = {["weapon_buck200knife"] = true, ["weapon_6x5"] = true},
         },
         defaultPresets = {
             {
@@ -213,8 +216,8 @@ local RoleConfigs = {
                     weapons = {
                         "weapon_p22",
                         "weapon_p22_silencer",
-                        "weapon_buck200knife",
-                        "weapon_hg_rgd_tpik",
+                        "weapon_6x5",
+                        "weapon_hg_eft_rgd5",
                         "weapon_adrenaline",
                         "weapon_hg_shuriken",
                         "weapon_hg_smokenade_tpik",
@@ -231,7 +234,7 @@ local RoleConfigs = {
                 loadout = {
                     skillset = "infiltrator",
                     weapons = {
-                        "weapon_sogknife",
+                        "weapon_buck200knife",
                         "weapon_adrenaline",
                         "weapon_hg_smokenade_tpik"
                     }
@@ -244,7 +247,7 @@ local RoleConfigs = {
                     weapons = {
                         "weapon_p22",
                         "weapon_p22_silencer",
-                        "weapon_sogknife",
+                        "weapon_6x5",
                         "weapon_adrenaline"
                     }
                 }
@@ -254,7 +257,7 @@ local RoleConfigs = {
                 loadout = {
                     skillset = "chemist",
                     weapons = {
-                        "weapon_sogknife",
+                        "weapon_buck200knife",
                         "weapon_adrenaline",
                         "weapon_traitor_poison1",
                         "weapon_traitor_poison2",
@@ -276,20 +279,17 @@ local RoleConfigs = {
         items = {
             ["weapon_px4beretta"] = {cost = 4, name = "Beretta PX4", desc = "Reliable sidearm with room for extra ammo."},
             ["weapon_glock17"] = {cost = 5, name = "Glock 17", desc = "Flexible pistol with strong attachment options."},
-            ["weapon_hk_usp"] = {cost = 5, name = "HK USP", desc = "Steady .45 pistol, accurate and reliable."},
-            ["weapon_remington870"] = {cost = 8, name = "Remington 870", desc = "Close range stopper with extra shell support."},
+            ["weapon_usp"] = {cost = 5, name = "HK USP", desc = "Steady .45 pistol, accurate and reliable."},
+            ["weapon_m590a1"] = {cost = 10, name = "M590A1", desc = "Close range stopper with extra shell support."},
             ["weapon_kar98"] = {cost = 8, name = "Karabiner 98k", desc = "Heavy marksman pick that can take a scope and extra rounds."},
-            ["ent_armor_vest3"] = {cost = 4, name = "Kevlar IIIA Vest", icon = "vgui/icons/armor01.png", desc = "Body armor that soaks torso hits."},
-            ["ent_armor_helmet1"] = {cost = 2, name = "ACH Helmet III", icon = "vgui/icons/helmet.png", desc = "Ballistic helmet that protects the head."},
-            ["ent_armor_helmet7"] = {cost = 2, name = "SSh-68 Helmet", icon = "entities/ent_jack_gmod_ezarmor_ssh68.png", desc = "Steel helmet that protects the head."},
+            ["ent_armor_vest3"] = {cost = 4, name = "UNTAR Body Armor II", icon = "vgui/icons/armor01.png", desc = "Body armor that soaks torso hits."},
+            ["ent_armor_helmet3"] = {cost = 2, name = "Untar Helmet I", icon = "vgui/icons/helmet.png", desc = "Ballistic helmet that protects the head."},
+            ["ent_armor_helmet6"] = {cost = 2, name = "SSh-68 Helmet I", icon = "entities/ent_jack_gmod_ezarmor_ssh68.png", desc = "Steel helmet that protects the head."},
             ["ent_armor_mask1"] = {cost = 2, name = "Ballistic Mask", icon = "vgui/icons/ballisticmask", desc = "Face armor that shields against hits."},
             ["ent_armor_mask2"] = {cost = 2, name = "M40 Gas Mask", icon = "vgui/icons/gasmask", desc = "Face mask offering light protection."},
-            ["ent_armor_mask3"] = {cost = 2, name = "Welding Mask", icon = "entities/ent_jack_gmod_ezarmor_weldingkill.png", desc = "Face mask that soaks some hits."},
-            ["weapon_remington870_long"] = {cost = 10, name = "Remington 870 Long Barrel", desc = "Long barrel pump-action shotgun."},
-            ["weapon_remington870_sawed_off"] = {cost = 6, name = "Remington 870 Sawed-off", desc = "Compact sawed-off pump-action shotgun."},
-            ["weapon_vpo209"] = {cost = 12, name = "VPO-209", desc = "Semi-auto carbine chambered in .366 TKM."},
-            ["weapon_vpo136"] = {cost = 12, name = "VPO-136", desc = "Semi-auto carbine chambered in 7.62x39mm."},
-            ["weapon_mosin"] = {cost = 8, name = "Mosin-Nagant M38", desc = "Bolt-action rifle chambered in 7.62x54mm."}
+            ["weapon_mr43"] = {cost = 8, name = "MR-43 Long Barrel", desc = "Long barrel pump-action shotgun."},
+            ["weapon_mr43_short"] = {cost = 7, name = "MR-43 Sawed-Off", desc = "Compact sawed-off pump-action shotgun."},
+            ["weapon_mp18"] = {cost = 6, name = "MP-18", desc = "Bolt-action rifle chambered in 7.62x54mm."}
         },
         addons = {
             ["hero_px4_ammo"] = {cost = 2, name = "PX4 Extra Ammo", parent = "weapon_px4beretta", desc = "Start with extra magazine."},
@@ -297,34 +297,24 @@ local RoleConfigs = {
             ["hero_glock_rmr"] = {cost = 2, name = "Glock RMR", parent = "weapon_glock17", attachment = "holo16", desc = "Adds a compact red dot."},
             ["hero_glock_laser"] = {cost = 1, name = "Glock Laser", parent = "weapon_glock17", attachment = "laser3", desc = "Adds a visible aiming laser."},
             ["hero_glock_ammo"] = {cost = 2, name = "Glock Extra Ammo", parent = "weapon_glock17", desc = "Start with extra magazine."},
-            ["hero_usp_ammo"] = {cost = 2, name = "USP Extra Ammo", parent = "weapon_hk_usp", desc = "Start with extra magazine."},
-            ["hero_remington_ammo"] = {cost = 2, name = "870 Extra Shells", parent = "weapon_remington870", desc = "Start with extra shells."},
+            ["hero_usp_ammo"] = {cost = 2, name = "USP Extra Ammo", parent = "weapon_usp", desc = "Start with extra magazine."},
+            ["hero_usp_rmr"] = {cost = 2, name = "USP RMR", parent = "weapon_usp", desc = "Start with sight."},
+            ["hero_m590a1_ammo"] = {cost = 2, name = "M590A1 Extra Shells", parent = "weapon_m590a1", desc = "Start with extra shells."},
             ["hero_kar98_scope"] = {cost = 2, name = "Kar98 Scope", parent = "weapon_kar98", attachment = "optic12", desc = "Adds the Kar98 scope."},
             ["hero_kar98_ammo"] = {cost = 2, name = "Kar98 Extra Ammo", parent = "weapon_kar98", desc = "Start with extra rifle rounds."},
-            ["hero_remington_sight"] = {cost = 2, name = "870 Sight", parent = "weapon_remington870", attachment = "holo16", desc = "Adds a sight to the Remington 870."},
-            ["hero_remington_long_ammo"] = {cost = 2, name = "870 Long Extra Shells", parent = "weapon_remington870_long", desc = "Start with extra shells."},
-            ["hero_remington_long_sight"] = {cost = 2, name = "870 Long Sight", parent = "weapon_remington870_long", attachment = "holo16", desc = "Adds a sight to the long barrel 870."},
-            ["hero_remington_sawedoff_ammo"] = {cost = 2, name = "870 Sawed-off Extra Shells", parent = "weapon_remington870_sawed_off", desc = "Start with extra shells."},
-            ["hero_remington_sawedoff_sight"] = {cost = 2, name = "870 Sawed-off Sight", parent = "weapon_remington870_sawed_off", attachment = "holo16", desc = "Adds a sight to the sawed-off 870."},
-            ["hero_vpo209_silencer"] = {cost = 2, name = "VPO-209 Suppressor", parent = "weapon_vpo209", attachment = "supressor3", desc = "Suppress the VPO-209."},
-            ["hero_vpo209_ammo"] = {cost = 2, name = "VPO-209 Extra Ammo", parent = "weapon_vpo209", desc = "Start with extra magazine."},
-            ["hero_vpo136_silencer"] = {cost = 2, name = "VPO-136 Suppressor", parent = "weapon_vpo136", attachment = "supressor7", desc = "Suppress the VPO-136."},
-            ["hero_vpo136_ammo"] = {cost = 2, name = "VPO-136 Extra Ammo", parent = "weapon_vpo136", desc = "Start with extra magazine."},
-            ["hero_mosin_silencer"] = {cost = 2, name = "Mosin Suppressor", parent = "weapon_mosin", attachment = "supressor9", desc = "Suppress the Mosin."},
-            ["hero_mosin_scope"] = {cost = 2, name = "Mosin Scope", parent = "weapon_mosin", attachment = "optic12", desc = "Adds a scope to the Mosin."},
-            ["hero_mosin_ammo"] = {cost = 2, name = "Mosin Extra Ammo", parent = "weapon_mosin", desc = "Start with extra rounds."}
+            ["hero_mr43_long_ammo"] = {cost = 2, name = "MR43 Long Extra Shells", parent = "weapon_mr43", desc = "Start with extra shells."},
+            ["hero_mr43_ammo"] = {cost = 2, name = "MR43 Sawed-off Extra Shells", parent = "weapon_mr43_short", desc = "Start with extra shells."},
+            ["hero_mp18_ammo"] = {cost = 2, name = "MP-18 Extra Ammo", parent = "weapon_mp18", desc = "Start with extra rounds."}
         },
         addonOrder = {
             ["weapon_px4beretta"] = {"hero_px4_ammo"},
             ["weapon_glock17"] = {"hero_glock_silencer", "hero_glock_rmr", "hero_glock_laser", "hero_glock_ammo"},
-            ["weapon_hk_usp"] = {"hero_usp_ammo"},
-            ["weapon_remington870"] = {"hero_remington_sight", "hero_remington_ammo"},
-            ["weapon_remington870_long"] = {"hero_remington_long_sight", "hero_remington_long_ammo"},
-            ["weapon_remington870_sawed_off"] = {"hero_remington_sawedoff_sight", "hero_remington_sawedoff_ammo"},
+            ["weapon_usp"] = {"hero_usp_rmr", "hero_usp_ammo"},
+            ["weapon_m590a1"] = {"hero_m590a1_ammo"},
+            ["weapon_mr43"] = {"hero_mr43_long_ammo"},
+            ["weapon_mr43_short"] = {"hero_mr43_ammo"},
             ["weapon_kar98"] = {"hero_kar98_scope", "hero_kar98_ammo"},
-            ["weapon_vpo209"] = {"hero_vpo209_silencer", "hero_vpo209_ammo"},
-            ["weapon_vpo136"] = {"hero_vpo136_silencer", "hero_vpo136_ammo"},
-            ["weapon_mosin"] = {"hero_mosin_silencer", "hero_mosin_scope", "hero_mosin_ammo"}
+            ["weapon_mp18"] = {"hero_mp18_ammo"},
         },
         exclusions = {},
         defaultPresets = {
@@ -343,8 +333,8 @@ local RoleConfigs = {
                 name = "Shotgunner",
                 loadout = {
                     weapons = {
-                        "weapon_remington870",
-                        "hero_remington_ammo",
+                        "weapon_m590a1",
+                        "hero_m590a1_ammo",
                         "weapon_walkie_talkie"
                     }
                 }
@@ -369,14 +359,12 @@ do
     local heroWeaponIds = {
         "weapon_px4beretta",
         "weapon_glock17",
-        "weapon_hk_usp",
-        "weapon_remington870",
-        "weapon_remington870_long",
-        "weapon_remington870_sawed_off",
+        "weapon_usp",
+        "weapon_m590a1",
+        "weapon_mr43",
+        "weapon_mr43_short",
         "weapon_kar98",
-        "weapon_vpo209",
-        "weapon_vpo136",
-        "weapon_mosin"
+        "weapon_mp18"
     }
 
     for _, weaponId in ipairs(heroWeaponIds) do

@@ -102,7 +102,7 @@ SWEP.RHandPos = Vector(-5, -1.5, 2)
 SWEP.LHandPos = false
 SWEP.SprayRand = {Angle(-0.02, -0.02, 0), Angle(-0.03, 0.02, 0)}
 SWEP.Ergonomics = 1.2
-SWEP.Penetration = 11
+SWEP.Penetration = 11.5
 SWEP.ShockMultiplier = 1
 SWEP.punchmul = 1.5
 SWEP.punchspeed = 3
@@ -169,8 +169,11 @@ if CLIENT then
 		end,
 		[0.35] = function(self, timeMul)
 			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 0.5 * timeMul, nil, nil, function()
-				self:GetWM():ManipulateBoneScale(38, vector_full)
-				self:GetWM():ManipulateBoneScale(39, vector_full)
+				local wm = self:GetWM()
+				if IsValid(wm) then
+				wm:ManipulateBoneScale(38, vector_full)
+				wm:ManipulateBoneScale(39, vector_full)
+				end
 			end)
 		end,
 		[0.40] = function(self, timeMul)
@@ -181,9 +184,12 @@ if CLIENT then
 			self:GetWM():ManipulateBoneScale(39, vector_origin)
 			self:GetWM():ManipulateBoneScale(40, vector_origin)
 			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 1 * timeMul, nil, nil, function()
-				self:GetWM():ManipulateBoneScale(38, vector_origin)
-				self:GetWM():ManipulateBoneScale(39, vector_origin)
-				self:GetWM():ManipulateBoneScale(40, vector_origin)
+				local wm = self:GetWM()
+				if IsValid(wm) then
+				wm:ManipulateBoneScale(38, vector_origin)
+				wm:ManipulateBoneScale(39, vector_origin)
+				wm:ManipulateBoneScale(40, vector_origin)
+				end
 			end)
 		end,
 	}

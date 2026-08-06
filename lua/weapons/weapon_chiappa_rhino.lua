@@ -130,12 +130,7 @@ SWEP.AnimShootMul = 4
 SWEP.podkid = 2
 
 SWEP.availableAttachments = {
-	sight = {
-		["mountType"] = "pistolmount",
-		["mount"] = Vector(-5.6, -1.5, 0),
-		["mountAngle"] = Angle(0, 0, 180),
-	},
-		underbarrel = {
+	underbarrel = {
 		["mount"] = Vector(9, 1, -1),
 		["mountAngle"] = Angle(0, -0.75, -90),
 		["mountType"] = "picatinny_small"
