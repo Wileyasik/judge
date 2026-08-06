@@ -179,10 +179,12 @@ hg.settings:AddOpt("View","hg_gun_cam", "Gun Camera (ADMIN ONLY)")
 hg.settings:AddOpt("View","hg_realismcam", "Realism camera (shitty)")
 hg.settings:AddOpt("View","hg_gopro", "GoPro camera")
 hg.settings:AddOpt("View","hg_newfakecam", "New fake camera")
+hg.settings:AddOpt("View","deatheffect_enabled", "Cinematic Death Screen")
 hg.settings:AddOpt("View","hg_leancam_mul", "Lean camera mul", true, nil, "int")
 hg.settings:AddOpt("View","hg_gun_cam", "Gun camera (WIP Admin only)")
 hg.settings:AddOpt("Sound","hg_dmusic", "Dynamic Music")
 hg.settings:AddOpt("Sound","hg_quietshots", "Enable/Disable Quietshoot Sounds")
+hg.settings:AddOpt("Sound","hg_success_sound_alt", "Alternate Success Sound", nil, nil, "bool")
 
 
 function hg.CreateCategory(ctgName, ParentPanel, yPos)
