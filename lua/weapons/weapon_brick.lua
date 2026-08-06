@@ -80,16 +80,14 @@ function SWEP:PrimaryAttackAdd(ent, trace)
 end
 
 function SWEP:CustomAttack2()
+	local ply = self:GetOwner()
+	if not IsValid(ply) then return end
     local ent = ents.Create("ent_throwable")
+	if not IsValid(ent) then return end
     ent.WorldModel = self.WorldModelExchange or self.WorldModel
-
-    local ply = self:GetOwner()
 
     ent:SetPos(select(1, hg.eye(ply,60,hg.GetCurrentCharacter(ply))) - ply:GetAimVector() * 2)
     ent:SetAngles(ply:EyeAngles())
-    ent:SetOwner(self:GetOwner())
-    ent:Spawn()
-
     ent.localshit = Vector(0,0,0)
     ent.wep = self:GetClass()
     ent.owner = ply
@@ -101,6 +99,8 @@ function SWEP:CustomAttack2()
     ent.noStuck = true
     ent.penetration = 3
     ent.PenetrationSize = 8
+    ent:SetOwner(ply)
+    ent:Spawn()
 
     local phys = ent:GetPhysicsObject()
 

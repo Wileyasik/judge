@@ -153,16 +153,15 @@ end
 
 function SWEP:ThrowShuriken()
 	if self.Thrown then return end
-	self.Thrown = true
 
 	local CLIENT = CLIENT
 	if CLIENT then return end
 
-	local time = CurTime()
-	local ent = ents.Create("ent_throwable")
-
 	local ply = self:GetOwner()
 	if not IsValid(ply) then return end
+	local ent = ents.Create("ent_throwable")
+	if not IsValid(ent) then return end
+	self.Thrown = true
 
 	if not ply:IsNPC() then
 		ent:SetPos(select(1, hg.eye(ply,60,hg.GetCurrentCharacter(ply))) - ply:GetAimVector() * 2)
@@ -171,13 +170,12 @@ function SWEP:ThrowShuriken()
 	end
 
 	ent:SetAngles(ply:EyeAngles())
-	ent:Spawn()
 	ent.wep = self:GetClass()
 	ent.owner = ply
-	ent.localshit = veczero
+	ent.localshit = Vector(0, 0, 0)
 	ent.poisoned2 = self.poisoned2
 	
-	if self.bombowner then
+	if IsValid(self.bombowner) then
 		ent.bombowner = self.bombowner
 		ent.bombowner.HaveTheBomb = ent
 	end
@@ -186,15 +184,18 @@ function SWEP:ThrowShuriken()
 	ent.AttackHitFlesh = "snd_jack_hmcd_knifestab.wav"
 	ent.AttackHit = "snd_jack_hmcd_knifehit.wav"
 	ent.dont_account_for_placement = true
-	ent.LodgeChance = 0.95
 	ent.StickInWorld = true
-	ent.StickDepth = -2
+	ent.StickDepth = -2.5
+	ent.BodyStickDepth = -15
 	ent.StickAnywhere = true
+	ent.ProtectFlatWorldStick = true
 	ent.StickPhysics = false
 	ent.UnstickSnd = "physics/metal/metal_grenade_impact_soft1.wav"
 	ent.ArteryChance = 1.6
 	ent.penetration = 8
 	ent.PenetrationSize = 3
+	ent:SetOwner(ply)
+	ent:Spawn()
 
 	local phys = ent:GetPhysicsObject()
 	if IsValid(phys) then

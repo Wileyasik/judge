@@ -142,29 +142,29 @@ function SWEP:CanSecondaryAttack()
 end
 
 function SWEP:CustomAttack2()
+	local ply = self:GetOwner()
+	if not IsValid(ply) then return end
     local ent = ents.Create("ent_throwable")
+	if not IsValid(ent) then return end
     ent.WorldModel = self.WorldModelExchange or self.WorldModel
-
-    local ply = self:GetOwner()
 
     ent:SetPos(select(1, hg.eye(ply,60,hg.GetCurrentCharacter(ply))) - ply:GetAimVector() * 2)
     ent:SetAngles(ply:EyeAngles())
-    ent:SetOwner(self:GetOwner())
-    ent:Spawn()
-    ent.localshit = Vector(4,6,0)
     ent.wep = self:GetClass()
     ent.owner = ply
     ent.damage = 35
     ent.penetration = 5
     ent.PenetrationSize = 10
-    ent.LodgeChance = 0.7
     ent.StickInWorld = true
     ent.StickPhysics = false
     ent.UnstickSnd = "physics/metal/metal_solid_impact_hard3.wav"
     ent.ArteryChance = 1.45
-    ent.StickDepth = -1
+    ent.StickDepth = -1.3
+    ent.BodyStickDepth = -12
     ent.returndamage = 20
     ent.returnblood = 50
+    ent:SetOwner(ply)
+    ent:Spawn()
 
     local phys = ent:GetPhysicsObject()
 

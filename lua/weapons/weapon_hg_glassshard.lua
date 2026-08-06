@@ -119,17 +119,15 @@ SWEP.basebone = 39
 SWEP.AttackPos = Vector(-3,8,-20)
 
 function SWEP:CustomAttack2()
+	local ply = self:GetOwner()
+	if not IsValid(ply) then return end
     local ent = ents.Create("ent_throwable")
+	if not IsValid(ent) then return end
     ent.WorldModel = self.WorldModelExchange or self.WorldModel
-
-    local ply = self:GetOwner()
 
     ent:SetPos(select(1, hg.eye(ply,60,hg.GetCurrentCharacter(ply))) - ply:GetAimVector() * 2)
     ent:SetAngles(ply:EyeAngles())
-    ent:SetOwner(self:GetOwner())
-    ent:Spawn()
-
-    ent.localshit = Vector(0,0,0)
+	ent.localshit = Vector(0,0,0)
     ent.wep = self:GetClass()
     ent.owner = ply
     ent.damage = self.DamagePrimary * 0.7
@@ -141,21 +139,24 @@ function SWEP:CustomAttack2()
     ent.uglublenie = 10
     ent.returndamage = 8
     ent.returnblood = 15
+	ent.BodyStickDepth = -48
     ent.penetration = 5
     ent.PenetrationSize = 5
-    ent.LodgeChance = 0.7
     ent.ArteryChance = 1.2
-    ent:PrecacheGibs()
-
     ent.func = function(data)
         if ent.removed then return end
         ent.removed = true
         timer.Simple(0, function()
+            if not IsValid(ent) then return end
             ent:GibBreakServer(vector_origin)
             ent:EmitSound("physics/glass/glass_pottery_break"..math.random(1,4)..".wav")
             ent:Remove()
         end)
     end
+
+	ent:SetOwner(ply)
+	ent:Spawn()
+	ent:PrecacheGibs()
 
     local phys = ent:GetPhysicsObject()
 
