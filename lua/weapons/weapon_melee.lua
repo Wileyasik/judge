@@ -1552,6 +1552,9 @@ function SWEP:Attack(owner, ent, vellen, attacktype, inattackLength)
         else
             self.Penetration = self:GetAttackConfigValue(self.PenetrationPrimary, self.PenetrationSecondary, self.ChargePenetration, attacktype)
             self.PenetrationSize = self:GetAttackConfigValue(self.PenetrationSizePrimary, self.PenetrationSizeSecondary, self.ChargePenetrationSize, attacktype)
+            -- Custom attacks can end the attack early, so consume the first tick
+            -- before invoking them instead of relying on the normal hit path.
+            self.FirstAttackTick = true
             
             self:PlaySwingSound(owner, attacktype)
             

@@ -310,7 +310,7 @@ function Gib_Input(rag, bone, force, damage)
 
 		gib_ragdols[rag] = true
 	end
-
+	
 	local phys_bone = rag:TranslateBoneToPhysBone(bone)
 	local phys_obj = rag:GetPhysicsObjectNum(phys_bone)
 	if phys_bone < 0 or not IsValid(phys_obj) then return end
@@ -360,6 +360,7 @@ function Gib_Input(rag, bone, force, damage)
 
 		net.Start("addfountain")
 		net.WriteEntity(rag)
+		net.WriteUInt(rag:EntIndex(), 16)
 		net.WriteVector(force or vector_origin)
 		net.SendPVS(rag:GetPos())
 
@@ -557,23 +558,49 @@ function hg.FullBodyExplode(target, force, dmgInfo)
 
 	if target:IsPlayer() then
 		local ply = target
-		local rag = IsValid(ply.FakeRagdoll) and ply.FakeRagdoll or ply:GetNWEntity("RagdollDeath")
-		if IsValid(rag) then return hg.FullBodyExplode(rag, force, dmgInfo) end
-		if ply:Alive() then
-			if not hg.CanFullBodyGib(ply, ply.organism, ply) then return end
-			ply.fullbodyexploded = true
-			local wasRemoved = ply.Removed
-			ply.Removed = true
-			ply:Kill()
-			timer.Simple(0, function()
-				if IsValid(ply) then ply.Removed = wasRemoved end
-			end)
-			timer.Simple(0, function()
-				if not IsValid(ply) then return end
-				local deathRag = IsValid(ply.FakeRagdoll) and ply.FakeRagdoll or ply:GetNWEntity("RagdollDeath")
-				if IsValid(deathRag) then hg.FullBodyExplode(deathRag, force, dmgInfo) end
-			end)
+		local function getBody()
+			local fake = ply.FakeRagdoll
+			if IsValid(fake) then return fake end
+
+			local death = ply:GetNWEntity("RagdollDeath")
+			if IsValid(death) then return death end
 		end
+
+		local rag = getBody()
+		if IsValid(rag) then return hg.FullBodyExplode(rag, force, dmgInfo) end
+		if not ply:Alive() or not hg.CanFullBodyGib(ply, ply.organism, ply) then return end
+		if ply.hgFullBodyExplodePending then return true end
+
+		ply.hgFullBodyExplodePending = true
+		local deadline = CurTime() + 0.5
+		local function acquireBody()
+			if not IsValid(ply) or not ply:Alive() or ply.fullbodyexploded then
+				if IsValid(ply) then ply.hgFullBodyExplodePending = nil end
+				return
+			end
+
+			local body = getBody()
+			if IsValid(body) then
+				ply.hgFullBodyExplodePending = nil
+				hg.FullBodyExplode(body, force, dmgInfo)
+				return
+			end
+
+			if CurTime() >= deadline then
+				ply.hgFullBodyExplodePending = nil
+				return
+			end
+
+			if not ply.hgRagdollCreating and (ply.hgRagdollCreateRetry or 0) <= CurTime() then
+				local moveType = ply:GetMoveType()
+				if moveType == MOVETYPE_NONE then ply:SetMoveType(MOVETYPE_WALK) end
+				hg.Fake(ply, nil, true, true)
+				if IsValid(ply) and moveType == MOVETYPE_NONE then ply:SetMoveType(moveType) end
+			end
+			timer.Simple(0.05, acquireBody)
+		end
+
+		acquireBody()
 		return true
 	end
 

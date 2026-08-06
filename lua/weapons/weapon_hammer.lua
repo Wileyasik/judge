@@ -321,12 +321,14 @@ local vpang = Angle(3, 0, 0)
 
 function SWEP:ThrowHammer()
 	if CLIENT then return true end
+	if self.ThrowConsumed then return true end
 
 	local ply = self:GetOwner()
 	if not IsValid(ply) then return true end
 
 	local ent = ents.Create("ent_throwable")
 	if not IsValid(ent) then return true end
+	self.ThrowConsumed = true
 	ent.WorldModel = self.WorldModelExchange or self.WorldModel
 
 	ent:SetPos(select(1, hg.eye(ply, 60, hg.GetCurrentCharacter(ply))) - ply:GetAimVector() * 2)

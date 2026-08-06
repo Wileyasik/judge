@@ -398,12 +398,133 @@ properties.Add( "setplayerclass", {
 	end
 } )
 
+local function hiddenBodyDamageCheck(self, ent, ply)
+	if CLIENT then return false end
+	return check(self, ent, ply)
+end
+
+local function withBodyDamageRagdoll(ent, callback)
+	local owner = ent:IsPlayer() and ent or hg.RagdollOwner(ent)
+	if not IsValid(owner) or not owner:IsPlayer() or not owner:Alive() then return end
+
+	local function apply(attempt)
+		if not IsValid(owner) or not owner:Alive() or not owner.organism then return end
+
+		local character = owner.FakeRagdoll
+		if IsValid(character) then
+			callback(owner, character, owner.organism)
+			return
+		end
+
+		local moveType = owner:GetMoveType()
+		local godFakeBypass = owner._godFakeBypass
+		if moveType == MOVETYPE_NONE then owner:SetMoveType(MOVETYPE_WALK) end
+		owner._godFakeBypass = true
+		hg.Fake(owner, nil, true, true)
+		owner._godFakeBypass = godFakeBypass
+		if IsValid(owner) and moveType == MOVETYPE_NONE then owner:SetMoveType(moveType) end
+
+		if attempt < 10 then timer.Simple(0.05, function() apply(attempt + 1) end) end
+	end
+
+	apply(0)
+end
+
+local function addLimbSubmenu(parent, ent, breakProperty, amputateProperty, includeBreaks, includeAmputations)
+	local handsOption = parent:AddOption("Hands")
+	local hands = handsOption:AddSubMenu()
+	if includeBreaks then
+		hands:AddOption("Break Left Forearm", function() breakProperty:BreakLimb(ent, 1) end)
+		hands:AddOption("Break Right Forearm", function() breakProperty:BreakLimb(ent, 2) end)
+		hands:AddOption("Break Left Upper Arm", function() breakProperty:BreakLimb(ent, 8) end)
+		hands:AddOption("Break Right Upper Arm", function() breakProperty:BreakLimb(ent, 9) end)
+	end
+	if includeBreaks and includeAmputations then hands:AddSpacer() end
+	if includeAmputations then
+		hands:AddOption("Amputate Left Hand", function() amputateProperty:AmputateLimb(ent, 5) end)
+		hands:AddOption("Amputate Right Hand", function() amputateProperty:AmputateLimb(ent, 6) end)
+		hands:AddOption("Amputate Left Forearm", function() amputateProperty:AmputateLimb(ent, 1) end)
+		hands:AddOption("Amputate Right Forearm", function() amputateProperty:AmputateLimb(ent, 2) end)
+		hands:AddOption("Amputate Left Upper Arm", function() amputateProperty:AmputateLimb(ent, 7) end)
+		hands:AddOption("Amputate Right Upper Arm", function() amputateProperty:AmputateLimb(ent, 8) end)
+	end
+
+	local legsOption = parent:AddOption("Legs")
+	local legs = legsOption:AddSubMenu()
+	if includeBreaks then
+		legs:AddOption("Break Left Lower Leg", function() breakProperty:BreakLimb(ent, 3) end)
+		legs:AddOption("Break Right Lower Leg", function() breakProperty:BreakLimb(ent, 4) end)
+		legs:AddOption("Break Left Upper Leg", function() breakProperty:BreakLimb(ent, 10) end)
+		legs:AddOption("Break Right Upper Leg", function() breakProperty:BreakLimb(ent, 11) end)
+	end
+	if includeBreaks and includeAmputations then legs:AddSpacer() end
+	if includeAmputations then
+		legs:AddOption("Amputate Left Lower Leg", function() amputateProperty:AmputateLimb(ent, 3) end)
+		legs:AddOption("Amputate Right Lower Leg", function() amputateProperty:AmputateLimb(ent, 4) end)
+		legs:AddOption("Amputate Left Upper Leg", function() amputateProperty:AmputateLimb(ent, 9) end)
+		legs:AddOption("Amputate Right Upper Leg", function() amputateProperty:AmputateLimb(ent, 10) end)
+	end
+end
+
+properties.Add("break_bones", {
+	MenuLabel = "Break Bones",
+	Order = 13,
+	MenuIcon = "pluv/pluv51.png",
+	Filter = check,
+	Action = function() end,
+	MenuOpen = function(self, option, ent)
+		local submenu = option:AddSubMenu()
+		local breakProperty = properties.List.break_limb
+		local amputateProperty = properties.List.amputate_limb
+		local neck = submenu:AddOption("Break Neck", function() breakProperty:BreakLimb(ent, 0) end)
+		neck:SetIcon("icon16/user_delete.png")
+		local spine = submenu:AddOption("Spine")
+		local spineMenu = spine:AddSubMenu()
+		spineMenu:AddOption("Spine 1", function() breakProperty:BreakLimb(ent, 5) end)
+		spineMenu:AddOption("Spine 2", function() breakProperty:BreakLimb(ent, 6) end)
+		spineMenu:AddOption("Spine 3", function() breakProperty:BreakLimb(ent, 7) end)
+		addLimbSubmenu(submenu, ent, breakProperty, amputateProperty, true, false)
+	end,
+	Receive = function(self, length, ply)
+		local ent = net.ReadEntity()
+		if not self:Filter(ent, ply) then return end
+	end
+})
+
+properties.Add("dismemberment", {
+	MenuLabel = "Dismemberment",
+	Order = 14,
+	MenuIcon = "effects/arc9_eft/evil.png",
+	Filter = check,
+	Action = function() end,
+	MenuOpen = function(self, option, ent)
+		local submenu = option:AddSubMenu()
+		local breakProperty = properties.List.break_limb
+		local amputateProperty = properties.List.amputate_limb
+		local head = submenu:AddOption("Head", function() amputateProperty:AmputateLimb(ent, 0) end)
+		head:SetIcon("icon16/user_delete.png")
+		local gib = submenu:AddOption("Gib", function()
+			self:MsgStart()
+				net.WriteEntity(ent)
+			self:MsgEnd()
+		end)
+		gib:SetIcon("icon16/bomb.png")
+		submenu:AddSpacer()
+		addLimbSubmenu(submenu, ent, breakProperty, amputateProperty, false, true)
+	end,
+	Receive = function(self, length, ply)
+		local ent = net.ReadEntity()
+		if not self:Filter(ent, ply) or not hg.FullBodyExplode then return end
+		hg.FullBodyExplode(ent, vector_origin)
+	end
+})
+
 properties.Add( "break_limb", {
 	MenuLabel = "Break Limb",
 	Order = 13,
 	MenuIcon = "pluv/pluv51.png",
 
-	Filter = check,
+	Filter = hiddenBodyDamageCheck,
 	MenuOpen = function( self, option, ent, tr )
 		ent = hg.RagdollOwner(ent) or hg.GetCurrentCharacter(ent) or ent
 
@@ -494,34 +615,34 @@ properties.Add( "break_limb", {
 		local limb = net.ReadUInt( 8 )
         
 		if not self:Filter(ent, ply) then return end
-       	ent = hg.RagdollOwner(ent) or hg.GetCurrentCharacter(ent) or ent
-        
-        local dmgInfo = DamageInfo()
-		if limb == 0 then
-            hg.BreakNeck(ent)
-        elseif limb == 1 then
-            hg.organism.input_list.larmdown(ent.organism, 0, 1, dmgInfo)
-		elseif limb == 2 then
-			hg.organism.input_list.rarmdown(ent.organism, 0, 1, dmgInfo)
-		elseif limb == 3 then
-			hg.organism.input_list.llegdown(ent.organism, 0, 1, dmgInfo)
-		elseif limb == 4 then
-			hg.organism.input_list.rlegdown(ent.organism, 0, 1, dmgInfo)
-		elseif limb == 5 then
-			hg.organism.input_list.spine1(ent.organism, 0, 1, dmgInfo)
-		elseif limb == 6 then
-			hg.organism.input_list.spine2(ent.organism, 0, 1, dmgInfo)
-		elseif limb == 7 then
-			hg.organism.input_list.spine3(ent.organism, 0, 1, dmgInfo)
-		elseif limb == 8 then
-			hg.organism.input_list.larmup(ent.organism, 0, 1, dmgInfo)
-		elseif limb == 9 then
-			hg.organism.input_list.rarmup(ent.organism, 0, 1, dmgInfo)
-		elseif limb == 10 then
-			hg.organism.input_list.llegup(ent.organism, 0, 1, dmgInfo)
-		elseif limb == 11 then
-			hg.organism.input_list.rlegup(ent.organism, 0, 1, dmgInfo)
-		end
+		withBodyDamageRagdoll(ent, function(owner, character, organism)
+			local dmgInfo = DamageInfo()
+			if limb == 0 then
+				hg.BreakNeck(owner)
+			elseif limb == 1 then
+				hg.organism.input_list.larmdown(organism, 0, 1, dmgInfo)
+			elseif limb == 2 then
+				hg.organism.input_list.rarmdown(organism, 0, 1, dmgInfo)
+			elseif limb == 3 then
+				hg.organism.input_list.llegdown(organism, 0, 1, dmgInfo)
+			elseif limb == 4 then
+				hg.organism.input_list.rlegdown(organism, 0, 1, dmgInfo)
+			elseif limb == 5 then
+				hg.organism.input_list.spine1(organism, 0, 1, dmgInfo)
+			elseif limb == 6 then
+				hg.organism.input_list.spine2(organism, 0, 1, dmgInfo)
+			elseif limb == 7 then
+				hg.organism.input_list.spine3(organism, 0, 1, dmgInfo)
+			elseif limb == 8 then
+				hg.organism.input_list.larmup(organism, 0, 1, dmgInfo)
+			elseif limb == 9 then
+				hg.organism.input_list.rarmup(organism, 0, 1, dmgInfo)
+			elseif limb == 10 then
+				hg.organism.input_list.llegup(organism, 0, 1, dmgInfo)
+			elseif limb == 11 then
+				hg.organism.input_list.rlegup(organism, 0, 1, dmgInfo)
+			end
+		end)
 	end
 } )
 
@@ -530,17 +651,15 @@ properties.Add( "amputate_limb", {
 	Order = 14,
 	MenuIcon = "effects/arc9_eft/evil.png",
 
-	Filter = check,
+	Filter = hiddenBodyDamageCheck,
 	MenuOpen = function( self, option, ent, tr )
 		ent = hg.RagdollOwner(ent) or hg.GetCurrentCharacter(ent) or ent
 
 		local submenu = option:AddSubMenu()
 
-		local head = submenu:AddOption("Head")
-		head:SetRadio(true)
-		head:SetChecked(ent.organism.larm > 0)
-		head:SetIsCheckable(true)
-		head.OnChecked = function(s, checked) if checked then self:AmputateLimb(ent, 0) end end
+		submenu:AddOption("Head", function()
+			self:AmputateLimb(ent, 0)
+		end)
 
 		local larm = submenu:AddOption("Left Arm")
 		larm:SetRadio(true)
@@ -615,34 +734,39 @@ properties.Add( "amputate_limb", {
 		local limb = net.ReadUInt( 8 )
         
 		if not self:Filter(ent, ply) then return end
-        ent = hg.RagdollOwner(ent) or ent
-        
-        local dmgInfo = DamageInfo()
 		if limb == 0 then
-			if SERVER and not ent.noHead then
-				hg.ExplodeHead(ent)
+			local target = ent
+			if ent:IsPlayer() then
+				local fake = IsValid(ent.FakeRagdoll) and ent.FakeRagdoll or ent:GetNWEntity("FakeRagdoll")
+				local death = ent:GetNWEntity("RagdollDeath")
+				target = IsValid(fake) and fake or (IsValid(death) and death or ent)
 			end
-        elseif limb == 1 then
-            hg.organism.AmputateLimb(ent.organism, "larm")
-		elseif limb == 2 then
-			hg.organism.AmputateLimb(ent.organism, "rarm")
-		elseif limb == 3 then
-			hg.organism.AmputateLimb(ent.organism, "lleg")
-		elseif limb == 4 then
-			hg.organism.AmputateLimb(ent.organism, "rleg")
-		elseif limb == 5 then
-			hg.organism.AmputateLimb(ent.organism, "lhand")
-		elseif limb == 6 then
-			hg.organism.AmputateLimb(ent.organism, "rhand")
-		elseif limb == 7 then
-			hg.organism.AmputateLimb(ent.organism, "larmup")
-		elseif limb == 8 then
-			hg.organism.AmputateLimb(ent.organism, "rarmup")
-		elseif limb == 9 then
-			hg.organism.AmputateLimb(ent.organism, "llegup")
-		elseif limb == 10 then
-			hg.organism.AmputateLimb(ent.organism, "rlegup")
+			if not target.noHead then hg.ExplodeHead(target) end
+			return
 		end
+		withBodyDamageRagdoll(ent, function(owner, character, organism)
+			if limb == 1 then
+				hg.organism.AmputateLimb(organism, "larm")
+			elseif limb == 2 then
+				hg.organism.AmputateLimb(organism, "rarm")
+			elseif limb == 3 then
+				hg.organism.AmputateLimb(organism, "lleg")
+			elseif limb == 4 then
+				hg.organism.AmputateLimb(organism, "rleg")
+			elseif limb == 5 then
+				hg.organism.AmputateLimb(organism, "lhand")
+			elseif limb == 6 then
+				hg.organism.AmputateLimb(organism, "rhand")
+			elseif limb == 7 then
+				hg.organism.AmputateLimb(organism, "larmup")
+			elseif limb == 8 then
+				hg.organism.AmputateLimb(organism, "rarmup")
+			elseif limb == 9 then
+				hg.organism.AmputateLimb(organism, "llegup")
+			elseif limb == 10 then
+				hg.organism.AmputateLimb(organism, "rlegup")
+			end
+		end)
 	end
 } )
 

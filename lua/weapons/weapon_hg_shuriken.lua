@@ -217,8 +217,12 @@ function SWEP:PrimaryAttack()
 	local ply = self:GetOwner()
 	if not IsValid(ply) then return end
 
-	self.Thrown = nil
 	self:ThrowShuriken()
+	if ply:IsNPC() and self.Thrown then
+		timer.Simple(self.Primary.Wait, function()
+			if IsValid(self) then self.Thrown = nil end
+		end)
+	end
 	self:SetNextPrimaryFire(CurTime() + self.Primary.Wait)
 end
 

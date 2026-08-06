@@ -655,10 +655,29 @@ function hg.ExplodeHead(ent, damage, slash, force)
 		ent.organism.alive = false
 	end
 
-	timer.Simple(0, function()
-		local ent = ent:IsRagdoll() and ent or ent:GetNWEntity("RagdollDeath")
+	local function finishHeadExplosion(attempt, entityReady)
+		if not IsValid(sourceEnt) then return end
+		local ent = sourceEnt
+		if sourceEnt:IsPlayer() then
+			ent = IsValid(sourceEnt.RagdollDeath) and sourceEnt.RagdollDeath
+				or sourceEnt:GetNWEntity("RagdollDeath")
+		end
 		if not IsValid(ent) then
+			if IsValid(sourceEnt) and sourceEnt:IsPlayer() and attempt < 40 then
+				timer.Simple(0.025, function()
+					finishHeadExplosion(attempt + 1, false)
+				end)
+				return
+			end
 			if IsValid(sourceEnt) then sourceEnt.headExplodePending = nil end
+			return
+		end
+		-- A C-menu head amputation can create this death ragdoll in the same
+		-- server tick. Give it time to network before sending entity-based FX.
+		if sourceEnt:IsPlayer() and not entityReady then
+			timer.Simple(0.1, function()
+				finishHeadExplosion(attempt, true)
+			end)
 			return
 		end
 		if ent.headexploded then
@@ -681,6 +700,7 @@ function hg.ExplodeHead(ent, damage, slash, force)
 			
 			net.Start("bloodsquirt")
 			net.WriteEntity(ent)
+			net.WriteUInt(ent:EntIndex(), 16)
 			net.WriteString("ValveBiped.Bip01_Head1")
 			net.WriteMatrix(mat)
 			net.WriteVector(pos)
@@ -701,6 +721,10 @@ function hg.ExplodeHead(ent, damage, slash, force)
 
 		if IsValid(ent.organism.owner) then ent.organism.owner.fullsend = true end
 		hg.send_bareinfo(ent.organism)
+	end
+
+	timer.Simple(0, function()
+		finishHeadExplosion(0, false)
 	end)
 end
 
@@ -1426,6 +1450,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 
 					net.Start("bloodsquirt")
 					net.WriteEntity(rag)
+					net.WriteUInt(rag:EntIndex(), 16)
 					net.WriteString(bonename)
 					net.WriteMatrix(mat)
 					net.WriteVector(dmgPos + dirCool * 2)
@@ -1435,6 +1460,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 					if outputHole and #outputHole > 0 then
 						net.Start("bloodsquirt")
 						net.WriteEntity(rag)
+						net.WriteUInt(rag:EntIndex(), 16)
 						net.WriteString(bonename)
 						net.WriteMatrix(mat)
 						net.WriteVector(outputHole[1] - dirCool * 2)

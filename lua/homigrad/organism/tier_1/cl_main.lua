@@ -1595,7 +1595,8 @@ function hg.GoreCalc(ent, ply)
 	if !org then return end
 
 	for bone, nam in pairs(limbs) do
-		if !org[bone.."amputated"] then
+		local amputated = org[bone.."amputated"] or (bone == "head" and ent.headexploded)
+		if !amputated then
 			local bon = ent:LookupBone(nam)
 			if not bon or bon < 0 then continue end
 

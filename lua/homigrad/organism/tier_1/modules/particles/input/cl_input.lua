@@ -240,57 +240,73 @@ end)
 
 net.Receive("addfountain",function()
 	local ent = net.ReadEntity()
+	local entIndex = net.ReadUInt(16)
 	local force = net.ReadVector()
-	
+
+	local function spawnEffect(attempt)
+		ent = IsValid(ent) and ent or Entity(entIndex)
+		if not IsValid(ent) then
+			if attempt < 20 then timer.Simple(0.05, function() spawnEffect(attempt + 1) end) end
+			return
+		end
 	--local bone = net.ReadInt(8)
 	--local lpos = net.ReadVector()
 	--local lang = net.ReadAngle()
 
-	if not IsValid(ent) then return end
-
-	local bone = ent:LookupBone("ValveBiped.Bip01_Neck1")
-	if bone then
-		local mat = ent:GetBoneMatrix(bone)
-		if mat then
-			explode(mat:GetTranslation() + mat:GetAngles():Forward() * 8, 0.5, force)
+		local bone = ent:LookupBone("ValveBiped.Bip01_Neck1")
+		if bone then
+			local mat = ent:GetBoneMatrix(bone)
+			if mat then
+				explode(mat:GetTranslation() + mat:GetAngles():Forward() * 8, 0.5, force)
+			end
 		end
 	end
+
+	spawnEffect(0)
 end)
 
 net.Receive("bloodsquirt", function()
 	local ent = net.ReadEntity()
-	
-	if not IsValid(ent) then return end
-
-	local bone = net.ReadString()
-	local bone = ent:LookupBone(bone)
+	local entIndex = net.ReadUInt(16)
+	local boneName = net.ReadString()
 	local mat = net.ReadMatrix()
 	local pos = net.ReadVector()
 	local dir = net.ReadVector()
 	local len = dir:Length()
 
-	local ent = hg.RagdollOwner(ent) or ent
+	local function spawnEffect(attempt)
+		ent = IsValid(ent) and ent or Entity(entIndex)
+		if not IsValid(ent) then
+			if attempt < 20 then timer.Simple(0.05, function() spawnEffect(attempt + 1) end) end
+			return
+		end
+		local bone = ent:LookupBone(boneName)
+		if not bone or not mat then return end
+		ent = hg.RagdollOwner(ent) or ent
 
 	//local mat = ent:GetBoneMatrix(bone)
-	local localPos, localDir = WorldToLocal(pos, dir:Angle(), mat:GetTranslation(), mat:GetAngles())
+		local localPos, localDir = WorldToLocal(pos, dir:Angle(), mat:GetTranslation(), mat:GetAngles())
 
-	local name = "squirtblood"..ent:EntIndex()..dir[1]
-	local i = 250
-	local maxI = i
-	local vechuy = Vector(0,0,0)
-	timer.Create(name, 0.01 * game.GetTimeScale(), i + 10, function()
-		if not IsValid(ent) then timer.Remove(name) return end
-		local ent = IsValid(ent.FakeRagdoll) and ent.FakeRagdoll or ent
-		local amt = i / maxI
-		local mat = ent:GetBoneMatrix(bone)
-		if not mat then timer.Remove(name) return end
-		local pos, dir = LocalToWorld(localPos, localDir, mat:GetTranslation(), mat:GetAngles())
-		dir = dir:Forward() * len
-		vechuy = vechuy + VectorRand(-amt * 5,amt * 5)
-		addBloodPart(pos, dir * amt * 90 + vechuy * amt, mat_huy, math.Rand(3,3), math.Rand(3,3), true, false)
-		i = i - 1
-	end)
-	timer.Adjust(name, 0)
+		local name = "squirtblood"..ent:EntIndex()..dir[1]
+		local i = 250
+		local maxI = i
+		local vechuy = Vector(0,0,0)
+		timer.Create(name, 0.01 * game.GetTimeScale(), i + 10, function()
+			if not IsValid(ent) then timer.Remove(name) return end
+			local drawEnt = IsValid(ent.FakeRagdoll) and ent.FakeRagdoll or ent
+			local amt = i / maxI
+			local drawMat = drawEnt:GetBoneMatrix(bone)
+			if not drawMat then timer.Remove(name) return end
+			local drawPos, drawDir = LocalToWorld(localPos, localDir, drawMat:GetTranslation(), drawMat:GetAngles())
+			drawDir = drawDir:Forward() * len
+			vechuy = vechuy + VectorRand(-amt * 5,amt * 5)
+			addBloodPart(drawPos, drawDir * amt * 90 + vechuy * amt, mat_huy, math.Rand(3,3), math.Rand(3,3), true, false)
+			i = i - 1
+		end)
+		timer.Adjust(name, 0)
+	end
+
+	spawnEffect(0)
 end)
 
 --net.Receive("blood particle explode", function() explode(net.ReadVector()) end)

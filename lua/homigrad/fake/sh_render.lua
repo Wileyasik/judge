@@ -193,7 +193,10 @@ local IsValid, math_Clamp = IsValid, math.Clamp
 		--if !current:IsEqualTol(wawanted, 0.01) then
 			--ent:ManipulateBoneScale(lkp, wawanted)
 			local mat = ent:GetBoneMatrix(lkp)
-			if !(Glide and Glide.Camera and !Glide.Camera.isInFirstPerson and lply == ply and lply:InVehicle() and hg_no_camera_in_cars:GetBool()) then
+			local org = ent.new_organism or ent.organism
+			if mat and (ent.headexploded or (org and org.headamputated)) then
+				mat:SetScale(vector_small)
+			elseif mat and !(Glide and Glide.Camera and !Glide.Camera.isInFirstPerson and lply == ply and lply:InVehicle() and hg_no_camera_in_cars:GetBool()) then
 				if (!hg_thirdperson:GetBool() and !hg_gopro:GetBool() and (ent == ply or (!hg_ragdollcombat:GetBool() or hg_firstperson_ragdoll:GetBool()))) or (hg_firstperson_death:GetBool() and follow == ent) then
 					mat:SetScale(wawanted)
 				end
@@ -203,7 +206,7 @@ local IsValid, math_Clamp = IsValid, math.Clamp
 			--local _, ang = LocalToWorld(vector_origin, angfuck, vector_origin, mat:GetAngles())
 			--mat:SetAngles(ang)
 
-			hg.bone_apply_matrix(ent, lkp, mat)
+			if mat then hg.bone_apply_matrix(ent, lkp, mat) end
 		--end
 
 		--hg.CoolGloves(ent, ply, wep)
