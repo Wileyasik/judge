@@ -17,6 +17,7 @@ local HeroWeaponData = {
 	["weapon_px4beretta"] = {extraClips = 0},
 	["weapon_glock17"] = {extraClips = 0},
 	["weapon_usp"] = {extraClips = 0},
+	["weapon_chiappa_rhino"] = {extraClips = 0},
 	["weapon_remington870"] = {extraClips = 0, sling = true},
 	["weapon_remington870_long"] = {extraClips = 0, sling = true},
 	["weapon_remington870_sawed_off"] = {extraClips = 0},

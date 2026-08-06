@@ -279,6 +279,7 @@ local RoleConfigs = {
         presetFile = "zcity_hero_presets.txt",
         items = {
             ["weapon_px4beretta"] = {cost = 4, name = "Beretta PX4", desc = "Reliable sidearm with room for extra ammo."},
+            ["weapon_chiappa_rhino"] = {cost = 7, name = "Chiappa Rhino", desc = "Reliable sidearm with room for extra ammo."},
             ["weapon_glock17"] = {cost = 5, name = "Glock 17", desc = "Flexible pistol with strong attachment options."},
             ["weapon_usp"] = {cost = 5, name = "HK USP", desc = "Steady .45 pistol, accurate and reliable."},
             ["weapon_m590a1"] = {cost = 10, name = "M590A1", desc = "Close range stopper with extra shell support."},
