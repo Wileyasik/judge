@@ -3146,7 +3146,10 @@ function SWEP:CustomThink()
                     hitForce.y = hitForce.y * (self.HeadRagdollForceMul or 1.35)
                     hitForce.z = hitForce.z * (self.HeadRagdollUpMul or 1.2)
                 end
-                hg.AddForceRag(ent, trace.PhysicsBone or 0, hitForce, 0.5)
+                local ragdoll = ent:IsRagdoll() and ent
+                    or ent:IsPlayer() and (IsValid(ent.FakeRagdoll) and ent.FakeRagdoll or ent:GetNWEntity("RagdollDeath"))
+                if IsValid(ragdoll) then ragdoll.hgMeleeImpulseUntil = CurTime() + 0.25 end
+                if not ent:IsRagdoll() then hg.AddForceRag(ent, trace.PhysicsBone or 0, hitForce, 0.5) end
 
                 self:PunchPlayer(ent, false, trace.Normal, dmg)
 
@@ -3315,7 +3318,10 @@ function SWEP:CustomThink()
                     hitForce.z = hitForce.z * (self.HeadRagdollUpMul or 1.2)
                 end
 
-                hg.AddForceRag(ent, trace.PhysicsBone or 0, hitForce, 0.5)
+                local ragdoll = ent:IsRagdoll() and ent
+                    or ent:IsPlayer() and (IsValid(ent.FakeRagdoll) and ent.FakeRagdoll or ent:GetNWEntity("RagdollDeath"))
+                if IsValid(ragdoll) then ragdoll.hgMeleeImpulseUntil = CurTime() + 0.25 end
+                if not ent:IsRagdoll() then hg.AddForceRag(ent, trace.PhysicsBone or 0, hitForce, 0.5) end
 
                 self:PunchPlayer(ent, true, trace.Normal, dmg)
 
@@ -3497,7 +3503,10 @@ function SWEP:CustomThink()
                     hitForce.y = hitForce.y * (self.HeadRagdollForceMul or 1.35)
                     hitForce.z = hitForce.z * (self.HeadRagdollUpMul or 1.2)
                 end
-                hg.AddForceRag(ent, trace.PhysicsBone or 0, hitForce, 0.5)
+                local ragdoll = ent:IsRagdoll() and ent
+                    or ent:IsPlayer() and (IsValid(ent.FakeRagdoll) and ent.FakeRagdoll or ent:GetNWEntity("RagdollDeath"))
+                if IsValid(ragdoll) then ragdoll.hgMeleeImpulseUntil = CurTime() + 0.25 end
+                if not ent:IsRagdoll() then hg.AddForceRag(ent, trace.PhysicsBone or 0, hitForce, 0.5) end
 
                 self:PunchPlayer(ent, 3, trace.Normal, dmg)
 
