@@ -114,7 +114,7 @@ SWEP.Primary.DefaultClip = 16
 SWEP.Primary.Automatic = false
 SWEP.Primary.Ammo = ".22 Long Rifle"
 SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 22
+SWEP.Primary.Damage = 21
 
 SWEP.Primary.Sound = {"arccw_uc/common/fire-22-01.ogg", 70, 90, 100}
 SWEP.Primary.SoundFP = {"arccw_uc/common/fire-22-01.ogg", 70, 90, 100}
