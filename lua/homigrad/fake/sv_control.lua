@@ -1700,6 +1700,36 @@ hook.Add("Think", "Fake", function()
 					end
 					ragdoll.isDropkicking = isDropkicking
 
+					if isDropkicking and hgIsDoor then
+						local kickDir = angles:Forward()
+						kickDir = Vector(kickDir.x, kickDir.y, 0)
+						if kickDir:LengthSqr() <= 0.001 then kickDir = angles:Forward() end
+						kickDir:Normalize()
+
+						local kickTr = getFakeLegKickTrace(ply, ragdoll, kickDir)
+						if kickTr and kickTr.Hit and IsValid(kickTr.Entity) and hgIsDoor(kickTr.Entity) and not kickTr.Entity:GetNoDraw() then
+							local doorEnt = kickTr.Entity
+							if not (ragdoll._dropkickDoorCd and ragdoll._dropkickDoorCd > CurTime()) then
+								ragdoll._dropkickDoorCd = CurTime() + 0.3
+
+								if DoorIsOpen(doorEnt) and not DoorIsOpen2(doorEnt) then
+									doorEnt:EmitSound("physics/wood/wood_crate_impact_hard" .. math.random(1, 4) .. ".wav")
+									doorEnt:EmitSound("physics/wood/wood_box_impact_hard3.wav")
+
+									doorEnt:FastOpenDoor(ply, 5, true)
+									local oldname = doorEnt:GetName()
+									local kickerName = ply:GetName()
+									if doorEnt:GetClass() == "func_door_rotating" then
+										doorEnt:Fire("open", kickerName, 0, ply, ply)
+									elseif doorEnt:GetClass() == "prop_door_rotating" then
+										doorEnt:Fire("openawayfrom", kickerName, 0, ply, ply)
+									end
+									doorEnt:SetName(oldname)
+								end
+							end
+						end
+					end
+
 					if isDropkicking then
 						legAng1:Set(angles)
 						legAng1:RotateAroundAxis(angles:Right(), 75)
@@ -1843,23 +1873,14 @@ hook.Add("Ragdoll Collide", "SlideDamage", function(ragdoll, data)
 		hook.Run("HG_PlayerDropkicked", ply, targetPly)
 	end
 	if not IsValid(targetPly) then
-		if hgIsDoor and hgIsDoor(hitEnt) and not hitEnt:GetNoDraw() then
-			hitEnt.HP = hitEnt.HP or 200
-			hitEnt.HP = hitEnt.HP - dmg * (isDropkick and 2.5 or 1)
-			hitEnt:EmitSound("physics/wood/wood_crate_impact_hard" .. math.random(1, 4) .. ".wav")
-			if hitEnt.HP <= 0 and hgBlastThatDoor then
-				hgBlastThatDoor(hitEnt, data.OurOldVelocity:GetNormalized() * 125)
-			end
-		else
-			local dmgInfo = DamageInfo()
-			dmgInfo:SetDamage(dmg)
-			dmgInfo:SetDamageType(DMG_CLUB)
-			dmgInfo:SetAttacker(ply)
-			dmgInfo:SetInflictor(ragdoll)
-			dmgInfo:SetDamagePosition(physObj:GetPos())
-			dmgInfo:SetDamageForce(data.OurOldVelocity:GetNormalized() * dmg * 50)
-			hitEnt:TakeDamageInfo(dmgInfo)
-		end
+		local dmgInfo = DamageInfo()
+		dmgInfo:SetDamage(dmg)
+		dmgInfo:SetDamageType(DMG_CLUB)
+		dmgInfo:SetAttacker(ply)
+		dmgInfo:SetInflictor(ragdoll)
+		dmgInfo:SetDamagePosition(physObj:GetPos())
+		dmgInfo:SetDamageForce(data.OurOldVelocity:GetNormalized() * dmg * 50)
+		hitEnt:TakeDamageInfo(dmgInfo)
 	else
 		local dmgInfo = DamageInfo()
 		dmgInfo:SetDamage(dmg)

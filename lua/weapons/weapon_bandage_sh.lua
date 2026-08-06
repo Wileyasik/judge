@@ -1056,6 +1056,7 @@ else
 			ent.bandagesHeadModel:Remove()
 		end
 		ent.bandagesHeadModel = nil
+		ent.bandagesSoak = nil
 	end
 
 	hook.Add("OnNetVarSet","bandage_netvar",function(index, key, var)
@@ -1065,9 +1066,15 @@ else
 			if IsValid(ent) then
 	
 				remove_bandages(ent)
-	
+
 				ent.bandaged_limbs = var
-	
+
+				local oldSoak = ent.bandagesSoak
+				ent.bandagesSoak = {}
+				for bone in pairs(ent.bandaged_limbs) do
+					ent.bandagesSoak[bone] = (oldSoak and oldSoak[bone]) or 0
+				end
+
 				ent:CallOnRemove("remove_bandages",function()
 					remove_bandages(ent)
 				end)
@@ -1117,10 +1124,40 @@ else
 	}
 
 	--hook.Add("PostDrawPlayerRagdoll", "draw_bandages", function(ent,ply)
+	local function GetBandageSoakRate(org)
+		if not org then return 0.0015 end
+
+		local rate = 0.0015
+		rate = rate + math.Clamp((org.bleed or 0) / 0.6, 0, 1) * 0.03
+		rate = rate + math.Clamp((5000 - (org.blood or 5000)) / 5000, 0, 1) * 0.006
+
+		return rate
+	end
+	local function GetBandageSoakColor(soak)
+		if not soak or soak <= 0 then return Color(255, 255, 255, 255) end
+
+		return Color(255 - math.floor(255 * soak * 0.12), 255 - math.floor(255 * soak * 0.85), 255 - math.floor(255 * soak * 0.9), 255)
+	end
+
 	function hg.RenderBandages(ent, ply)
 		--PrintTable(ent.bandaged_limbs)
 		if not ent.bandaged_limbs then return end
 		if !next(ent.bandaged_limbs) then return end
+
+		if not ent.bandagesSoak then
+			ent.bandagesSoak = {}
+			for bone in pairs(ent.bandaged_limbs) do ent.bandagesSoak[bone] = 0 end
+		end
+
+		local org = ent and ent.organism or (IsValid(ply) and ply.organism)
+		local soak = 0
+		for bone, v in pairs(ent.bandagesSoak) do
+			if ent.bandaged_limbs[bone] then
+				ent.bandagesSoak[bone] = math.min((ent.bandagesSoak[bone] or 0) + GetBandageSoakRate(org) * FrameTime(), 1)
+				soak = math.max(soak, ent.bandagesSoak[bone])
+			end
+		end
+
 		if not IsValid( ent.bandagesModel ) then
 			ent.bandagesModel = (ThatPlyIsFemale(ent) and ClientsideModel(BadagesModelFemale) or ClientsideModel(BadagesModelMale))
 			local model = ent.bandagesModel
@@ -1137,6 +1174,7 @@ else
 		model:SetPos(ent:GetPos() + vector_up * 1)
 		model:SetParent(ent)
 		model:AddEffects(EF_BONEMERGE)
+		model:SetColor(GetBandageSoakColor(soak))
 		local dontmakehands = false
 		if !hg.Appearance.FuckYouModels[1][ent:GetModel()] and !hg.Appearance.FuckYouModels[2][ent:GetModel()] then dontmakehands = true end
 		
@@ -1191,6 +1229,7 @@ else
 				end
 			end
 
+			headmodel:SetColor(GetBandageSoakColor(soak))
 			headmodel:DrawModel()
 		end
 	end

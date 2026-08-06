@@ -118,8 +118,14 @@ local IsValid, math_Clamp = IsValid, math.Clamp
 		end
 
 		local clr = ply.CurAppearance and ply.CurAppearance.AColor
+			or (ply.GetNWVector and ply:GetNWVector("PlayerColor", nil))
+			or (ply.GetPlayerColor and ply:GetPlayerColor())
 		if clr then
-			render.SetColorModulation((clr.r or 255) / 255, (clr.g or 255) / 255, (clr.b or 255) / 255)
+			if IsColor(clr) then
+				render.SetColorModulation(clr.r / 255, clr.g / 255, clr.b / 255)
+			elseif isvector(clr) then
+				render.SetColorModulation(clr.x, clr.y, clr.z)
+			end
 		end
 
 		model:DrawModel()

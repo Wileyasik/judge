@@ -245,6 +245,17 @@ local function GetAppearanceBaseColor(ply, ent)
 		return NormalizeAppearanceColor(appearance.AColor)
 	end
 
+	if ply then
+		if ply.GetNWVector then
+			local pc = ply:GetNWVector("PlayerColor", nil)
+			if pc then return NormalizeAppearanceColor(pc) end
+		end
+		if ply.GetPlayerColor then
+			local pc = ply:GetPlayerColor()
+			if pc then return NormalizeAppearanceColor(pc) end
+		end
+	end
+
 	return color_white
 end
 
