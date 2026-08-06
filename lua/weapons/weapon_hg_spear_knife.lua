@@ -96,14 +96,13 @@ SWEP.SwingAng2 = 0
 SWEP.MinSensivity = 0.95
 
 function SWEP:CustomAttack2()
+	local ply = self:GetOwner()
+	if not IsValid(ply) then return end
     local ent = ents.Create("ent_throwable")
+	if not IsValid(ent) then return end
     ent.WorldModel = self.WorldModelExchange or self.WorldModel
-    local ply = self:GetOwner()
     ent:SetPos(select(1, hg.eye(ply,60,hg.GetCurrentCharacter(ply))) - ply:GetAimVector() * 2)
     ent:SetAngles(ply:EyeAngles())
-    ent:SetOwner(self:GetOwner())
-    ent:Spawn()
-
     ent.localshit = Vector(50,0,0)
     ent.wep = self:GetClass()
     ent.owner = ply
@@ -112,8 +111,8 @@ function SWEP:CustomAttack2()
     ent.returndamage = 30
     ent.returnblood = 100
     ent.PenetrationSize = 15
+    ent.BodyStickDepth = 16
     ent.penetration = 10
-    ent.LodgeChance = 0.9
     ent.StickInWorld = true
     ent.StickDepth = -6
     ent.ArteryChance = 1.3
@@ -122,12 +121,16 @@ function SWEP:CustomAttack2()
         ent.wep = "weapon_hg_spear"
         ent:SetModel("models/distac/spear_wood.mdl")
         local knife = ents.Create("weapon_pocketknife")
+        if not IsValid(knife) then return end
         knife:SetPos(ent:GetPos())
         knife:SetAngles(ent:GetAngles())
         knife:Spawn()
         knife.IsSpawned = true
         knife.init = true
     end
+
+	ent:SetOwner(ply)
+	ent:Spawn()
 
     local phys = ent:GetPhysicsObject()
 

@@ -332,14 +332,14 @@ function SWEP:ThrowHammer()
 	ent:SetPos(select(1, hg.eye(ply, 60, hg.GetCurrentCharacter(ply))) - ply:GetAimVector() * 2)
 	ent:SetAngles(ply:EyeAngles())
 	ent:SetOwner(ply)
-	ent:Spawn()
 	ent.localshit = Vector(4, 6, 0)
 	ent.wep = self:GetClass()
 	ent.owner = ply
 	ent.damage = 35
+	ent.DamageType = DMG_CLUB
 	ent.penetration = 5
-	ent.LodgeChance = 0
 	ent.StickInWorld = false
+	ent:Spawn()
 
 	local phys = ent:GetPhysicsObject()
 	if IsValid(phys) then

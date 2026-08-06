@@ -68,16 +68,14 @@ SWEP.AttackHitFlesh = "Flesh.ImpactHard"
 SWEP.DeploySnd = "GlassBottle.ImpactSoft"
 
 function SWEP:CustomAttack2()
+	local ply = self:GetOwner()
+	if not IsValid(ply) then return end
     local ent = ents.Create("ent_throwable")
+	if not IsValid(ent) then return end
     ent.WorldModel = self.WorldModelExchange or self.WorldModel
-
-    local ply = self:GetOwner()
 
     ent:SetPos(select(1, hg.eye(ply,60,hg.GetCurrentCharacter(ply))) - ply:GetAimVector() * 2)
     ent:SetAngles(ply:EyeAngles())
-    ent:SetOwner(self:GetOwner())
-    ent:Spawn()
-
     ent.localshit = Vector(0,0,0)
     ent.wep = self:GetClass()
     ent.owner = ply
@@ -85,13 +83,16 @@ function SWEP:CustomAttack2()
     ent.MaxSpeed = 1300
     ent.DamageType = DMG_CLUB
     ent.AttackHit = "GlassBottle.ImpactHard"
-    ent.AttackHitFlesh = "GlassBottle.ImpactHard"
-    ent:PrecacheGibs()
+	ent.AttackHitFlesh = "GlassBottle.ImpactHard"
+	ent.BreakOnImpact = true
+	ent.BreakOnWorldImpact = true
+	ent.BreakSpeed = 350
 
     ent.func = function(data)
         if ent.removed then return end
         ent.removed = true
         timer.Simple(0, function()
+            if not IsValid(ent) then return end
             ent:GibBreakServer(vector_origin)
             ent:EmitSound("physics/glass/glass_pottery_break"..math.random(1,4)..".wav")
             ent:Remove()
@@ -99,6 +100,9 @@ function SWEP:CustomAttack2()
     end
 
     ent.noStuck = true
+	ent:SetOwner(ply)
+	ent:Spawn()
+	ent:PrecacheGibs()
 
     local phys = ent:GetPhysicsObject()
 

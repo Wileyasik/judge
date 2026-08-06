@@ -416,6 +416,21 @@ local painScreamFolders = {
 		"female2"
 	}
 }
+local painScreamSounds = {
+	"screams/universal1/screamOne.mp3",
+	"screams/universal1/screamTwo.mp3",
+	"screams/universal1/screamThree.mp3",
+}
+local painScreamUniversalChance = 0.5
+local burnScreamSounds = {
+	"screams/universal1/burnOne.mp3",
+	"screams/universal1/burnTwo.mp3",
+	"screams/universal1/burnThree.mp3",
+	"screams/universal1/burnFour.mp3",
+	"screams/universal1/burnFive.mp3",
+	"screams/universal1/burnSix.mp3",
+}
+local burnScreamUniversalChance = 0.5
 local painScreamRestartFade = 0.6
 local painScreamEndFade = 0.05
 local painScreamChance = 0.42
@@ -535,8 +550,13 @@ local function playPainScream(ply)
 
 	hg.StopPainScream(ply, painScreamRestartFade)
 
-	local prefix = string.match(folder, "^(female)") or string.match(folder, "^(male)") or folder
-	local phrase = "screams/" .. folder .. "/rem_" .. prefix .. "partial" .. mRandom(1, 4) .. ".mp3"
+	local phrase
+	if mRandom(1, 100) <= mClamp(painScreamUniversalChance, 0, 1) * 100 then
+		phrase = painScreamSounds[mRandom(#painScreamSounds)]
+	else
+		local prefix = string.match(folder, "^(female)") or string.match(folder, "^(male)") or folder
+		phrase = "screams/" .. folder .. "/rem_" .. prefix .. "partial" .. mRandom(1, 4) .. ".mp3"
+	end
 	local rf = RecipientFilter()
 	rf:AddPAS(ent:GetPos())
 
@@ -624,7 +644,12 @@ hook.Add("PreHomigradDamage","BurnScream", function( ent, dmgInfo )
 
 	if dmgInfo:IsDamageType(DMG_BURN) and IsValid(ply) and ply:IsPlayer() 
 	and ply.organism and !ply.organism.otrub and ply:Alive() then
-		local phrase = "zcitysnd/"..(ThatPlyIsFemale(ply) and "fe" or "").."male/burn/death_burn"..mRandom(1,ThatPlyIsFemale(ply) and femaleCount or maleCount)..".mp3"
+		local phrase
+		if mRandom(1, 100) <= mClamp(burnScreamUniversalChance, 0, 1) * 100 then
+			phrase = burnScreamSounds[mRandom(#burnScreamSounds)]
+		else
+			phrase = "zcitysnd/"..(ThatPlyIsFemale(ply) and "fe" or "").."male/burn/death_burn"..mRandom(1,ThatPlyIsFemale(ply) and femaleCount or maleCount)..".mp3"
+		end
 
 		-- overrides
 		override_ply, override_phrase = hook.Run("HG_ReplaceBurnPhrase", ply, phrase)

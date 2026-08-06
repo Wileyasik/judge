@@ -889,7 +889,7 @@ function PANEL:PostInit()
         net.SendToServer()
         main.SharedPreviewOriginal = table.Copy(main.AppearanceTable)
         savedSnapshot = BuildComparable(main.AppearanceTable)
-        surface.PlaySound(SND.success)
+        surface.PlaySound(hg.GetSuccessSound())
     end
 
     local function HasUnsaved() return not DeepEqual(savedSnapshot or {}, BuildComparable(main.AppearanceTable)) end

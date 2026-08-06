@@ -1426,7 +1426,7 @@ local function ShowSummary(featured)
 		if not IsValid(container) then return end
 		container.CountdownStart = CurTime()
 		container.CountPunch = 1
-		surface.PlaySound("ui/rem_success.wav")
+		surface.PlaySound(hg.GetSuccessSound())
 	end)
 
 	local endFade = vgui.Create("DPanel", container)

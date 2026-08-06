@@ -368,7 +368,8 @@ local childLimbs = {
 }
 
 function hg.organism.AmputateLimb(org, limb)
-	if org[limb.."amputated"] == nil then return end
+	local amputatedKey = limb.."amputated"
+	if org[amputatedKey] == nil or org[amputatedKey] then return end
 
 	local bone = limbs[limb]
 	if !IsValid(org.owner) then return end
@@ -389,7 +390,7 @@ function hg.organism.AmputateLimb(org, limb)
 	org.arterialwounds = wnds
 	org.owner:SetNetVar("arterialwounds", wnds)
 
-	org[limb.."amputated"] = true
+	org[amputatedKey] = true
 
 	for i = 1, 5 do
 		hg.organism.AddWoundManual(org.owner, 50, vec + VectorRand(-2, 2), ang, boneup, CurTime() + math.Rand(0, 2))
@@ -1276,7 +1277,9 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 				end
 			end
 			
-			hg.AddForceRag(ply, bone, force * 0.5, 0.5)
+			if not ent:IsRagdoll() then
+				hg.AddForceRag(ply, bone, force * 0.5, 0.5)
+			end
 
 			local afr = ply.AddForceRag
 			if afr and afr[bone] and afr[bone][2] and afr[bone][2]:Length() > 4500 then
@@ -1309,7 +1312,10 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	local lend = math.max(0.1, (ent:GetPos() - dmgInfo:GetDamagePosition()):Length())
 	local armorMit = hitgroup == HITGROUP_HEAD and (org.lastHeadArmorMitigation or 1) or (org.lastArmorMitigation or 1)
 	local isBuckshot = dmgInfo:IsDamageType(DMG_BUCKSHOT)
+	local noDismemberment = IsValid(inf) and inf.NoDismemberment
 	local damageStack = (dmg_before * armorMit) / (dmgInfo:IsDamageType(DMG_BULLET) and RagdollDamageBoneMul[hitgroup] or 1)
+	if IsValid(inf) and inf.NoGoreDamage then damageStack = 0 end
+	if noDismemberment then damageStack = 0 end
 	--print(damageStack, 3)
 	if dmgInfo:IsDamageType(DMG_SLASH + DMG_CLUB + DMG_GENERIC) then damageStack = damageStack * melee_gib_damage_mul end
 	if hitgroup == HITGROUP_HEAD and IsValid(inf) and inf.HeadGibDamageMul then damageStack = damageStack * inf.HeadGibDamageMul end
@@ -1319,7 +1325,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	damageStack = damageStack * (dmgInfo:IsDamageType(DMG_BLAST) and blast_gib_damage_mul / lend * grenadeBlastMul or 1) * (!dmgInfo:IsDamageType(DMG_CLUB+DMG_SLASH+DMG_BULLET+DMG_BUCKSHOT+DMG_BLAST+DMG_SNIPER) and 0 or 1) * (ent:IsNPC() and 3 or 1)
 	if impact.armorStopped then damageStack = 0 end
 	--damageStack = damageStack * (bullet and bullet.AmmoType and hg.ammotypeshuy[bullet.AmmoType] and hg.ammotypeshuy[bullet.AmmoType].BulletSettings and hg.ammotypeshuy[bullet.AmmoType].BulletSettings.Mass or 1) / 8
-	if hg.FullBodyExplode and not org.fullbodyexploded and dmgInfo:IsDamageType(DMG_BLAST) and (damageStack >= full_body_blast_gib_threshold or dmg_before >= full_body_blast_damage_threshold) then
+	if not noDismemberment and hg.FullBodyExplode and not org.fullbodyexploded and dmgInfo:IsDamageType(DMG_BLAST) and (damageStack >= full_body_blast_gib_threshold or dmg_before >= full_body_blast_damage_threshold) then
 		return hg.FullBodyExplode(ent, dirCool * len, dmgInfo) or true
 	end
 	
@@ -1352,8 +1358,8 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	--print(damageStack, org.dmgstack[hitgroup][1], org.dmgstack[hitgroup][3])
 	local blast = dmgInfo:IsDamageType(DMG_BLAST)
 	local slash = dmgInfo:IsDamageType(DMG_SLASH)
-	if instant and hitgroup == HITGROUP_HEAD and !ent.headexploded then hg.ExplodeHead(ent, headGoreStack or gibStack, slash, dirCool * len) end
-	if instant and (hitgrouptolimb[hitgroup] or hg.amputeetable[bonename]) then
+	if not noDismemberment and instant and hitgroup == HITGROUP_HEAD and !ent.headexploded then hg.ExplodeHead(ent, headGoreStack or gibStack, slash, dirCool * len) end
+	if not noDismemberment and instant and (hitgrouptolimb[hitgroup] or hg.amputeetable[bonename]) then
 		if blast then
 			for _, limb in ipairs({"lleg", "rleg", "larm", "rarm", "lhand", "rhand", "llegup", "rlegup", "larmup", "rarmup"}) do
 				if !org[limb.."amputated"] and math.random(5) < 200 / lend then hg.organism.AmputateLimb(org, limb) end
@@ -1407,7 +1413,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 
 			should = hitgroupStack[1] > hitgroup_max
 			--print(rag, should, hitgroup == HITGROUP_HEAD, bonename, hitgroup, HITGROUP_HEAD)
-			if should and hitgroup == HITGROUP_HEAD then
+			if not noDismemberment and should and hitgroup == HITGROUP_HEAD then
 				hg.ExplodeHead(ent, hitgroupStack[1], slash, dirCool * len)
 
 				hitgroupStack[1] = nil
@@ -1779,16 +1785,22 @@ local hg_safe_landing_minspeed = 350
 local function velocityDamage(ent, data)
 	local speed = (data.OurOldVelocity - data.TheirOldVelocity):Length()
 	if speed < 545 then return end
-	if data.HitEntity.Throwable then return end
+	if IsValid(data.HitEntity) and data.HitEntity.NoDismemberment then
+		-- A thrown item can transfer momentum before this ragdoll hits the world.
+		-- Keep that secondary impact from becoming projectile-caused dismemberment.
+		ent.NoDismembermentPhysics = true
+		return
+	end
+	local noDismemberment = ent.NoDismembermentPhysics
 	
-	if !data.HitEntity:IsWorld() and data.HitEntity.lasttouched and data.HitEntity.lasttouched[ent] then
-		if data.HitEntity.lasttouched[ent] + 0.5 > CurTime() then
+	ent.hgLastTouched = ent.hgLastTouched or setmetatable({}, {__mode = "k"})
+	if ent.hgLastTouched[data.HitEntity] then
+		if ent.hgLastTouched[data.HitEntity] + 0.5 > CurTime() then
 			return
 		end
 	end
 
-	data.HitEntity.lasttouched = data.HitEntity.lasttouched or {}
-	data.HitEntity.lasttouched[ent] = CurTime()
+	ent.hgLastTouched[data.HitEntity] = CurTime()
 
 	--print(data.HitObject:GetEntity():IsWorld())
 	local dmg = speed / 5350 * data.DeltaTime * ((IsValid(data.HitObject) && !data.HitObject:GetEntity():IsWorld()) && math.min(data.HitObject:GetMass() / 20, 1) || 1)
@@ -1861,8 +1873,10 @@ local function velocityDamage(ent, data)
 	if RagdollDamageBoneMul[hitgroup] then dmgInfo:ScaleDamage(RagdollDamageBoneMul[hitgroup]) end
 
 	local org = ent.organism
+	if ent.NoDismembermentPhysics then org.NoDismembermentPhysics = true end
+	noDismemberment = noDismemberment or org.NoDismembermentPhysics
 	if org.godmode then return end
-	if hg.FullBodyExplode and not org.fullbodyexploded and (speed >= full_body_physics_speed_threshold or rawPhysicsDamage >= full_body_physics_damage_threshold) then
+	if not noDismemberment and hg.FullBodyExplode and not org.fullbodyexploded and (speed >= full_body_physics_speed_threshold or rawPhysicsDamage >= full_body_physics_damage_threshold) then
 		if hg.FullBodyExplode(ent, data.OurOldVelocity - data.TheirOldVelocity, dmgInfo) then return end
 	end
 
@@ -1947,7 +1961,7 @@ local function velocityDamage(ent, data)
 				net.Broadcast()
 			end
 
-			if !ent.headexploded and dmg * headDamageMul > player_fall_head_gib_threshold then
+			if not noDismemberment and !ent.headexploded and dmg * headDamageMul > player_fall_head_gib_threshold then
 				hg.ExplodeHead(ent, dmg * 30, false, data.OurOldVelocity - data.TheirOldVelocity)
 			end
 		end

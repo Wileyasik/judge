@@ -784,7 +784,7 @@ local Angle, Vector, AngleRand, VectorRand, math, hook, util, game = Angle, Vect
 
 if CLIENT then
 	hook.Add("hg_AdjustMouseSensitivity", "HG_Sprint_Sens", function(ply)
-		if ply.hg_isSprinting then
+		if ply.hg_isSprinting and not IsValid(ply.FakeRagdoll) then
 			return 0.3 -- lower sensitivity to 30% when sprinting
 		end
 	end)

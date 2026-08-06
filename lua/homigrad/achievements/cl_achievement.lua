@@ -916,17 +916,17 @@ end)
 hg.achievements.NewAchievements = hg.achievements.NewAchievements or {}
 local AchTable = hg.achievements.NewAchievements
 local achievement_rarity_sounds = {
-    Uncommon = "uncommon.wav",
-    Rare = "rare.wav",
-    Epic = "epic.wav",
-    Legendary = "legendary.wav",
-    Mythic = "exotic.wav",
-    Exotic = "mythic.wav"
+    Uncommon = "uncommon.MP3",
+    Rare = "rare.MP3",
+    Epic = "Epic.MP3",
+    Legendary = "legendary.MP3",
+    Mythic = "exotic.MP3",
+    Exotic = "Mythic.MP3"
 }
 
 local function PlayAchievementSound(rarity)
     local fileName = achievement_rarity_sounds[rarity] or achievement_rarity_sounds.Uncommon
-    sound.PlayFile("addons/judge/sounds/" .. fileName, "noplay", function(channel, errorID, errorName)
+    sound.PlayFile(fileName, "noplay", function(channel, errorID, errorName)
         if IsValid(channel) then
             channel:SetVolume(1)
             channel:Play()

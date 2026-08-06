@@ -38,8 +38,10 @@ SWEP.BlockMaterial = "metal"
 SWEP.BlockSound = {"physics/metal/metal_sheet_impact_hard2.wav", 85, {145, 155}}
 
 
-SWEP.setlh = false
+SWEP.setlh = true
 SWEP.setrh = true
+SWEP.BlockHoldType = "slam"
+SWEP.DisableLHIKWhileBlocking = true
 SWEP.TwoHanded = false
 
 SWEP.basebone = 76
@@ -176,9 +178,6 @@ function SWEP:GetLHIKStateOffset()
     if not IsValid(owner) then return vector_origin, angle_zero end
     if self.CanSuicide and owner.suiciding then
         return self.LHIKSuicidePos or vector_origin, self.LHIKSuicideAng or angle_zero
-    end
-    if self.GetBlocking and self:GetBlocking() then
-        return self.LHIKBlockPos or vector_origin, self.LHIKBlockAng or angle_zero
     end
     return vector_origin, angle_zero
 end

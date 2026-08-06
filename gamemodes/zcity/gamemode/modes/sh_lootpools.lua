@@ -72,6 +72,7 @@ LP.MeleeCommon = {
 	{1.5, "weapon_6x5"},
 	{1.5, "weapon_hg_wire"},
 	{1.5, "weapon_hg_telescop"},
+	{2, "weapon_hg_extinguisher"},
 }
 
 LP.MeleeRare = {
@@ -98,6 +99,8 @@ LP.MeleeRare = {
 	{0.5, "weapon_hg_redrebel"},
 	{0.4, "weapon_hg_stunstick"},
 	{0.35, "weapon_hg_slayersword"},
+	{0.4, "weapon_hg_ritual"},
+	{0.45, "weapon_hg_mpl40"},
 }
 
 LP.Sidearms = {
@@ -137,6 +140,8 @@ LP.Sidearms = {
 	{0.8, "weapon_rsh12"},
 	{0.6, "weapon_sam_fisher_glock"},
 	{0.4, "weapon_flintlock"},
+	{0.7, "weapon_ar_pistol"},
+	{0.5, "weapon_taser"},
 }
 
 LP.SMGs = {
@@ -229,6 +234,8 @@ LP.AssaultRifles = {
 	{0.25, "weapon_tx15"},
 	{0.25, "weapon_adar215"},
 	{0.25, "weapon_osipr"},
+	{0.2, "weapon_sr3m"},
+	{0.2, "weapon_spear"},
 }
 
 LP.Marksman = {
