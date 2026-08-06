@@ -114,7 +114,7 @@ SWEP.Primary.DefaultClip = 16
 SWEP.Primary.Automatic = false
 SWEP.Primary.Ammo = ".22 Long Rifle"
 SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 21
+SWEP.Primary.Damage = 26
 
 SWEP.Primary.Sound = {"arccw_uc/common/fire-22-01.ogg", 70, 90, 100}
 SWEP.Primary.SoundFP = {"arccw_uc/common/fire-22-01.ogg", 70, 90, 100}
@@ -168,7 +168,7 @@ SWEP.Ergonomics = 1.5
 SWEP.AnimShootMul = 2
 SWEP.AnimShootHandMul = 0.1
 SWEP.addSprayMul = 0.25
-SWEP.Penetration = 11.5
+SWEP.Penetration = 14
 SWEP.WorldPos = Vector(4,-1.5,-2)
 SWEP.WorldAng = Angle(0, 0, 0)
 SWEP.UseCustomWorldModel = true

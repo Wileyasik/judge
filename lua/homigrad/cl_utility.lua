@@ -1,5 +1,16 @@
 local plymeta = FindMetaTable("Player")
 hg.ConVars = hg.ConVars or {}
+--\\ Success sound variant (rem_success.wav / rem_success1.wav)
+	local hg_success_sound_alt = GetConVar("hg_success_sound_alt") or CreateClientConVar("hg_success_sound_alt", "0", true, false, "Use the alternate round-success sound (rem_success1.wav)", 0, 1)
+	hg.ConVars.success_sound_alt = hg_success_sound_alt
+
+	function hg.GetSuccessSound()
+		if hg_success_sound_alt and hg_success_sound_alt:GetBool() then
+			return "ui/rem_success1.wav"
+		end
+		return "ui/rem_success.wav"
+	end
+--//
 --\\ AimVector fix
 	hg.GetAimVector = hg.GetAimVector or plymeta.GetAimVector
 

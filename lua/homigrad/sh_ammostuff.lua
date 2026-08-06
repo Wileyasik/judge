@@ -2171,9 +2171,9 @@ hg.ammotypes = {
 			TracerSpeed = 10000
 		},
 		BulletSettings = {
-			Damage = 17,
-			Force = 20,
-			Penetration = 6.5,
+			Damage = 22,
+			Force = 32,
+			Penetration = 9,
 			Shell = ".22lr",
 			Speed = 335,
 			Diameter = 5.72,
