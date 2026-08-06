@@ -1,7 +1,7 @@
 ﻿if SERVER then AddCSLuaFile() end
 ENT.Base = "ent_hg_grenade"
 ENT.Spawnable = false
-ENT.Model = "models/weapons/arc9/darsu_eft/w_f1.mdl"
+ENT.Model = "models/weapons/w_f1.mdl"
 ENT.timeToBoom = 3.5
 ENT.Fragmentation = 90 * 3
 ENT.BlastDis = 7 --meters

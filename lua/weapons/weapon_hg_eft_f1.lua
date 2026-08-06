@@ -13,3 +13,9 @@ SWEP.Spawnable = true
 SWEP.WorldModel = "models/weapons/w_f1_unthrowed.mdl"
 SWEP.WorldModelReal = "models/weapons/c_f1_2.mdl"
 SWEP.ENT = "ent_hg_eft_f1"
+
+if CLIENT then
+	SWEP.WepSelectIcon = Material("entities/arc9_eft_f1.png")
+	SWEP.IconOverride = "entities/arc9_eft_f1.png"
+	SWEP.BounceWeaponIcon = false
+end

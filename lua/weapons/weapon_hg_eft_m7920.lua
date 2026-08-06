@@ -13,3 +13,9 @@ SWEP.Spawnable = true
 SWEP.WorldModel = "models/weapons/w_m7920_unthrowed.mdl"
 SWEP.WorldModelReal = "models/weapons/c_m7920_2.mdl"
 SWEP.ENT = "ent_hg_eft_m7290"
+
+if CLIENT then
+	SWEP.WepSelectIcon = Material("entities/arc9_eft_m7290.png")
+	SWEP.IconOverride = "entities/arc9_eft_m7290.png"
+	SWEP.BounceWeaponIcon = false
+end
