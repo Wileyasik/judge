@@ -182,6 +182,7 @@ local RoleConfigs = {
             ["weapon_6x5"] = {cost = 2, name = "6x5 Bayonet"},
             ["weapon_buck200knife"] = {cost = 2, name = "Buck 120 General"},
             ["weapon_hg_ritual"] = {cost = 5, name = "Ritual Knife"},
+            ["weapon_hg_akula"] = {cost = 2, name = "Akula Dagger"},
             ["weapon_hg_wire"] = {cost = 3, name = "Fiber Wire"},
             ["weapon_hg_eft_rgd5"] = {cost = 4, name = "RGD-5 Grenade"},
             ["weapon_adrenaline"] = {cost = 3, name = "Epipen"},
@@ -205,9 +206,10 @@ local RoleConfigs = {
             ["weapon_p22"] = {"weapon_p22_silencer", "weapon_p22_ammo"}
         },
         exclusions = {
-            ["weapon_6x5"] = {["weapon_buck200knife"] = true, ["weapon_hg_ritual"] = true},
-            ["weapon_buck200knife"] = {["weapon_6x5"] = true, ["weapon_hg_ritual"] = true},
-            ["weapon_hg_ritual"] = {["weapon_buck200knife"] = true, ["weapon_6x5"] = true},
+            ["weapon_6x5"] = {["weapon_buck200knife"] = true, ["weapon_hg_ritual"] = true, ["weapon_hg_akula"] = true},
+            ["weapon_buck200knife"] = {["weapon_6x5"] = true, ["weapon_hg_ritual"] = true, ["weapon_hg_akula"] = true},
+            ["weapon_hg_ritual"] = {["weapon_buck200knife"] = true, ["weapon_6x5"] = true, ["weapon_hg_akula"] = true},
+            ["weapon_hg_akula"] = {["weapon_buck200knife"] = true, ["weapon_6x5"] = true, ["weapon_hg_ritual"] = true},
         },
         defaultPresets = {
             {
@@ -279,6 +281,7 @@ local RoleConfigs = {
         presetFile = "zcity_hero_presets.txt",
         items = {
             ["weapon_px4beretta"] = {cost = 4, name = "Beretta PX4", desc = "Reliable sidearm with room for extra ammo."},
+            ["weapon_chiappa_rhino"] = {cost = 7, name = "Chiappa Rhino", desc = "Reliable sidearm with room for extra ammo."},
             ["weapon_glock17"] = {cost = 5, name = "Glock 17", desc = "Flexible pistol with strong attachment options."},
             ["weapon_usp"] = {cost = 5, name = "HK USP", desc = "Steady .45 pistol, accurate and reliable."},
             ["weapon_m590a1"] = {cost = 10, name = "M590A1", desc = "Close range stopper with extra shell support."},
@@ -306,7 +309,8 @@ local RoleConfigs = {
             ["hero_kar98_ammo"] = {cost = 2, name = "Kar98 Extra Ammo", parent = "weapon_kar98", desc = "Start with extra rifle rounds."},
             ["hero_mr43_long_ammo"] = {cost = 2, name = "MR43 Long Extra Shells", parent = "weapon_mr43", desc = "Start with extra shells."},
             ["hero_mr43_ammo"] = {cost = 2, name = "MR43 Sawed-off Extra Shells", parent = "weapon_mr43_short", desc = "Start with extra shells."},
-            ["hero_mp18_ammo"] = {cost = 2, name = "MP-18 Extra Ammo", parent = "weapon_mp18", desc = "Start with extra rounds."}
+            ["hero_mp18_ammo"] = {cost = 2, name = "MP-18 Extra Ammo", parent = "weapon_mp18", desc = "Start with extra rounds."},
+            ["hero_chiappa_ammo"] = {cost = 2, name = "Chiappa Extra Ammo", parent = "weapon_chiappa_rhino", desc = "Start with extra revolver rounds."}
         },
         addonOrder = {
             ["weapon_px4beretta"] = {"hero_px4_ammo"},
@@ -317,6 +321,7 @@ local RoleConfigs = {
             ["weapon_mr43_short"] = {"hero_mr43_ammo"},
             ["weapon_kar98"] = {"hero_kar98_scope", "hero_kar98_ammo"},
             ["weapon_mp18"] = {"hero_mp18_ammo"},
+            ["weapon_chiappa_rhino"] = {"hero_chiappa_ammo"},
         },
         exclusions = {},
         defaultPresets = {
