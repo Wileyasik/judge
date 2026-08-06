@@ -62,11 +62,12 @@ function MODE:SetupChances()
 end
 
 MODE.LootTable = {
+	-- [1] Медицина и расходники — самый частый кат
 	{40, {
 		{15,"weapon_smallconsumable"},
 		{12,"weapon_bigconsumable"},
-		{8,"weapon_tourniquet"},
-		{8,"weapon_bandage_sh"},
+		{9,"weapon_tourniquet"},
+		{9,"weapon_bandage_sh"},
 		{7,"weapon_ducttape"},
 		{6,"weapon_painkillers_tpik"},
 		{5,"weapon_bloodbag"},
@@ -74,132 +75,133 @@ MODE.LootTable = {
 		{3,"hg_flashlight"},
 		{3,"weapon_bigbandage_sh"},
 		{2,"weapon_medkit_sh"},
-
 		{1,"weapon_matches"},
 
+		{0.5,"weapon_naloxone"},
+		{0.4,"weapon_betablock_tpik"},
+		{0.4,"weapon_adrenaline"},
+		{0.3,"weapon_midazolam"},
+		{0.3,"weapon_thiamine_tpik"},
 		{0.2,"weapon_morphine"},
 		{0.2,"weapon_mannitol"},
-		{0.5,"weapon_naloxone"},
+		{0.2,"weapon_defibrillator"},
 		{0.1,"weapon_fentanyl"},
-		{0.9,"weapon_betablock_tpik"},
-		{0.6,"weapon_adrenaline"},
-		{0.5,"weapon_midazolam"},
-		{0.5,"weapon_thiamine_tpik"},
-		{0.3,"weapon_defibrillator"},
-		{0.10,"hg_brassknuckles"},
-
-		{0.65,"ent_armor_mask2"},
-		{0.27, "ent_armor_helmet2"},
+		{0.1,"hg_brassknuckles"},
 	}},
-	{24,{
-		{12,"weapon_hammer"},
-		{6,"weapon_brick"},
-		{10,"weapon_pocketknife"},
-
-		{4,"weapon_bat"},
-		{1,"weapon_metalbat"},
+	-- [2] Мили — слабое чаще, сильное редко (MeleeRare подмешивается ×0.3)
+	{26, {
+		{14,"weapon_hammer"},
+		{11,"weapon_pocketknife"},
+		{8,"weapon_brick"},
+		{5,"weapon_bat"},
 		{4,"weapon_leadpipe"},
 		{3,"weapon_hg_extinguisher"},
-		{0.25,"weapon_chainsaw"},
-		{0.75,"weapon_defibrillator"},
-
 		{2,"weapon_hg_crowbar"},
-		{1,"weapon_hatchet"},
-		{0.9,"weapon_hg_axe"},
-		{0.5,"weapon_hg_machete"},
-		{0.4,"weapon_hg_sledgehammer"},
-
+		{1.2,"weapon_hatchet"},
 		{1,"hg_brassknuckles"},
-		{0.13,"weapon_hg_spear"},
-		{0.13, "weapon_hg_spear_pro"},
+		{0.7,"weapon_hg_axe"},
+		{0.5,"weapon_defibrillator"},
+
+		{0.9,"weapon_chair_leg"},
+		{0.9,"weapon_table_leg"},
+		{0.8,"weapon_hg_bottle"},
+		{0.8,"weapon_hg_mug"},
+		{0.7,"weapon_wirebat"},
+		{0.6,"weapon_ram"},
+		{0.5,"weapon_hg_tonfa"},
+		{0.4,"weapon_hg_shuriken"},
+		{0.3,"weapon_hg_bottlebroken"},
+		{0.3,"weapon_hg_wire"},
 	}},
-	{11,{
+	-- [3] Обвесы и лёгкая броня
+	{11, {
 		{10,"*sight*"},
 		{7,"*barrel*"},
 
-		{7,"ent_armor_helmet7"},
-		{5,"ent_armor_vest7"},
-		{8, "ent_armor_helmet2"},
+		{6,"ent_armor_helmet7"},
+		{4,"ent_armor_vest7"},
+		{3,"ent_armor_helmet2"},
 	}},
-	{7,{
+	-- [4] Пистолеты — редкий кат
+	{8, {
 		{6,"*sight*"},
 		{5,"*barrel*"},
 
-		{15,"weapon_mp-80"},
-		{8,"weapon_makarov"},
-		{7,"weapon_ruger"},
+		{12,"weapon_mp-80"},
+		{7,"weapon_pm"},
+		{6,"weapon_p22"},
 		{4,"weapon_revolver2"},
 		{4,"weapon_px4beretta"},
-		{3.5,"weapon_m1911"},
-		{3,"weapon_m9beretta"},
+		{3,"weapon_m1911"},
+		{2.5,"weapon_m9beretta"},
 		{2,"weapon_fn45"},
-		{2,"weapon_chainsaw"},
 	}},
+	-- [5] Кобуры покрепче — очень редкий кат
 	{4, {
-		{9,"weapon_hk_usp"},
-		{9,"weapon_glock17"},
-		{9,"weapon_cz75"},
-		{9,"weapon_px4beretta"},
+		{7,"weapon_usp"},
+		{7,"weapon_glock17"},
+		{7,"weapon_cz75"},
+		{7,"weapon_px4beretta"},
 
-		{6,"weapon_deagle"},
-		{6,"weapon_colt9mm"},
+		{4,"weapon_deagle"},
+		{4,"weapon_colt9mm"},
 
-		{5,"weapon_doublebarrel_short"},
-		{5,"weapon_doublebarrel"},
-		{4, "weapon_flintlock"},
+		{3,"weapon_remington870_sawed_off"},
+		{3,"weapon_remington870_long"},
+		{2.5,"weapon_flintlock"},
 	}},
-	{5,{
-		{5,"ent_armor_vest3"},
-		{5,"ent_armor_helmet1"},
+	-- [6] Средняя и тяжёлая броня — редко
+	{5, {
+		{4,"ent_armor_vest3"},
+		{4,"ent_armor_helmet1"},
 		{2,"ent_armor_vest4"},
-		{2, "ent_armor_helmet5"},
+		{1.5,"ent_armor_helmet5"},
 	}},
+	-- [7] Длинноствол — самый редкий кат
 	{3, {
 		{4,"weapon_remington870"},
 
-		{4,"weapon_hg_molotov_tpik"},
-		{4,"weapon_hg_pipebomb_tpik"},
+		{3,"weapon_hg_molotov_tpik"},
+		{3,"weapon_hg_pipebomb_tpik"},
 
-		{3,"weapon_mini14"},
-		{3,"weapon_kar98"},
-		{3,"weapon_ar_pistol"},
-		{3,"weapon_draco"},
-		{3,"weapon_mp5"},
-		{3,"weapon_m16a2"},
+		{2.5,"weapon_mp5"},
+		{2,"weapon_draco"},
+		{2,"weapon_kar98"},
+		{1.5,"weapon_m1a1"},
+		{1.5,"weapon_sks"},
+		{1.5,"weapon_m16a2"},
 
-		{2,"weapon_mp7"},
-		{2,"weapon_sks"},
-		{2,"weapon_ar15"},
-		{2,"weapon_ac556"},
+		{1,"weapon_mp7"},
+		{1,"weapon_adar215"},
+		{1,"weapon_hk416"},
 
-		{1,"weapon_vpo136"},
-		{1,"weapon_musket"},
-		{1,"weapon_vpo136"},
-		{1,"weapon_sr25"},
-		{3,"weapon_chainsaw"},
+		{0.8,"weapon_vpo136"},
+		{0.8,"weapon_sr25"},
+		{0.6,"weapon_musket"},
 	}},
 }
 
--- Judge arsenal injected into the loot pool (weights tuned so guns stay rare).
+-- Judge arsenal, вшитый с настроенными множителями: сильный ствол и сильное
+-- мили — редкость, броня поделена по тирам (лёгкая чаще, тяжёлая почти не найти).
 hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.MeleeCommon, 1)
-hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.MeleeRare, 1)
-hg.AppendLootPool(MODE.LootTable[3][2], hg.LootPools.ArmorLight, 0.8)
-hg.AppendLootPool(MODE.LootTable[3][2], hg.LootPools.ArmorMedium, 0.6)
-hg.AppendLootPool(MODE.LootTable[4][2], hg.LootPools.Sidearms, 0.6)
-hg.AppendLootPool(MODE.LootTable[6][2], hg.LootPools.ArmorMedium, 0.7)
-hg.AppendLootPool(MODE.LootTable[6][2], hg.LootPools.ArmorHeavy, 0.5)
-hg.AppendLootPool(MODE.LootTable[7][2], hg.LootPools.SMGs, 0.4)
-hg.AppendLootPool(MODE.LootTable[7][2], hg.LootPools.Shotguns, 0.4)
-hg.AppendLootPool(MODE.LootTable[7][2], hg.LootPools.AssaultRifles, 0.3)
-hg.AppendLootPool(MODE.LootTable[7][2], hg.LootPools.Marksman, 0.3)
-hg.AppendLootPool(MODE.LootTable[7][2], hg.LootPools.LMG, 0.2)
+hg.AppendLootPool(MODE.LootTable[2][2], hg.LootPools.MeleeRare, 0.3)
+hg.AppendLootPool(MODE.LootTable[3][2], hg.LootPools.ArmorLight, 1)
+hg.AppendLootPool(MODE.LootTable[3][2], hg.LootPools.ArmorMedium, 0.45)
+hg.AppendLootPool(MODE.LootTable[4][2], hg.LootPools.Sidearms, 0.5)
+hg.AppendLootPool(MODE.LootTable[6][2], hg.LootPools.ArmorMedium, 0.5)
+hg.AppendLootPool(MODE.LootTable[6][2], hg.LootPools.ArmorHeavy, 0.25)
+hg.AppendLootPool(MODE.LootTable[7][2], hg.LootPools.SMGs, 0.35)
+hg.AppendLootPool(MODE.LootTable[7][2], hg.LootPools.Shotguns, 0.3)
+hg.AppendLootPool(MODE.LootTable[7][2], hg.LootPools.AssaultRifles, 0.22)
+hg.AppendLootPool(MODE.LootTable[7][2], hg.LootPools.Marksman, 0.18)
+hg.AppendLootPool(MODE.LootTable[7][2], hg.LootPools.LMG, 0.1)
 
 MODE.LootTableStandard = {
 	{65, {
-		{15,"weapon_smallconsumable"},
-		{12,"weapon_bigconsumable"},
-		{8,"weapon_tourniquet"},
-		{8,"weapon_bandage_sh"},
+		{16,"weapon_smallconsumable"},
+		{13,"weapon_bigconsumable"},
+		{9,"weapon_tourniquet"},
+		{9,"weapon_bandage_sh"},
 		{7,"weapon_ducttape"},
 		{6,"weapon_painkillers_tpik"},
 		{5,"weapon_bloodbag"},
@@ -207,34 +209,31 @@ MODE.LootTableStandard = {
 		{1,"weapon_matches"},--for dumbasses
 	}},
 	{30, {
-		{1,"weapon_hammer"},
+		{1.4,"weapon_hammer"},
+		{1.2,"weapon_pocketknife"},
 		{1,"weapon_brick"},
-		{1,"weapon_pocketknife"},
-		{0.32,"weapon_bat"},
-		{0.12,"weapon_metalbat"},
-		{0.3,"weapon_leadpipe"},
+		{0.45,"weapon_bat"},
+		{0.35,"weapon_leadpipe"},
 
 		{0.15,"weapon_hg_extinguisher"},
 		{0.14,"weapon_hg_crowbar"},
 
 		{0.12,"weapon_hatchet"},
-		{0.10,"weapon_hg_axe"},
-		{0.09,"weapon_hg_sledgehammer"},
-		{0.07,"weapon_hg_machete"},
 	}},
 }
 
 -- LootTableStandard only has medical + melee, so inject a rare gun category too.
+-- Здесь всё ещё слабее основного: и стволы, и сильное мили почти не встречаются.
 hg.AppendLootPool(MODE.LootTableStandard[2][2], hg.LootPools.MeleeCommon, 1)
-hg.AppendLootPool(MODE.LootTableStandard[2][2], hg.LootPools.MeleeRare, 1)
+hg.AppendLootPool(MODE.LootTableStandard[2][2], hg.LootPools.MeleeRare, 0.35)
 MODE.LootTableStandard[3] = {10, {}}
-hg.AppendLootPool(MODE.LootTableStandard[3][2], hg.LootPools.Sidearms, 0.5)
-hg.AppendLootPool(MODE.LootTableStandard[3][2], hg.LootPools.ArmorLight, 0.6)
-hg.AppendLootPool(MODE.LootTableStandard[3][2], hg.LootPools.SMGs, 0.25)
-hg.AppendLootPool(MODE.LootTableStandard[3][2], hg.LootPools.Shotguns, 0.25)
-hg.AppendLootPool(MODE.LootTableStandard[3][2], hg.LootPools.ArmorMedium, 0.4)
-hg.AppendLootPool(MODE.LootTableStandard[3][2], hg.LootPools.AssaultRifles, 0.2)
-hg.AppendLootPool(MODE.LootTableStandard[3][2], hg.LootPools.Marksman, 0.15)
+hg.AppendLootPool(MODE.LootTableStandard[3][2], hg.LootPools.Sidearms, 0.4)
+hg.AppendLootPool(MODE.LootTableStandard[3][2], hg.LootPools.ArmorLight, 0.5)
+hg.AppendLootPool(MODE.LootTableStandard[3][2], hg.LootPools.SMGs, 0.18)
+hg.AppendLootPool(MODE.LootTableStandard[3][2], hg.LootPools.Shotguns, 0.15)
+hg.AppendLootPool(MODE.LootTableStandard[3][2], hg.LootPools.ArmorMedium, 0.3)
+hg.AppendLootPool(MODE.LootTableStandard[3][2], hg.LootPools.AssaultRifles, 0.12)
+hg.AppendLootPool(MODE.LootTableStandard[3][2], hg.LootPools.Marksman, 0.08)
 
 MODE.LootTableSingle = MergeLootTables(
 	MODE.LootTableStandard,
@@ -426,7 +425,7 @@ MODE.Types.wildwest = {
 		ply:Give("weapon_sogknife")
 		ply:Give("weapon_hg_type59_tpik")
 		ply:Give("weapon_adrenaline")
-		local revolver = ply:Give(math.random(2) == 2 and "weapon_winchester" or "weapon_revolver2")
+		local revolver = ply:Give(math.random(2) == 2 and "weapon_musket" or "weapon_revolver2")
 		ply:GiveAmmo(revolver:GetMaxClip1() * 1,revolver:GetPrimaryAmmoType(),true)
 		ply:Give("weapon_traitor_ied")
 		ply:Give("weapon_hg_molotov_tpik")
@@ -483,16 +482,16 @@ MODE.Types.wildwest = {
 			end)
 			if v.isTraitor then continue end
 			if v.isGunner then
-				v:Give("weapon_winchester")
+				v:Give("weapon_musket")
 				v:Give("weapon_revolver357")
 				v:Give("weapon_handcuffs")
 				v:Give("weapon_handcuffs_key")
 			else
 				local guns = {
-					"weapon_winchester",
+					"weapon_musket",
 					"weapon_revolver2",
-					"weapon_doublebarrel",
-					"weapon_doublebarrel_short"
+					"weapon_remington870_long",
+					"weapon_remington870_sawed_off"
 				}
 
 				local weapon = v:Give(guns[math.random(#guns)], true)

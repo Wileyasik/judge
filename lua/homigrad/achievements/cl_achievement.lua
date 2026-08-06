@@ -916,12 +916,12 @@ end)
 hg.achievements.NewAchievements = hg.achievements.NewAchievements or {}
 local AchTable = hg.achievements.NewAchievements
 local achievement_rarity_sounds = {
-    Uncommon = "uncommon.MP3",
-    Rare = "rare.MP3",
-    Epic = "Epic.MP3",
-    Legendary = "legendary.MP3",
-    Mythic = "exotic.MP3",
-    Exotic = "Mythic.MP3"
+    Uncommon = "uncommon.wav",
+    Rare = "rare.wav",
+    Epic = "epic.wav",
+    Legendary = "legendary.wav",
+    Mythic = "exotic.wav",
+    Exotic = "mythic.wav"
 }
 
 local function PlayAchievementSound(rarity)

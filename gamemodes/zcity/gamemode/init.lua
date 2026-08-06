@@ -223,9 +223,14 @@ function GM:PlayerSpawn(ply)
     end
 
     if CurrentRound() and not CurrentRound().OverrideSpawn then
+        local mode = CurrentRound()
+        local team_ = ply:Team()
+        if not (mode.OverrideBalance and (team_ == 0 or team_ == 1)) then
+            team_ = zb:BalancedChoice(0, 1)
+        end
         ply:SetTeam(1001)
         ApplyAppearance(ply,nil,nil,nil,true)
-        ply:SetTeam(zb:BalancedChoice(0, 1))
+        ply:SetTeam(team_)
     end
 
 end

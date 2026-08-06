@@ -44,7 +44,7 @@ local riotContainedConsumables = {
 local riotAnarchySupport = {
     "weapon_bandage_sh",
     "weapon_medkit_sh",
-    "weapon_hg_type56_tpik",
+    "weapon_hg_type59_tpik",
     "weapon_hg_pipebomb_tpik",
 }
 
@@ -52,21 +52,23 @@ local riotAnarchyWeapons = {
     "weapon_revolver2",
     "weapon_revolver357",
     "weapon_rpk",
-    "weapon_ruger",
     "weapon_vpo136",
     "weapon_vpo209",
     "weapon_remington870_long",
     "weapon_remington870_sawed_off",
     "weapon_remington870",
     "weapon_p22",
-    "weapon_pm9",
     "weapon_pl15",
     "weapon_px4beretta",
-    "weapon_tec9",
-    "weapon_tokarev"
+    "weapon_glock17",
+    "weapon_pb",
+    "weapon_zoraki",
+    "weapon_mp5k",
+    "weapon_mp9",
+    "weapon_pp1901",
+    "weapon_svt",
+    "weapon_toz106"
 }
-
-local riotArmorChance = 40
 
 local lawWeapons = {
     "weapon_hg_tonfa",
@@ -74,11 +76,6 @@ local lawWeapons = {
     "weapon_walkie_talkie",
     "weapon_handcuffs",
     "weapon_handcuffs_key"
-}
-
-local lawArmor = {
-    "ent_armor_vest2",
-    "ent_armor_helmet3"
 }
 
 local swatWeapons = {
@@ -309,12 +306,29 @@ end
 function MODE:RoundStart()
 end
 
+local function GiveRioterRandomArmor(ply)
+    if math.random(100) > 40 then return end
+
+    local roll = math.random(4)
+    if roll == 1 then
+        hg.AddArmor(ply, "helmet5")
+        hg.AddArmor(ply, "visor_kolpak")
+    elseif roll == 2 then
+        hg.AddArmor(ply, "helmet6")
+    elseif roll == 3 then
+        hg.AddArmor(ply, "helmet18")
+    else
+        hg.AddArmor(ply, "helmet19")
+    end
+end
+
 local function GiveContainedRioter(ply)
     zb.GiveRole(ply, "Rioter", Color(190, 0, 0))
     ply:SetPlayerClass("terrorist")
     ply:SetNetVar("CurPluv", "pluvmajima")
     ply:Give("weapon_hands_sh")
     ply:Give(riotContainedConsumables[math.random(#riotContainedConsumables)])
+    GiveRioterRandomArmor(ply)
     local weapon = riotWeapons[math.random(#riotWeapons)]
     GiveWeaponWithAmmo(ply, weapon, 2)
     ply:SelectWeapon(weapon)
@@ -334,9 +348,7 @@ local function GiveEscalatedRioter(ply, index, shotgunIndex)
 
     ply:Give(riotConsumables[math.random(#riotConsumables)])
 
-    if math.random(100) <= riotArmorChance then
-        hg.AddArmor(ply, "ent_armor_helmet2")
-    end
+    GiveRioterRandomArmor(ply)
 
     local weapon = index == shotgunIndex and "weapon_remington870_sawed_off" or riotWeapons[math.random(#riotWeapons)]
     GiveWeaponNoReserve(ply, weapon)
@@ -350,9 +362,7 @@ local function GiveAnarchyRioter(ply)
     ply:Give("weapon_hands_sh")
     ply:Give(riotAnarchySupport[math.random(#riotAnarchySupport)])
 
-    if math.random(100) <= 35 then
-        hg.AddArmor(ply, "ent_armor_vest2")
-    end
+    GiveRioterRandomArmor(ply)
 
     local weapon = riotAnarchyWeapons[math.random(#riotAnarchyWeapons)]
     GiveWeaponWithAmmo(ply, weapon, 3)
@@ -371,7 +381,9 @@ local function GiveContainedLaw(ply, lawIndex)
     ply:Give("weapon_walkie_talkie")
     ply:Give("weapon_handcuffs")
     ply:Give("weapon_handcuffs_key")
-    hg.AddArmor(ply, "ent_armor_vest2")
+    hg.AddArmor(ply, "vest_riot")
+    hg.AddArmor(ply, "helmet_riot")
+    hg.AddArmor(ply, "visor_riot")
     ply:SetNetVar("CurPluv", "pluvberet")
 
     if lawIndex == 1 then
@@ -396,8 +408,9 @@ local function GiveEscalatedLaw(ply, lawIndex, glockIndex)
     end
 
     ply:SetNetVar("CurPluv", "pluvberet")
-    hg.AddArmor(ply, lawArmor[1])
-    hg.AddArmor(ply, lawArmor[2])
+    hg.AddArmor(ply, "vest_riot")
+    hg.AddArmor(ply, "helmet_riot")
+    hg.AddArmor(ply, "visor_riot")
 
     if lawIndex == 1 then
         ply:Give("weapon_ram")
@@ -414,13 +427,20 @@ local function GiveEscalatedLaw(ply, lawIndex, glockIndex)
     ply:SelectWeapon("weapon_hg_tonfa")
 end
 
+local sobrVests = {"vest_sobr1", "vest_sobr2", "vest_sobr3"}
+
 local function GiveAnarchyLaw(ply)
     zb.GiveRole(ply, "SWAT", Color(0, 0, 190))
     ply:SetPlayerClass("swat")
     GiveSling(ply)
     ply:Give("weapon_hands_sh")
-    hg.AddArmor(ply, "ent_armor_vest8")
-    hg.AddArmor(ply, "ent_armor_helmet6")
+    hg.AddArmor(ply, sobrVests[math.random(#sobrVests)])
+    if math.random(2) == 1 then
+        hg.AddArmor(ply, "helmet_sobr1")
+        hg.AddArmor(ply, "visor_sobr1")
+    else
+        hg.AddArmor(ply, "helmet_sobr2")
+    end
 
     local weaponData = swatWeapons[math.random(#swatWeapons)]
     local primary = GiveWeaponWithAmmo(ply, weaponData[1], 3)

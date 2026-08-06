@@ -135,6 +135,7 @@ function SpawnMeatGore(mainent, pos, count, force, scale, spawnEyes, models)
 			net.WriteUInt(entIndex, 16)
 			net.WriteFloat(math.Rand(1, 2))
 			net.WriteBool(false)
+			net.WriteBool(false)
 			net.SendPVS(ent:GetPos())
 		end)
 	end
@@ -234,12 +235,13 @@ for _, snd in ipairs(sounds) do
 end
 for _, snd in ipairs(fullBodySounds) do util.PrecacheSound(snd) end
 util.PrecacheSound(fullBodyMainSound)
-local function sendGibBloodSpill(ent, stump)
+local function sendGibBloodSpill(ent, stump, trail)
 	if not IsValid(ent) then return end
 	net.Start("hg_gib_bloodspill")
 	net.WriteUInt(ent:EntIndex(), 16)
 	net.WriteFloat(math.Rand(5, 10))
 	net.WriteBool(stump or false)
+	net.WriteBool(trail or false)
 	net.SendPVS(ent:GetPos())
 end
 
@@ -449,7 +451,8 @@ function hg.CanFullBodyGib(target, org, owner, removed)
 	end
 	if org and (org.otrub or org.alive == false or org.headamputated or (org.consciousness or 1) <= 0.1) then return true end
 	if IsValid(owner) and (owner.Removed or not owner:Alive()) then return true end
-	return false
+	-- Живых игроков можно разорвать (взрывом/ударом), godmode отсекается выше.
+	return true
 end
 
 local function spawnFullBodyGib(mainent, pos, force, model, scale, bloodSpill)
@@ -474,7 +477,7 @@ local function spawnFullBodyGib(mainent, pos, force, model, scale, bloodSpill)
 	SafeRemoveEntityDelayed(ent, gibRemoveTime)
 	if bloodSpill then
 		timer.Simple(0.2, function()
-			if IsValid(ent) then sendGibBloodSpill(ent, false) end
+			if IsValid(ent) then sendGibBloodSpill(ent, false, true) end
 		end)
 	end
 	return ent
@@ -648,3 +651,55 @@ hook.Add("Player Getup", "HG_ReparentStomachGorePlayerGetup", function(ply)
 	if IsValid(ply) and IsValid(ply.FakeRagdoll) then reparentStomachGore(ply.FakeRagdoll, ply) end
 end)
 hook.Add("RagdollDeath", "HG_StomachGoreDeathRag", function(ply, rag) reparentStomachGore(ply, rag) end)
+
+-- Fullgib при падении в пропасть / триггер смерти (за пределы мира или kill-trigger)
+local voidFallMinVelocity = CreateConVar("hg_void_fall_min_velocity", "700", FCVAR_ARCHIVE, "Vertical fall speed (units/s) at/above which falling off the map triggers fullgib", 0, 100000)
+
+local function isFallingOutOfWorld(ply)
+	if not IsValid(ply) then return false end
+
+	local vel = ply:GetVelocity()
+	if vel.z > -voidFallMinVelocity:GetFloat() then return false end
+
+	-- Падаем вниз с большой скоростью. Если прямо под игроком нет мира (пустота/пропасть),
+	-- считаем что он падает из мира. Трассируем глубоко вниз и проверяем, что земли нет.
+	local pos = ply:GetPos()
+	local tr = util.TraceLine({
+		start = pos,
+		endpos = pos + Vector(0, 0, -30000),
+		mask = MASK_SOLID,
+		filter = function(e) return e ~= ply end,
+	})
+	if tr.Hit or tr.HitWorld or tr.HitNonWorld then return false end
+
+	return true
+end
+
+hook.Add("PlayerDeath", "HG_FullGibOnVoidFall", function(ply)
+	if not isFallingOutOfWorld(ply) then return end
+	ply.hgVoidFall = true
+end)
+
+hook.Add("PostPlayerDeath", "HG_FullGibOnVoidFallRag", function(ply)
+	if not ply.hgVoidFall then return end
+	ply.hgVoidFall = nil
+
+	if not IsValid(ply) or not ply.organism then return end
+	local org = ply.organism
+	if org and (org.godmode or org.fullbodyexploded) then return end
+
+	-- Если уже есть death-регдолл - рвём его. Иначе ставим на следующий тик,
+	-- когда движок создаст регдолл смерти.
+	local function explodeDeathRag()
+		local rag = IsValid(ply.FakeRagdoll) and ply.FakeRagdoll or ply:GetNWEntity("RagdollDeath")
+		if not IsValid(rag) then return end
+		if not hg.CanFullBodyGib(rag, rag.organism, hg.RagdollOwner(rag)) then return end
+		hg.FullBodyExplode(rag, ply:GetVelocity() or vector_origin, nil)
+	end
+
+	if IsValid(ply.FakeRagdoll) or IsValid(ply:GetNWEntity("RagdollDeath")) then
+		explodeDeathRag()
+	else
+		timer.Simple(0, explodeDeathRag)
+	end
+end)

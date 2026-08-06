@@ -147,7 +147,9 @@ if CLIENT then
 			local playerBone = ent:LookupBone(playerBoneName)
 			if not modelMatrix or not playerBone then continue end
 
-			ent:SetBoneMatrix(playerBone, modelMatrix)
+			pcall(function()
+				ent:SetBoneMatrix(playerBone, modelMatrix)
+			end)
 		end
 	end
 end

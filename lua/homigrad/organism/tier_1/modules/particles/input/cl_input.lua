@@ -200,13 +200,42 @@ end)
 
 hg.explode = explode
 
+hg.gibTrails = hg.gibTrails or {}
+local function addGibTrail(ent)
+	if not IsValid(ent) or hg.gibTrails[ent] then return end
+	hg.gibTrails[ent] = {lastSpawn = 0}
+end
+
 net.Receive("hg_gib_bloodspill", function()
 	local entIndex = net.ReadUInt(16)
 	net.ReadFloat()
 	local stump = net.ReadBool()
+	local trail = net.ReadBool()
 	local ent = Entity(entIndex)
 	if not IsValid(ent) then return end
 	for i = 1, stump and 16 or 5 do addGibBloodSpill(ent, stump) end
+	if trail then addGibTrail(ent) end
+end)
+
+hook.Add("Think", "hg_gib_trail", function()
+	for ent, data in pairs(hg.gibTrails) do
+		if not IsValid(ent) then
+			hg.gibTrails[ent] = nil
+			continue
+		end
+		if LocalPlayer():GetNetVar("disappearance", nil) or ent:GetNetVar("disappearance", nil) then continue end
+
+		local vel = ent:GetVelocity()
+		local speed = vel:Length()
+		if speed < 22 then continue end
+
+		local now = CurTime()
+		if data.lastSpawn > now then continue end
+		data.lastSpawn = now + 0.035
+
+		local normVel = vel / speed
+		addBloodPart(ent:GetPos() + VectorRand(-1.5, 1.5), -normVel * Rand(15, 35) + VectorRand(-4, 4), mats[math.random(countmats)], Rand(1.5, 3), Rand(1.5, 3), false, false)
+	end
 end)
 
 net.Receive("addfountain",function()

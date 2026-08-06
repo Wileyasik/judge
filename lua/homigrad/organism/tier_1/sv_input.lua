@@ -1319,7 +1319,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	damageStack = damageStack * (dmgInfo:IsDamageType(DMG_BLAST) and blast_gib_damage_mul / lend * grenadeBlastMul or 1) * (!dmgInfo:IsDamageType(DMG_CLUB+DMG_SLASH+DMG_BULLET+DMG_BUCKSHOT+DMG_BLAST+DMG_SNIPER) and 0 or 1) * (ent:IsNPC() and 3 or 1)
 	if impact.armorStopped then damageStack = 0 end
 	--damageStack = damageStack * (bullet and bullet.AmmoType and hg.ammotypeshuy[bullet.AmmoType] and hg.ammotypeshuy[bullet.AmmoType].BulletSettings and hg.ammotypeshuy[bullet.AmmoType].BulletSettings.Mass or 1) / 8
-	if hg.FullBodyExplode and not org.fullbodyexploded and dmgInfo:IsDamageType(DMG_BLAST) and hg.CanFullBodyGib and hg.CanFullBodyGib(ent, org, ply) and (damageStack >= full_body_blast_gib_threshold or dmg_before >= full_body_blast_damage_threshold) then
+	if hg.FullBodyExplode and not org.fullbodyexploded and dmgInfo:IsDamageType(DMG_BLAST) and (damageStack >= full_body_blast_gib_threshold or dmg_before >= full_body_blast_damage_threshold) then
 		return hg.FullBodyExplode(ent, dirCool * len, dmgInfo) or true
 	end
 	
@@ -1602,23 +1602,23 @@ function hg.organism.DamageTypeAffliction(dmg, dmgInfo, ply, org)
 	end
 
 	if dmgInfo:IsDamageType(DMG_BULLET) then
-		dmgBlood = dmg * 8
+		dmgBlood = dmg * 7
 		dmgHurt = dmg * 5
 		instaPain = dmg * 5
 		immobilization = dmg * 5
 	end
 	
 	if dmgInfo:IsDamageType(DMG_SLASH) then
-		dmgBlood = dmg * 12
-		dmgHurt = dmg * 8
-		instaPain = dmg * 9
+		dmgBlood = dmg * 7
+		dmgHurt = dmg * 7
+		instaPain = dmg * 6
 		immobilization = dmg * 6
 	end
 	
 	if dmgInfo:IsDamageType(DMG_BUCKSHOT) then
-		dmgBlood = dmg * 3
-		dmgHurt = dmg * 5
-		instaPain = dmg * 3
+		dmgBlood = dmg * 9
+		dmgHurt = dmg * 7
+		instaPain = dmg * 4
 		immobilization = dmg * 5
 	end
 
@@ -1862,7 +1862,7 @@ local function velocityDamage(ent, data)
 
 	local org = ent.organism
 	if org.godmode then return end
-	if hg.FullBodyExplode and not org.fullbodyexploded and hg.CanFullBodyGib and hg.CanFullBodyGib(ent, org, ply) and (speed >= full_body_physics_speed_threshold or rawPhysicsDamage >= full_body_physics_damage_threshold) then
+	if hg.FullBodyExplode and not org.fullbodyexploded and (speed >= full_body_physics_speed_threshold or rawPhysicsDamage >= full_body_physics_damage_threshold) then
 		if hg.FullBodyExplode(ent, data.OurOldVelocity - data.TheirOldVelocity, dmgInfo) then return end
 	end
 
