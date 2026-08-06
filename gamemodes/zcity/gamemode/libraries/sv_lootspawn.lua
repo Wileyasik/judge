@@ -262,6 +262,8 @@ function hg.GenerateLoot(ply,ent,func)
 
 	local _, entName = hg.WeightedRandomSelect(tab)
 
+	if entName and hg.LootBlacklist[entName] then return end
+
 	if hg.PluvTown.Active and (entName == "weapon_bigconsumable" or entName == "weapon_smallconsumable") then
 		entName = "weapon_pluviska"
 	end

@@ -5,6 +5,42 @@
 hg.LootPools = hg.LootPools or {}
 local LP = hg.LootPools
 
+-- Weapons/entities that must never roll from loot.
+-- Filtered out in hg.GenerateLoot for every mode.
+hg.LootBlacklist = hg.LootBlacklist or {}
+local LootBlacklist = hg.LootBlacklist
+
+for _, class in ipairs({
+	"weapon_hg_slayersword",
+	"weapon_hg_nunchuks",
+	"weapon_thaumaturgic_arm",
+	"weapon_ballistic_shield",
+	"weapon_callbomber",
+	"weapon_hg_bow",
+	"weapon_hg_bugbait",
+	"weapon_hg_emptymag",
+	"weapon_remington870_roullet",
+	"weapon_hg_gravitygun",
+	"weapon_hg_crossbow",
+	"weapon_spawnmenu_pda",
+	"weapon_hg_snowball",
+	"weapon_henchman_usp",
+	"weapon_hg_wire",
+	"weapon_ags_30_handheld",
+	"weapon_fn40gl",
+	"weapon_hg_rebelrpg",
+	"weapon_hg_rpg",
+	"weapon_hg_eft_rshg",
+	"weapon_ptrd_fun_auto",
+	"weapon_bleeding_musket",
+	"weapon_kord",
+	"weapon_alien3",
+	"weapon_oicw",
+	"weapon_osipr",
+}) do
+	LootBlacklist[class] = true
+end
+
 -- Each pool is a list of { weight, entityClass }.
 -- Weights are relative inside a single pool and tuned so that
 -- anything that shoots hard is a rare find.
@@ -81,8 +117,6 @@ LP.Sidearms = {
 	{1.2, "weapon_chiappa_rhino"},
 	{1, "weapon_tkpd"},
 	{1, "weapon_henchman_usp"},
-	{0.8, "weapon_fury16"},
-	{0.6, "weapon_fury13"},
 
 	{2, "weapon_glock17"},
 	{2, "weapon_cz75"},
@@ -195,8 +229,6 @@ LP.AssaultRifles = {
 	{0.25, "weapon_tx15"},
 	{0.25, "weapon_adar215"},
 	{0.25, "weapon_osipr"},
-	{0.2, "weapon_oicw"},
-	{0.2, "weapon_alien3"},
 }
 
 LP.Marksman = {

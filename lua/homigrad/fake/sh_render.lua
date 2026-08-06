@@ -75,7 +75,7 @@ local IsValid, math_Clamp = IsValid, math.Clamp
 	local bandageHandsOnly = "00000010010000"
 
 	function hg.RenderBandageGloves(ent, ply)
-		local mdl = ply.PlayerClassName ~= "swat" and ply:GetNWString("BandageGlovesMdl", "") or ""
+		local mdl = ply.PlayerClassName ~= "swat" and ply.PlayerClassName ~= "police" and ply:GetNWString("BandageGlovesMdl", "") or ""
 		if mdl == "" then
 			if IsValid(ent.bandageGlovesModel) then
 				ent.bandageGlovesModel:Remove()

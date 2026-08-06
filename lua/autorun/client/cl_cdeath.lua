@@ -33,11 +33,35 @@ local cfg_spectator     = true
 local cfg_compat        = false
 local cfg_options_delay = 4
 
+local deathColors = { Color(255, 0, 0) }
+local colorRandom  = true
+local colorIndex   = 1
+
 net.Receive("DeathEffect_Config", function()
     cfg_spectator     = net.ReadBool()
     cfg_compat        = net.ReadBool()
     cfg_options_delay = net.ReadFloat()
+
+    local count = net.ReadUInt(8)
+    local palette = {}
+    for _ = 1, count do
+        local r = net.ReadUInt(8)
+        local g = net.ReadUInt(8)
+        local b = net.ReadUInt(8)
+        palette[#palette + 1] = Color(r, g, b)
+    end
+    if #palette == 0 then palette = { Color(255, 0, 0) } end
+    deathColors = palette
+    colorRandom = net.ReadBool()
 end)
+
+local function NextDeathColor()
+    if colorRandom then
+        return deathColors[math.random(#deathColors)]
+    end
+    colorIndex = (colorIndex % #deathColors) + 1
+    return deathColors[colorIndex]
+end
 
 -- convars (client)
 CreateClientConVar(
@@ -111,6 +135,7 @@ local deathPos      = Vector(0, 0, 0)
 local ragdollEnt    = nil
 local nextRagdollSearch = 0
 local deathMessage  = DEATH_MESSAGES[1]
+local deathColor    = Color(255, 0, 0)
 local matWhite      = Material("models/debug/debugwhite")
 
 local deathSoundChannels = {}
@@ -391,6 +416,7 @@ local function CinematicDeathTracker()
         prevSkipDown     = input.IsButtonDown(KEY_BACKSPACE) or SafeKeyDown(jumpKeyCode)
         prevSpecReloadDown = false
         deathMessage     = DEATH_MESSAGES[math.random(#DEATH_MESSAGES)]
+        deathColor       = NextDeathColor()
 
         local plyPos = ply:GetPos()
         deathPos     = plyPos
@@ -677,8 +703,8 @@ local function CinematicDeathBackground()
         local fadeProgress = math.Clamp(stageElapsed / BLACK_FADE_DURATION, 0, 1)
         local fadeOutProgress = math.Clamp((stageElapsed - BLACK_FADE_DURATION) / BLACK_FADE_OUT_DURATION, 0, 1)
         local overlayAlpha = math.floor((1 - fadeOutProgress) * 255)
-        local red = math.floor((1 - fadeProgress) * 255)
-        surface.SetDrawColor(red, 0, 0, overlayAlpha)
+        local intensity = math.floor((1 - fadeProgress) * 255)
+        surface.SetDrawColor(deathColor.r * intensity / 255, deathColor.g * intensity / 255, deathColor.b * intensity / 255, overlayAlpha)
         surface.DrawRect(0, 0, sw, sh)
 
         if fadeProgress < 1 and IsValid(ragdollEnt) then
@@ -711,12 +737,12 @@ local function CinematicDeathBackground()
         local slide = 1 - ((1 - textFadeIn) ^ 3)
         local textX = Lerp(slide, -650, 70) + math.sin(CurTime() * 95) * shake
         local textY = sh / 2 - 60 + math.cos(CurTime() * 110) * shake
-        draw.SimpleText(text, "DeathEffect_HG_Large", textX, textY, Color(0, 0, 0, textAlpha), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-        draw.SimpleText(desc, "DeathEffect_HG_Desc", textX + 6, textY + 85, Color(0, 0, 0, textAlpha), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        draw.SimpleText(text, "DeathEffect_HG_Large", textX, textY, Color(deathColor.r, deathColor.g, deathColor.b, textAlpha), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        draw.SimpleText(desc, "DeathEffect_HG_Desc", textX + 6, textY + 85, Color(deathColor.r, deathColor.g, deathColor.b, textAlpha), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 
         local hint = "press [SPACE] or [BACKSPACE] to skip"
         local hintAlpha = math.floor(textFadeIn * overlayAlpha * 0.45)
-        draw.SimpleText(hint, "DeathEffect_Hint", sw / 2, sh - 36, Color(0, 0, 0, hintAlpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        draw.SimpleText(hint, "DeathEffect_Hint", sw / 2, sh - 36, Color(deathColor.r, deathColor.g, deathColor.b, hintAlpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     end
 
 end

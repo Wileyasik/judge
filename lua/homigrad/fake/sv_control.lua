@@ -841,7 +841,7 @@ hook.Add("Think", "Fake", function()
 			end
 		end
 		local holdWound, holdWoundArterial = getHoldWound(org, ragdoll)
-		local wantsManualHold = holdWound and org.canmove and hg.KeyDown(ply, IN_USE) and hg.KeyDown(ply, IN_JUMP)
+		local wantsManualHold = (holdWound and org.canmove and hg.KeyDown(ply, IN_USE) and hg.KeyDown(ply, IN_JUMP)) or (org.neckslit and not org.otrub and holdWoundArterial and org.canmove)
 		local canHoldLeft = IsValid(lupper) and IsValid(lforearm) and IsValid(lhand) and not org.larmamputated and not org.larmupamputated
 		local canHoldRight = IsValid(rupper) and IsValid(rforearm) and IsValid(rhand) and not org.rarmamputated and not org.rarmupamputated
 		local hasBothArms = canHoldLeft and canHoldRight
@@ -1572,7 +1572,10 @@ hook.Add("Think", "Fake", function()
 					entryDir = ragdoll._slideEntryDir or vector_up
 				end
 
-				local checkSpeed = math.max(horizontalSpeed, entrySpeed)
+				local plyVel = ply:GetVelocity()
+				local playerHorizontalSpeed = Vector(plyVel.x, plyVel.y, 0):Length()
+
+				local checkSpeed = math.max(playerHorizontalSpeed, entrySpeed)
 
 				if ragdoll._slideActive then
 					local slideTime = CurTime() - ragdoll._slideStartTime
@@ -1840,14 +1843,23 @@ hook.Add("Ragdoll Collide", "SlideDamage", function(ragdoll, data)
 		hook.Run("HG_PlayerDropkicked", ply, targetPly)
 	end
 	if not IsValid(targetPly) then
-		local dmgInfo = DamageInfo()
-		dmgInfo:SetDamage(dmg)
-		dmgInfo:SetDamageType(DMG_CLUB)
-		dmgInfo:SetAttacker(ply)
-		dmgInfo:SetInflictor(ragdoll)
-		dmgInfo:SetDamagePosition(physObj:GetPos())
-		dmgInfo:SetDamageForce(data.OurOldVelocity:GetNormalized() * dmg * 50)
-		hitEnt:TakeDamageInfo(dmgInfo)
+		if hgIsDoor and hgIsDoor(hitEnt) and not hitEnt:GetNoDraw() then
+			hitEnt.HP = hitEnt.HP or 200
+			hitEnt.HP = hitEnt.HP - dmg * (isDropkick and 2.5 or 1)
+			hitEnt:EmitSound("physics/wood/wood_crate_impact_hard" .. math.random(1, 4) .. ".wav")
+			if hitEnt.HP <= 0 and hgBlastThatDoor then
+				hgBlastThatDoor(hitEnt, data.OurOldVelocity:GetNormalized() * 125)
+			end
+		else
+			local dmgInfo = DamageInfo()
+			dmgInfo:SetDamage(dmg)
+			dmgInfo:SetDamageType(DMG_CLUB)
+			dmgInfo:SetAttacker(ply)
+			dmgInfo:SetInflictor(ragdoll)
+			dmgInfo:SetDamagePosition(physObj:GetPos())
+			dmgInfo:SetDamageForce(data.OurOldVelocity:GetNormalized() * dmg * 50)
+			hitEnt:TakeDamageInfo(dmgInfo)
+		end
 	else
 		local dmgInfo = DamageInfo()
 		dmgInfo:SetDamage(dmg)
@@ -1864,7 +1876,9 @@ hook.Add("Ragdoll Collide", "SlideDamage", function(ragdoll, data)
 			hitgroup = HITGROUP_LEFTLEG
 		end
 
-		hook.Run("HomigradDamage", targetPly, dmgInfo, hitgroup, hg.GetCurrentCharacter(targetPly), dmg)
+		-- Dropkicks hit hard but are cheap movement tech: pass harm normalized to the
+		-- 0..maxharm scale (like real weapons) so they don't rack up RDM-karma like a kill.
+		hook.Run("HomigradDamage", targetPly, dmgInfo, hitgroup, hg.GetCurrentCharacter(targetPly), dmg * 0.1)
 
 		if isDropkick and targetPly.organism then
 			local speedMul = math.Clamp((speed - 260) / 420, 0, 1)
