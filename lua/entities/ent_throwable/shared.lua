@@ -10,3 +10,5 @@ ENT.NoDismemberment = true
 ENT.AttackHit = "Canister.ImpactHard"
 ENT.AttackHitFlesh = "snd_jack_hmcd_axehit.wav"
 ENT.Throwable = true
+
+-- Shared throwable defaults.

@@ -2,6 +2,8 @@ AddCSLuaFile("cl_init.lua")
 AddCSLuaFile("shared.lua")
 include("shared.lua")
 
+-- Throwable lifecycle is handled below.
+
 function ENT:Initialize()
 	self:SetModel(self.WorldModel)
 	self:PhysicsInit(SOLID_VPHYSICS)
