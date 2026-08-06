@@ -88,8 +88,10 @@ local OpenMenu
 local whitelist = {
 	["weapon_bandage_sh"] = true,
 	["weapon_buck200knife"] = true,
+	["weapon_bars_a2607"] = true,
 	["weapon_combatknife"] = true,
 	["weapon_6x5"] = true,
+	["weapon_hg_akula"] = true,
 	["weapon_hammer"] = true,
 	["weapon_hatchet"] = true,
 	["weapon_hg_axe"] = true,
