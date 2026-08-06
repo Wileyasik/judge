@@ -13,3 +13,9 @@ SWEP.Spawnable = true
 SWEP.WorldModel = "models/weapons/w_rgd5_unthrowed.mdl"
 SWEP.WorldModelReal = "models/weapons/c_rgd5_2.mdl"
 SWEP.ENT = "ent_hg_eft_rgd5"
+
+if CLIENT then
+	SWEP.WepSelectIcon = Material("entities/arc9_eft_rgd5.png")
+	SWEP.IconOverride = "entities/arc9_eft_rgd5.png"
+	SWEP.BounceWeaponIcon = false
+end
