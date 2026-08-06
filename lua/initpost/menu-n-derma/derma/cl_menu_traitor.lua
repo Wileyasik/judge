@@ -182,6 +182,7 @@ local RoleConfigs = {
             ["weapon_6x5"] = {cost = 2, name = "6x5 Bayonet"},
             ["weapon_buck200knife"] = {cost = 2, name = "Buck 120 General"},
             ["weapon_hg_ritual"] = {cost = 5, name = "Ritual Knife"},
+            ["weapon_hg_akula"] = {cost = 2, name = "Akula Dagger"},
             ["weapon_hg_wire"] = {cost = 3, name = "Fiber Wire"},
             ["weapon_hg_eft_rgd5"] = {cost = 4, name = "RGD-5 Grenade"},
             ["weapon_adrenaline"] = {cost = 3, name = "Epipen"},
@@ -205,9 +206,10 @@ local RoleConfigs = {
             ["weapon_p22"] = {"weapon_p22_silencer", "weapon_p22_ammo"}
         },
         exclusions = {
-            ["weapon_6x5"] = {["weapon_buck200knife"] = true, ["weapon_hg_ritual"] = true},
-            ["weapon_buck200knife"] = {["weapon_6x5"] = true, ["weapon_hg_ritual"] = true},
-            ["weapon_hg_ritual"] = {["weapon_buck200knife"] = true, ["weapon_6x5"] = true},
+            ["weapon_6x5"] = {["weapon_buck200knife"] = true, ["weapon_hg_ritual"] = true, ["weapon_hg_akula"] = true},
+            ["weapon_buck200knife"] = {["weapon_6x5"] = true, ["weapon_hg_ritual"] = true, ["weapon_hg_akula"] = true},
+            ["weapon_hg_ritual"] = {["weapon_buck200knife"] = true, ["weapon_6x5"] = true, ["weapon_hg_akula"] = true},
+            ["weapon_hg_akula"] = {["weapon_buck200knife"] = true, ["weapon_6x5"] = true, ["weapon_hg_ritual"] = true},
         },
         defaultPresets = {
             {
