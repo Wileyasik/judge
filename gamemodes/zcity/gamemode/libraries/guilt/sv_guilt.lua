@@ -153,7 +153,9 @@ hook.Add("HomigradDamage", "GuiltReg", function(ply, dmgInfo, hitgroup, ent, har
 
     local newharm = math.min(harm + oldharmdone, maxharm)
     local harm = newharm - oldharmdone
-    local amt = harm / maxharm
+    -- "Колено": мелкий/одиночный урон весит меньше, чем добивание.
+    -- Добивание (полный клип до maxharm) остаётся 1.0, а градусы/дропкики сушат меньше.
+    local amt = (harm / maxharm) ^ 1.12
     
     if amt > 0.2 or newharm / maxharm > 0.8 then
         --print("Player "..Attacker:Name().." harmed player "..(Victim:IsPlayer() and Victim:Name() or (tostring(Victim))).." with "..harm.." points.")
@@ -237,12 +239,24 @@ hook.Add("HomigradDamage", "GuiltReg", function(ply, dmgInfo, hitgroup, ent, har
     end
     
     local guiltadd = amt * 60
-    local maxLoss = zb.IsForce(Attacker) and 50 or 30
+    -- Килы по нарастающей: каждый следующий килл в коротком окне (90 сек) отнимает больше кармы.
+    local now = CurTime()
+    if (Attacker.karmaKillStreakUntil or 0) < now then
+        Attacker.karmaKillStreak = 0
+    end
+    local isKill = newharm >= maxharm and oldharmdone < newharm
+    if isKill then
+        Attacker.karmaKillStreak = (Attacker.karmaKillStreak or 0) + 1
+        Attacker.karmaKillStreakUntil = now + 90
+    end
+    local streak = math.max(Attacker.karmaKillStreak or 0, 1)
+    local streakMul = math.min(1 + 0.5 * (streak - 1), 3)
+    local maxLoss = (zb.IsForce(Attacker) and 50 or 30) + 15 * (streak - 1)
     local karmaDone = zb.HarmDoneKarma[Victim][Attacker]
     zb.HarmReturnedKarma[Attacker] = zb.HarmReturnedKarma[Attacker] or {}
     local karmaReturn = math.max(((zb.HarmDoneKarma[Attacker] and zb.HarmDoneKarma[Attacker][Victim] or 0) * 0.5) - (zb.HarmReturnedKarma[Attacker][Victim] or 0), 0)
     zb.HarmReturnedKarma[Attacker][Victim] = (zb.HarmReturnedKarma[Attacker][Victim] or 0) + karmaReturn
-    add = math.Clamp(add, 0, math.max(maxLoss - karmaDone, 0))
+    add = math.Clamp(add * (isKill and streakMul or 1), 0, math.max(maxLoss - karmaDone, 0))
 
     if Victim:IsPlayer() and add > 0 then
         zb.HarmReceivedKarma[Victim] = zb.HarmReceivedKarma[Victim] or 0
@@ -255,20 +269,43 @@ hook.Add("HomigradDamage", "GuiltReg", function(ply, dmgInfo, hitgroup, ent, har
     Attacker.Guilt = (Attacker.Guilt or 0) + guiltadd
     Attacker.Karma = math.Clamp((Attacker.Karma or 100) - add + karmaReturn, -60, zb.MaxKarma)
 
+    -- Звук при резкой потере кармы (более 20 за один инцидент), погромче.
+    local karmaNetLoss = add - karmaReturn
+    if karmaNetLoss > 20 then
+        Attacker:EmitSound("karmadown.mp3", 100, 100)
+    end
+
     zb.HarmDoneKarma[Victim][Attacker] = zb.HarmDoneKarma[Victim][Attacker] + add
 
     if shouldBanGuilt and Attacker.Guilt >= 100 then
 		-- if ULib then
-        	ULib.addBan( Attacker:SteamID(), 30, "Kicked and banned for dealing too much team damage.", Attacker:Name(), "System" )
+        	ULib.addBan( Attacker:SteamID(), 15, "Banned for dealing too much team damage.", Attacker:Name(), "System" )
 		-- else
-		-- 	Attacker:Ban(30, true)
+		-- 	Attacker:Ban(15, true)
 		-- end
 
-        PrintMessage(HUD_PRINTTALK, "Player "..Attacker:Name().." has been banned for 30 minutes for RDMing in a team based gamemode.")
+        PrintMessage(HUD_PRINTTALK, "Player "..Attacker:Name().." has been banned for 15 minutes for RDMing in a team based gamemode.")
     end
 
     Attacker:SetNetVar("Karma", Attacker.Karma)
     
+    -- Чисто звуковое предупреждение для того, кто теряет карму (без чата).
+    -- Чем ниже карма — тем ниже тон сигнала.
+    local warned = Attacker.karma_warned or 999
+    if Attacker.Karma <= 0 and warned > 0 then
+        Attacker.karma_warned = 0
+        Attacker:EmitSound("karmadown.mp3", 100, 60)
+    elseif Attacker.Karma <= 20 and warned > 20 then
+        Attacker.karma_warned = 20
+        Attacker:EmitSound("karmadown.mp3", 100, 80)
+    elseif Attacker.Karma <= 35 and warned > 35 then
+        Attacker.karma_warned = 35
+        Attacker:EmitSound("karmadown.mp3", 100, 100)
+    elseif Attacker.Karma <= 60 and warned > 60 then
+        Attacker.karma_warned = 60
+        Attacker:EmitSound("karmadown.mp3", 100, 120)
+    end
+
     zb.GuiltTable[Attacker][Victim] = math.Clamp((zb.GuiltTable[Attacker][Victim] or 0) + guiltadd, 0, 200)
 
     if Attacker.Karma <= 0 then
@@ -285,12 +322,13 @@ hook.Add("HomigradDamage", "GuiltReg", function(ply, dmgInfo, hitgroup, ent, har
                 karma = Attacker.Karma
             end
 
-            local time = math.Round(60 - karma * 4, 0)
+            -- Бан на 25 минут за обнуление кармы.
+            local time = 25
 
 			-- if ULib then
-				ULib.addBan( steamID, 60, "Kicked and banned for having too low karma.", name, "System" )
+				ULib.addBan( steamID, time, "Banned for having too low karma.", name, "System" )
 			-- else
-			-- 	Attacker:Ban(60, true)
+			-- 	Attacker:Ban(time, true)
 			-- end
             
             PrintMessage(HUD_PRINTTALK, "Player "..name.." has been banned for "..time.." minutes for having too low karma.")
@@ -328,6 +366,10 @@ hook.Add("Player Spawn","SlowlyRestoreKarma",function(ply)
     //ply:guilt_SetValue( ply.Karma or 100 )
     
     ply.Guilt = 0
+
+    -- Re-arm karma warnings to the current risk tier, so they only fire when karma drops.
+    ply.karma_warned = math.min(ply.karma_warned or 999,
+        ply.Karma <= 20 and 0 or ply.Karma <= 35 and 35 or ply.Karma <= 60 and 60 or 999)
 end)
 
 hook.Add("Player Think", "karmagain", function(ply)

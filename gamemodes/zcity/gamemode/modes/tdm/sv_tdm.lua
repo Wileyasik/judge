@@ -135,6 +135,8 @@ function MODE:EndVoting()
 	self.SeriesTotal = (ARENA_ROUND_OPTIONS[selected] or ARENA_ROUND_OPTIONS[2]).rounds
 	self.SeriesLeft = self.SeriesTotal
 	self.VoteInProgress = false
+	self.TeamsAssigned = false
+	self:AssignArenaTeams()
 	self.RoundSetupTime = CurTime() + 2
 
 	net.Start("arena_vote_result")
@@ -188,6 +190,38 @@ net.Receive("arena_loadout_sync", function(_, ply)
 	if not ok or not istable(parsed) then return end
 	ply.ArenaLoadout = parsed
 end)
+function MODE:AssignArenaTeams()
+	self.TeamsAssigned = true
+
+	local players = {}
+	for _, ply in player.Iterator() do
+		if ply:Team() == TEAM_SPECTATOR then continue end
+		players[#players + 1] = ply
+	end
+
+	table.Shuffle(players)
+	for i, ply in ipairs(players) do
+		ply:SetTeam(i % 2)
+	end
+end
+
+function MODE:OverrideBalance()
+	if not self.TeamsAssigned then
+		self:AssignArenaTeams()
+		return true
+	end
+
+	for _, ply in player.Iterator() do
+		if ply:Team() == TEAM_SPECTATOR then continue end
+		local team_ = ply:Team()
+		if team_ ~= 0 and team_ ~= 1 then
+			ply:SetTeam(zb:BalancedChoice(0, 1))
+		end
+	end
+
+	return true
+end
+
 function MODE:Intermission()
 	RemoveVoteTimers()
 	self.VoteInProgress = false

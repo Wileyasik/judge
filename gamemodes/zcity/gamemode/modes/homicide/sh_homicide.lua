@@ -35,6 +35,7 @@ local HeroUpgradeData = {
 	["hero_glock_ammo"] = {parent = "weapon_glock17", type = "ammo", extraClips = 1},
 	["hero_usp_ammo"] = {parent = "weapon_usp", type = "ammo", extraClips = 1},
 	["hero_usp_rmr"] = {parent = "weapon_usp", type = "attachment", attachment = "holo16"},
+	["hero_usp_supressor"] = {parent = "weapon_usp", type = "attachment", attachment = "supressor1"},
 	["hero_remington_sight"] = {parent = "weapon_remington870", type = "attachment", attachment = "holo16"},
 	["hero_remington_ammo"] = {parent = "weapon_remington870", type = "ammo", extraClips = 1},
 	["hero_remington_long_sight"] = {parent = "weapon_remington870_long", type = "attachment", attachment = "holo16"},

@@ -599,6 +599,25 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		end
 	end
 	org.neckslit = neckslit
+
+	if org.neckslit and not org.otrub then
+		org.needfake = true
+		if not org.neckslitDeadline then
+			org.neckslitDeadline = CurTime() + 15
+			org.neckslitWarned = nil
+			if isPly and owner:Alive() then
+				owner:Notify("My throat was slit! I hold my neck and wait for help. ~15 seconds left...", true, "neckslit", 0)
+			end
+		elseif org.neckslitWarned ~= true and org.neckslitDeadline - CurTime() <= 4 then
+			org.neckslitWarned = true
+			if isPly and owner:Alive() then
+				owner:Notify("I'm fading... someone save me!", true, "neckslit_save", 0)
+			end
+		end
+	elseif org.neckslitDeadline then
+		org.neckslitDeadline = nil
+		org.neckslitWarned = nil
+	end
 	module.pain[2](owner, org, timeValue)
 	if isPly then
 		module.metabolism[2](owner, org, timeValue)
@@ -633,7 +652,6 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	local oldSeizureBrain = org.lastSeizureBrain or (org.brain or 0)
 	local lobeDamage = getSeizureLobeDamage(org)
 	local oldSeizureLobeDamage = org.lastSeizureLobeDamage or lobeDamage
-	local oldSeizureTemperature = org.lastSeizureTemperature or (org.temperature or 36.7)
 	if org.berserk > 0 and !org.berserkActive then
 		org.berserkActive = true
 		owner.lastBerserkLaughSoundCD = CurTime() + 5
@@ -678,14 +696,9 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	if lobeDelta > 0 then
 		hg.organism.AddSeizure(org, math.Clamp(lobeDelta * seizure_brain_trauma_gain_mul, 0, 1))
 	end
+	-- Отключено: перепад температуры (холод/жара) больше не вызывает судороги.
+	-- Раньше на зимних картах это давало случайные припадки из-за переохлаждения.
 	local temperature = org.temperature or 36.7
-	local previousTemperature = oldSeizureTemperature
-	local heatStress = math.max(temperature - seizure_temperature_high_start, previousTemperature - seizure_temperature_high_start, 0)
-	local coldStress = math.max(seizure_temperature_low_start - temperature, seizure_temperature_low_start - previousTemperature, 0)
-	local temperatureStress = math.max(heatStress, coldStress)
-	if temperatureStress > 0 then
-		hg.organism.AddSeizure(org, timeValue * temperatureStress * seizure_temperature_gain_mul)
-	end
 	local curTime = CurTime()
 	local seizureBrainDamage = math.max(org.brain or 0, lobeDamage)
 	if seizureBrainDamage > 0.05 then
@@ -788,6 +801,12 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	else
 		org.deathStateEnd = nil
 		org.deathStateKilled = nil
+	end
+
+	if isPly and org.neckslit and org.neckslitDeadline and CurTime() >= org.neckslitDeadline and owner:Alive() and not org.deathStateKilled then
+		org.deathStateKilled = true
+		owner:Kill()
+		return
 	end
 
 	if isPly and org.brain and org.brain >= 1 and owner:Alive() and not org.deathStateKilled then
