@@ -307,7 +307,8 @@ local RoleConfigs = {
             ["hero_kar98_ammo"] = {cost = 2, name = "Kar98 Extra Ammo", parent = "weapon_kar98", desc = "Start with extra rifle rounds."},
             ["hero_mr43_long_ammo"] = {cost = 2, name = "MR43 Long Extra Shells", parent = "weapon_mr43", desc = "Start with extra shells."},
             ["hero_mr43_ammo"] = {cost = 2, name = "MR43 Sawed-off Extra Shells", parent = "weapon_mr43_short", desc = "Start with extra shells."},
-            ["hero_mp18_ammo"] = {cost = 2, name = "MP-18 Extra Ammo", parent = "weapon_mp18", desc = "Start with extra rounds."}
+            ["hero_mp18_ammo"] = {cost = 2, name = "MP-18 Extra Ammo", parent = "weapon_mp18", desc = "Start with extra rounds."},
+            ["hero_chiappa_ammo"] = {cost = 2, name = "Chiappa Extra Ammo", parent = "weapon_chiappa_rhino", desc = "Start with extra revolver rounds."}
         },
         addonOrder = {
             ["weapon_px4beretta"] = {"hero_px4_ammo"},
@@ -318,6 +319,7 @@ local RoleConfigs = {
             ["weapon_mr43_short"] = {"hero_mr43_ammo"},
             ["weapon_kar98"] = {"hero_kar98_scope", "hero_kar98_ammo"},
             ["weapon_mp18"] = {"hero_mp18_ammo"},
+            ["weapon_chiappa_rhino"] = {"hero_chiappa_ammo"},
         },
         exclusions = {},
         defaultPresets = {

@@ -47,6 +47,7 @@ local HeroUpgradeData = {
 	["hero_mr43_long_ammo"] = {parent = "weapon_mr43", type = "ammo", extraClips = 1},
 	["hero_mr43_ammo"] = {parent = "weapon_mr43_short", type = "ammo", extraClips = 1},
 	["hero_mp18_ammo"] = {parent = "weapon_mp18", type = "ammo", extraClips = 1},
+	["hero_chiappa_ammo"] = {parent = "weapon_chiappa_rhino", type = "ammo", extraClips = 1},
 	["hero_kar98_scope"] = {parent = "weapon_kar98", type = "attachment", attachment = "optic12"},
 	["hero_kar98_ammo"] = {parent = "weapon_kar98", type = "ammo", extraClips = 1},
 	["hero_mosin_silencer"] = {parent = "weapon_mosin", type = "attachment", attachment = "supressor9"},
