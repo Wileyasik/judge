@@ -38,7 +38,7 @@ SWEP.BlockMaterial = "metal"
 SWEP.BlockSound = {"physics/metal/metal_sheet_impact_hard2.wav", 85, {145, 155}}
 
 
-SWEP.setlh = true
+SWEP.setlh = false
 SWEP.setrh = true
 SWEP.TwoHanded = false
 
