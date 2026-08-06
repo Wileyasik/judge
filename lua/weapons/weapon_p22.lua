@@ -105,7 +105,7 @@ SWEP.CustomShell = "9x19"
 
 SWEP.ScrappersSlot = "Secondary"
 
-SWEP.LocalMuzzlePos = Vector(5.767,0.001,2.28)
+SWEP.LocalMuzzlePos = Vector(4.75,0.0,2.2)
 SWEP.LocalMuzzleAng = Angle(0.7,-0.1,0)
 SWEP.WeaponEyeAngles = Angle(0,0,0)
 

@@ -339,15 +339,15 @@ hg.attachments.sight = {
 	},
 	["holo17"] = {
 		"sight",
-		"models/weapons/arc9/darsu_eft/mods/scope_compact_prism.mdl",
-		Angle(180, 0, -90),
+		"models/weapons/arc9/darsu_eft/mods/steiner_r1x.mdl",
+		Angle(0, 0, -90),
 		offset = Vector(0, 0, -0.02),
-		offsetView = Vector(-1.4, 0, 9),
+		offsetView = Vector(-1.2, 0, 9),
 		{},
 		mountType = "picatinny",
 		holotex = "effects/arc9/rt",
 
-		holo = Material("vgui/arc9_eft_shared/reticles/new/scope_base_sig_romeo_4_mark.png"),
+		holo = Material("vgui/arc9_eft_shared/reticles/new/scope_all_leupold_deltapoint_marks.png"),
 		holo_size = CLIENT and ScreenScale(0.35) or 1, --size of the holo
 		PhysModel = "models/hunter/plates/plate025.mdl",
 		PhysPos = Vector(0, 0, 0),
