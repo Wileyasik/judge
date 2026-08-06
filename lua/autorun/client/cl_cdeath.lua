@@ -63,7 +63,7 @@ local cv_cam_max_dist = GetConVar("deatheffect_cam_max_dist")
 local cv_cam_min_dist = GetConVar("deatheffect_cam_min_dist")
 local cv_alt_sound    = GetConVar("deatheffect_alt_sound")
 
-local cv_enabled = CreateClientConVar("deatheffect_enabled", "1", true, false, "Toggle the cinematic death screen", 0, 1)
+local cv_enabled = CreateClientConVar("deatheffect_enabled", "1", true, true, "Toggle the cinematic death screen", 0, 1)
 
 surface.CreateFont("DeathEffect_Key", { font = "Roboto", size = 52, weight = 700 })
 surface.CreateFont("DeathEffect_Label", { font = "Roboto", size = 22, weight = 400 })
@@ -109,6 +109,7 @@ local matWhite      = Material("models/debug/debugwhite")
 
 local deathSoundChannels = {}
 local keepSoundAlive    = false
+local deathSoundGeneration = 0
 
 local inTransition        = false
 local transitionStartTime = 0
@@ -130,6 +131,7 @@ local lastReloadPressTime = 0
 local prevSpecReloadDown  = false
 local nextCamSync         = 0
 local nextSoundfade       = 0
+local nextRagdollSearch   = 0
 local disabledUnblocked   = false
 
 -- z-city bypassing
@@ -149,14 +151,15 @@ local function TakeAuthority()
 end
 
 local function ReleaseAuthority()
-    if zcity_RenderScene then
+    local hooks = hook.GetTable()
+    if zcity_RenderScene and not (hooks.RenderScene and hooks.RenderScene.jopa) then
         hook.Add("RenderScene", "jopa", zcity_RenderScene)
-        zcity_RenderScene = nil
     end
-    if zcity_CalcView then
+    if zcity_CalcView and not (hooks.CalcView and hooks.CalcView["homigrad-view"]) then
         hook.Add("CalcView", "homigrad-view", zcity_CalcView)
-        zcity_CalcView = nil
     end
+    zcity_RenderScene = nil
+    zcity_CalcView = nil
 end
 
 local function DeathEffectRoundActive()
@@ -169,8 +172,14 @@ end
 
 
 local function PlayClick()
+    local generation = deathSoundGeneration
     sound.PlayFile("sound/" .. CLICK_SOUND, "noplay", function(ch)
-        if IsValid(ch) then ch:Play() end
+        if not IsValid(ch) then return end
+        if generation ~= deathSoundGeneration then
+            ch:Stop()
+            return
+        end
+        ch:Play()
     end)
 end
 
@@ -180,6 +189,7 @@ local function DoRespawn()
 end
 
 local function StopDeathSounds()
+    deathSoundGeneration = deathSoundGeneration + 1
     for _, station in ipairs(deathSoundChannels) do
         if IsValid(station) then
             station:Stop()
@@ -338,6 +348,8 @@ local function CinematicDeathTracker()
             StopDeathSounds()
             ReleaseAuthority()
         end
+        hasSpawned = ply:Alive()
+        prevSkipDown = false
         return
     end
 
@@ -362,6 +374,8 @@ local function CinematicDeathTracker()
             ply:SetDSP(0)
             ply:ConCommand("soundfade 0 1")
             StopDeathSounds()
+            net.Start("DeathEffect_CompatUnblock")
+            net.SendToServer()
         end
 
         return
@@ -391,6 +405,7 @@ local function CinematicDeathTracker()
         compatActiveTime = 0
         compatTriggered  = false
         deathTime        = CurTime()
+        nextRagdollSearch = 0
         ragdollEnt       = ply:GetRagdollEntity()
         prevReloadDown   = false
         prevJumpDown     = false
@@ -421,13 +436,18 @@ local function CinematicDeathTracker()
         deathCamPos = tr.HitPos + tr.HitNormal * 5
         deathCamAng = (plyPos + Vector(0, 0, STAGE_1_LOOK_HEIGHT) - deathCamPos):Angle()
 
-        deathSoundChannels = {}
+        StopDeathSounds()
+        keepSoundAlive = true
+        local soundGeneration = deathSoundGeneration
         for _, deathSound in pairs(DEATH_SOUNDS) do
             sound.PlayFile("sound/" .. deathSound, "noplay", function(station)
-                if IsValid(station) then
-                    deathSoundChannels[#deathSoundChannels + 1] = station
-                    station:Play()
+                if not IsValid(station) then return end
+                if soundGeneration ~= deathSoundGeneration or not isDead then
+                    station:Stop()
+                    return
                 end
+                deathSoundChannels[#deathSoundChannels + 1] = station
+                station:Play()
             end)
         end
 
@@ -490,21 +510,9 @@ local function CinematicDeathTracker()
         end
     end
 
-    if isDead and not IsValid(ragdollEnt) then
-        ragdollEnt = ply:GetRagdollEntity()
-        if not IsValid(ragdollEnt) then
-            local bestDist = math.huge
-            for _, ent in ipairs(ents.FindByClass("prop_ragdoll")) do
-                if ent:GetModel() == ply:GetModel() then
-                    local dist = ent:GetPos():DistToSqr(deathPos)
-                    if dist < 100000 and dist < bestDist then
-                        ragdollEnt = ent
-                        bestDist   = dist
-                    end
-                end
-            end
-        end
-
+    if isDead and not IsValid(ragdollEnt) and CurTime() >= (nextRagdollSearch or 0) then
+        nextRagdollSearch = CurTime() + 0.2
+        ragdollEnt = FindDeathRagdoll(ply)
         MakeRagdollHeadVisible(ragdollEnt)
     end
 
@@ -693,18 +701,22 @@ local function CinematicDeathBackground()
 
         if fadeProgress < 1 and IsValid(ragdollEnt) then
             cam.Start3D(deathCamPos, deathCamAng)
-                cam.IgnoreZ(true)
-                render.SuppressEngineLighting(true)
-                render.MaterialOverride(matWhite)
-                render.SetColorModulation(0, 0, 0)
-                render.SetBlend(1)
-                ragdollEnt:DrawModel()
-                render.SetBlend(1)
-                render.SetColorModulation(1, 1, 1)
-                render.MaterialOverride(nil)
-                render.SuppressEngineLighting(false)
-                cam.IgnoreZ(false)
+            cam.IgnoreZ(true)
+            render.SuppressEngineLighting(true)
+            render.MaterialOverride(matWhite)
+            render.SetColorModulation(0, 0, 0)
+            render.SetBlend(1)
+
+            local ok, err = pcall(ragdollEnt.DrawModel, ragdollEnt)
+
+            render.SetBlend(1)
+            render.SetColorModulation(1, 1, 1)
+            render.MaterialOverride(nil)
+            render.SuppressEngineLighting(false)
+            cam.IgnoreZ(false)
             cam.End3D()
+
+            if not ok then ErrorNoHaltWithStack(tostring(err)) end
         end
 
         local textFadeIn = math.Clamp(stageElapsed / DEATH_TEXT_FADE_IN, 0, 1)
@@ -730,26 +742,3 @@ local function HideDefaultDamage(name)
     if isDead and name == "CHudDamageIndicator" then return false end
 end
 hook.Add("HUDShouldDraw", "HideDefaultDamage", HideDefaultDamage)
-
--- renderscene override
-local deathRenderView = {
-    x = 0, y = 0, drawhud = true, drawviewmodel = false, dopostprocess = true, drawmonitors = true,
-}
-
-local function CinematicDeathRenderScene(pos, angle, fov)
-    if not isDead then return end
-
-    local view = BuildDeathView(fov)
-    if not view then return end
-
-    deathRenderView.w          = ScrW()
-    deathRenderView.h          = ScrH()
-    deathRenderView.fov        = view.fov or fov
-    deathRenderView.origin     = view.origin
-    deathRenderView.angles     = view.angles
-    deathRenderView.drawviewer = view.drawviewer
-
-    render.RenderView(deathRenderView)
-    return true
-end
-hook.Add("RenderScene", "CinematicDeathRenderScene", CinematicDeathRenderScene)

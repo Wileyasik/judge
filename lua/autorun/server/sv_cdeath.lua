@@ -38,6 +38,11 @@ end
 -- respawn block
 hook.Add("PlayerDeathThink", "DeathEffect_BlockRespawn", function(ply)
     if ply:GetNWBool("DeathEffect_BlockRespawn", false) then
+        if (ply.DeathEffectBlockUntil or 0) <= CurTime() or not DeathEffectRoundActive() then
+            ply:SetNWBool("DeathEffect_BlockRespawn", false)
+            ply.DeathEffectBlockUntil = nil
+            return
+        end
         return false
     end
 end)
@@ -60,7 +65,14 @@ hook.Add("PlayerDeath", "DeathEffect_OnDeath", function(ply)
         return
     end
 
+    if ply:GetInfoNum("deatheffect_enabled", 1) == 0 then
+        ply:SetNWBool("DeathEffect_BlockRespawn", false)
+        ply.DeathEffectBlockUntil = nil
+        return
+    end
+
     ply:SetNWBool("DeathEffect_BlockRespawn", true)
+    ply.DeathEffectBlockUntil = CurTime() + 30
 
     net.Start("DeathEffect_Config")
         net.WriteBool(GetConVar("deatheffect_spectator"):GetBool())
@@ -71,12 +83,14 @@ end)
 
 hook.Add("PlayerSpawn", "DeathEffect_OnSpawn", function(ply)
     ply:SetNWBool("DeathEffect_BlockRespawn", false)
+    ply.DeathEffectBlockUntil = nil
 end)
 
 -- client triggers
 net.Receive("DeathEffect_Respawn", function(len, ply)
     if IsValid(ply) and not ply:Alive() then
         ply:SetNWBool("DeathEffect_BlockRespawn", false)
+        ply.DeathEffectBlockUntil = nil
         ply:UnSpectate()
         ply:Spawn()
     end
@@ -86,6 +100,7 @@ end)
 net.Receive("DeathEffect_CompatUnblock", function(len, ply)
     if IsValid(ply) then
         ply:SetNWBool("DeathEffect_BlockRespawn", false)
+        ply.DeathEffectBlockUntil = nil
     end
 end)
 

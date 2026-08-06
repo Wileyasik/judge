@@ -543,7 +543,7 @@ hook.Add("RagdollEntityCreated", "RagdollFinder", function(ply, ent, key)
 		if IsValid(ply) then ply:SetNoDraw(false) end
 		ply:SetRenderMode(RENDERMODE_NORMAL)
 		
-		oldrag.ply = nil
+		if IsValid(oldrag) then oldrag.ply = nil end
 		//ply.FakeRagdollOld = oldrag
 
 		ply.FakeRagdoll = nil
@@ -676,7 +676,8 @@ hook.Add("Player Spawn", "fuckingremoveragdoll", function(ply)
 	
 	if IsValid(ragdoll) then
 		ragdoll:SetNWEntity("ply", NULL)
-		ragdoll:ManipulateBoneScale(ragdoll:LookupBone("ValveBiped.Bip01_Head1"), Vector(1, 1, 1))
+		local headBone = ragdoll:LookupBone("ValveBiped.Bip01_Head1")
+		if headBone then ragdoll:ManipulateBoneScale(headBone, Vector(1, 1, 1)) end
 	end
 	--FUCKING SHIT
 	if IsValid(ply.FakeRagdoll) then

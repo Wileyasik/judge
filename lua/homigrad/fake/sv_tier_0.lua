@@ -184,7 +184,9 @@ local function Ragdoll_CreateInternal(ply)
 		ply.NoDismembermentPhysics = nil
 	end
 
-	local offset = ply:GetPos() - ply:GetBoneMatrix(0):GetTranslation() + vector_up * 36
+	local rootMatrix = ply:GetBoneMatrix(0)
+	local offset = vector_up * 36
+	if rootMatrix then offset = ply:GetPos() - rootMatrix:GetTranslation() + vector_up * 36 end
 	
 	if ply:InVehicle() then
 		local veh = ply:GetVehicle()
@@ -196,8 +198,9 @@ local function Ragdoll_CreateInternal(ply)
 	for physNum = 0, ragdoll:GetPhysicsObjectCount() - 1 do
 		local phys = ragdoll:GetPhysicsObjectNum(physNum)
 		local bone = ragdoll:TranslatePhysBoneToBone(physNum)
-		if bone < 0 then continue end
+		if not IsValid(phys) or not isnumber(bone) or bone < 0 then continue end
 		local matrix = ply:GetBoneMatrix(bone)
+		if not matrix then continue end
 		ply.AddForceRag = ply.AddForceRag or {}
 		ply.AddForceRag[physNum] = ply.AddForceRag[physNum] or {}
 		local vel = (ply.AddForceRag[physNum][2] or vecZero) * math.max(0, (ply.AddForceRag[physNum][1] or CurTime()) - CurTime()) / 0.25
@@ -221,7 +224,7 @@ local function Ragdoll_CreateInternal(ply)
 		local bonename = ragdoll:GetBoneName(bone)
 		local hitgroup = hg.bonetohitgroup[bonename]--( ent:IsPlayer() and tr.HitGroup or hg.bonetohitgroup[bonename])
 		
-		if hg.amputeetable[bonename] and ply.organism[hg.amputeetable[bonename].."amputated"] then
+		if hg.amputeetable[bonename] and ply.organism and ply.organism[hg.amputeetable[bonename].."amputated"] then
 			--phys:SetContents(CONTENTS_EMPTY)
 			Gib_RemoveBone(ragdoll, bone, physNum, true)
 			--phys:SetCollisionGroup(COLLISION_GROUP_WORLD)
@@ -284,7 +287,9 @@ local function Ragdoll_CreateInternal(ply)
 							for physNum = 0, ragdoll:GetPhysicsObjectCount() - 1 do
 								local phys = ragdoll:GetPhysicsObjectNum(physNum)
 								local bone = ragdoll:TranslatePhysBoneToBone(physNum)
-								phys:SetMass(IdealMassPlayer[ragdoll:GetBoneName(bone)] or 4)
+								if IsValid(phys) and isnumber(bone) and bone >= 0 then
+									phys:SetMass(IdealMassPlayer[ragdoll:GetBoneName(bone)] or 4)
+								end
 							end
 						end
 					end)
@@ -1274,7 +1279,9 @@ function hg.FakeUp(ply, forced, instant)
 	end
 
 	local ent = (IsValid(ragdoll) and ragdoll or ply)
-	local posit = ent:GetBoneMatrix(ent:LookupBone("ValveBiped.Bip01_Pelvis")):GetTranslation()
+	local pelvisBone = ent:LookupBone("ValveBiped.Bip01_Pelvis")
+	local pelvisMatrix = pelvisBone and ent:GetBoneMatrix(pelvisBone)
+	local posit = pelvisMatrix and pelvisMatrix:GetTranslation() or ent:GetPos()
 	local pos = hg.GetUpPos(ply, posit, 50, 50)
 	
 	if not pos and not forced then return end
