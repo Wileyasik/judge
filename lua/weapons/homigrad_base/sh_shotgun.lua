@@ -176,6 +176,11 @@ function SWEP:ShotgunReload()
 	end
 	if state == SG_CYCLING or state == SG_RELOAD_FINISH then return end
 
+	if state == SG_READY and (self:Clip1() <= 0 or not self.drawBullet) and self:ShotgunCanInsert() then
+		self:ShotgunStartReload()
+		return
+	end
+
 	if (state == SG_NEEDS_CYCLE or state == SG_EMPTY) and self:Clip1() > 0 and not self:ShotgunCanInsert() then
 		self:ShotgunStartCycle()
 		return
@@ -230,4 +235,15 @@ end
 function SWEP:ShotgunCancel()
 	if not self.ShotgunTubeReload then return end
 	self:ShotgunInvalidateCallbacks()
+end
+
+function SWEP:ShotgunResetForUnload()
+	if not self.ShotgunTubeReload or not SERVER then return end
+	self:ShotgunInvalidateCallbacks()
+	self:ShotgunSetState(SG_EMPTY)
+end
+
+function SWEP:ShotgunCanInspect()
+	if not self.ShotgunTubeReload then return true end
+	return self:GetShotgunState() == SG_READY
 end
