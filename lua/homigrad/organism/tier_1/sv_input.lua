@@ -1945,6 +1945,11 @@ local function velocityDamage(ent, data)
 	end
 	dmg = dmg * armorDmgMul
 
+	if (hitgroup == HITGROUP_LEFTARM and IsValid(ent.ConsLH)) or (hitgroup == HITGROUP_RIGHTARM and IsValid(ent.ConsRH))
+		or ((hitgroup == HITGROUP_LEFTARM or hitgroup == HITGROUP_RIGHTARM) and IsValid(ply) and (ply:KeyDown(IN_FORWARD) or ply:KeyDown(IN_BACK))) then
+		dmg = dmg * 0.1
+	end
+
 
 	org.fearadd = org.fearadd + dmg * 0.5 * (safeLanding and safePainMul or 1)
 

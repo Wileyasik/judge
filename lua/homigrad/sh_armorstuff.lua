@@ -2424,6 +2424,67 @@ local armorIcons = {
 }
 hg.armorIcons = armorIcons
 
+-- Balance: give every armor piece durability/absorb suited to its protection
+-- class, and give helmets/visors a material ricochet chance instead of pure absorption.
+do
+	local function clamp(v, a, b) return math.max(a, math.min(b, v)) end
+
+	-- Characteristic durability per ballistic tier. Higher-tier plates and
+	-- helmets are tougher and survive more hits before breaking.
+	local helmetTier = {
+		[0] = {durability = 40, breakThreshold = 90},
+		[1.5] = {durability = 55, breakThreshold = 130},
+		[3.2] = {durability = 65, breakThreshold = 150},
+		[3.8] = {durability = 70, breakThreshold = 160},
+		[4.5] = {durability = 80, breakThreshold = 180},
+		[6] = {durability = 90, breakThreshold = 200},
+		[6.5] = {durability = 95, breakThreshold = 210},
+		[7.5] = {durability = 110, breakThreshold = 240},
+		[8] = {durability = 120, breakThreshold = 260},
+		[8.6] = {durability = 130, breakThreshold = 280},
+		[10.5] = {durability = 105, breakThreshold = 235},
+		[12] = {durability = 140, breakThreshold = 320},
+	}
+	local vestTier = {
+		[9.9] = {health = 2.3, healthDamageMul = 0.013},
+		[11.5] = {health = 2.6, healthDamageMul = 0.012},
+		[12.5] = {health = 2.8, healthDamageMul = 0.0115},
+		[13.5] = {health = 2.9, healthDamageMul = 0.011},
+		[15.5] = {health = 3.2, healthDamageMul = 0.01},
+		[18.5] = {health = 3.6, healthDamageMul = 0.009},
+		[20.5] = {health = 4.0, healthDamageMul = 0.008},
+		[22.5] = {health = 4.4, healthDamageMul = 0.0075},
+	}
+
+	for placement, tbl in pairs(hg.armor) do
+		for name, data in pairs(tbl) do
+			if istable(data) and isnumber(data.protection) then
+				local prot = data.protection
+				local isDurability = data.durabilityArmor ~= nil and data.durabilityArmor
+					or placement == "head" or placement == "face"
+
+				if isDurability then
+					local tier = helmetTier[prot]
+					data.durability = data.durability or (tier and tier.durability or math.floor(28 + prot * 11))
+					data.breakThreshold = data.breakThreshold or (tier and tier.breakThreshold or math.floor(55 + prot * 12))
+					data.absorbMultiplier = data.absorbMultiplier or 0.2
+					data.durabilityDamageMul = data.durabilityDamageMul or 5
+					data.durabilityArmor = true
+					-- Ballistic helmets/visors deflect more than they absorb; the
+					-- higher the protection class, the higher the ricochet tendency.
+					data.ricochetChance = data.ricochetChance or
+						(placement == "head" and clamp(0.2 + prot * 0.045, 0.2, 0.68)
+							or clamp(0.2 + prot * 0.02, 0.14, 0.4))
+				elseif placement == "torso" then
+					local tier = vestTier[prot]
+					data.health = data.health or (tier and tier.health or (1.25 + prot * 0.12))
+					data.healthDamageMul = data.healthDamageMul or (tier and tier.healthDamageMul or 0.012)
+				end
+			end
+		end
+	end
+end
+
 local entityMeta = FindMetaTable("Entity")
 function entityMeta:SyncArmor()
 	if self.armors then

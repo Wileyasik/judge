@@ -773,6 +773,10 @@ players : 1 humans, 0 bots (20 max)
 
 			local weight = (ply:IsSpeaking() and math.Clamp( ply:VoiceVolume() * 5, 0, 2 )) or 0
 
+			if (ply:GetNWFloat("PainScreamUntil", 0) or 0) > CurTime() then
+				weight = math.max(weight, 1.8)
+			end
+
 			for k = 1, #flexes do
 				v = flexes[ k ]
 				ent:SetFlexWeight( v, weight )
@@ -814,7 +818,11 @@ players : 1 humans, 0 bots (20 max)
 			end
 		end
 
-		hook.Add("Player Think", "MouthThink", function(ply) if IsValid(ply.FakeRagdoll) then mouthmove(ply) end end)
+		hook.Add("Player Think", "MouthThink", function(ply)
+			if IsValid(ply.FakeRagdoll) or (ply:GetNWFloat("PainScreamUntil", 0) or 0) > CurTime() then
+				mouthmove(ply)
+			end
+		end)
 
 		hg.mouthmove = mouthmove
 --//

@@ -55,7 +55,8 @@ function ENT:Initialize()
             end
 
             if hg.IgniteGasolineAt then
-                hg.IgniteGasolineAt(pos, ent1.debil, 40)
+                local ok = hg.IgniteGasolineAt(pos, ent1.debil, 40)
+                if ok then MsgN("[HGBENZIN] match ignited gasoline at " .. tostring(pos)) end
             end
             if IsValid(data.HitEntity) and hg.drums[data.HitEntity:EntIndex()] then
                 local drum = hg.drums[data.HitEntity:EntIndex()]

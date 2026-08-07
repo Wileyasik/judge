@@ -30,7 +30,8 @@ SWEP.weight = 0.4
 SWEP.AttackTime = 0.3
 SWEP.AnimTime1 = 0.95
 SWEP.WaitTime1 = 0.75
-SWEP.AttackLen1 = 40
+SWEP.AttackLen1 = 13
+SWEP.AttackLen2 = 13
 
 SWEP.AnimTime2 = 0.85
 SWEP.Attack2Time = 0.15
@@ -42,7 +43,7 @@ SWEP.Attack2TimeLength = 0.1
 SWEP.DamageType = DMG_SLASH
 SWEP.DamagePrimary = 25
 SWEP.DamageSecondary = 15
-SWEP.ArteryChance = 1.65
+SWEP.ArteryChance = 1.5
 
 SWEP.swingsoundextra = {
     {"knife/knife_bayonet_swing1.ogg", 60, {80, 90}},

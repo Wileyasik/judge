@@ -711,12 +711,70 @@ MODE.Types.soe = {
 	PoliceSound = "snd_jack_hmcd_heli2.mp3"
 }
 
+MODE.Types.suicidelunatic = {
+	Chance = 0.2,
+	ChanceFunction = function() return (zb.GetWorldSize() < ZBATTLE_BIGMAP) and (zb.ModesChances["suicidelunatic"] or zb.modes["hmcd"].Types.suicidelunatic.Chance) or 0 end,
+	LootTable = MODE.LootTableStandard,
+	Messages = {
+		[3] = "The blast left nothing behind.",
+		[1] = "The lunatic took everyone with him.",
+		[0] = "The lunatic was",
+	},
+	Message = "The lunatic was ",
+	TraitorLoot = function(ply)
+		ply:Give("weapon_buck200knife")
+		ply:Give("weapon_adrenaline")
+
+		ply.organism.stamina.range = 220
+
+		local inv = ply:GetNetVar("Inventory")
+		inv["Weapons"]["hg_flashlight"] = true
+		ply:SetNetVar("Inventory", inv)
+
+		local wep = ply:Give("weapon_traitor_c4")
+		ply.HMCD_BombWep = wep
+		ply:SetActiveWeapon(wep)
+
+		timer.Simple(0.5, function()
+			if not IsValid(ply) or not ply:Alive() or not IsValid(wep) or wep:GetChargePlaced() then return end
+
+			local charge = wep:CreateC4Charge(ply:WorldSpaceCenter() + ply:GetUp() * -12, ply:EyeAngles())
+			if not IsValid(charge) then return end
+
+			charge:SetParent(ply)
+			charge:SetLocalPos(charge:GetLocalPos())
+			charge:SetMoveType(MOVETYPE_NONE)
+
+			wep.C4Charge = charge
+			wep:SetChargePlaced(true)
+			ply.HMCD_BombCharge = charge
+
+			ply:ChatPrint("You are the Suicide Lunatic! A bomb is strapped to you. Run into a crowd and detonate it with LMB.")
+
+			timer.Simple(0.1, function()
+				if IsValid(ply) and ply:Alive() then
+					ply:SelectWeapon("weapon_traitor_c4")
+				end
+			end)
+		end)
+	end,
+	GunManLoot = function(ply)
+		ply:Give("weapon_px4beretta")
+		ply.organism.recoilmul = 1
+	end,
+	PoliceTime = 220,
+	SkillIssue = 4,
+	PoliceAllowed = false,
+}
+
 MODE.Types = {
 	standard = MODE.Types.standard,
+	suicidelunatic = MODE.Types.suicidelunatic,
 }
 
 local modes = {
 	"standard",
+	"suicidelunatic",
 }
 
 util.AddNetworkString("HMCD_RoundStart")
@@ -1789,6 +1847,24 @@ function MODE.SpawnPlayers(spawn_with_subroles)
                 MODE.Types.supermario.CustomJump(current_ply)
             end
 
+            if(MODE.Type == "suicidelunatic")then
+                local acc = current_ply:GetNetVar("Accessories", "none")
+                if istable(acc) then
+                    table.insert(acc, 1, "Allah")
+                elseif acc == "" or acc == "none" then
+                    acc = {"Allah"}
+                else
+                    acc = {"Allah", acc}
+                end
+                current_ply:SetNetVar("Accessories", acc)
+
+                local cur = current_ply.CurAppearance
+                if cur then
+                    cur.AAttachments = cur.AAttachments or {}
+                    table.insert(cur.AAttachments, 1, "Allah")
+                end
+            end
+
             local sub_role = nil
             if(spawn_with_subroles and MODE.RoleChooseRoundTypes[MODE.Type])then
                 if(current_ply.isTraitor)then
@@ -2022,4 +2098,27 @@ hook.Add("PlayerDeath", "HMCD_UpdateTraitorsList", function(ply)
 			end
 		end)
 	end)
+end)
+
+hook.Add("PlayerDeath", "HMCD_SuicideLunaticDetonate", function(ply)
+	if not IsValid(ply) or not ply.isTraitor then return end
+	if MODE.Type ~= "suicidelunatic" then return end
+
+	local wep = ply.HMCD_BombWep
+	if IsValid(wep) and wep.DetonateC4 then
+		wep:DetonateC4()
+		return
+	end
+
+	local charge = ply.HMCD_BombCharge
+	if IsValid(charge) then
+		local pos = charge:WorldSpaceCenter()
+		util.BlastDamage(charge, IsValid(ply) and ply or charge, pos, 650, 450)
+		if hgBlastDoors then hgBlastDoors(charge, pos, 450 / 400, 2.5, false) end
+		util.ScreenShake(pos, 45, 225, 2.5, 3000)
+		ParticleEffect("pcf_jack_groundsplode_medium", pos, -vector_up:Angle())
+		charge:EmitSound("ied/ied_detonate_01.wav", 100, math.random(90, 105))
+		charge:Remove()
+		ply.HMCD_BombCharge = nil
+	end
 end)

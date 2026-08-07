@@ -202,7 +202,7 @@ end
 		local matrix = owner:GetBoneMatrix(boneid)
 		if not matrix then return end
 		local newPos, newAng = LocalToWorld(offsetVec, offsetAng, matrix:GetTranslation(), matrix:GetAngles())
-		if self.raiseT > 0 then
+		if (self.raiseT or 0) > 0 then
 			newPos = newPos - owner:EyeAngles():Up() * (self.raiseT * 22)
 		end
 		WorldModel:SetPos(newPos)
@@ -214,7 +214,8 @@ end
 
 local lang1, lang2 = Angle(0, -10, 0), Angle(0, 10, 0)
 function SWEP:Animation()
-	if self:GetOwner().zmanipstart ~= nil and not self:GetOwner().organism.larmamputated then return end
+	local org = self:GetOwner().organism
+	if self:GetOwner().zmanipstart ~= nil and org and not org.larmamputated then return end
 	local hold = self:GetHolding()
 	if self:GetBandageMode() or self.visualBandage then
 		local aimvec = self:GetOwner():GetAimVector()

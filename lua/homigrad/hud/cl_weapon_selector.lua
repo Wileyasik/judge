@@ -696,7 +696,7 @@ local function canUseSelector(ply)
         return true
     end
 
-    return IsAiming(ply) or (IsValid(wep) and wep:GetClass() == "weapon_physgun" and ply:KeyDown(IN_ATTACK)) or (ply.organism and ply.organism.pain and ply.organism.pain > 60)
+    return IsAiming(ply) or (IsValid(wep) and wep:GetClass() == "weapon_physgun" and ply:KeyDown(IN_ATTACK))
  end
 
 local lastSelectorBind

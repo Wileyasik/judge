@@ -369,6 +369,24 @@ MODE.Roles.standard = {
 	},
 }
 
+MODE.Roles.suicidelunatic = {
+	traitor = {
+		objective = "You are the Suicide Lunatic. You have a bomb strapped to your chest. Walk into a crowd and detonate.",
+		name = "Lunatic",
+		color = Color(190,0,0)
+	},
+
+	gunner = {
+		name = "Innocent",
+		color = Color(0,120,190)
+	},
+
+	innocent = {
+		name = "Innocent",
+		color = Color(0,120,190)
+	},
+}
+
 MODE.Roles.supermario = {
 	traitor = {
 		objective = "You're the evil Mario! Jump around and take down everyone.",

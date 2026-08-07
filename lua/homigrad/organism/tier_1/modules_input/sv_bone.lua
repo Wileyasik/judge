@@ -120,7 +120,7 @@ end
 
 local function legs(org, bone, dmg, dmgInfo, key, segment, boneindex, dir, hit, ricochet)
 	local oldDmg = org[key]
-	local dmg = dmg * 4
+	local dmg = dmg * 2.5
 	local amputateThreshold = org.isPly and player_crush_amputation_threshold or 4
 
 	if not org.NoDismembermentPhysics and dmgInfo:IsDamageType(DMG_CRUSH) and dmg > amputateThreshold and !org[key.."amputated"] then
@@ -200,7 +200,7 @@ end
 
 local function arms(org, bone, dmg, dmgInfo, key, segment, boneindex, dir, hit, ricochet)
 	local oldDmg = org[key]
-	local dmg = dmg * 4
+	local dmg = dmg * 2.5
 	local amputateThreshold = org.isPly and player_crush_amputation_threshold or 4
 	
 	if not org.NoDismembermentPhysics and dmgInfo:IsDamageType(DMG_CRUSH) and dmg > amputateThreshold and !org[key.."amputated"] then
@@ -299,7 +299,7 @@ local function spine(org, bone, dmg, dmgInfo, number, boneindex, dir, hit, ricoc
 	if org[name] >= hg.organism[name2] then return 0 end
 	local oldDmg = org[name]
 
-	local result, vecrand = damageBone(org, 0.1, isCrush(dmgInfo) and dmg * 2 or dmg * 2, dmgInfo, name, boneindex, dir, hit, ricochet)
+	local result, vecrand = damageBone(org, 0.1, dmgInfo:IsDamageType(DMG_SLASH) and dmg * 0.6 or dmg * 0.4, dmgInfo, name, boneindex, dir, hit, ricochet)
 	
 	hg.AddHarmToAttacker(dmgInfo, (org[name] - oldDmg) * 5, "Spine bone damage harm")
 	
@@ -740,7 +740,7 @@ end
 
 local function upper_limb(org, bone, dmg, dmgInfo, amputate_key, limb_key, segment, boneindex, dir, hit, ricochet)
 	local oldDmg = org[limb_key]
-	local dmg = dmg * 4
+	local dmg = dmg * 2.0
 	local amputateThreshold = org.isPly and player_crush_amputation_threshold or 4
 
 	if dmgInfo:IsDamageType(DMG_CRUSH) and dmg > amputateThreshold and !org[amputate_key.."amputated"] then

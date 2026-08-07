@@ -6,9 +6,6 @@ hook.Add("OnNetVarSet", "Guilt",function(index, key, var)
 end)
 
 hook.Add("Player Spawn", "GuiltKnown",function(ply)
-    --if (ply == LocalPlayer()) and ply.Karma then
-    --    ply:ChatPrint("Your current karma is "..tostring(math.Round(ply.Karma)).."")
-    --end
 end)
 
 concommand.Add("hg_getkarma",function(ply)

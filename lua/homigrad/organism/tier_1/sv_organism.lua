@@ -1088,7 +1088,7 @@ concommand.Add("hg_fixdislocation", function(ply, cmd, args)
 	local org = ply.organism
 	if !fixer:Alive() or !org or fixer.organism.otrub then return end
 	if (fixer.tried_fixing_limb or 0) > CurTime() then return end
-	if !fixer.organism.canmove or !fixer.organism.canmovehead or fixer.organism.pain > 60 then return end
+	if !fixer.organism.canmove or !fixer.organism.canmovehead then return end
 	fixer.tried_fixing_limb = CurTime() + fixer.organism.pain / 30
 	if math.Round(tonumber(args[1])) == 1 then
 		if org.llegdislocation then

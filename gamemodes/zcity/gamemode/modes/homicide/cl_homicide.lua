@@ -9,6 +9,7 @@ end
 
 MODE.TypeSounds = {
 	["standard"] = {"snd_jack_hmcd_psycho.mp3","snd_jack_hmcd_shining.mp3"},
+	["suicidelunatic"] = "allah.mp3",
 }
 local fade = 0
 local HMCD_ScreenDuration = 10
@@ -112,6 +113,7 @@ end)
 
 MODE.TypeNames = {
 	["standard"] = "Homicide",
+	["suicidelunatic"] = "Suicide Lunatic",
 }
 
 --local hg_coolvetica = ConVarExists("hg_coolvetica") and GetConVar("hg_coolvetica") or CreateClientConVar("hg_coolvetica", "0", true, false, "changes every text to coolvetica because its good", 0, 1)
@@ -196,6 +198,27 @@ MODE.TypeObjectives.standard = {
 	innocent = {
 		objective = "You are a potential victim. Survive, stay cautious and help identify the Executioner.",
 		name = "a Victim",
+		color1 = Color(0,120,190)
+	},
+}
+
+MODE.TypeObjectives.suicidelunatic = {
+	traitor = {
+		objective = "My brother insha'Allah, don't let him down.",
+		name = "a Shahid",
+		color1 = Color(190,0,0),
+		color2 = Color(190,0,0)
+	},
+
+	gunner = {
+		objective = "Sheep fucker's gone crazy, now you need to survive.",
+		name = "an Innocent",
+		color1 = Color(0,120,190)
+	},
+
+	innocent = {
+		objective = "Sheep fucker's gone crazy, now you need to survive.",
+		name = "an Innocent",
 		color1 = Color(0,120,190)
 	},
 }

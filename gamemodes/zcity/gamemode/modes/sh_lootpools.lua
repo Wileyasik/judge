@@ -37,6 +37,15 @@ for _, class in ipairs({
 	"weapon_alien3",
 	"weapon_oicw",
 	"weapon_osipr",
+
+	"weapon_p22",
+	"weapon_zoraki",
+	"weapon_taser",
+	"weapon_hg_rgd_tpik",
+	"weapon_hg_smokenade_tpik",
+	"weapon_traitor_c4",
+	"weapon_sogknife",
+	"weapon_buck200knife",
 }) do
 	LootBlacklist[class] = true
 end
