@@ -4,6 +4,7 @@ if CLIENT then
 		local wep = ply:GetActiveWeapon()
 		if not IsValid(wep) then return end
 		if wep.IsGP25Active and wep:IsGP25Active() then return end
+		if wep.ShotgunCanInspect and not wep:ShotgunCanInspect() then return end
 		local canInspect = wep.AllowedInspect
 		if not isfunction(canInspect) then return end
 		if not canInspect(wep) then return end
@@ -56,6 +57,9 @@ else
         if wep and wep:GetOwner() == ply and ishgweapon(wep) and wep:Clip1() > 0 and wep:CanUse() then
 			ply:GiveAmmo(wep:Clip1(), wep:GetPrimaryAmmoType(), true)
 			wep:SetClip1(0)
+			if wep.ShotgunResetForUnload then
+				wep:ShotgunResetForUnload()
+			end
 			if wep.Unload then
 				wep:Unload()
 			end
@@ -158,6 +162,7 @@ if SERVER then
 		local gun = ply:GetActiveWeapon()
 		if not IsValid(gun) or not gun then return end
 		if gun.IsGP25Active and gun:IsGP25Active() then return end
+		if gun.ShotgunCanInspect and not gun:ShotgunCanInspect() then return end
 		local canInspect = gun.AllowedInspect
 		if not isfunction(canInspect) then return end
 		if not canInspect(gun) then return end
