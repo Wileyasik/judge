@@ -220,7 +220,7 @@ SWEP.weight = 3.6
 SWEP.ScrappersSlot = "Primary"
 
 SWEP.DistSound = "weapons/newakm/akmm_dist.wav"
-SWEP.StartAtt = {"stock_akm_std"}
+SWEP.StartAtt = {"stock_akm_std", "mag9"}
 local sightProfile, sightMountProfile = hg.GetAK74SightProfile()
 SWEP.availableAttachments = {
 	barrel = {
@@ -233,6 +233,7 @@ SWEP.availableAttachments = {
 	mount = sightMountProfile,
 	magwell = {
 		["mountType"] = {"ak_762", "ak_762_75"},
+		["cannotremove"] = true,
 	},
 	stock = {
 		[1] = {"stock_akm_std", Vector(0, 0, 0), {}},

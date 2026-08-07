@@ -26,6 +26,7 @@ local HeroWeaponData = {
 	["weapon_mr43_short"] = {extraClips = 0},
 	["weapon_kar98"] = {extraClips = 0, sling = true},
 	["weapon_mp18"] = {extraClips = 0},
+	["weapon_vpo136"] = {extraClips = 0, sling = true},
 }
 
 local HeroUpgradeData = {

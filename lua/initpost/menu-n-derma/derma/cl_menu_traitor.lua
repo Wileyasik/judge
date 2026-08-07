@@ -286,6 +286,7 @@ local RoleConfigs = {
             ["weapon_usp"] = {cost = 5, name = "HK USP", desc = "Steady .45 pistol, accurate and reliable."},
             ["weapon_m590a1"] = {cost = 10, name = "M590A1", desc = "Close range stopper with extra shell support."},
             ["weapon_kar98"] = {cost = 8, name = "Karabiner 98k", desc = "Heavy marksman pick that can take a scope and extra rounds."},
+            ["weapon_vpo136"] = {cost = 10, name = "VPO-136", desc = "Reliable 7.62x39 carbine with a fixed 10-round magazine."},
             ["ent_armor_vest3"] = {cost = 4, name = "UNTAR Body Armor II", icon = "entities/ent_jack_gmod_ezarmor_untar.png", desc = "Body armor that soaks torso hits."},
             ["ent_armor_helmet3"] = {cost = 2, name = "Untar Helmet I", icon = "entities/ent_jack_gmod_ezarmor_untarhelm.png", desc = "Ballistic helmet that protects the head."},
             ["ent_armor_helmet6"] = {cost = 2, name = "SSh-68 Helmet I", icon = "entities/ent_jack_gmod_ezarmor_ssh68.png", desc = "Steel helmet that protects the head."},
@@ -371,7 +372,8 @@ do
         "weapon_mr43",
         "weapon_mr43_short",
         "weapon_kar98",
-        "weapon_mp18"
+        "weapon_mp18",
+        "weapon_vpo136"
     }
 
     for _, weaponId in ipairs(heroWeaponIds) do
