@@ -14,6 +14,14 @@ local deathLocalAng = Angle(0, 0, 0)
 
 local angle
 
+local function IsGettingUpFirstPerson(ply)
+	local thirdperson = GetConVar("hg_thirdperson")
+	local gopro = GetConVar("hg_gopro")
+
+	return IsValid(ply) and ply:Alive() and IsValid(ply.OldRagdoll) and follow == ply.OldRagdoll
+		and not (thirdperson and thirdperson:GetBool()) and not (gopro and gopro:GetBool())
+end
+
 local hg_coolcamera = ConVarExists("hg_coolcamera") and GetConVar("hg_coolcamera") or CreateConVar("hg_coolcamera", 0, FCVAR_ARCHIVE + FCVAR_REPLICATED, "Cool camera movement", 0, 1)
 local hg_coolcameralerpmult = ConVarExists("hg_coolcameralerpmult") and GetConVar("hg_coolcameralerpmult") or CreateConVar("hg_coolcameralerpmult", 1, FCVAR_ARCHIVE + FCVAR_REPLICATED, "Cool camera movement lerp multiplier", 0, 5)
 function GetCoolCameraBool()
@@ -143,6 +151,24 @@ hook.Add("HG.InputMouseApply", "fakeCameraAngles2", function(tbl)
 	local att = follow:GetAttachment(follow:LookupAttachment("eyes"))
 	if not att or not istable(att) then return end
 	local att_Ang = att.Ang
+
+	if IsGettingUpFirstPerson(lply) then
+		local proposed = Angle(angle.p + y / 50, angle.y - x / 50, angle.r)
+		proposed:Normalize()
+
+		local _, localAng = WorldToLocal(vector_origin, proposed, vector_origin, att_Ang)
+		localAng:Normalize()
+		localAng.p = math.Clamp(localAng.p, -35, 35)
+		localAng.y = math.Clamp(localAng.y, -45, 45)
+		localAng.r = 0
+
+		local _, constrained = LocalToWorld(vector_origin, localAng, vector_origin, att_Ang)
+		constrained:Normalize()
+		tbl.angle = constrained
+		tbl.override_angle = true
+		return true
+	end
+
 	local vel = follow:GetVelocity()
 	local huy = vel:Dot(angle:Right()) / 1500
 
@@ -277,8 +303,9 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 	local _, ot = WorldToLocal(vector_origin, ang, vector_origin, att_Ang)
 	ot:Normalize()
 
-	ot[2] = math.Clamp(ot[2], -90, 90)
-	ot[1] = math.Clamp(ot[1], -90, 90)
+	local gettingUpView = IsGettingUpFirstPerson(ply)
+	ot[2] = math.Clamp(ot[2], gettingUpView and -45 or -90, gettingUpView and 45 or 90)
+	ot[1] = math.Clamp(ot[1], gettingUpView and -35 or -90, gettingUpView and 35 or 90)
 
 	local _, angEye = LocalToWorld(vector_origin, ot, vector_origin, att_Ang)
 	angEye:Normalize()
@@ -370,14 +397,6 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 	view.fov = math.Clamp(hg_fov:GetFloat(),75,100) + lerpfovadd + lerpfovadd2
 	view.znear = 1
 
-	if ply.gettingup and (ply.gettingup + 1 - CurTime()) > 0 then
-		local k = 1 - (ply.gettingup + 1 - CurTime())
-		local k2 = math.max(k - 0.5, 0) * 2
-		//view.origin = LerpVector(k2, view.origin, oldorigin)
-		view.angles = LerpAngle(k2, view.angles, oldangles)
-	end
-	//view.angles = angles
-
 	view = hook.Run("Camera", ply, view.origin, view.angles, view, vector_origin) or view
 	
 	if GetCoolCameraBool() and !hg_cshs_fake:GetBool() and ply:Alive() then
@@ -399,6 +418,16 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 	end--]]
 	
 	if ply.organism and ply.organism.otrub then view.angles = att_Ang end
+
+	if gettingUpView and ply.gettingup then
+		local cameraLerp = math.Clamp(FrameTime() * 12, 0, 1)
+		ply.getUpCamAngles = LerpAngle(cameraLerp, ply.getUpCamAngles or view.angles, view.angles)
+		view.angles = ply.getUpCamAngles
+
+		local blend = math.Clamp((CurTime() - ply.gettingup - 0.5) / 0.5, 0, 1)
+		blend = blend * blend * (3 - 2 * blend)
+		view.angles = LerpAngle(blend, view.angles, oldangles)
+	end
 
 	if hg_gopro:GetBool() then
 		return SpecCam(follow, origin, angles, fov, znear, zfar)
@@ -476,15 +505,19 @@ hook.Add("RagdollEntityCreated", "RagdollFinder", function(ply, ent, key)
 	if not IsValid(ply) then return end
 	--print(ply)
 	local oldrag = ply.FakeRagdoll
+	local ragdollOwner = ply
 	ply.bGetUp = false
 	
 	if IsValid(ent) then
+		ent.hgGettingUpView = nil
 		ent.RenderOverride = function(self, flags)
 			if not IsValid(self) or self:IsDormant() then return end
 			if not self:GetBonePosition(1) or self:GetBonePosition(1):IsEqualTol(self:GetPos(), 0.01) then return end
-			local ply = (IsValid(ply) and ply:IsPlayer() and ply:Alive() and ply.FakeRagdoll == self) and ply or self
+			local validPly = IsValid(ragdollOwner) and ragdollOwner:IsPlayer()
+			local isGettingUp = validPly and self.hgGettingUp and ragdollOwner.OldRagdoll == self
+			local renderOwner = (validPly and ragdollOwner:Alive() and (ragdollOwner.FakeRagdoll == self or isGettingUp)) and ragdollOwner or self
 			
-			hg.renderOverride(ply, self, flags)
+			hg.renderOverride(renderOwner, self, flags)
 		end
 	end
 	
@@ -540,8 +573,31 @@ hook.Add("RagdollEntityCreated", "RagdollFinder", function(ply, ent, key)
 			ply.fakecd = CurTime() + 2
 		end
 
-		if IsValid(ply) then ply:SetNoDraw(false) end
-		ply:SetRenderMode(RENDERMODE_NORMAL)
+		local gettingUpRagdoll = ply:GetNWBool("FakeGettingUp", false) and (IsValid(oldrag) and oldrag or ply:GetNWEntity("FakeRagdollOld"))
+		if IsValid(gettingUpRagdoll) then
+			gettingUpRagdoll.hgGettingUp = true
+			ply:SetNoDraw(true)
+			ply:SetRenderMode(RENDERMODE_NONE)
+			ply.OldRagdoll = gettingUpRagdoll
+			ply.FakeRagdollOld = gettingUpRagdoll
+			if ply == lply then
+				gettingUpRagdoll.hgGettingUpView = true
+				if follow ~= gettingUpRagdoll then
+					ply.gettingup = CurTime()
+					ply.getUpCamAngles = nil
+				end
+				follow = gettingUpRagdoll
+			end
+		else
+			if IsValid(ply.OldRagdoll) then
+				ply.OldRagdoll.hgGettingUp = nil
+				ply.OldRagdoll.hgGettingUpView = nil
+			end
+			ply.OldRagdoll = nil
+			ply.FakeRagdollOld = nil
+			ply:SetNoDraw(false)
+			ply:SetRenderMode(RENDERMODE_NORMAL)
+		end
 		
 		if IsValid(oldrag) then oldrag.ply = nil end
 		//ply.FakeRagdollOld = oldrag
@@ -687,7 +743,17 @@ hook.Add("Player Spawn", "fuckingremoveragdoll", function(ply)
 	
 	if ply == lply then
 		fakeTimer = nil
-		follow = nil
+		local gettingUpRagdoll = ply:GetNWBool("FakeGettingUp", false) and ply:GetNWEntity("FakeRagdollOld")
+		follow = IsValid(gettingUpRagdoll) and gettingUpRagdoll or nil
+		if not IsValid(follow) then
+			if IsValid(ply.OldRagdoll) then
+				ply.OldRagdoll.hgGettingUp = nil
+				ply.OldRagdoll.hgGettingUpView = nil
+			end
+			ply.OldRagdoll = nil
+			ply.FakeRagdollOld = nil
+			ply.getUpCamAngles = nil
+		end
 	end
 
 	ply:SetNWEntity("FakeRagdoll", NULL)

@@ -72,7 +72,7 @@ function PANEL:Paint(w, h)
     surface.SetDrawColor(50, 50, 50, 230)
     surface.DrawRect(w * 0.5 - barW * 0.5, h * 0.15, barW, barH)
     surface.SetDrawColor(180, 220, 180, 255)
-    surface.DrawRect(w * 0.5 - barW * 0.5, h * 0.15, barW * math.Clamp(self.holdProgress / 2.5, 0, 1), barH)
+    surface.DrawRect(w * 0.5 - barW * 0.5, h * 0.15, barW * math.Clamp(self.holdProgress / 1.5, 0, 1), barH)
 end
 
 function PANEL:Logic()
@@ -91,10 +91,10 @@ function PANEL:Logic()
     self.failCooldown = math.max(self.failCooldown - dt, 0)
     self.targetMoveTime = self.targetMoveTime + dt
 
-    local moveWidth = math.max(ScrW() * 0.22, 100)
-    local moveHeight = math.max(ScrH() * 0.16, 60)
-    self.ghostX = ScrW() * 0.5 + math.sin(self.targetMoveTime * 0.32) * moveWidth
-    self.ghostY = ScrH() * 0.5 + math.sin(self.targetMoveTime * 0.45) * moveHeight
+    local moveWidth = math.max(ScrW() * 0.14, 80)
+    local moveHeight = math.max(ScrH() * 0.1, 45)
+    self.ghostX = ScrW() * 0.5 + math.sin(self.targetMoveTime * 0.22) * moveWidth
+    self.ghostY = ScrH() * 0.5 + math.sin(self.targetMoveTime * 0.3) * moveHeight
     
     local mouseSpeed = math.sqrt((mx - self.lastMouseX)^2 + (my - self.lastMouseY)^2) / dt
     self.lastMouseX = mx
@@ -123,11 +123,11 @@ function PANEL:Logic()
         self.boneX = Lerp(dt * 10, self.boneX, targetX)
         self.boneY = Lerp(dt * 10, self.boneY, targetY)
         
-        if mouseSpeed > 220 then
-            self.shakeIntensity = math.min(self.shakeIntensity + dt * 45, 20)
+        if mouseSpeed > 320 then
+            self.shakeIntensity = math.min(self.shakeIntensity + dt * 30, 16)
             self.dangerTime = self.dangerTime + dt
 
-            if self.dangerTime > 0.3 and self.failCooldown <= 0 then
+            if self.dangerTime > 0.6 and self.failCooldown <= 0 then
                 self:Fail()
                 return
             end
@@ -137,9 +137,9 @@ function PANEL:Logic()
         end
         
         local dist = math.sqrt((self.boneX - self.ghostX)^2 + (self.boneY - self.ghostY)^2)
-        if dist < 32 then
+        if dist < 48 then
             self.holdProgress = self.holdProgress + dt
-            if self.holdProgress >= 2.5 then
+            if self.holdProgress >= 1.5 then
                 self:Win()
             end
         else

@@ -1106,6 +1106,8 @@ function hg.Fake(ply, huyragdoll, no_freemove, force)
 
 	ply.FakeRagdollOld = nil
 	ply.OldRagdoll = nil
+	ply:SetNWEntity("FakeRagdollOld", NULL)
+	ply:SetNWBool("FakeGettingUp", false)
 
 	if timer.Exists("faking_up"..ply:EntIndex()) then
 		timer.Remove("faking_up"..ply:EntIndex(), 0)
@@ -1292,6 +1294,7 @@ function hg.FakeUp(ply, forced, instant)
 	ply.FakeRagdollOld = ragdoll
 	ply.OldRagdoll = ragdoll
 	ply:SetNWEntity("FakeRagdollOld", ragdoll)
+	ply:SetNWBool("FakeGettingUp", not instant)
 	ply.FakeRagdoll = nil
 	
 	ply:ConCommand("+duck")
@@ -1328,15 +1331,30 @@ function hg.FakeUp(ply, forced, instant)
 	ply.hgOverrideSpawnPending = (ply.hgOverrideSpawnPending or 0) + 1
 	local hp, armor = ply:Health(), ply:Armor()
 	local ang, wep = ply:EyeAngles(), ply:GetActiveWeapon()
+	local getUpYaw = ang.y
+	if IsValid(ragdoll) then
+		local eyesID = ragdoll:LookupAttachment("eyes")
+		local eyes = eyesID and ragdoll:GetAttachment(eyesID)
+		if eyes then
+			local forward = eyes.Ang:Forward()
+			forward.z = 0
+			if forward:LengthSqr() > 0.001 then
+				forward:Normalize()
+				getUpYaw = forward:Angle().y
+			end
+		end
+	end
 	hg.OverrideSpawn(ply)
 	//local pos = ply:GetPos()
 	ply:Spawn()
 	//ply:SetPos(pos)
-	ply:SetRenderMode(RENDERMODE_NORMAL)
+	ply:SetNoDraw(not instant)
+	ply:SetRenderMode(instant and RENDERMODE_NORMAL or RENDERMODE_NONE)
 	ply.LastFakeUp = CurTime()
-	ply:DrawWorldModel(true)
+	ply:DrawWorldModel(instant)
 	ply:SetHealth(hp)
 	ply:SetArmor(armor)
+	ply:SetAngles(Angle(0, getUpYaw, 0))
 	ply:SetEyeAngles(ang)
         if IsValid(wep) then ply:SelectWeapon(wep:GetClass()) else ply:SelectWeapon(hg.GetHandsWeaponClass and hg.GetHandsWeaponClass(ply) or "weapon_hands_sh") end
 	
@@ -1361,7 +1379,6 @@ function hg.FakeUp(ply, forced, instant)
 		NET_Up(ply)
 
 		if not instant then
-			ply:SetRenderMode(RENDERMODE_NORMAL)
 			--ply:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
 			--ply:SetSolidFlags(bit.bor(ply:GetSolidFlags(), FSOLID_NOT_SOLID, FSOLID_TRIGGER, FSOLID_USE_TRIGGER_BOUNDS))
 			ply:DrawShadow(false)
@@ -1382,6 +1399,17 @@ function hg.FakeUp(ply, forced, instant)
 					ragdoll:Remove()
 				end
 
+				if ply.FakeRagdollOld == ragdoll then ply.FakeRagdollOld = nil end
+				if ply.OldRagdoll == ragdoll then ply.OldRagdoll = nil end
+				if ply:GetNWEntity("FakeRagdollOld") == ragdoll then
+					ply:SetNWEntity("FakeRagdollOld", NULL)
+				end
+				ply:SetNWBool("FakeGettingUp", false)
+
+				if IsValid(ply.FakeRagdoll) then return end
+
+				ply:SetNoDraw(false)
+				ply:DrawWorldModel(true)
 				ply:DrawShadow(true)
 				ply:SetRenderMode(RENDERMODE_NORMAL)
 				ply:SetCollisionGroup(COLLISION_GROUP_PLAYER)
@@ -1395,6 +1423,8 @@ function hg.FakeUp(ply, forced, instant)
 				end
 			end)
 		else
+			ply:SetNoDraw(false)
+			ply:DrawWorldModel(true)
 			ply:DrawShadow(true)
 			ply:SetRenderMode(RENDERMODE_NORMAL)
 			ply:SetCollisionGroup(ply.switchingseat and COLLISION_GROUP_IN_VEHICLE or COLLISION_GROUP_PLAYER)
@@ -1405,6 +1435,12 @@ function hg.FakeUp(ply, forced, instant)
 			if IsValid(ragdoll) then
 				ragdoll:Remove()
 			end
+			if ply.FakeRagdollOld == ragdoll then ply.FakeRagdollOld = nil end
+			if ply.OldRagdoll == ragdoll then ply.OldRagdoll = nil end
+			if ply:GetNWEntity("FakeRagdollOld") == ragdoll then
+				ply:SetNWEntity("FakeRagdollOld", NULL)
+			end
+			ply:SetNWBool("FakeGettingUp", false)
 		end
 	end
 

@@ -491,7 +491,7 @@ hg.vehicles = hg.vehicles or {}
 
 local armsbones = {
 	["ValveBiped.Bip01_L_Clavicle"] = true,
-	["ValveBiped.Bip01_L_Clavicle"] = true,
+	["ValveBiped.Bip01_R_Clavicle"] = true,
 	["ValveBiped.Bip01_L_UpperArm"] = true,
 	["ValveBiped.Bip01_R_UpperArm"] = true,
 	["ValveBiped.Bip01_L_Forearm"] = true,
@@ -724,7 +724,14 @@ function ENTITY:FireLuaBullets(tInfo)
 				local bonename = ent:GetBoneName(ent:TranslatePhysBoneToBone(tr.PhysicsBone))
 				local hitgroup = hg.bonetohitgroup[bonename]--( ent:IsPlayer() and tr.HitGroup or hg.bonetohitgroup[bonename])
 				
-				if !(armsbones[bonename] and hg.RagdollOwner(tr.Entity) == pInflictor:GetOwner()) and !IsValid(tr.Entity.OldRagdoll) and (tr.PhysicsBone != 0 or !tr.StartSolid) and (!hg.amputeetable[bonename] or !ent.organism[hg.amputeetable[bonename].."amputated"]) then break end
+				local isSelfArm = armsbones[bonename] and hg.RagdollOwner(ent) == pInflictor:GetOwner()
+				local isOldRagdoll = IsValid(ent.OldRagdoll)
+				local limb = hg.amputeetable[bonename]
+				local isAmputated = limb and ent.organism[limb.."amputated"]
+
+				-- StartSolid commonly reports physics bone 0 at close range. It is still a
+				-- valid organism hit and must not make the trace skip the entire target.
+				if not isSelfArm and not isOldRagdoll and not isAmputated then break end
 
 				tr = bHullTrace and iShot % 2 == 0 and
 					// Half of the shotgun pellets are hulls that make it easier to hit targets with the shotgun.

@@ -150,23 +150,27 @@ local IsValid, math_Clamp = IsValid, math.Clamp
 		local lkp = ent.LookupBone and ent:LookupBone("ValveBiped.Bip01_Head1")
 		if !ent.GetManipulateBoneScale or !lkp then return end
 
-		if IsValid(ply.OldRagdoll) then
+		if ply:GetNWBool("FakeGettingUp", false) and IsValid(ply.OldRagdoll) then
+			local idleSequence = ply:SelectWeightedSequence(ACT_HL2MP_IDLE)
+			if idleSequence and idleSequence >= 0 then
+				ply:SetSequence(idleSequence)
+				ply:SetCycle(0)
+			end
 			ply:SetupBones()
 		end
 
-		hg.RenderWeapons(ent, ply)
-
 		ent:SetupBones()
+		if ply:GetNWBool("FakeGettingUp", false) and IsValid(ply.OldRagdoll) then
+			hg.SmoothUnfake(ent, ply)
+		end
+
+		hg.RenderWeapons(ent, ply)
 
 		if IsValid(wep) and wep.PrepareMeleeWorldModel then
 			wep:PrepareMeleeWorldModel()
 		end
 
 		hg.MainTPIKFunction(ent, ply, wep)
-
-		if IsValid(ply.OldRagdoll) then
-			hg.SmoothUnfake(ent, ply)
-		end
 
 		if ply:GetNetVar("handcuffed", false) then hg.CuffedAnim(ent, ply) end
 
@@ -194,7 +198,8 @@ local IsValid, math_Clamp = IsValid, math.Clamp
 
 		--local current = ent:GetManipulateBoneScale(lkp)
 		local fountains = GetNetVar("fountains") or {}
-		local wawanted = (GetViewEntity() != ply) and !fountains[ent] and (!(!lply:Alive() and lply:GetNWEntity("spect") == ply and viewmode == 1) and !(hg_firstperson_death:GetBool() and follow == ent)) and vector_full or vector_small
+		local hideGettingUpHead = ent.hgGettingUpView and follow == ent
+		local wawanted = !hideGettingUpHead and (GetViewEntity() != ply) and !fountains[ent] and (!(!lply:Alive() and lply:GetNWEntity("spect") == ply and viewmode == 1) and !(hg_firstperson_death:GetBool() and follow == ent)) and vector_full or vector_small
 		--print(ent, wawanted, GetViewEntity(), ply, (GetViewEntity() != ply), !fountains[ent], !(!lply:Alive() and lply:GetNWEntity("spect") == ply and viewmode == 1))
 		--if !current:IsEqualTol(wawanted, 0.01) then
 			--ent:ManipulateBoneScale(lkp, wawanted)
@@ -203,7 +208,7 @@ local IsValid, math_Clamp = IsValid, math.Clamp
 			if mat and (ent.headexploded or (org and org.headamputated)) then
 				mat:SetScale(vector_small)
 			elseif mat and !(Glide and Glide.Camera and !Glide.Camera.isInFirstPerson and lply == ply and lply:InVehicle() and hg_no_camera_in_cars:GetBool()) then
-				if (!hg_thirdperson:GetBool() and !hg_gopro:GetBool() and (ent == ply or (!hg_ragdollcombat:GetBool() or hg_firstperson_ragdoll:GetBool()))) or (hg_firstperson_death:GetBool() and follow == ent) then
+				if hideGettingUpHead or (!hg_thirdperson:GetBool() and !hg_gopro:GetBool() and (ent == ply or (!hg_ragdollcombat:GetBool() or hg_firstperson_ragdoll:GetBool()))) or (hg_firstperson_death:GetBool() and follow == ent) then
 					mat:SetScale(wawanted)
 				end
 			end

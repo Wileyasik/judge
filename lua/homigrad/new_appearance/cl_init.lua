@@ -297,6 +297,7 @@ end
 function DrawAccesories(ply, ent, accessories,accessData, islply, force, setup)
 	if not accessories then return end
 	if not accessData then return end
+	if ent.hgGettingUpView and follow == ent and accessData["bone"] == "ValveBiped.Bip01_Head1" then return end
 
 	ply.modelAccess = ply.modelAccess or {}
 

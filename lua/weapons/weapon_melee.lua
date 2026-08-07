@@ -1772,6 +1772,27 @@ function SWEP:PlayEffects(trace, attacktype)
             util.Decal( "Blood", trace.HitPos + trace.HitNormal * 2, owner:GetPos(), trace.Entity )
         elseif self.DamageType == DMG_CLUB then
             self:ApplyBruise(trace)
+
+            local victim = self:GetHitVictim(trace.Entity)
+            if IsValid(victim) and victim.organism and victim.organism.skull == 1 and self:IsHeadHit(trace.Entity, trace) then
+                local fx = EffectData()
+                fx:SetOrigin(trace.HitPos)
+                fx:SetNormal(trace.HitNormal or vector_up)
+                fx:SetMagnitude(2)
+                fx:SetScale(0.8)
+                fx:SetRadius(8)
+                util.Effect("BloodImpact", fx)
+
+                util.Decal("Blood", trace.HitPos + trace.HitNormal * 4, trace.HitPos - trace.HitNormal * 8)
+
+                local impactDir = trace.Normal or (trace.HitPos - owner:GetShootPos()):GetNormalized()
+                net.Start("hg_bloodimpact")
+                net.WriteVector(trace.HitPos)
+                net.WriteVector(impactDir / 8)
+                net.WriteFloat(2.5)
+                net.WriteInt(2, 8)
+                net.SendPVS(trace.HitPos)
+            end
         end
     elseif not self.AttackHitPlayed then
         self.AttackHitPlayed = true

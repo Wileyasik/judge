@@ -28,6 +28,19 @@ local DEATH_SOUNDS = {
     [0] = "death_ost.mp3",
 }
 
+local DEATH_COLORS = {
+    Color(255, 0, 0),
+    Color(255, 70, 0),
+    Color(255, 170, 0),
+    Color(185, 220, 0),
+    Color(0, 210, 90),
+    Color(0, 190, 190),
+    Color(0, 115, 255),
+    Color(95, 65, 255),
+    Color(175, 45, 255),
+    Color(255, 35, 160),
+}
+
 -- server convar values yesss
 local cfg_spectator     = true
 local cfg_compat        = false
@@ -94,45 +107,51 @@ end
 local m_pitch = GetConVar("m_pitch")
 local m_yaw   = GetConVar("m_yaw")
 
-local hasSpawned    = false
-local isDead        = false
-local stage2Started = false
-local deathTime     = 0
-local stage2Time    = 0
-local autoCompatTriggered = false
-local deathCamPos   = Vector(0, 0, 0)
-local deathCamAng   = Angle(0, 0, 0)
-local deathPos      = Vector(0, 0, 0)
-local ragdollEnt    = nil
-local deathMessage  = DEATH_MESSAGES[1]
+-- состояние кинематографичной смерти собрано в одну таблицу,
+-- чтобы функции не превышали лимит upvalues (60) LuaJIT
+local CDeath = {}
+
+CDeath.hasSpawned    = false
+CDeath.isDead        = false
+CDeath.stage2Started = false
+CDeath.deathTime     = 0
+CDeath.stage2Time    = 0
+CDeath.autoCompatTriggered = false
+CDeath.deathCamPos   = Vector(0, 0, 0)
+CDeath.deathCamAng   = Angle(0, 0, 0)
+CDeath.deathPos      = Vector(0, 0, 0)
+CDeath.ragdollEnt    = nil
+CDeath.deathMessage  = DEATH_MESSAGES[1]
+CDeath.deathColor    = DEATH_COLORS[1]
+
 local matWhite      = Material("models/debug/debugwhite")
 
-local deathSoundChannels = {}
-local keepSoundAlive    = false
-local deathSoundGeneration = 0
+CDeath.deathSoundChannels = {}
+CDeath.keepSoundAlive    = false
+CDeath.deathSoundGeneration = 0
 
-local inTransition        = false
-local transitionStartTime = 0
-local transitionCallback  = nil
-local transitionFired     = false
+CDeath.inTransition        = false
+CDeath.transitionStartTime = 0
+CDeath.transitionCallback  = nil
+CDeath.transitionFired     = false
 
-local prevReloadDown = false
-local prevJumpDown   = false
-local prevSkipDown   = false
+CDeath.prevReloadDown = false
+CDeath.prevJumpDown   = false
+CDeath.prevSkipDown   = false
 
-local compatActive     = false
-local compatActiveTime = 0
-local compatTriggered  = false
+CDeath.compatActive     = false
+CDeath.compatActiveTime = 0
+CDeath.compatTriggered  = false
 
-local inSpectator         = false
-local freecamPos          = Vector(0, 0, 0)
-local freecamAng          = Angle(0, 0, 0)
-local lastReloadPressTime = 0
-local prevSpecReloadDown  = false
-local nextCamSync         = 0
-local nextSoundfade       = 0
-local nextRagdollSearch   = 0
-local disabledUnblocked   = false
+CDeath.inSpectator         = false
+CDeath.freecamPos          = Vector(0, 0, 0)
+CDeath.freecamAng          = Angle(0, 0, 0)
+CDeath.lastReloadPressTime = 0
+CDeath.prevSpecReloadDown  = false
+CDeath.nextCamSync         = 0
+CDeath.nextSoundfade       = 0
+CDeath.nextRagdollSearch   = 0
+CDeath.disabledUnblocked   = false
 
 -- z-city bypassing
 local zcity_RenderScene = nil
@@ -172,10 +191,10 @@ end
 
 
 local function PlayClick()
-    local generation = deathSoundGeneration
+    local generation = CDeath.deathSoundGeneration
     sound.PlayFile("sound/" .. CLICK_SOUND, "noplay", function(ch)
         if not IsValid(ch) then return end
-        if generation ~= deathSoundGeneration then
+        if generation ~= CDeath.deathSoundGeneration then
             ch:Stop()
             return
         end
@@ -189,28 +208,28 @@ local function DoRespawn()
 end
 
 local function StopDeathSounds()
-    deathSoundGeneration = deathSoundGeneration + 1
-    for _, station in ipairs(deathSoundChannels) do
+    CDeath.deathSoundGeneration = CDeath.deathSoundGeneration + 1
+    for _, station in ipairs(CDeath.deathSoundChannels) do
         if IsValid(station) then
             station:Stop()
         end
     end
-    deathSoundChannels = {}
-    keepSoundAlive = false
+    CDeath.deathSoundChannels = {}
+    CDeath.keepSoundAlive = false
 end
 
 local function RestoreRagdoll()
-    if IsValid(ragdollEnt) then
-        ragdollEnt:SetNoDraw(false)
-        local headBone = ragdollEnt:LookupBone("ValveBiped.Bip01_Head1")
+    if IsValid(CDeath.ragdollEnt) then
+        CDeath.ragdollEnt:SetNoDraw(false)
+        local headBone = CDeath.ragdollEnt:LookupBone("ValveBiped.Bip01_Head1")
         if headBone then
-            ragdollEnt:ManipulateBoneScale(headBone, Vector(1, 1, 1))
+            CDeath.ragdollEnt:ManipulateBoneScale(headBone, Vector(1, 1, 1))
         end
     end
 end
 
 local function GetRagdollHeadPos(ent)
-    if not IsValid(ent) then return deathPos + Vector(0, 0, STAGE_1_LOOK_HEIGHT) end
+    if not IsValid(ent) then return CDeath.deathPos + Vector(0, 0, STAGE_1_LOOK_HEIGHT) end
 
     local headBone = ent:LookupBone("ValveBiped.Bip01_Head1")
     if headBone then
@@ -253,7 +272,7 @@ local function FindDeathRagdoll(ply)
     local bestDist = math.huge
     for _, ent in ipairs(ents.FindByClass("prop_ragdoll")) do
         if ent:GetModel() == ply:GetModel() then
-            local dist = ent:GetPos():DistToSqr(deathPos)
+            local dist = ent:GetPos():DistToSqr(CDeath.deathPos)
             if dist < 100000 and dist < bestDist then
                 bestRagdoll = ent
                 bestDist = dist
@@ -268,16 +287,16 @@ local function SkipDeathScene()
     local ply = LocalPlayer()
     if not IsValid(ply) then return end
 
-    isDead = false
-    hasSpawned = false
-    stage2Started = false
-    inTransition = false
-    inSpectator = false
-    autoCompatTriggered = false
-    compatActive = false
-    compatTriggered = false
+    CDeath.isDead = false
+    CDeath.hasSpawned = false
+    CDeath.stage2Started = false
+    CDeath.inTransition = false
+    CDeath.inSpectator = false
+    CDeath.autoCompatTriggered = false
+    CDeath.compatActive = false
+    CDeath.compatTriggered = false
     RestoreRagdoll()
-    ragdollEnt = nil
+    CDeath.ragdollEnt = nil
     ply:SetDSP(0)
     ply:ConCommand("soundfade 0 1")
     StopDeathSounds()
@@ -287,11 +306,11 @@ local function SkipDeathScene()
 end
 
 local function EnterSpectator()
-    inSpectator  = true
-    freecamPos   = Vector(deathCamPos.x, deathCamPos.y, deathCamPos.z)
-    freecamAng   = Angle(deathCamAng.pitch, deathCamAng.yaw, deathCamAng.roll)
-    nextCamSync  = 0
-    inTransition = false
+    CDeath.inSpectator  = true
+    CDeath.freecamPos   = Vector(CDeath.deathCamPos.x, CDeath.deathCamPos.y, CDeath.deathCamPos.z)
+    CDeath.freecamAng   = Angle(CDeath.deathCamAng.pitch, CDeath.deathCamAng.yaw, CDeath.deathCamAng.roll)
+    CDeath.nextCamSync  = 0
+    CDeath.inTransition = false
     LocalPlayer():SetDSP(0)
     LocalPlayer():ConCommand("soundfade 0 1")
     net.Start("DeathEffect_EnterSpectator")
@@ -299,9 +318,9 @@ local function EnterSpectator()
 end
 
 local function ActivateCompatMode()
-    compatActive     = true
-    compatActiveTime = CurTime()
-    inTransition     = false
+    CDeath.compatActive     = true
+    CDeath.compatActiveTime = CurTime()
+    CDeath.inTransition     = false
     LocalPlayer():SetDSP(0)
     LocalPlayer():ConCommand("soundfade 0 1")
     ReleaseAuthority() 
@@ -310,10 +329,10 @@ local function ActivateCompatMode()
 end
 
 local function BeginTransition(callback)
-    inTransition        = true
-    transitionStartTime = CurTime()
-    transitionCallback  = callback
-    transitionFired     = false
+    CDeath.inTransition        = true
+    CDeath.transitionStartTime = CurTime()
+    CDeath.transitionCallback  = callback
+    CDeath.transitionFired     = false
     PlayClick()
 end
 
@@ -324,52 +343,52 @@ local function CinematicDeathTracker()
 
     if not cv_enabled:GetBool() then
         if not ply:Alive() then
-            if not disabledUnblocked then
-                disabledUnblocked = true
+            if not CDeath.disabledUnblocked then
+                CDeath.disabledUnblocked = true
                 net.Start("DeathEffect_CompatUnblock")
                 net.SendToServer()
             end
         else
-            disabledUnblocked = false
+            CDeath.disabledUnblocked = false
         end
 
-        if isDead or inTransition or inSpectator or compatActive then
-            isDead           = false
-            stage2Started    = false
-            inTransition     = false
-            inSpectator      = false
-            autoCompatTriggered = false
-            compatActive     = false
-            keepSoundAlive   = false
+        if CDeath.isDead or CDeath.inTransition or CDeath.inSpectator or CDeath.compatActive then
+            CDeath.isDead           = false
+            CDeath.stage2Started    = false
+            CDeath.inTransition     = false
+            CDeath.inSpectator      = false
+            CDeath.autoCompatTriggered = false
+            CDeath.compatActive     = false
+            CDeath.keepSoundAlive   = false
             RestoreRagdoll()
-            ragdollEnt = nil
+            CDeath.ragdollEnt = nil
             ply:SetDSP(0)
             ply:ConCommand("soundfade 0 1")
             StopDeathSounds()
             ReleaseAuthority()
         end
-        hasSpawned = ply:Alive()
-        prevSkipDown = false
+        CDeath.hasSpawned = ply:Alive()
+        CDeath.prevSkipDown = false
         return
     end
 
-    disabledUnblocked = false
+    CDeath.disabledUnblocked = false
 
     if not DeathEffectRoundActive() then
-        hasSpawned = ply:Alive()
+        CDeath.hasSpawned = ply:Alive()
 
-        if isDead then
-            isDead = false
-            stage2Started = false
-            keepSoundAlive = false
-            inTransition = false
-            inSpectator = false
-            autoCompatTriggered = false
-            compatActive = false
+        if CDeath.isDead then
+            CDeath.isDead = false
+            CDeath.stage2Started = false
+            CDeath.keepSoundAlive = false
+            CDeath.inTransition = false
+            CDeath.inSpectator = false
+            CDeath.autoCompatTriggered = false
+            CDeath.compatActive = false
             ReleaseAuthority()
 
             RestoreRagdoll()
-            ragdollEnt = nil
+            CDeath.ragdollEnt = nil
 
             ply:SetDSP(0)
             ply:ConCommand("soundfade 0 1")
@@ -382,40 +401,41 @@ local function CinematicDeathTracker()
     end
 
     local skipDown = input.IsButtonDown(KEY_BACKSPACE) or SafeKeyDown(jumpKeyCode)
-    if isDead and skipDown and not prevSkipDown then
+    if CDeath.isDead and skipDown and not CDeath.prevSkipDown then
         SkipDeathScene()
-        prevSkipDown = true
+        CDeath.prevSkipDown = true
         return
     end
-    prevSkipDown = skipDown
+    CDeath.prevSkipDown = skipDown
 
-    if ply:Alive() and not hasSpawned then
-        hasSpawned = true
+    if ply:Alive() and not CDeath.hasSpawned then
+        CDeath.hasSpawned = true
     end
 
-    if not ply:Alive() and not isDead and hasSpawned then
-        isDead           = true
+    if not ply:Alive() and not CDeath.isDead and CDeath.hasSpawned then
+        CDeath.isDead           = true
         TakeAuthority() 
-        stage2Started    = false
-        keepSoundAlive   = true
-        inTransition     = false
-        inSpectator      = false
-        autoCompatTriggered = false
-        compatActive     = false
-        compatActiveTime = 0
-        compatTriggered  = false
-        deathTime        = CurTime()
-        nextRagdollSearch = 0
-        ragdollEnt       = ply:GetRagdollEntity()
-        prevReloadDown   = false
-        prevJumpDown     = false
-        prevSkipDown     = input.IsButtonDown(KEY_BACKSPACE) or SafeKeyDown(jumpKeyCode)
-        prevSpecReloadDown = false
-        deathMessage     = DEATH_MESSAGES[math.random(#DEATH_MESSAGES)]
-        MakeRagdollHeadVisible(ragdollEnt)
+        CDeath.stage2Started    = false
+        CDeath.keepSoundAlive   = true
+        CDeath.inTransition     = false
+        CDeath.inSpectator      = false
+        CDeath.autoCompatTriggered = false
+        CDeath.compatActive     = false
+        CDeath.compatActiveTime = 0
+        CDeath.compatTriggered  = false
+        CDeath.deathTime        = CurTime()
+        CDeath.nextRagdollSearch = 0
+        CDeath.ragdollEnt       = ply:GetRagdollEntity()
+        CDeath.prevReloadDown   = false
+        CDeath.prevJumpDown     = false
+        CDeath.prevSkipDown     = input.IsButtonDown(KEY_BACKSPACE) or SafeKeyDown(jumpKeyCode)
+        CDeath.prevSpecReloadDown = false
+        CDeath.deathMessage     = DEATH_MESSAGES[math.random(#DEATH_MESSAGES)]
+        CDeath.deathColor       = DEATH_COLORS[math.random(#DEATH_COLORS)]
+        MakeRagdollHeadVisible(CDeath.ragdollEnt)
 
         local plyPos = ply:GetPos()
-        deathPos     = plyPos
+        CDeath.deathPos     = plyPos
 
         local randYaw  = math.random(0, 360)
         local randDist = math.random(STAGE_1_MIN_DIST, STAGE_1_MAX_DIST)
@@ -433,70 +453,70 @@ local function CinematicDeathTracker()
             mask   = MASK_SOLID_BRUSHONLY
         })
 
-        deathCamPos = tr.HitPos + tr.HitNormal * 5
-        deathCamAng = (plyPos + Vector(0, 0, STAGE_1_LOOK_HEIGHT) - deathCamPos):Angle()
+        CDeath.deathCamPos = tr.HitPos + tr.HitNormal * 5
+        CDeath.deathCamAng = (plyPos + Vector(0, 0, STAGE_1_LOOK_HEIGHT) - CDeath.deathCamPos):Angle()
 
         StopDeathSounds()
-        keepSoundAlive = true
-        local soundGeneration = deathSoundGeneration
+        CDeath.keepSoundAlive = true
+        local soundGeneration = CDeath.deathSoundGeneration
         for _, deathSound in pairs(DEATH_SOUNDS) do
             sound.PlayFile("sound/" .. deathSound, "noplay", function(station)
                 if not IsValid(station) then return end
-                if soundGeneration ~= deathSoundGeneration or not isDead then
+                if soundGeneration ~= CDeath.deathSoundGeneration or not CDeath.isDead then
                     station:Stop()
                     return
                 end
-                deathSoundChannels[#deathSoundChannels + 1] = station
+                CDeath.deathSoundChannels[#CDeath.deathSoundChannels + 1] = station
                 station:Play()
             end)
         end
 
-    elseif ply:Alive() and isDead then
-        isDead         = false
-        stage2Started  = false
-        keepSoundAlive = false
-        inTransition   = false
-        inSpectator    = false
-        autoCompatTriggered = false
-        compatActive   = false
+    elseif ply:Alive() and CDeath.isDead then
+        CDeath.isDead         = false
+        CDeath.stage2Started  = false
+        CDeath.keepSoundAlive = false
+        CDeath.inTransition   = false
+        CDeath.inSpectator    = false
+        CDeath.autoCompatTriggered = false
+        CDeath.compatActive   = false
         ReleaseAuthority() 
         
         RestoreRagdoll()
-        ragdollEnt = nil
+        CDeath.ragdollEnt = nil
 
         ply:SetDSP(0)
         ply:ConCommand("soundfade 0 1")
         StopDeathSounds()
     end
 
-    if isDead and not stage2Started then
-        if (CurTime() - deathTime) >= STAGE_1_DURATION then
-            stage2Started = true
-            stage2Time    = CurTime()
+    if CDeath.isDead and not CDeath.stage2Started then
+        if (CurTime() - CDeath.deathTime) >= STAGE_1_DURATION then
+            CDeath.stage2Started = true
+            CDeath.stage2Time    = CurTime()
             LocalPlayer():SetDSP(17)
             LocalPlayer():ConCommand("soundfade 100 99999")
         end
     end
 
     -- bypass loop
-    if isDead and not compatActive then
+    if CDeath.isDead and not CDeath.compatActive then
         ply:SetViewPunchAngles(Angle(0,0,0))
         ply:ScreenFade(SCREENFADE.IN, Color(0,0,0,0), 0.1, 0)
         
-        if stage2Started and not inSpectator then
+        if CDeath.stage2Started and not CDeath.inSpectator then
             ply:SetDSP(17)
             -- keep re-applying the sound muting so it can't be bypassed
-            if CurTime() >= nextSoundfade then
-                nextSoundfade = CurTime() + 0.5
+            if CurTime() >= CDeath.nextSoundfade then
+                CDeath.nextSoundfade = CurTime() + 0.5
                 ply:ConCommand("soundfade 100 99999")
             end
         end
     end
 
-    if isDead and keepSoundAlive then
-        local t = CurTime() - deathTime
+    if CDeath.isDead and CDeath.keepSoundAlive then
+        local t = CurTime() - CDeath.deathTime
         local anyPlaying = false
-        for _, station in ipairs(deathSoundChannels) do
+        for _, station in ipairs(CDeath.deathSoundChannels) do
             if IsValid(station) and t < station:GetLength() then
                 anyPlaying = true
                 if station:GetState() ~= 1 then
@@ -505,55 +525,55 @@ local function CinematicDeathTracker()
                 end
             end
         end
-        if #deathSoundChannels > 0 and not anyPlaying then
-            keepSoundAlive = false
+        if #CDeath.deathSoundChannels > 0 and not anyPlaying then
+            CDeath.keepSoundAlive = false
         end
     end
 
-    if isDead and not IsValid(ragdollEnt) and CurTime() >= (nextRagdollSearch or 0) then
-        nextRagdollSearch = CurTime() + 0.2
-        ragdollEnt = FindDeathRagdoll(ply)
-        MakeRagdollHeadVisible(ragdollEnt)
+    if CDeath.isDead and not IsValid(CDeath.ragdollEnt) and CurTime() >= (CDeath.nextRagdollSearch or 0) then
+        CDeath.nextRagdollSearch = CurTime() + 0.2
+        CDeath.ragdollEnt = FindDeathRagdoll(ply)
+        MakeRagdollHeadVisible(CDeath.ragdollEnt)
     end
 
-    if inTransition and not transitionFired then
-        if (CurTime() - transitionStartTime) >= TRANSITION_DURATION then
-            transitionFired = true
+    if CDeath.inTransition and not CDeath.transitionFired then
+        if (CurTime() - CDeath.transitionStartTime) >= TRANSITION_DURATION then
+            CDeath.transitionFired = true
             PlayClick()
-            if transitionCallback then
-                transitionCallback()
-                transitionCallback = nil
+            if CDeath.transitionCallback then
+                CDeath.transitionCallback()
+                CDeath.transitionCallback = nil
             end
         end
     end
 
-    if isDead and stage2Started and not autoCompatTriggered then
-        if (CurTime() - stage2Time) >= (BLACK_FADE_DURATION + BLACK_FADE_OUT_DURATION) then
-            autoCompatTriggered = true
+    if CDeath.isDead and CDeath.stage2Started and not CDeath.autoCompatTriggered then
+        if (CurTime() - CDeath.stage2Time) >= (BLACK_FADE_DURATION + BLACK_FADE_OUT_DURATION) then
+            CDeath.autoCompatTriggered = true
             ActivateCompatMode()
         end
     end
 
-    if inSpectator and not inTransition then
+    if CDeath.inSpectator and not CDeath.inTransition then
         local reloadDown = SafeKeyDown(reloadKeyCode)
 
-        if reloadDown and not prevSpecReloadDown then
+        if reloadDown and not CDeath.prevSpecReloadDown then
             local now = CurTime()
-            if (now - lastReloadPressTime) <= DOUBLE_CLICK_WINDOW then
+            if (now - CDeath.lastReloadPressTime) <= DOUBLE_CLICK_WINDOW then
                 BeginTransition(DoRespawn)
             else
-                lastReloadPressTime = now
+                CDeath.lastReloadPressTime = now
             end
         end
 
-        prevSpecReloadDown = reloadDown
+        CDeath.prevSpecReloadDown = reloadDown
 
         local timeNow = CurTime()
-        if timeNow >= nextCamSync then
-            nextCamSync = timeNow + 0.05
+        if timeNow >= CDeath.nextCamSync then
+            CDeath.nextCamSync = timeNow + 0.05
             net.Start("DeathEffect_UpdateCam")
-                net.WriteVector(freecamPos)
-                net.WriteAngle(freecamAng)
+                net.WriteVector(CDeath.freecamPos)
+                net.WriteAngle(CDeath.freecamAng)
             net.SendToServer()
         end
     end
@@ -562,19 +582,19 @@ hook.Add("Think", "CinematicDeathTracker", CinematicDeathTracker)
 
 -- mouse tracking
 local function CinematicDeathFreecamLook(cmd)
-    if not inSpectator then return end
+    if not CDeath.inSpectator then return end
     local mX = cmd:GetMouseX()
     local mY = cmd:GetMouseY()
-    freecamAng.pitch = math.Clamp(freecamAng.pitch + mY * m_pitch:GetFloat(), -89, 89)
-    freecamAng.yaw   = freecamAng.yaw - mX * m_yaw:GetFloat()
-    freecamAng.roll  = 0
-    cmd:SetViewAngles(freecamAng)
+    CDeath.freecamAng.pitch = math.Clamp(CDeath.freecamAng.pitch + mY * m_pitch:GetFloat(), -89, 89)
+    CDeath.freecamAng.yaw   = CDeath.freecamAng.yaw - mX * m_yaw:GetFloat()
+    CDeath.freecamAng.roll  = 0
+    cmd:SetViewAngles(CDeath.freecamAng)
 end
 hook.Add("CreateMove", "CinematicDeathFreecamLook", CinematicDeathFreecamLook)
 
 -- cam view shit. so you can spawn things in spectator
 local function BuildDeathView(fov)
-    if compatActive then 
+    if CDeath.compatActive then 
         return {
             origin     = LocalPlayer():EyePos(),
             angles     = LocalPlayer():EyeAngles(),
@@ -583,54 +603,54 @@ local function BuildDeathView(fov)
         }
     end
 
-    if inSpectator then
+    if CDeath.inSpectator then
         local dt        = FrameTime()
         local speedMult = SafeKeyDown(sprintKeyCode) and 3 or 1
         local speed     = 200 * dt * speedMult
-        local fwd       = freecamAng:Forward()
-        local right     = freecamAng:Right()
+        local fwd       = CDeath.freecamAng:Forward()
+        local right     = CDeath.freecamAng:Right()
         local up        = Vector(0, 0, 1)
 
-        if input.IsButtonDown(KEY_W) then freecamPos = freecamPos + fwd   * speed end
-        if input.IsButtonDown(KEY_S) then freecamPos = freecamPos - fwd   * speed end
-        if input.IsButtonDown(KEY_A) then freecamPos = freecamPos - right * speed end
-        if input.IsButtonDown(KEY_D) then freecamPos = freecamPos + right * speed end
-        if SafeKeyDown(jumpKeyCode)   then freecamPos = freecamPos + up   * speed end
-        if SafeKeyDown(crouchKeyCode) then freecamPos = freecamPos - up   * speed end
+        if input.IsButtonDown(KEY_W) then CDeath.freecamPos = CDeath.freecamPos + fwd   * speed end
+        if input.IsButtonDown(KEY_S) then CDeath.freecamPos = CDeath.freecamPos - fwd   * speed end
+        if input.IsButtonDown(KEY_A) then CDeath.freecamPos = CDeath.freecamPos - right * speed end
+        if input.IsButtonDown(KEY_D) then CDeath.freecamPos = CDeath.freecamPos + right * speed end
+        if SafeKeyDown(jumpKeyCode)   then CDeath.freecamPos = CDeath.freecamPos + up   * speed end
+        if SafeKeyDown(crouchKeyCode) then CDeath.freecamPos = CDeath.freecamPos - up   * speed end
 
-        return { origin = freecamPos, angles = freecamAng, fov = fov, drawviewer = false }
+        return { origin = CDeath.freecamPos, angles = CDeath.freecamAng, fov = fov, drawviewer = false }
     end
 
-    local elapsed = CurTime() - deathTime
-    local view = { origin = deathCamPos, fov = fov, drawviewer = false }
+    local elapsed = CurTime() - CDeath.deathTime
+    local view = { origin = CDeath.deathCamPos, fov = fov, drawviewer = false }
 
     if elapsed < STAGE_1_DURATION then
         local intensity = (1 - (elapsed / STAGE_1_DURATION)) * 15
-        view.angles = deathCamAng + Angle(
+        view.angles = CDeath.deathCamAng + Angle(
             math.sin(CurTime() * 30) * intensity,
             math.cos(CurTime() * 35) * intensity,
             math.sin(CurTime() * 40) * intensity
         )
     else
-        if IsValid(ragdollEnt) then
-            local targetPos = GetRagdollHeadPos(ragdollEnt)
-            local targetAng = (targetPos - deathCamPos):Angle()
-            deathCamAng = LerpAngle(FrameTime() * 4, deathCamAng, targetAng)
+        if IsValid(CDeath.ragdollEnt) then
+            local targetPos = GetRagdollHeadPos(CDeath.ragdollEnt)
+            local targetAng = (targetPos - CDeath.deathCamPos):Angle()
+            CDeath.deathCamAng = LerpAngle(FrameTime() * 4, CDeath.deathCamAng, targetAng)
 
-            local dist = deathCamPos:Distance(targetPos)
+            local dist = CDeath.deathCamPos:Distance(targetPos)
             if dist > 0 then
-                local dir    = (targetPos - deathCamPos):GetNormalized()
+                local dir    = (targetPos - CDeath.deathCamPos):GetNormalized()
                 local maxDist = cv_cam_max_dist and cv_cam_max_dist:GetFloat() or 150
                 local minDist = cv_cam_min_dist and cv_cam_min_dist:GetFloat() or 40
                 if dist > maxDist then
-                    deathCamPos = LerpVector(FrameTime() * 2, deathCamPos, targetPos - dir * maxDist)
+                    CDeath.deathCamPos = LerpVector(FrameTime() * 2, CDeath.deathCamPos, targetPos - dir * maxDist)
                 elseif dist < minDist then
-                    deathCamPos = LerpVector(FrameTime() * 2, deathCamPos, targetPos - dir * minDist)
+                    CDeath.deathCamPos = LerpVector(FrameTime() * 2, CDeath.deathCamPos, targetPos - dir * minDist)
                 end
             end
         end
-        view.origin = deathCamPos
-        view.angles = deathCamAng
+        view.origin = CDeath.deathCamPos
+        view.angles = CDeath.deathCamAng
     end
 
     return view
@@ -638,49 +658,49 @@ end
 
 -- calcview mm
 local function CinematicDeathCamera(ply, pos, angles, fov)
-    if not isDead then return end
+    if not CDeath.isDead then return end
     return BuildDeathView(fov)
 end
 hook.Add("CalcView", "CinematicDeathCamera", CinematicDeathCamera)
 
 local function CinematicDeathHGCalcView(ply, origin, angles, fov, znear, zfar)
-    if not isDead then return end
+    if not CDeath.isDead then return end
     return BuildDeathView(fov)
 end
 hook.Add("HG_CalcView", "CinematicDeathHGOverride", CinematicDeathHGCalcView)
 
 -- audio and visual overrides
 local function CinematicDeathMute()
-    if isDead and stage2Started and not inSpectator and not compatActive then
+    if CDeath.isDead and CDeath.stage2Started and not CDeath.inSpectator and not CDeath.compatActive then
         return false
     end
 end
 hook.Add("EntityEmitSound", "CinematicDeathMute", CinematicDeathMute)
 
 local function CinematicDeathHideRagdoll()
-    if not isDead or not IsValid(ragdollEnt) or compatActive then return end
+    if not CDeath.isDead or not IsValid(CDeath.ragdollEnt) or CDeath.compatActive then return end
     
-    if (CurTime() - deathTime) < STAGE_1_DURATION then
-        ragdollEnt:SetNoDraw(true)
+    if (CurTime() - CDeath.deathTime) < STAGE_1_DURATION then
+        CDeath.ragdollEnt:SetNoDraw(true)
     else
-        ragdollEnt:SetNoDraw(false)
+        CDeath.ragdollEnt:SetNoDraw(false)
     end
 end
 hook.Add("PreDrawOpaqueRenderables", "CinematicDeathHideRagdoll", CinematicDeathHideRagdoll)
 
 local function CinematicDeathBackground()
-    if not isDead or compatActive then return end
+    if not CDeath.isDead or CDeath.compatActive then return end
 
     local sw, sh  = ScrW(), ScrH()
-    local elapsed = CurTime() - deathTime
+    local elapsed = CurTime() - CDeath.deathTime
 
-    if inTransition then
+    if CDeath.inTransition then
         surface.SetDrawColor(0, 0, 0, 255)
         surface.DrawRect(0, 0, sw, sh)
         return
     end
 
-    if inSpectator then
+    if CDeath.inSpectator then
         local hint = "double click [" .. reloadKeyName .. "] to respawn"
         surface.SetFont("DeathEffect_Hint")
         local hw = surface.GetTextSize(hint)
@@ -695,19 +715,25 @@ local function CinematicDeathBackground()
         local fadeProgress = math.Clamp(stageElapsed / BLACK_FADE_DURATION, 0, 1)
         local fadeOutProgress = math.Clamp((stageElapsed - BLACK_FADE_DURATION) / BLACK_FADE_OUT_DURATION, 0, 1)
         local overlayAlpha = math.floor((1 - fadeOutProgress) * 255)
-        local red = math.floor((1 - fadeProgress) * 255)
-        surface.SetDrawColor(red, 0, 0, overlayAlpha)
+        local colorFade = 1 - fadeProgress
+        local deathColor = CDeath.deathColor
+        surface.SetDrawColor(
+            math.floor(deathColor.r * colorFade),
+            math.floor(deathColor.g * colorFade),
+            math.floor(deathColor.b * colorFade),
+            overlayAlpha
+        )
         surface.DrawRect(0, 0, sw, sh)
 
-        if fadeProgress < 1 and IsValid(ragdollEnt) then
-            cam.Start3D(deathCamPos, deathCamAng)
+        if fadeProgress < 1 and IsValid(CDeath.ragdollEnt) then
+            cam.Start3D(CDeath.deathCamPos, CDeath.deathCamAng)
             cam.IgnoreZ(true)
             render.SuppressEngineLighting(true)
             render.MaterialOverride(matWhite)
             render.SetColorModulation(0, 0, 0)
             render.SetBlend(1)
 
-            local ok, err = pcall(ragdollEnt.DrawModel, ragdollEnt)
+            local ok, err = pcall(CDeath.ragdollEnt.DrawModel, CDeath.ragdollEnt)
 
             render.SetBlend(1)
             render.SetColorModulation(1, 1, 1)
@@ -722,8 +748,8 @@ local function CinematicDeathBackground()
         local textFadeIn = math.Clamp(stageElapsed / DEATH_TEXT_FADE_IN, 0, 1)
         local textAlpha = math.floor(textFadeIn * overlayAlpha * (1 - fadeProgress))
         local shake = 5 * (1 - textFadeIn)
-        local text = deathMessage.title
-        local desc = deathMessage.desc
+        local text = CDeath.deathMessage.title
+        local desc = CDeath.deathMessage.desc
         local slide = 1 - ((1 - textFadeIn) ^ 3)
         local textX = Lerp(slide, -650, 70) + math.sin(CurTime() * 95) * shake
         local textY = sh / 2 - 60 + math.cos(CurTime() * 110) * shake
@@ -739,6 +765,6 @@ end
 hook.Add("DrawOverlay", "CinematicDeathBackground", CinematicDeathBackground)
 
 local function HideDefaultDamage(name)
-    if isDead and name == "CHudDamageIndicator" then return false end
+    if CDeath.isDead and name == "CHudDamageIndicator" then return false end
 end
 hook.Add("HUDShouldDraw", "HideDefaultDamage", HideDefaultDamage)

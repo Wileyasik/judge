@@ -389,6 +389,8 @@ hook.Add("Player Think", "homigrad-bones", function(ply, time, dtime)
 end)
 
 function hg.bone.Set(ply, lookup_name, vec, ang, layer, lerp, dtime2)
+	if not IsValid(ply) then return end
+
 	local dtime = dtime2 or dtime
 	boneName = hg.bone.matrixManual_Name[lookup_name]
 	boneID = isnumber(lookup_name) and lookup_name or ply:LookupBone(boneName ~= nil and boneName or lookup_name)

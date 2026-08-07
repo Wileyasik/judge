@@ -8,10 +8,21 @@ zb.HarmReturnedKarma = zb.HarmReturnedKarma or {}
 zb.HarmReceivedKarma = zb.HarmReceivedKarma or {}
 zb.HarmDoneDetailed = zb.HarmDoneDetailed or {}
 zb.HarmAttacked = zb.HarmAttacked or {}
+zb.KarmaEarned = zb.KarmaEarned or {}
 zb.GuiltSQL = zb.GuiltSQL or {}
 zb.GuiltSQL.PlayerInstances = zb.GuiltSQL.PlayerInstances or {}
 
 local hg_developer = ConVarExists("hg_developer") and GetConVar("hg_developer") or CreateConVar("hg_developer",0,FCVAR_SERVER_CAN_EXECUTE,"Toggle developer mode (enables damage traces)",0,1)
+
+util.AddNetworkString("karma_down_sound")
+
+function zb.PlayKarmaSound(ply, pitch)
+	if not IsValid(ply) or not ply:IsPlayer() then return end
+
+	net.Start("karma_down_sound")
+		net.WriteFloat(pitch or 100)
+	net.Send(ply)
+end
 
 hook.Add("DatabaseConnected", "GuiltCreateData", function()
 	local query
@@ -200,6 +211,25 @@ hook.Add("HomigradDamage", "GuiltReg", function(ply, dmgInfo, hitgroup, ent, har
 
     if Attacker == Victim then return end
 
+    local isEnemyKill = newharm >= maxharm and oldharmdone < newharm
+    if isEnemyKill then
+        local enemyKill
+        if rnd.name == "hmcd" then
+            enemyKill = Victim.isTraitor and not Attacker.isTraitor
+        else
+            enemyKill = attackerTeam ~= (Victim:IsPlayer() and Victim:Team() or Victim.team or -1)
+        end
+
+        if enemyKill then
+            zb.KarmaEarned[Attacker] = zb.KarmaEarned[Attacker] or 0
+            if zb.KarmaEarned[Attacker] < zb.KarmaEnemyKillCap then
+                zb.KarmaEarned[Attacker] = zb.KarmaEarned[Attacker] + 1
+                Attacker.Karma = math.Clamp((Attacker.Karma or 100) + zb.KarmaEnemyKillReward, 0, zb.MaxKarma)
+                Attacker:SetNetVar("Karma", Attacker.Karma)
+            end
+        end
+    end
+
     zb.GuiltTable[Attacker] = zb.GuiltTable[Attacker] or {}
     zb.GuiltTable[Victim] = zb.GuiltTable[Victim] or {}
     zb.HarmDoneKarma[Victim] = zb.HarmDoneKarma[Victim] or {}
@@ -228,7 +258,7 @@ hook.Add("HomigradDamage", "GuiltReg", function(ply, dmgInfo, hitgroup, ent, har
     local add = amt * maxharm
 
     add = add * (Victim:IsPlayer() and Attacker:PlayerClassEvent("Guilt", Victim) or 1)
-    add = add * 2
+    add = add * 1
 
     local mul, shouldBanGuilt
     
@@ -239,7 +269,6 @@ hook.Add("HomigradDamage", "GuiltReg", function(ply, dmgInfo, hitgroup, ent, har
     end
     
     local guiltadd = amt * 60
-    -- Килы по нарастающей: каждый следующий килл в коротком окне (90 сек) отнимает больше кармы.
     local now = CurTime()
     if (Attacker.karmaKillStreakUntil or 0) < now then
         Attacker.karmaKillStreak = 0
@@ -260,7 +289,7 @@ hook.Add("HomigradDamage", "GuiltReg", function(ply, dmgInfo, hitgroup, ent, har
 
     if Victim:IsPlayer() and add > 0 then
         zb.HarmReceivedKarma[Victim] = zb.HarmReceivedKarma[Victim] or 0
-        local victimAdd = math.Clamp(add * 0.5, 0, math.max(30 - zb.HarmReceivedKarma[Victim], 0))
+        local victimAdd = math.Clamp(add * zb.KarmaVictimComp, 0, math.max(zb.KarmaVictimCompCap - zb.HarmReceivedKarma[Victim], 0))
         zb.HarmReceivedKarma[Victim] = zb.HarmReceivedKarma[Victim] + victimAdd
         Victim.Karma = math.Clamp((Victim.Karma or 100) + victimAdd, 0, zb.MaxKarma)
         Victim:SetNetVar("Karma", Victim.Karma)
@@ -269,10 +298,9 @@ hook.Add("HomigradDamage", "GuiltReg", function(ply, dmgInfo, hitgroup, ent, har
     Attacker.Guilt = (Attacker.Guilt or 0) + guiltadd
     Attacker.Karma = math.Clamp((Attacker.Karma or 100) - add + karmaReturn, -60, zb.MaxKarma)
 
-    -- Звук при резкой потере кармы (более 20 за один инцидент), погромче.
     local karmaNetLoss = add - karmaReturn
     if karmaNetLoss > 20 then
-        Attacker:EmitSound("karmadown.mp3", 100, 100)
+        zb.PlayKarmaSound(Attacker, 100)
     end
 
     zb.HarmDoneKarma[Victim][Attacker] = zb.HarmDoneKarma[Victim][Attacker] + add
@@ -288,22 +316,20 @@ hook.Add("HomigradDamage", "GuiltReg", function(ply, dmgInfo, hitgroup, ent, har
     end
 
     Attacker:SetNetVar("Karma", Attacker.Karma)
-    
-    -- Чисто звуковое предупреждение для того, кто теряет карму (без чата).
-    -- Чем ниже карма — тем ниже тон сигнала.
+
     local warned = Attacker.karma_warned or 999
     if Attacker.Karma <= 0 and warned > 0 then
         Attacker.karma_warned = 0
-        Attacker:EmitSound("karmadown.mp3", 100, 60)
+        zb.PlayKarmaSound(Attacker, 60)
     elseif Attacker.Karma <= 20 and warned > 20 then
         Attacker.karma_warned = 20
-        Attacker:EmitSound("karmadown.mp3", 100, 80)
+        zb.PlayKarmaSound(Attacker, 80)
     elseif Attacker.Karma <= 35 and warned > 35 then
         Attacker.karma_warned = 35
-        Attacker:EmitSound("karmadown.mp3", 100, 100)
+        zb.PlayKarmaSound(Attacker, 100)
     elseif Attacker.Karma <= 60 and warned > 60 then
         Attacker.karma_warned = 60
-        Attacker:EmitSound("karmadown.mp3", 100, 120)
+        zb.PlayKarmaSound(Attacker, 120)
     end
 
     zb.GuiltTable[Attacker][Victim] = math.Clamp((zb.GuiltTable[Attacker][Victim] or 0) + guiltadd, 0, 200)
@@ -315,14 +341,11 @@ hook.Add("HomigradDamage", "GuiltReg", function(ply, dmgInfo, hitgroup, ent, har
 
         Attacker:guilt_SetValue( 10 )
 
-        -- we wait one tick to make them pay for all the murders they've done
-        -- also makes sure the message is displayed only once
         timer.Create("simplewaitforkarmadrop"..Attacker:EntIndex(), 0, 1, function()
             if IsValid(Attacker) then -- if the player haven't left in that exact tick then we do him dirty
                 karma = Attacker.Karma
             end
 
-            -- Бан на 25 минут за обнуление кармы.
             local time = 25
 
 			-- if ULib then
@@ -376,7 +399,7 @@ hook.Add("Player Think", "karmagain", function(ply)
     if (ply.KarmaGainThink or 0) > CurTime() then return end
     ply.KarmaGainThink = CurTime() + 120
 
-    ply.Karma = math.Clamp(ply.Karma + (ply.Karma > 100 and 0.1 or (ply.KarmaGain or 0.75)), 0, zb.MaxKarma)// * (1 + ply:HasPurchase("zpremium")), 0, zb.MaxKarma)
+    ply.Karma = math.Clamp(ply.Karma + (ply.Karma > 100 and zb.KarmaRegenHigh or (ply.KarmaGain or zb.KarmaRegen)), 0, zb.MaxKarma)// * (1 + ply:HasPurchase("zpremium")), 0, zb.MaxKarma)
     
     ply:SetNetVar("Karma", ply.Karma)
     //ply:guilt_SetValue( ply.Karma or 100 )
@@ -414,9 +437,9 @@ end)
 hook.Add("ZB_StartRound","NO_HARM",function()
     for i,ply in player.Iterator() do
         if (ply.Guilt or 0) < 1 then
-            ply.KarmaGain = math.Clamp((ply.KarmaGain or 0.75) + 0.25, 0.75, 1.5)
+            ply.KarmaGain = math.Clamp((ply.KarmaGain or zb.KarmaRegen) + 0.25, zb.KarmaRegen, zb.KarmaRegen + zb.KarmaRegenCleanBonus)
         else
-            ply.KarmaGain = 0.75
+            ply.KarmaGain = zb.KarmaRegen
         end
 
         //ply:guilt_SetValue( ply.Karma or 100 )
@@ -426,6 +449,7 @@ hook.Add("ZB_StartRound","NO_HARM",function()
     zb.HarmDoneKarma = {}
     zb.HarmReturnedKarma = {}
     zb.HarmReceivedKarma = {}
+    zb.KarmaEarned = {}
 end)
 
 util.AddNetworkString("get_karma")
@@ -465,6 +489,7 @@ net.Receive("open_guilt_menu",function(len, ply)
     if ply:Alive() then return end
     local tbl = zb.HarmDoneKarma[ply] or {}
     net.Start("open_guilt_menu")
+    net.WriteFloat(ply.Karma or 100)
     net.WriteTable(tbl)
     net.Send(ply)
     //current round guilt
@@ -483,6 +508,7 @@ net.Receive("forgive_player", function(len, ply)
     zb.HarmDone[ply][ent] = 0
     zb.HarmDoneKarma[ply][ent] = 0
     net.Start("open_guilt_menu")
+    net.WriteFloat(ply.Karma or 100)
     net.WriteTable(zb.HarmDoneKarma[ply])
     net.Send(ply)
 end)

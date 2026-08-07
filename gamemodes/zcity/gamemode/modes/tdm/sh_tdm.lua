@@ -11,6 +11,14 @@ zb.Points.HMCD_TDM_T = zb.Points.HMCD_TDM_T or {}
 zb.Points.HMCD_TDM_T.Color = Color(150,95,0)
 zb.Points.HMCD_TDM_T.Name = "HMCD_TDM_T"
 
+zb.Points.HMCD_ARENA_CT = zb.Points.HMCD_ARENA_CT or {}
+zb.Points.HMCD_ARENA_CT.Color = Color(0,90,255)
+zb.Points.HMCD_ARENA_CT.Name = "HMCD_ARENA_CT"
+
+zb.Points.HMCD_ARENA_T = zb.Points.HMCD_ARENA_T or {}
+zb.Points.HMCD_ARENA_T.Color = Color(220,70,40)
+zb.Points.HMCD_ARENA_T.Name = "HMCD_ARENA_T"
+
 MODE.PrintName = "Arena"
 MODE.start_time = 25
 

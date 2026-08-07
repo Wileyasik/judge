@@ -636,7 +636,7 @@ function MODE:RoundThink()
 end
 
 function MODE:GetTeamSpawn()
-	return zb.TranslatePointsToVectors(zb.GetMapPoints( "HMCD_TDM_T" )), zb.TranslatePointsToVectors(zb.GetMapPoints( "HMCD_TDM_CT" ))
+	return zb.TranslatePointsToVectors(zb.GetMapPoints("HMCD_ARENA_T")), zb.TranslatePointsToVectors(zb.GetMapPoints("HMCD_ARENA_CT"))
 end
 
 function MODE:CanSpawn()

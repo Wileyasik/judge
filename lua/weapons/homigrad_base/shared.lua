@@ -354,6 +354,8 @@ function SWEP:CanUse(ignoreSprint)
     local owner = self:GetOwner()
 	if not IsValid(owner) then return true end
     if owner:IsNPC() then return true end
+	local gunInterruptedUntil = SERVER and owner.hgGunInterruptedUntil or owner:GetNWFloat("hgGunInterruptedUntil", 0)
+	if gunInterruptedUntil > CurTime() then return false end
 	if owner:IsPlayer() and owner:GetNWBool("hg_hold_wound_twohand", false) then return false end
 	if owner.organism and owner.organism.rarmamputated and !self:IsPistolHoldType() then return false end
 	return not (self.reload or self.deploy or (owner:IsPlayer() and ((!ignoreSprint and self:IsSprinting()) or (owner.organism and owner.organism.otrub))))
@@ -2336,6 +2338,7 @@ function SWEP:SetHandPos(noset)
     if not ply.shouldTransmit or ply.NotSeen then return end
 
 	local ent = IsValid(ply.FakeRagdoll) and ply.FakeRagdoll or ply
+	ent = ply:GetNWBool("FakeGettingUp", false) and IsValid(ply.OldRagdoll) and ply.OldRagdoll:IsRagdoll() and ply.OldRagdoll or ent
 	local inuse = self:InUse()
 
 	//if (ent ~= ply and not (inuse)) and (self.lerped_positioning and self.lerped_positioning < 0.2) then return end

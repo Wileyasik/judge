@@ -728,7 +728,7 @@ function SWEP:FireBullet()
 
 	bullet.Force = scaleBulletForce(ammotype.Force and ammotype.Force / 1.5 or primary.Force, numbullet)
     bullet.Damage = ammotype.Damage or primary.Damage or 25
-	bullet.Damage = bullet.Damage * (self.Supressor and 0.9 or 1) * (self.DamageMultiplier or 1)
+	bullet.Damage = bullet.Damage * 0.95 * (self.Supressor and (self.SupressorDamageMultiplier or 0.9) or 1) * (self.DamageMultiplier or 1)
 
 	local baseSpread = (ammotype.Spread or self.Primary.Spread or 0) * 3
 	if self.ShotgunTubeReload and self.ShotgunManualCycle then
@@ -758,6 +758,7 @@ function SWEP:FireBullet()
 	
 	bullet.AmmoType = primary.Ammo
 	bullet.Speed = ammotype.Speed or 0
+	bullet.StopsInJaw = self.StopsInJaw
 	self.nearMissShotSequence = (self.nearMissShotSequence or 0) + 1
 	bullet.NearMissShotID = tostring(self:EntIndex()) .. ":" .. tostring(self.nearMissShotSequence)
 	bullet.TracerName = self.Tracer or "nil"

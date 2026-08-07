@@ -117,10 +117,17 @@ local function Trace_Bullet(box, hit, ricochet, impact, org, organs, dmg, dmgInf
 		local resistance = func(org, bone, dmg, dmgInfo, box[6], dir, hit, ricochet, impact)
 
 		if isRifleBullet and name == "skull" then resistance = 0 end
-		if isRifleBullet and string.StartWith(name, "brain") then
+		if impact.ballisticVersion and string.StartWith(name, "brain") then
 			org.brain = 1
 			org.alive = false
 			ApplyFatalOrganismDamage(org, dmgInfo)
+		end
+		if name == "jaw" and impact.bullet and impact.bullet.StopsInJaw then
+			return {
+				penetrationCost = impact.penetrationBefore,
+				energyCost = impact.energyBefore,
+				stopped = true
+			}
 		end
 
 		if istable(resistance) or not impact.ballisticVersion then return resistance end
@@ -1216,8 +1223,16 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 		local painkillerMul = (org.painkiller * 0.5 + 1)
 	
 		org.shock_turn = 10 * (!org.otrub and 1 or 0.1)
-	
-		if org.shock > org.shock_turn * 1.5 * analgesiaMul * painkillerMul then
+		local collapseThreshold = org.shock_turn * 1.5 * analgesiaMul * painkillerMul
+
+		if isRifleBullet and org.shock > collapseThreshold and IsValid(org.owner) and org.owner:IsPlayer() then
+			local interruptDuration = math.Clamp(0.45 + org.shock / 70, 0.6, 1.45)
+			local interruptUntil = math.max(org.owner.hgGunInterruptedUntil or 0, CurTime() + interruptDuration)
+			org.owner.hgGunInterruptedUntil = interruptUntil
+			org.owner:SetNWFloat("hgGunInterruptedUntil", interruptUntil)
+		end
+
+		if org.shock > collapseThreshold then
 			timer.Simple(0, function() hg.Fake(org.owner) end)
 		end
 
@@ -1809,7 +1824,8 @@ local hg_safe_landing_painmul = 0.7
 local hg_safe_landing_minspeed = 350
 
 local function velocityDamage(ent, data)
-	local speed = (data.OurOldVelocity - data.TheirOldVelocity):Length()
+	local relativeVelocity = data.OurOldVelocity - data.TheirOldVelocity
+	local speed = relativeVelocity:Length()
 	if speed < 545 then return end
 	if IsValid(data.HitEntity) and data.HitEntity.NoDismemberment then
 		-- A thrown item can transfer momentum before this ragdoll hits the world.
@@ -1820,17 +1836,23 @@ local function velocityDamage(ent, data)
 	local noDismemberment = ent.NoDismembermentPhysics
 	
 	ent.hgLastTouched = ent.hgLastTouched or setmetatable({}, {__mode = "k"})
-	if ent.hgLastTouched[data.HitEntity] then
-		if ent.hgLastTouched[data.HitEntity] + 0.5 > CurTime() then
+	local physTouches = ent.hgLastTouched[data.PhysObject]
+	if not physTouches then
+		physTouches = setmetatable({}, {__mode = "k"})
+		ent.hgLastTouched[data.PhysObject] = physTouches
+	end
+
+	if physTouches[data.HitEntity] then
+		if physTouches[data.HitEntity] + 0.5 > CurTime() then
 			return
 		end
 	end
 
-	ent.hgLastTouched[data.HitEntity] = CurTime()
+	physTouches[data.HitEntity] = CurTime()
 
 	--print(data.HitObject:GetEntity():IsWorld())
-	local dmg = speed / 5350 * data.DeltaTime * ((IsValid(data.HitObject) && !data.HitObject:GetEntity():IsWorld()) && math.min(data.HitObject:GetMass() / 20, 1) || 1)
-	dmg = dmg * math.abs(data.OurOldVelocity:GetNormalized():Dot(data.HitNormal))
+	local normalSpeed = math.abs(relativeVelocity:Dot(data.HitNormal))
+	local dmg = normalSpeed / 5350 * ((IsValid(data.HitObject) && !data.HitObject:GetEntity():IsWorld()) && math.min(data.HitObject:GetMass() / 20, 1) || 1)
 	if !data.HitObject:GetEntity():IsWorld() && !data.HitObject:GetEntity():IsRagdoll() then
 		//dmg = dmg * math.max(data.HitObject:GetMass()*(speed/50000),5)
 	end
@@ -1862,7 +1884,8 @@ local function velocityDamage(ent, data)
 	--end
 	local att = data.HitObject:GetEntity():GetPhysicsAttacker(15)
 	att = IsValid(att) and att or ent:GetPhysicsAttacker(15)
-	dmgInfo:SetAttacker(IsValid(att) and att or IsValid(dmgInfo:GetAttacker()) and dmgInfo:GetAttacker() or game.GetWorld())
+	att = IsValid(att) and att or game.GetWorld()
+	dmgInfo:SetAttacker(att)
 	att.harm = dmgInfo:GetDamage() / 15
 	-- 100 is kil
 	
@@ -1881,10 +1904,10 @@ local function velocityDamage(ent, data)
 		safeLanding = true
 	end
 
-	local traceResult = GetTraceDamage(ent, data.HitPos, -(data.OurOldVelocity - data.TheirOldVelocity))
+	local traceResult = GetTraceDamage(ent, data.HitPos, -relativeVelocity)
 	
 	if not bone then
-		bone = tr.PhysicsBone
+		bone = traceResult.PhysicsBone
 	end
 
 	if IsValid(att) and att:IsPlayer() and att.organism and att.organism.fear and att.organism.fear < 0 then
@@ -2125,7 +2148,6 @@ hg.velocityDamage = velocityDamage
 
 hook.Add("Ragdoll Collide", "organism", function(ragdoll, data)
 	if ragdoll == data.HitEntity then return end
-	if data.DeltaTime < 0.25 then return end
 	if not ragdoll:IsRagdoll() then return end
 	if data.HitEntity:IsPlayerHolding() then return end
 	velocityDamage(ragdoll, data)

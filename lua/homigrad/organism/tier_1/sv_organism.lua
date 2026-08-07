@@ -605,9 +605,6 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		if not org.neckslitDeadline then
 			org.neckslitDeadline = CurTime() + 15
 			org.neckslitWarned = nil
-			if isPly and owner:Alive() then
-				owner:Notify("My throat was slit! I hold my neck and wait for help. ~15 seconds left...", true, "neckslit", 0)
-			end
 		elseif org.neckslitWarned ~= true and org.neckslitDeadline - CurTime() <= 4 then
 			org.neckslitWarned = true
 			if isPly and owner:Alive() then

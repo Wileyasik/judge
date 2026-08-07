@@ -226,7 +226,7 @@ function SWEP:PosAngChanges(ply, desiredPos, desiredAng, bNoAdditional, closeani
     end
 	
 	local ent = IsValid(ply.FakeRagdoll) and ply.FakeRagdoll or ply
-	--ent = IsValid(ply.OldRagdoll) and ply.OldRagdoll:IsRagdoll() and ply.OldRagdoll or ent
+	ent = ply:GetNWBool("FakeGettingUp", false) and IsValid(ply.OldRagdoll) and ply.OldRagdoll:IsRagdoll() and ply.OldRagdoll or ent
 
 	local inuse = self:InUse()
 		
@@ -744,13 +744,14 @@ function SWEP:WorldModel_Transform(bNoApply, bNoAdditional, model)
 	
 	if IsValid(owner) and (owner:IsNPC() or owner:IsPlayer()) then
 		local ent = IsValid(owner.FakeRagdoll) and owner.FakeRagdoll or owner
+		ent = owner:GetNWBool("FakeGettingUp", false) and IsValid(owner.OldRagdoll) and owner.OldRagdoll:IsRagdoll() and owner.OldRagdoll or ent
 		local inuse = self:InUse()
 		
 		local dtime = SysTime() - (self.last_transform or SysTime())
 		self.last_transform = SysTime()
 
 		local should = hg.ShouldTPIK(owner) and not (ent ~= owner and not (inuse))
-		if not should and not IsValid(owner.FakeRagdoll) then
+		if not should and ent == owner then
 			if IsValid(model) then
 				-- local ownAngs = owner:EyeAngles()
 				-- model:SetRenderAngles(ownAngs)
@@ -887,6 +888,7 @@ function SWEP:WorldModel_Transform_Holstered()
 	if not IsValid(model) then model = self:CreateWorldModel() end
 	
 	local ent = IsValid(owner.FakeRagdoll) and owner.FakeRagdoll or owner
+	ent = owner:GetNWBool("FakeGettingUp", false) and IsValid(owner.OldRagdoll) and owner.OldRagdoll:IsRagdoll() and owner.OldRagdoll or ent
 	
 	if not IsValid(ent) then
 		model:SetNoDraw(true)
@@ -1046,7 +1048,7 @@ function hg.RenderWeapons(ent, owner)
 	local wep = owner.GetActiveWeapon and owner:GetActiveWeapon()
 	
 	if IsValid(wep) and wep.ishgweapon then
-		DrawWorldModel(wep)
+		DrawWorldModel(wep, owner:GetNWBool("FakeGettingUp", false) and IsValid(owner.OldRagdoll) and owner.OldRagdoll == ent)
     end
 
 	if owner.GetWeapons then

@@ -14,6 +14,7 @@ end
 
 hook.Add("Bones", "homigrad-weapons-bone", function(ply)
 	local wep = ply:GetActiveWeapon()
+	if not IsValid(wep) then return end
 	local func = wep.Animation
 	
 	if func then func(wep, ply) end
@@ -356,7 +357,7 @@ hook.Add("Bones", "homigrad-lean-bone", function(ply, dtime)
 	local right = ((isragdoll and !ragdollcombat and hg.KeyDown(ply, IN_MOVELEFT)) or hg.KeyDown(ply, IN_ALT1)) and not hg.KeyDown(ply, IN_ALT2)
 
 	ply.lean = Lerp(
-		hg.lerpFrameTime( ( left or right ) and 0.045 * ply:GetNetVar("leanSpeedMul",1) or 0.075, dtime * game.GetTimeScale()), 
+		hg.lerpFrameTime((left or right) and 0.12 * ply:GetNetVar("leanSpeedMul", 1) or 0.2, dtime * game.GetTimeScale()),
 		ply.lean or 0,
 		hg.IsLocal(ply) and ( (left and right and 0) or (left and 1.3) or (right and -1.3) or 0) or ply:GetNWFloat("PlayerLean", 0)
 	)

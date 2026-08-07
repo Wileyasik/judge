@@ -47,17 +47,15 @@ function ENT:Initialize()
     if SERVER then
         self:AddCallback("PhysicsCollide",function(ent1, data)
             if ent1:GetFireLeft() <= 0 then return end
-            local pos = ent1:GetPos()
+            local pos = data.HitPos or ent1:GetPos()
             local ent = data.HitEntity
             --print(IsValid(ent), ignitable[ent:GetModel()], ent:GetModel())
             if IsValid(ent) and ignitable[ent:GetModel()] then
                 ent:Ignite()
             end
 
-            for _,v in ipairs(hg.gasolinePath) do
-                if v[1]:Distance(pos) > 30 or v[2] ~= false then continue end
-                v[2] = CurTime()
-                v[3] = owner
+            if hg.IgniteGasolineAt then
+                hg.IgniteGasolineAt(pos, ent1.debil, 40)
             end
             if IsValid(data.HitEntity) and hg.drums[data.HitEntity:EntIndex()] then
                 local drum = hg.drums[data.HitEntity:EntIndex()]

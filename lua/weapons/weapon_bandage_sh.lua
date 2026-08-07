@@ -121,7 +121,7 @@ end
 local bone, name
 function SWEP:BoneSet(lookup_name, vec, ang)
 	local owner = self:GetOwner()
-    if IsValid(owner) and !owner:IsPlayer() then return end
+	if not IsValid(owner) or not owner:IsPlayer() then return end
 	hg.bone.Set(owner, lookup_name, vec, ang, "bandage", 0.01)
 end
 

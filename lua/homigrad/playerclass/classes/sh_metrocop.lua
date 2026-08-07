@@ -137,7 +137,7 @@ function CLASS.On(self, data)
 	end
 
     if IsValid(self.FakeRagdoll) then
-        hg.FakeUp(self, nil, nil, true)
+        hg.FakeUp(self, nil, nil, false)
     end
 
     ApplyAppearance(self,nil,nil,nil,true)

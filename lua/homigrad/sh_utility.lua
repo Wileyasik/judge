@@ -680,7 +680,7 @@ local IsValid = IsValid
 			time = SysTime()
 
 			local lean = (ply.lean or 0)
-			lean_lerp = LerpFT(hg.lerpFrameTime2(1,dtime), lean_lerp, lean)
+			lean_lerp = LerpFT(hg.lerpFrameTime2(0.08, dtime), lean_lerp, lean)
 		end)
 	end
 --//

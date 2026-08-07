@@ -933,6 +933,10 @@ if SERVER then
 	}
 
 	function ENT:SpreadThink(ran)
+		if SERVER and hg.IgniteGasolineAt then
+			hg.IgniteGasolineAt(self:GetPos(), self:GetOwner(), vFireBaseRadius(self:GetFireState() or 1) or 32)
+		end
+
 		-- Attempt to spread
 		if vFireEnableSpread then
 
@@ -940,12 +944,6 @@ if SERVER then
 			
 			-- We only spread if our random variable is below 1000 - the more throttle there is, the higher the probability of ran being >= 1000
 			-- and as a result, fire spreading is throttled
-
-			for _,v in ipairs(hg.gasolinePath) do
-				if v[1]:Distance(self:GetPos()) > (vFireBaseRadius(self:GetFireState() or 1) or 1) or v[2] ~= false then continue end
-				v[2] = CurTime()
-				v[3] = self:GetOwner()
-			end
 
 			if self.NextParticle < CurTime() and vFireLifeToState(self.life) > 4 then
 				self.NextParticle = CurTime() + 2

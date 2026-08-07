@@ -115,6 +115,10 @@ SWEP.Primary.Automatic = false
 SWEP.Primary.Ammo = ".22 Long Rifle"
 SWEP.Primary.Cone = 0
 SWEP.Primary.Damage = 26
+SWEP.DamageMultiplier = 0.75
+SWEP.SupressorDamageMultiplier = 1
+SWEP.PenetrationMultiplier = 0.7
+SWEP.StopsInJaw = true
 
 SWEP.Primary.Sound = {"arccw_uc/common/fire-22-01.ogg", 70, 90, 100}
 SWEP.Primary.SoundFP = {"arccw_uc/common/fire-22-01.ogg", 70, 90, 100}
@@ -181,9 +185,9 @@ SWEP.holsteredPos = Vector(0, -2, 1)
 SWEP.holsteredAng = Angle(0, 20, 30)
 SWEP.shouldntDrawHolstered = true
 
-SWEP.ShockMultiplier = 0.8
-SWEP.HurtMultiplier = 1
-SWEP.PainMultiplier = 1
+SWEP.ShockMultiplier = 0.6
+SWEP.HurtMultiplier = 0.8
+SWEP.PainMultiplier = 0.8
 
 --local to head
 SWEP.RHPos = Vector(12,-4.5,3.5)

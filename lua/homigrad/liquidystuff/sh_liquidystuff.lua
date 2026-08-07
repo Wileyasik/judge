@@ -71,6 +71,23 @@ if SERVER then
 	local net_WriteVector = net.WriteVector
 	local net_WriteEntity = net.WriteEntity
 	local net_Broadcast = net.Broadcast
+
+	function hg.IgniteGasolineAt(pos, owner, radius)
+		if not isvector(pos) then return false end
+
+		local ignited = false
+		local radiusSqr = (radius or 32) ^ 2
+		for _, point in ipairs(hg.gasolinePath) do
+			if point[2] == false and point[1]:DistToSqr(pos) <= radiusSqr then
+				point[2] = CurTime()
+				point[3] = IsValid(owner) and owner or nil
+				ignited = true
+			end
+		end
+
+		return ignited
+	end
+
 	hook.Add("Think", "drum_think", function()
 		local now = CurTime()
 		if time > now then return end
