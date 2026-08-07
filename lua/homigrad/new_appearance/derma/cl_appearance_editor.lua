@@ -721,6 +721,162 @@ function UI.ModelRow(parent, title, modelData, fnActive, fnClick, subtitle)
     return row
 end
 
+function UI.SkinRow(parent, title, family, main, slotID, fnActive)
+    local row = vgui.Create("DPanel", parent)
+    row:Dock(TOP)
+    row:SetTall(MU(CFG.rowH) + MU(22))
+    row:DockMargin(MU(6), MU(1), MU(6), 0)
+    row.Family = family
+    row.MainPanel = main
+    row.SlotID = slotID
+    row.CurrentIndex = 1
+    row.HoverLerp = 0
+    row.SpinAngle = 20
+
+    function row:GetCurrentIndex()
+        local key = self.MainPanel.AppearanceTable.AAttachments and self.MainPanel.AppearanceTable.AAttachments[self.SlotID]
+        if key then
+            for i, vr in ipairs(self.Family.variants) do
+                if vr.key == key then return i end
+            end
+        end
+        return math.Clamp(self.CurrentIndex or 1, 1, #self.Family.variants)
+    end
+    function row:GetCurrentVariant() return self.Family.variants[self:GetCurrentIndex()] end
+    function row:GetIsActive() return fnActive and fnActive() or false end
+
+    local head = vgui.Create("DButton", row)
+    head:Dock(TOP)
+    head:SetTall(MU(CFG.rowH))
+    head:SetText("")
+    head:SetCursor("hand")
+    head.Title = title
+    head.Row = row
+    function head:DoClick()
+        local vr = row:GetCurrentVariant()
+        if vr then
+            main.AppearanceTable.AAttachments[slotID] = vr.key
+            main:SyncSharedPreview()
+            PlayCloth()
+        end
+    end
+    function head:Think()
+        self.IsActive = row:GetIsActive()
+        self.HoverLerp = LerpFT(0.2, self.HoverLerp or 0, self:IsHovered() and 1 or 0)
+        self.SpinAngle = (self.SpinAngle or 20) + RealFrameTime()*18*(self.HoverLerp or 0)
+        row.HoverLerp = self.HoverLerp
+        row.SpinAngle = self.SpinAngle
+    end
+    function head:Paint(w,h)
+        PaintRowBg(self, w, h, self.IsActive, self:IsHovered())
+        draw.SimpleText(self.Title, "ZCity_Menu_Settings_Small", MU(56), MU(10), CLR.text, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+        local vr = row:GetCurrentVariant()
+        local vname = vr and (vr.data.name or vr.key) or ""
+        draw.SimpleText(string.NiceName(tostring(vname)), "ZCity_Menu_Settings_Tiny", MU(56), MU(28), CLR.dim, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+    end
+
+    local icon = vgui.Create("DModelPanel", row)
+    icon:SetPos(MU(4), MU(4))
+    icon:SetSize(MU(48), MU(52))
+    icon:SetMouseInputEnabled(false)
+    icon:SetModel(tostring(family.model or "models/error.mdl"))
+    icon:SetFOV(15)
+    icon:SetAmbientLight(Color(80,80,80))
+    icon:SetDirectionalLight(BOX_TOP, Color(120,120,120))
+    icon:SetDirectionalLight(BOX_RIGHT, Color(100,100,100))
+    icon:SetDirectionalLight(BOX_LEFT, Color(100,100,100))
+    icon:SetDirectionalLight(BOX_FRONT, Color(90,90,90))
+    icon:SetDirectionalLight(BOX_BACK, Color(90,90,90))
+    icon:SetDirectionalLight(BOX_BOTTOM, Color(60,60,60))
+    function icon:PreDrawModel(ent)
+        local d = row:GetCurrentVariant().data
+        if d and d.bSetColor then
+            local cd = d.vecColorOveride or (lply.GetPlayerColor and lply:GetPlayerColor() or lply:GetNWVector("PlayerColor",Vector(1,1,1)))
+            render.SetColorModulation(cd[1],cd[2],cd[3])
+        end
+    end
+    function icon:PostDrawModel(ent)
+        local d = row:GetCurrentVariant().data
+        if d and d.bSetColor then render.SetColorModulation(1,1,1) end
+    end
+    function icon:LayoutEntity(ent)
+        ent:SetAngles(Angle(0, row.SpinAngle or 20, 0))
+        local d = row:GetCurrentVariant().data
+        local sk = d and d.skin
+        ent:SetSkin((isfunction(sk) and sk(ent) or sk) or 0)
+        if d and d.bodygroups then
+            ent:SetBodyGroups(d.bodygroups)
+        else
+            local bgs = ent:GetBodyGroups()
+            for i, bg in ipairs(bgs) do ent:SetBodygroup(bg.id, 0) end
+        end
+        ent:SetSubMaterial(0, (d and d.SubMat) or "")
+        self:SetLookAt(d and d.vpos or Vector(0,0,0))
+    end
+
+    local sliderStrip = vgui.Create("DPanel", row)
+    sliderStrip:Dock(TOP)
+    sliderStrip:SetTall(MU(22))
+    sliderStrip:DockMargin(MU(10), 0, MU(10), MU(4))
+    sliderStrip.Paint = function() end
+
+    local valueLabel = vgui.Create("DLabel", sliderStrip)
+    valueLabel:Dock(RIGHT)
+    valueLabel:SetWidth(MU(48))
+    valueLabel:SetFont("ZCity_Menu_Settings_Tiny")
+    valueLabel:SetTextColor(CLR.dim)
+    valueLabel:SetContentAlignment(6)
+
+    local slider = vgui.Create("DSlider", sliderStrip)
+    slider:Dock(FILL)
+    slider:DockMargin(MU(2), MU(5), MU(2), MU(5))
+    slider:SetTrapInside(true)
+    function slider:Paint(w,h)
+        draw.RoundedBox(3, 0, h*0.5-3, w, 6, Color(40,40,40,220))
+        surface.SetDrawColor(CLR.accent.r, CLR.accent.g, CLR.accent.b, 50)
+        surface.DrawOutlinedRect(0, h*0.5-3, w, 6, 1)
+    end
+    if IsValid(slider.Knob) then
+        function slider.Knob:Paint(w,h)
+            draw.RoundedBox(3, 2, MU(1), w-4, h-MU(2), CLR.accent)
+        end
+    end
+
+    local function RefreshSlider()
+        local idx = row:GetCurrentIndex()
+        row.CurrentIndex = idx
+        slider._lock = true
+        slider:SetSlideX((idx - 1) / math.max(1, #family.variants - 1))
+        slider._lock = nil
+        valueLabel:SetText(idx .. " / " .. #family.variants)
+    end
+
+    function slider:OnValueChanged(fr)
+        if self._lock then return end
+        local idx = math.Clamp(math.Round(1 + fr * math.max(1, #family.variants - 1)), 1, #family.variants)
+        local vr = family.variants[idx]
+        if vr and main.AppearanceTable.AAttachments[slotID] != vr.key then
+            main.AppearanceTable.AAttachments[slotID] = vr.key
+            main:SyncSharedPreview()
+            if RealTime() - (row._lastCloth or 0) > 0.12 then
+                PlayCloth()
+                row._lastCloth = RealTime()
+            end
+        end
+        row.CurrentIndex = idx
+        valueLabel:SetText(idx .. " / " .. #family.variants)
+    end
+
+    function row:Think()
+        self.IsActive = self:GetIsActive()
+        if self:GetCurrentIndex() != (self.CurrentIndex or 1) then RefreshSlider() end
+    end
+
+    RefreshSlider()
+
+    return row
+end
+
 function UI.ClothingRow(parent, title, clothingKey, clothingMat, main, fnActive, fnClick, subtitle)
     local modelData = main:GetCurrentModelData()
     if not modelData then return UI.SelectorRow(parent, title, fnActive, fnClick, subtitle) end
@@ -1097,6 +1253,24 @@ function PANEL:PostInit()
         end)
     end
 
+    local function BuildAccessoryFamilyKey(v)
+        return table.concat({
+            tostring(v.model or ""),
+            tostring(v.bone or ""),
+            tostring(v.placement or ""),
+            tostring(v.norender and 1 or 0),
+            tostring(v.bonemerge and 1 or 0),
+        }, "|")
+    end
+
+    local function AccessoryFamilyActive(fam, slotID)
+        local cur = GetAttachmentValue(slotID)
+        for _,vr in ipairs(fam.variants) do
+            if vr.key == cur then return true end
+        end
+        return false
+    end
+
     local function OpenAccessorySlot(slotID, title, placements)
         OpenSelector(title, title, "Select "..title, function(scroll)
             UI.NoneRow(scroll, function() return GetAttachmentValue(slotID)=="none" end, function()
@@ -1104,15 +1278,48 @@ function PANEL:PostInit()
                 main:SyncSharedPreview()
                 PlayCloth()
             end)
+            local families = {}
+            local ordered = {}
             for k,v in SortedPairs(hg.Accessories or {}) do
                 if not placements[v.placement] then continue end
                 local hasItem = lply.PS_HasItem and lply:PS_HasItem(k)
                 if not hasItem and v.bPointShop and not hg.Appearance.GetAccessToAll(lply) then continue end
-                UI.ModelRow(scroll, string.NiceName(v.name or k), v, function() return GetAttachmentValue(slotID)==k end, function()
-                    main.AppearanceTable.AAttachments[slotID] = k
-                    main:SyncSharedPreview()
-                    PlayCloth()
-                end, v.placement or title)
+                local fk = BuildAccessoryFamilyKey(v)
+                local fam = families[fk]
+                if not fam then
+                    fam = { model = v.model, variants = {} }
+                    families[fk] = fam
+                    table.insert(ordered, fam)
+                end
+                table.insert(fam.variants, { key = k, data = v })
+            end
+            local function skinVal(vr)
+                local s = vr.data.skin
+                if isfunction(s) then s = nil end
+                return s or 0
+            end
+            for _,fam in ipairs(ordered) do
+                table.sort(fam.variants, function(a,b)
+                    local sa, sb = skinVal(a), skinVal(b)
+                    if sa ~= sb then return sa < sb end
+                    return a.key < b.key
+                end)
+            end
+            for _,fam in ipairs(ordered) do
+                if #fam.variants == 1 then
+                    local vr = fam.variants[1]
+                    local k = vr.key
+                    local v = vr.data
+                    UI.ModelRow(scroll, string.NiceName(v.name or k), v, function() return GetAttachmentValue(slotID)==k end, function()
+                        main.AppearanceTable.AAttachments[slotID] = k
+                        main:SyncSharedPreview()
+                        PlayCloth()
+                    end, v.placement or title)
+                else
+                    local base = fam.variants[1]
+                    local famTitle = string.NiceName(tostring(base.data.name or base.key):gsub("%s*%d+%s*$", ""))
+                    UI.SkinRow(scroll, famTitle, fam, main, slotID, function() return AccessoryFamilyActive(fam, slotID) end)
+                end
             end
         end)
     end
