@@ -303,6 +303,7 @@ function SWEP:OwnerChanged()
 
 	if SERVER then
 		self:SetNetVar("attachments",self.attachments)
+		self:ShotgunResetForPickup()
 	end
 end
 

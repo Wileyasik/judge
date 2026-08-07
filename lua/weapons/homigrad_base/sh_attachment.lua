@@ -1636,7 +1636,99 @@ if CLIENT then
 		if IsValid(hg.attachmentsMenuPanel) then hg.attachmentsMenuPanel:Remove() end
 
 		local wep = lply:GetActiveWeapon()
-		if not IsValid(wep) or not ishgweapon(wep) or not wep.availableAttachments then return end
+		if not IsValid(wep) or not ishgweapon(wep) or not wep.availableAttachments then
+			local inventory = getInventoryCounts()
+			if not next(inventory) then return end
+
+			local frame = vgui.Create("DFrame")
+			hg.attachmentsMenuPanel = frame
+			frame:SetTitle("")
+			frame:SetSize(math.min(ScrW() * 0.4, 460), math.min(ScrH() * 0.55, 500))
+			frame:Center()
+			frame:SetDraggable(false)
+			frame:ShowCloseButton(false)
+			frame:MakePopup()
+			frame:SetKeyboardInputEnabled(true)
+			frame.escapeWasDown = input.IsKeyDown(KEY_ESCAPE)
+			frame.Paint = function(self, w, h)
+				hg.DrawBlur(self, 2)
+				surface.SetDrawColor(attMenuFill)
+				surface.DrawRect(0, 0, w, h)
+				surface.SetDrawColor(attMenuGradient)
+				surface.SetMaterial(gradient_u)
+				surface.DrawTexturedRect(0, 0, w, h)
+				surface.SetDrawColor(attMenuOutline)
+				surface.DrawOutlinedRect(0, 0, w, h, 1)
+				drawAttachmentText("INVENTORY ATTACHMENTS", "HG_Attachment_Title", w * 0.5, attachmentPx(20), menuText, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+				drawAttachmentText("LMB: DROP FROM INVENTORY", "HG_Attachment_Small", w * 0.5, h - attachmentPx(16), menuMuted, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+			end
+
+			local scroll = vgui.Create("DScrollPanel", frame)
+			scroll:SetPos(attachmentPx(16), attachmentPx(52))
+			scroll:SetSize(frame:GetWide() - attachmentPx(32), frame:GetTall() - attachmentPx(84))
+			local sbar = scroll:GetVBar()
+			sbar:SetHideButtons(true)
+			sbar.Paint = function(self, w, h) draw.RoundedBox(0, w - 4, 0, 4, h, Color(30, 30, 30, 180)) end
+			sbar.btnGrip.Paint = function(self, w, h) draw.RoundedBox(0, w - 4, 0, 4, h, Color(115, 115, 115, 230)) end
+
+			local ids = {}
+			for id in pairs(inventory) do ids[#ids + 1] = id end
+			table.sort(ids, function(a, b)
+				return (hg.attachmentslaunguage[a] or a) < (hg.attachmentslaunguage[b] or b)
+			end)
+
+			local function buildList()
+				local canvas = scroll:GetCanvas()
+				for _, child in ipairs(canvas:GetChildren()) do
+					if IsValid(child) then child:Remove() end
+				end
+				local counts = getInventoryCounts()
+				if not next(counts) then frame:Close() return end
+				for _, id in ipairs(ids) do
+					local count = counts[id]
+					if not count then continue end
+					local button = scroll:Add("DButton")
+					button:SetText("")
+					button:SetSize(scroll:GetWide() - attachmentPx(8), attachmentPx(42))
+					button:SetTooltip("LMB: drop from inventory")
+					button.Paint = function(self, w, h)
+						local hover = self:IsHovered()
+						surface.SetDrawColor(hover and attMenuDropHover or attMenuDropIdle)
+						surface.DrawRect(0, 0, w, h)
+						surface.SetDrawColor(attMenuOutline)
+						surface.DrawOutlinedRect(0, 0, w, h, 1)
+						local name = hg.attachmentslaunguage[id] or id
+						if count and count > 1 then name = name .. "   x" .. count end
+						drawAttachmentText(name, "HG_Attachment_Label", w * 0.5, h * 0.5, menuText, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+					end
+					button.DoClick = function()
+						dropAttachment(id)
+					end
+				end
+			end
+
+			function frame:RefreshTbl()
+				buildList()
+			end
+
+			buildList()
+
+			function frame:Think()
+				local escapeDown = input.IsKeyDown(KEY_ESCAPE)
+				if escapeDown and not self.escapeWasDown then self:Close() return end
+				self.escapeWasDown = escapeDown
+			end
+
+			function frame:OnKeyCodePressed(key)
+				if key == KEY_ESCAPE then self:Close() end
+			end
+
+			function frame:OnRemove()
+				if hg.attachmentsMenuPanel == self then hg.attachmentsMenuPanel = nil end
+			end
+
+			return
+		end
 
 		local frame = vgui.Create("DFrame")
 		hg.attachmentsMenuPanel = frame

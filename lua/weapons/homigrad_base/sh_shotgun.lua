@@ -54,6 +54,25 @@ function SWEP:Initialize_Shotgun()
 	self:ShotgunSetState(self:Clip1() > 0 and self.drawBullet and SG_READY or SG_EMPTY)
 end
 
+function SWEP:ShotgunResetForPickup()
+	if not self.ShotgunTubeReload or not SERVER then return end
+
+	self:ShotgunInvalidateCallbacks()
+	self._ShotgunToken = 0
+	self._ShotgunInserted = 0
+	self._ShotgunReloadInterrupt = false
+	self._ShotgunReloadHeld = false
+
+	local clip = self:Clip1()
+	if clip > 0 then
+		self:ShotgunSetChambered(true)
+		self:ShotgunSetState(SG_READY)
+	else
+		self:ShotgunSetChambered(false)
+		self:ShotgunSetState(SG_EMPTY)
+	end
+end
+
 function SWEP:ShotgunPlay(state, animation, duration, callback)
 	if not SERVER then return end
 
