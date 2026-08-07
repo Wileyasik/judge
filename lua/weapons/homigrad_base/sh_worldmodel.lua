@@ -835,17 +835,17 @@ function SWEP:WorldModel_Transform(bNoApply, bNoAdditional, model)
 			local readiness = self.weaponReadiness or 1
 			local flex = self:IsResting() and 0 or math.Clamp(self:GetWeaponInertiaFactor() / 5, 0.15, 1)
 			local visualLag = Angle(
-				math.Clamp(velocity[1] * -0.045 * flex, -4, 4),
-				math.Clamp(velocity[2] * -0.055 * flex, -5, 5),
-				math.Clamp(velocity[2] * 0.018 * flex, -2, 2)
+				math.Clamp(velocity[1] * -0.018 * flex, -2, 2),
+				math.Clamp(velocity[2] * -0.022 * flex, -2.5, 2.5),
+				math.Clamp(velocity[2] * 0.007 * flex, -1, 1)
 			)
 			local muzzleLocal = self.LocalMuzzlePos or vector_origin
 			local muzzlePos = LocalToWorld(muzzleLocal, self.LocalMuzzleAng or angle_zero, newPos, newAng)
 			local laggedAng = newAng + visualLag
 			local laggedMuzzle = LocalToWorld(muzzleLocal, self.LocalMuzzleAng or angle_zero, newPos, laggedAng)
 			renderPos = newPos + muzzlePos - laggedMuzzle
-			renderPos:Add(newAng:Forward() * -4.5 * (1 - readiness))
-			renderPos:Add(newAng:Up() * -3 * (1 - readiness))
+			renderPos:Add(newAng:Forward() * -1.5 * (1 - readiness))
+			renderPos:Add(newAng:Up() * -1 * (1 - readiness))
 			renderAng = laggedAng
 		end
 
