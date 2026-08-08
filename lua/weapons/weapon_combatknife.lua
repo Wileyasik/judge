@@ -30,8 +30,8 @@ SWEP.weight = 0.4
 SWEP.AttackTime = 0.3
 SWEP.AnimTime1 = 0.95
 SWEP.WaitTime1 = 0.75
-SWEP.AttackLen1 = 25
-SWEP.AttackLen2 = 25
+SWEP.AttackLen1 = 36
+SWEP.AttackLen2 = 34
 
 SWEP.AnimTime2 = 0.85
 SWEP.Attack2Time = 0.15

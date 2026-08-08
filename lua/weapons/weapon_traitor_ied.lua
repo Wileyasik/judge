@@ -393,6 +393,8 @@ local function StartIEDDetonation(self, ent)
 	if self:GetDialing() then return end
 
 	local delay = GetIEDDialDelay(self, ent)
+	local callSound = self.CallSound
+	local callSoundLevel = self.CallSoundLevel
 
 	self:SetDialing(true)
 	self:SetDestroyed(false)
@@ -402,7 +404,7 @@ local function StartIEDDetonation(self, ent)
 
 	timer.Simple(self.CallStartDelay, function()
 		if not IsValid(ent) then return end
-		ent:EmitSound(self.CallSound, self.CallSoundLevel, 100, 1, CHAN_AUTO)
+		ent:EmitSound(callSound, callSoundLevel, 100, 1, CHAN_AUTO)
 	end)
 
 	timer.Simple(delay, function()
@@ -446,7 +448,15 @@ ExplodeTheItem = function(self,ent)
 	end
 	local BlastDamage = self.BlastDamage
 	local BlastDis = self.BlastDis
+	local disorientationRange = self.DisorientationRange
 	local owner = self:GetOwner()
+	local attacker = IsValid(owner) and owner or game.GetWorld()
+	local explosionSound = table.Random(self.ExplosionSounds)
+	local explosionSoundLevel = self.ExplosionSoundLevel
+	local explosionSoundPitch = math.random(self.ExplosionSoundPitchMin, self.ExplosionSoundPitchMax)
+	local soundNear = table.Random(self.Sound)
+	local soundFar = table.Random(self.SoundFar)
+	local soundWater = self.SoundWater
 
 	if entValid and hg and hg.GasTank and hg.GasTank.ActiveTanks and hg.GasTank.ActiveTanks[ent:EntIndex()] and hg.GasTankDetonate then
 		hg.GasTankDetonate(ent)
@@ -473,14 +483,18 @@ ExplodeTheItem = function(self,ent)
 
 	timer.Simple(0.4,function()
 		timer.Simple(0.1,function()
-			PlayIEDExplosionSound(self, ent)
+			if IsValid(ent) then
+				ent:EmitSound(explosionSound, explosionSoundLevel, explosionSoundPitch, 1, CHAN_AUTO)
+			else
+				sound.Play(explosionSound, EntPos, explosionSoundLevel, explosionSoundPitch, 1)
+			end
 			net.Start("projectileFarSound")
-				net.WriteString(table.Random(self.Sound))
-				net.WriteString(table.Random(self.SoundFar))
+				net.WriteString(soundNear)
+				net.WriteString(soundFar)
 				net.WriteVector(EntPos)
-				net.WriteEntity(entValid and ent or Entity(0))
+				net.WriteEntity(IsValid(ent) and ent or Entity(0))
 				net.WriteBool(entWaterLevel > 0)
-				net.WriteString(self.SoundWater)
+				net.WriteString(soundWater)
 			net.Broadcast()
 
 			if entWaterLevel == 0 then
@@ -503,10 +517,11 @@ ExplodeTheItem = function(self,ent)
 		end)
 
 		timer.Simple(0.2,function()
-			util.BlastDamage(self, IsValid(self:GetOwner()) and self:GetOwner() or self, EntPos, BlastDis / 0.01905, BlastDamage * 0.1) -- эта функция полное говно кстати. бьет сковзь любые пропы...
+			local inflictor = IsValid(ent) and ent or attacker
+			util.BlastDamage(inflictor, attacker, EntPos, BlastDis / 0.01905, BlastDamage * 0.1) -- эта функция полное говно кстати. бьет сковзь любые пропы...
 			
 			local dis = BlastDis / 0.01905
-			local disorientation_dis = self.DisorientationRange / 0.01905
+			local disorientation_dis = disorientationRange / 0.01905
 			for _, enta in ipairs(ents.FindInSphere(EntPos, disorientation_dis)) do
 				local tracePos = enta:IsPlayer() and (enta:GetPos() + enta:OBBCenter()) or enta:GetPos()
 				local tr = hg.ExplosionTrace(EntPos, tracePos, {ent})
@@ -549,18 +564,18 @@ ExplodeTheItem = function(self,ent)
 			end
 
 			--hgWreckBuildings(ent, EntPos, BlastDamage / 400, BlastDis/8, false)
-			hgBlastDoors(entValid and ent or self, EntPos, BlastDamage / 400, BlastDis/8, false)
+			hgBlastDoors(IsValid(ent) and ent or attacker, EntPos, BlastDamage / 400, BlastDis/8, false)
 			util.ScreenShake( EntPos, 45, 225, 2.5, 3000 )
 
 			if FireEnts[entModel] then
 				local Tr = util.QuickTrace(EntPos, -vector_up*500, {EntPos})
-				local fire = CreateVFire(game.GetWorld(), Tr.HitPos, Tr.HitNormal, 300, IsValid(owner) and owner or self)
+				local fire = CreateVFire(game.GetWorld(), Tr.HitPos, Tr.HitNormal, 300, attacker)
 				if IsValid(fire) then
 					fire:ChangeLife(300)
 				end
 			end
 
-			if mat == MAT_METAL and entValid and IsValid(ent:GetPhysicsObject()) then
+			if mat == MAT_METAL and IsValid(ent) and IsValid(ent:GetPhysicsObject()) then
 				local co = coroutine.create(function()
 					local LastShrapnel = SysTime()
 
@@ -580,7 +595,7 @@ ExplodeTheItem = function(self,ent)
 								bullet.Force = 0.01
 								bullet.Damage = BlastDamage
 								bullet.AmmoType = "Metal Debris"
-								bullet.Attacker = self:GetOwner()
+								bullet.Attacker = attacker
 								bullet.Distance = 205
 								bullet.DisableLagComp = true
 								bullet.Filter = {ent}
@@ -632,6 +647,26 @@ ExplodeTheItem = function(self,ent)
 	end)
 end
 
+function SWEP:RegisterExternalIEDBomb(ent)
+	if not SERVER or self.KABOOM or not IsValid(ent) then return false end
+
+	RegisterIEDBomb(self, ent)
+	self.Planted = true
+	self:SetPlanted(true)
+	return true
+end
+
+function SWEP:DetonateExternalIED()
+	if not SERVER or self.KABOOM then return false end
+
+	local bomb = self.HaveTheBomb
+	if not IsValid(bomb) then return false end
+
+	ExplodeTheItem(self, bomb)
+	self.HaveTheBomb = nil
+	return true
+end
+
 function SWEP:CanSecondaryAttack()
 	return not self.IEDPlantPending and IsValid(self:GetOwner()) and not hg.GetCurrentCharacter(self:GetOwner()):IsRagdoll()
 end
@@ -670,13 +705,26 @@ function SWEP:FinishIEDPlant()
 		end
 
 		bomb:SetModel("models/saraphines/insurgency explosives/ied/insurgency_ied.mdl")
-		bomb:SetPos(self.IEDPlantPos + self.IEDPlantNormal * 4)
 		bomb:SetModelScale(0.8)
+		bomb:SetPos(self.IEDPlantPos + self.IEDPlantNormal * 16)
 		bomb:Spawn()
 		bomb:Activate()
 
-		if IsValid(bomb:GetPhysicsObject()) then
-			bomb:GetPhysicsObject():SetMass(20)
+		local mins, maxs = bomb:OBBMins(), bomb:OBBMaxs()
+		local placement = util.TraceHull({
+			start = self.IEDPlantPos + self.IEDPlantNormal * 16,
+			endpos = self.IEDPlantPos,
+			mins = mins,
+			maxs = maxs,
+			filter = {owner, bomb},
+			mask = MASK_SOLID
+		})
+		bomb:SetPos(placement.HitPos + placement.HitNormal * 0.5)
+
+		local phys = bomb:GetPhysicsObject()
+		if IsValid(phys) then
+			phys:SetMass(20)
+			phys:EnableMotion(false)
 		end
 	end
 

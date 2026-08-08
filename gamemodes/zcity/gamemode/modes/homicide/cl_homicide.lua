@@ -8,7 +8,7 @@ end
 --//
 
 MODE.TypeSounds = {
-	["standard"] = {"snd_jack_hmcd_psycho.mp3","snd_jack_hmcd_shining.mp3"},
+	["standard"] = "rem_newroundcommence.mp3",
 	["suicidelunatic"] = "allah.mp3",
 }
 local fade = 0

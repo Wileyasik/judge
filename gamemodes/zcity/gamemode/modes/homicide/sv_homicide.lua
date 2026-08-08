@@ -328,7 +328,7 @@ util.AddNetworkString("hmcd_announce_traitor_lose")
 MODE.Type = MODE.Type or "standard"
 MODE.Types = MODE.Types or {}
 MODE.Types.standard = {
-	Chance = 0.2,
+	Chance = 0.45,
 	ChanceFunction = function() return zb.ModesChances["standard"] or zb.modes["hmcd"].Types.standard.Chance end,
 	LootTable = MODE.LootTableSingle,
 	Messages = {
@@ -709,7 +709,9 @@ MODE.Types.soe = {
 }
 
 MODE.Types.suicidelunatic = {
-	Chance = 0.05,
+	PrintName = "Suicide Lunatic",
+	Description = "One executioner carries a hidden suicide bomb. Everyone wears the Allah accessory.",
+	Chance = 0.02,
 	ChanceFunction = function() return zb.ModesChances["suicidelunatic"] or zb.modes["hmcd"].Types.suicidelunatic.Chance end,
 	LootTable = MODE.LootTableStandard,
 	Messages = {
@@ -723,28 +725,44 @@ MODE.Types.suicidelunatic = {
 		ply:RemoveAllAmmo()
 		ply:Give("weapon_hg_ritual")
 		ply:Give("weapon_apb")
-		ply:Give("weapon_traitor_ied")
+		local iedController = ply:Give("weapon_traitor_ied")
 		ply:Give("weapon_hg_pipebomb_tpik")
-		ply:Give("weapon_hg_type59_tpik")
+		ply:Give("weapon_hg_eft_rgn")
 		ply:Give("weapon_adrenaline")
 		ply.organism.stamina.range = 220
 
 		local wep = ply:Give("weapon_traitor_c4")
-		if not IsValid(wep) then return end
+		if not IsValid(wep) or not IsValid(iedController) then return end
 		ply.HMCD_BombWep = wep
+		ply.HMCD_IEDController = iedController
+		wep.IEDController = iedController
 
 		timer.Simple(0.5, function()
-			if not IsValid(ply) or not ply:Alive() or not IsValid(wep) or wep:GetChargePlaced() then return end
+			if not IsValid(ply) or not ply:Alive() or not IsValid(wep) or not IsValid(iedController) or wep:GetChargePlaced() then return end
 
-			local charge = wep:CreateC4Charge(ply:WorldSpaceCenter() + ply:GetUp() * -12, ply:EyeAngles())
+			local charge = ents.Create("prop_physics")
 			if not IsValid(charge) then return end
 
+			charge:SetModel("models/saraphines/insurgency explosives/ied/insurgency_ied.mdl")
+			charge:SetPos(ply:WorldSpaceCenter() + ply:GetForward() * 8)
+			charge:SetAngles(ply:EyeAngles())
+			charge:SetModelScale(0.8, 0)
+			charge:SetCollisionGroup(COLLISION_GROUP_WEAPON)
+			charge:Spawn()
+			charge:Activate()
+			charge:SetOwner(ply)
 			charge:SetNoDraw(true)
 			charge:DrawShadow(false)
 			charge:SetNotSolid(true)
 			charge:SetParent(ply)
-			charge:SetLocalPos(charge:GetLocalPos())
+			charge:SetLocalPos(Vector(8, 0, 0))
+			charge:SetLocalAngles(Angle(0, 90, 90))
 			charge:SetMoveType(MOVETYPE_NONE)
+
+			if not iedController:RegisterExternalIEDBomb(charge) then
+				charge:Remove()
+				return
+			end
 
 			wep.C4Charge = charge
 			wep:SetChargePlaced(true)
@@ -2140,19 +2158,15 @@ hook.Add("PlayerDeath", "HMCD_SuicideLunaticDetonate", function(ply)
 
 	local wep = ply.HMCD_BombWep
 	if IsValid(wep) and wep.DetonateC4 then
+		if wep.C4Detonating then return end
 		wep:DetonateC4()
 		return
 	end
 
-	local charge = ply.HMCD_BombCharge
-	if IsValid(charge) then
-		local pos = charge:WorldSpaceCenter()
-		util.BlastDamage(charge, IsValid(ply) and ply or charge, pos, 650, 450)
-		if hgBlastDoors then hgBlastDoors(charge, pos, 450 / 400, 2.5, false) end
-		util.ScreenShake(pos, 45, 225, 2.5, 3000)
-		ParticleEffect("pcf_jack_groundsplode_medium", pos, -vector_up:Angle())
-		charge:EmitSound("ied/ied_detonate_01.wav", 100, math.random(90, 105))
-		charge:Remove()
+	local iedController = ply.HMCD_IEDController
+	if IsValid(iedController) and iedController.DetonateExternalIED then
 		ply.HMCD_BombCharge = nil
+		ply.HMCD_IEDController = nil
+		iedController:DetonateExternalIED()
 	end
 end)

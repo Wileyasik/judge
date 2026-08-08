@@ -17,6 +17,7 @@ local ZB_FORCED_TEMP_MODE_WEIGHTS = {
 }
 local ZB_FORCED_MODE_POOL = {
         ["hmcd"] = true,
+        ["standard"] = true,
         ["suicidelunatic"] = true,
         ["dm"] = true,
         ["tdm"] = true,
@@ -30,7 +31,7 @@ local ZB_NO_BACK_TO_BACK_MODES = {
 local ZB_HAS_CHANGELEVEL
 
 local function ZB_NormalizeModeKey(mode)
-        if mode == "standard" or mode == "homicide/standard" or mode == "hmcd/standard" then return "hmcd" end
+        if mode == "homicide/standard" or mode == "hmcd/standard" then return "standard" end
 
         return mode
 end
@@ -580,8 +581,22 @@ function zb.GetModesInfo()
 				forBigMaps = mode.ForBigMaps or false,
 				canlaunch = (mode:CanLaunch() and 1 or 0)
 			})
+
+			for name2, mode2 in pairs(mode.Types or {}) do
+				if name2 == "standard" then continue end
+				if ZB_FORCE_LIMITED_MODE_POOL and !ZB_FORCED_MODE_POOL[name2] then continue end
+
+				table.insert(modesInfo, {
+					key = name2,
+					name = mode2.PrintName or ((mode.PrintName or mode.name or name) .. "/" .. name2),
+					description = mode2.Description or mode.Description or "",
+					forBigMaps = mode.ForBigMaps or false,
+					canlaunch = (mode:CanLaunch() and 1 or 0)
+				})
+			end
 		elseif mode.Types then
 			for name2, mode2 in pairs(mode.Types) do
+				if ZB_FORCE_LIMITED_MODE_POOL and !ZB_FORCED_MODE_POOL[name2] then continue end
 				table.insert(modesInfo, {
 					key = name2,
 					name = (mode.PrintName or mode.name or name).."/"..name2,

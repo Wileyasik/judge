@@ -283,24 +283,50 @@ function SWEP:SecondaryAttack()
 end
 
 function SWEP:DetonateC4()
+	if self.C4Detonating then return end
+	self.C4Detonating = true
+
+	local owner = self:GetOwner()
+	local iedController = self.IEDController
+	if IsValid(iedController) and iedController.DetonateExternalIED then
+		self.C4Charge = nil
+		self:SetChargePlaced(false)
+		if IsValid(owner) then
+			if owner.HMCD_BombWep == self then owner.HMCD_BombWep = nil end
+			owner.HMCD_BombCharge = nil
+		end
+
+		iedController:DetonateExternalIED()
+		self:SetBusy(false)
+		self:Remove()
+		return
+	end
+
 	local charge = self.C4Charge
 	if not IsValid(charge) then
+		self.C4Detonating = nil
 		self:SetBusy(false)
 		self:SetChargePlaced(false)
 		return
 	end
 
 	local pos = charge:WorldSpaceCenter()
-	local owner = self:GetOwner()
-	util.BlastDamage(self, IsValid(owner) and owner or self, pos, self.BlastRadius, self.BlastDamage)
+	self.C4Charge = nil
+	self:SetChargePlaced(false)
+	if IsValid(owner) then
+		if owner.HMCD_BombWep == self then owner.HMCD_BombWep = nil end
+		if owner.HMCD_BombCharge == charge then owner.HMCD_BombCharge = nil end
+	end
+
+	charge:SetNoDraw(true)
+	charge:SetNotSolid(true)
 	hgBlastDoors(charge, pos, self.BlastDamage / 400, self.DoorBlastRange, false)
 	util.ScreenShake(pos, 45, 225, 2.5, 3000)
 	ParticleEffect("pcf_jack_groundsplode_medium", pos, -vector_up:Angle())
 	charge:EmitSound("ied/ied_detonate_01.wav", 100, math.random(90, 105))
 	charge:Remove()
 
-	self.C4Charge = nil
-	self:SetChargePlaced(false)
+	util.BlastDamage(self, IsValid(owner) and owner or self, pos, self.BlastRadius, self.BlastDamage)
 	self:SetBusy(false)
 	self:Remove()
 end
