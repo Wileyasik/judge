@@ -3,6 +3,9 @@ SWEP.Spawnable = true
 SWEP.AdminOnly = true
 SWEP.PrintName = "PTRD-41 Fun Auto"
 SWEP.Category = "Weapons - Sniper Rifles"
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
 
 SWEP.WepSelectIcon2 = Material("vgui/wep_jack_hmcd_ptrd")
 SWEP.IconOverride = "vgui/wep_jack_hmcd_ptrd"

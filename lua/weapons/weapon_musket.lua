@@ -5,6 +5,9 @@ SWEP.PrintName = "Long Land Pattern" -- "Brown Bess"
 SWEP.Author = "Various Great Britain manufacturers"
 SWEP.Instructions = "A musket is a muzzle-loaded long gun that appeared as a smoothbore weapon in the early 16th century, using black powder and 20mm caliber"
 SWEP.Category = "Weapons - Sniper Rifles"
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
@@ -99,8 +102,6 @@ SWEP.punchspeed = 6
 SWEP.podkid = 2
 
 SWEP.Ergonomics = 0.4
-SWEP.holsteredPos = Vector(-14, -4, -12)
-SWEP.holsteredAng = Angle(320, 0, 0)
 
 SWEP.attPos = Vector(0.5,-3.5,75)
 SWEP.attAng = Angle(-0.1,.4,0)

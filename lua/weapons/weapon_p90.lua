@@ -5,6 +5,9 @@ SWEP.PrintName = "FN P90"
 SWEP.Author = "FN Herstal"
 SWEP.Instructions = "Submachine gun chambered in 5.7x28 mm\n\nRate of fire 900 rounds per minute"
 SWEP.Category = "Weapons - Machine-Pistols"
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
@@ -192,10 +195,6 @@ SWEP.LHPos = Vector(5, 0, -3.5)
 SWEP.LHAng = Angle(-15, -10, -90)
 
 SWEP.ShootAnimMul = 3
-
-SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
-SWEP.holsteredPos = Vector(2, 8, -4)
-SWEP.holsteredAng = Angle(210, 0, 180)
 
 function SWEP:OnReloaded()
 	self.BaseClass.OnReloaded(self)

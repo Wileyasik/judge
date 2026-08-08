@@ -8,7 +8,7 @@ SWEP.Category = "Weapons - Pistols"
 SWEP.Slot = 1
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/esw/w_english_dragoon_pistol.mdl"
+SWEP.WorldModel = "models/weapons/w_pist_deagle.mdl"
 
 SWEP.WepSelectIcon2 = Material("entities/zcity/flinthook.png")
 SWEP.IconOverride = "entities/zcity/flinthook.png"

@@ -8,6 +8,9 @@ SWEP.PrintName = "AK-50"
 SWEP.Author = "Brandon Herrera"
 SWEP.Instructions = "Sniper rifle chambered in .50 BMG"
 SWEP.Category = "Weapons - Sniper Rifles"
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
@@ -178,10 +181,6 @@ SWEP.WorldAng = Angle(0, 0, 0)
 SWEP.attPos = Vector(0,2,0)
 SWEP.attAng = Angle(0,0,0)
 SWEP.lengthSub = 5
-
-SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
-SWEP.holsteredPos = Vector(2, 8, -12)
-SWEP.holsteredAng = Angle(210, 0, 180)
 
 -- СПИСОК АНИМАЦИЙ
 SWEP.AnimList = {
@@ -362,4 +361,3 @@ end
 function SWEP:CanPrimaryAttack()
     return not (self:GetNetVar("shootgunReload", 0) > CurTime())
 end
-

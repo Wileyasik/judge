@@ -743,7 +743,6 @@ MODE.LootTable = {
 	}},
 	{8, {
 		{5,"weapon_doublebarrel"},
-		{4,"weapon_remington870"},
 
 		{4,"weapon_glock18c"},
 		{4,"weapon_skorpion"},

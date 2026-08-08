@@ -75,17 +75,21 @@ if SERVER then
 	function hg.IgniteGasolineAt(pos, owner, radius)
 		if not isvector(pos) then return false end
 
-		local ignited = false
+		local ignited = 0
 		local radiusSqr = (radius or 32) ^ 2
 		for _, point in ipairs(hg.gasolinePath) do
 			if point[2] == false and point[1]:DistToSqr(pos) <= radiusSqr then
 				point[2] = CurTime()
 				point[3] = IsValid(owner) and owner or nil
-				ignited = true
+				ignited = ignited + 1
 			end
 		end
 
-		return ignited
+		if ignited > 0 then
+			MsgN("[HGBENZIN] ignited " .. ignited .. " point(s) at " .. tostring(pos))
+		end
+
+		return ignited > 0
 	end
 
 	hook.Add("Think", "drum_think", function()
@@ -100,6 +104,16 @@ if SERVER then
 
 	local time2 = CurTime()
 	local ents_FindInSphere = ents.FindInSphere
+	local function isGasolineIgniter(ent)
+		if not IsValid(ent) then return false end
+		if vFireIsVFireEnt and vFireIsVFireEnt(ent) then return true end
+
+		local class = ent:GetClass()
+		if class == "env_fire" or class == "entityflame" then return true end
+
+		return ent.IsOnFire and ent:IsOnFire()
+	end
+
 	hook.Add("Think", "path_think", function()
 		local now = CurTime()
 		if time2 > now then return end
@@ -132,9 +146,10 @@ if SERVER then
 				end
 			elseif not ignited then
 				for _, obj in ipairs(ents_FindInSphere(pos, 32)) do
-					if IsValid(obj) and obj:GetClass() == "vfire" then
+					if isGasolineIgniter(obj) then
 						tbl[2] = now
-						tbl[3] = obj:GetOwner() or obj
+						local owner = obj:GetOwner()
+						tbl[3] = IsValid(owner) and owner or obj
 						break
 					end
 				end
@@ -227,16 +242,17 @@ if SERVER then
 
 				tr = TraceLine(tr)
 				
-				if tr.Hit and tr.Entity == worldEnt then
-					if (drum.lastFireCreated or 0) < now then
-						drum.lastFireCreated = now + 0.2
+					if tr.Hit and tr.Entity == worldEnt then
+						if (drum.lastFireCreated or 0) < now then
+							drum.lastFireCreated = now + 0.2
 
-						hg.gasolineNextId = hg.gasolineNextId + 1
-						table.insert(hg.gasolinePath, {tr.HitPos, false, nil, hg.gasolineNextId, CurTime()})
+							hg.gasolineNextId = hg.gasolineNextId + 1
+							table.insert(hg.gasolinePath, {tr.HitPos, false, nil, hg.gasolineNextId, CurTime()})
+							MsgN("[HGBENZIN] created gasoline point #" .. hg.gasolineNextId .. " at " .. tostring(tr.HitPos))
+						end
+					elseif tr.Entity != worldEnt then
+						tr.Entity.shouldburn = tr.Entity.shouldburn and tr.Entity.shouldburn + 1 or 1
 					end
-				elseif tr.Entity != worldEnt then
-					tr.Entity.shouldburn = tr.Entity.shouldburn and tr.Entity.shouldburn + 1 or 1
-				end
 
 				net_Start("gas particle")
 				net_WriteVector(pos + high_point)

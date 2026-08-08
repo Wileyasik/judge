@@ -37,6 +37,15 @@ for _, class in ipairs({
 	"weapon_alien3",
 	"weapon_oicw",
 	"weapon_osipr",
+
+	"weapon_p22",
+	"weapon_zoraki",
+	"weapon_taser",
+	"weapon_hg_rgd_tpik",
+	"weapon_hg_smokenade_tpik",
+	"weapon_traitor_c4",
+	"weapon_sogknife",
+	"weapon_buck200knife",
 }) do
 	LootBlacklist[class] = true
 end
@@ -186,11 +195,7 @@ LP.Shotguns = {
 	{0.25, "weapon_aa12"},
 
 	{1, "weapon_870"},
-	{1, "weapon_remington870"},
-	{0.8, "weapon_remington870_long"},
-	{0.7, "weapon_remington870_sawed_off"},
 	{0.5, "weapon_spas12"},
-	{0.4, "weapon_xm1014"},
 }
 
 LP.AssaultRifles = {

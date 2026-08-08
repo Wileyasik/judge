@@ -6,6 +6,9 @@ SWEP.PrintName = "Pulse Rifle MK2"
 SWEP.Author = "Alien 3"
 SWEP.Instructions = "99 Rounds. Kill them all."
 SWEP.Category = "Weapons - Assault Rifles"
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = "" -- Используем FakeWM
@@ -97,10 +100,6 @@ SWEP.WorldAng = Angle(0, 0, 0.5)
 SWEP.attPos = Vector(3, 0.5, 0)
 SWEP.attAng = Angle(0, 0, 0)
 SWEP.lengthSub = 20
-
-SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
-SWEP.holsteredPos = Vector(9, 9, 1)
-SWEP.holsteredAng = Angle(-30, 180, 0)
 
 -- СПИСОК АНИМАЦИЙ
 SWEP.AnimList = {

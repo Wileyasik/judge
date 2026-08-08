@@ -469,7 +469,6 @@ local mount3ScopeCorrections = {
 }
 
 local mount3PreviewCorrections = {
-	holo17 = Vector(0, 0, 1.4),
 }
 
 function SWEP:Attachment_Transform(model,pos,ang,plc,att,attdata,available)

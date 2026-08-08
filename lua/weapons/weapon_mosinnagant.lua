@@ -7,6 +7,9 @@ SWEP.PrintName = "Mosin"
 SWEP.Author = "Mauser"
 SWEP.Instructions = "Sniper rifle chambered in 7.62x54R"
 SWEP.Category = "Weapons - Sniper Rifles"
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
@@ -92,10 +95,6 @@ SWEP.WorldAng = Angle(0.7, -0.1, 0)
 SWEP.attPos = Vector(0.4, -0.15, 0)
 SWEP.attAng = Angle(0, 0.2, 0)
 SWEP.lengthSub = 20
-
-SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
-SWEP.holsteredPos = Vector(4, 8, -6)
-SWEP.holsteredAng = Angle(210, 0, 180)
 
 -- AnimList для модели c_mosin.mdl
 SWEP.AnimList = {

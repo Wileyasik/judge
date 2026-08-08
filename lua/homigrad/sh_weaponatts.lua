@@ -35,22 +35,6 @@ hg.attachments.sight = {
 		Angle(0, 0, 0),
 		{}
 	},
-	["holo1"] = {
-		"sight",
-		"models/weapons/tfa_ins2/upgrades/phy_optic_eotech.mdl",
-		Angle(0, 0, -90),
-		offset = Vector(-1, 0, -0.02),
-		offsetView = Vector(-1.5, 0, 9),
-		{
-			--[1] = "models/weapons/arc9_eft_shared/atts/optic/transparent_glass"
-		},
-		mountType = "picatinny",
-		holotex = "models/weapons/arc9_eft_shared/atts/optic/transparent_glass",
-		holo = Material("vgui/arc9_eft_shared/reticles/new/scope_all_eotech_xps3-2_marks.png"),
-		holo_size = CLIENT and ScreenScale(0.4) or 1,
-		holo_lum = 0.1,
-		valid = true,
-	},
 	["holo2"] = {
 		"sight",
 		"models/weapons/mods/scope_all_aksion_ekp_8_18.mdl",
@@ -290,27 +274,6 @@ hg.attachments.sight = {
 		PhysAng = Angle(0, 90, 0),
 		valid = true,
 	},
-	["holo15"] = {
-		"sight",
-		"models/weapons/arc9/darsu_eft/mods/scope_base_sig_romeo_4.mdl",
-		Angle(0, 0, -90),
-		offset = Vector(-1, 0.8, -0.05),
-		offsetView = Vector(-0.75, 0, 9),
-		{},
-		mountType = "picatinny",
-		holotex = "models/weapons/arc9_eft_shared/atts/optic/transparent_glass",
-
-		mount = "models/weapons/arc9/darsu_eft/mods/mount_all_sig_romeo_4_base_weaver.mdl",
-		mountVec = Vector(0.2, 0, -0.78),
-		mountAng = Angle(0, 0, 0),
-
-		holo = Material("vgui/arc9_eft_shared/reticles/new/scope_base_sig_romeo_4_mark.png"),
-		holo_size = CLIENT and ScreenScale(0.35) or 1, --size of the holo
-		PhysModel = "models/hunter/plates/plate025.mdl",
-		PhysPos = Vector(0, 0, 0),
-		PhysAng = Angle(0, 90, 0),
-		valid = true,
-	},
 	["holo16"] = {
 		"sight",
 		"models/weapons/arc9/darsu_eft/mods/scope_base_trijicon_rmr.mdl",
@@ -335,23 +298,6 @@ hg.attachments.sight = {
 			if self.availableAttachments.sight.mountBone then return end
 			vecadd:Add(ang:Forward() * -(self.shooanim or 0) * (self.SightSlideOffset or 1))
 		end,
-		valid = true,
-	},
-	["holo17"] = {
-		"sight",
-		"models/weapons/arc9/darsu_eft/mods/steiner_r1x.mdl",
-		Angle(0, 0, -90),
-		offset = Vector(0, 0, -0.02),
-		offsetView = Vector(-1.2, 0, 9),
-		{},
-		mountType = "picatinny",
-		holotex = "effects/arc9/rt",
-
-		holo = Material("vgui/arc9_eft_shared/reticles/new/scope_all_leupold_deltapoint_marks.png"),
-		holo_size = CLIENT and ScreenScale(0.35) or 1, --size of the holo
-		PhysModel = "models/hunter/plates/plate025.mdl",
-		PhysPos = Vector(0, 0, 0),
-		PhysAng = Angle(0, 90, 0),
 		valid = true,
 	},
 	["optic0"] = {
@@ -2893,7 +2839,6 @@ local attNames = {
 	["muzzle_762x51_flash_2"] = "DS Arms Trident 7.62x51",
 
 	-- Holographic sights
-	["holo1"] = "EOTech 552",
 	["holo2"] = "KOBRA ЭКП-8-18",
 	["holo3"] = "ROMEO8T",
 	["holo4"] = "Walther \"MRS\"",
@@ -2908,9 +2853,7 @@ local attNames = {
 	["holo12"] = "Valday PK-120",
 	["holo13"] = "Valday Krechet",
 	["holo14"] = "EOTech \"XPS3-0\"",
-	["holo15"] = "SIG Sauer \"ROMEO4\"",
 	["holo16"] = "Trijicon \"RMR\"",
-	["holo17"] = "Aimpoint COMP M2",
 	["holo18"] = "Elcan Specter HCO",
 	["holo19"] = "Vortex Razor AMG UH-1",
 	["holo21"] = "Trijicon SRO",
@@ -3044,7 +2987,6 @@ local attachmentsIcons = {
 	["muzzle_762x51_flash_2"] = "entities/eft_ar10_attachments/war.png",
 
 	-- Holographic sights
-	["holo1"] = "entities/553.png",
 	["holo2"] = "entities/cobra1.png",
 	["holo3"] = "entities/eft_attachments/scopes/romeo8t.png",
 	["holo4"] = "entities/eft_attachments/scopes/mrs.png",
@@ -3059,9 +3001,7 @@ local attachmentsIcons = {
 	["holo12"] = "entities/eft_attachments/scopes/pk120.png",
 	["holo13"] = "entities/eft_attachments/scopes/krechet.png",
 	["holo14"] = "entities/eft_attachments/scopes/xps3.png",
-	["holo15"] = "entities/eft_attachments/scopes/romeo4.png",
 	["holo16"] = "entities/eft_attachments/scopes/rmr.png",
-	["holo17"] = "entities/eft_attachments/scopes/compm4.png",
 	["holo18"] = "entities/hco.png",
 	["holo19"] = "entities/uh1.png",
 	["holo21"] = "entities/SRO.png",

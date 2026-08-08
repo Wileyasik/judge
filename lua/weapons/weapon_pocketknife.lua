@@ -112,8 +112,8 @@ SWEP.PenetrationSizeSecondary = 1
 SWEP.StaminaPrimary = 15
 SWEP.StaminaSecondary = 12
 
-SWEP.AttackLen1 = 42
-SWEP.AttackLen2 = 35
+SWEP.AttackLen1 = 10
+SWEP.AttackLen2 = 13
 
 function SWEP:GetModeAnimList(mode)
     return self.ModeAnimLists[mode and true or false] or self.ModeAnimLists[false]

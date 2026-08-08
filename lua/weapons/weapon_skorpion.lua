@@ -5,6 +5,9 @@ SWEP.PrintName = "Šcorpion vz. 61"
 SWEP.Author = "Česká zbrojovka"
 SWEP.Instructions = "Pistol chambered in 7.65x17 mm\n\nRate of fire 900 rounds per minute"
 SWEP.Category = "Weapons - Machine-Pistols"
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
@@ -158,10 +161,6 @@ SWEP.WorldAng = Angle(0, 0, 0)
 SWEP.UseCustomWorldModel = true
 SWEP.lengthSub = 20
 SWEP.DistSound = "m9/m9_dist.wav"
-
-SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
-SWEP.holsteredPos = Vector(4, 8, -10)
-SWEP.holsteredAng = Angle(210, 0, 180)
 
 SWEP.attPos = Vector(-3,-1,0)
 SWEP.attAng = Angle(0,0,0)

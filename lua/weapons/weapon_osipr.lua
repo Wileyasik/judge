@@ -5,6 +5,9 @@ SWEP.PrintName = "O.S.I.P.R."
 SWEP.Author = "Universal Union"
 SWEP.Instructions = "O.S.I.P.R. (Overwatch Standard Issue Pulse Rifle) is a Dark Energy/pulse-powered assault rifle.\n\nRate of fire 600 rounds per minute"
 SWEP.Category = "Weapons - Assault Rifles"
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
@@ -133,10 +136,6 @@ SWEP.ReloadSoundes = {
 	"none",
 	"none"
 }
-
-SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
-SWEP.holsteredPos = Vector(3, 8, -6)
-SWEP.holsteredAng = Angle(210, 0, 180)
 
 SWEP.HoldType = "rpg"
 SWEP.ZoomPos = Vector(-3, 1.767, 6.4546)

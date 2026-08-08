@@ -8,7 +8,7 @@ SWEP.Category = "Weapons - Pistols"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/w_pist_usp.mdl"
+SWEP.WorldModel = "models/weapons/w_pist_deagle.mdl"
 SWEP.WorldModelFake = "models/weapons/zcity/salat/c_px4.mdl" --https://steamcommunity.com/sharedfiles/filedetails/?id=3544105055
 //PrintBones(Entity(1):GetActiveWeapon():GetWM())
 --uncomment for funny

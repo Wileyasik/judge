@@ -5,6 +5,9 @@ SWEP.PrintName = "ASH-12"
 SWEP.Author = "Izhmash TsKIB SOO"
 SWEP.Instructions = "12.7x55mm large-caliber assault rifle"
 SWEP.Category = "Weapons - Assault Rifles"
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
@@ -106,10 +109,6 @@ SWEP.WorldAng = Angle(0, 0, 0)
 SWEP.attPos = Vector(0, 0, 0)
 SWEP.attAng = Angle(0, 0, 0)
 SWEP.lengthSub = 25
-
-SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
-SWEP.holsteredPos = Vector(2, 3, 3)
-SWEP.holsteredAng = Angle(215, 0, 180)
 
 -- СПИСОК АНИМАЦИЙ
 

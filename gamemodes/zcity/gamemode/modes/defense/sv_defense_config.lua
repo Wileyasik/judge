@@ -60,8 +60,6 @@ DEFENSE_WEAPONS = {
         "weapon_sr25",
         "weapon_svd",
 		"weapon_m590a1",
-        "weapon_remington870",
-        "weapon_xm1014",
     }
 }
 
@@ -98,10 +96,8 @@ DEFENSE_LOOTTABLE = {
 		{7,"weapon_deagle"},
 		{7,"weapon_doublebarrel_short"},
 		{7,"weapon_doublebarrel"},
-		{6,"weapon_remington870"},
 		{6,"weapon_glock18c"},
 		{5,"weapon_mp5"},
-		{4,"weapon_xm1014"},
 		{4,"weapon_mp7"},
 		{4,"weapon_sks"},
 		{3,"weapon_akm"},

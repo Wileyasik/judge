@@ -92,7 +92,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_6b2.mdl",
 		Vector(0, 2.9, 0),
 		Angle(0, 92, 90),
-		protection = 11.5,
+		protection = 8,
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_6b2.mdl",
 		nobonemerge = true,
@@ -120,7 +120,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_paca.mdl",
 		Vector(-0, 2.9, 0),
 		Angle(0, 92, 90),
-		protection = 11.5,
+		protection = 8,
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_paca.mdl",
 		nobonemerge = true,
@@ -148,7 +148,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_untar.mdl",
 		Vector(-0.4, 2.6, 0),
 		Angle(0, 92, 90),
-		protection = 11.5,
+		protection = 8,
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_untar.mdl",
 		nobonemerge = true,
@@ -176,7 +176,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/cr/cr_tt_plate_carrier.mdl",
 		Vector(-0.6, 3, 0),
 		Angle(0, 92, 90),
-		protection = 11.5, // бр 2
+		protection = 8, // бр 2
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/cr/cr_tt_plate_carrier.mdl",
 		nobonemerge = true,
@@ -194,7 +194,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_6b23-1.mdl",
 		Vector(-1, 2.8, 0),
 		Angle(0, 90, 90),
-		protection = 13.5, // бр 3
+		protection = 10, // бр 3
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_6b23-1.mdl",
 		nobonemerge = true,
@@ -222,7 +222,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/cr/cr_6b5_16.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 13.5, // бр 3
+		protection = 10, // бр 3
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/cr/cr_6b5_16.mdl",
 		nobonemerge = true,
@@ -240,7 +240,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/cr/cr_mbss.mdl",
 		Vector(-0.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 13.5, // бр 3
+		protection = 10, // бр 3
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/cr/cr_mbss.mdl",
 		nobonemerge = true,
@@ -258,7 +258,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_otv_ucp.mdl",
 		Vector(-1, 2.6, 0),
 		Angle(0, 92, 90),
-		protection = 13.5, // бр 3
+		protection = 10, // бр 3
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_otv_ucp.mdl",
 		nobonemerge = true,
@@ -286,7 +286,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_6b13_digi.mdl",
 		Vector(-1, 2.7, 0),
 		Angle(0, 90, 90),
-		protection = 15.5, // бр 4
+		protection = 12, // бр 4
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_6b13_digi.mdl",
 		nobonemerge = true,
@@ -314,7 +314,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/cr/cr_6b3.mdl",
 		Vector(-0.8, 2.9, 0),
 		Angle(0, 90, 90),
-		protection = 15.5, // бр 4
+		protection = 12, // бр 4
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/cr/cr_6b3.mdl",
 		nobonemerge = true,
@@ -332,7 +332,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_thor_crv.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 15.5, // бр 4
+		protection = 12, // бр 4
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_thor_crv.mdl",
 		nobonemerge = true,
@@ -360,7 +360,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/cr/cr_bae_rbav_af.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 15.5, // бр 4
+		protection = 12, // бр 4
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/cr/cr_bae_rbav_af.mdl",
 		nobonemerge = true,
@@ -378,7 +378,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_6b43_body.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 18.5, // бр 5
+		protection = 15, // бр 5
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_6b43_body.mdl",
 		nobonemerge = true,
@@ -428,7 +428,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_iotv.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 90, 90),
-		protection = 18.5, // бр 5
+		protection = 15, // бр 5
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_iotv.mdl",
 		nobonemerge = true,
@@ -468,7 +468,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/cr/cr_bagarii.mdl",
 		Vector(-1.1, 2.8, 0),
 		Angle(0, 92, 90),
-		protection = 18.5, // бр 5
+		protection = 15, // бр 5
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/cr/cr_bagarii.mdl",
 		nobonemerge = true,
@@ -486,7 +486,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/cr/cr_osprey_defence.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 18.5, // бр 5
+		protection = 15, // бр 5
 		shoulderProtection = 15.5, // бр 4
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/cr/cr_osprey_defence.mdl",
@@ -535,7 +535,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_slick_b.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 20.5, // бр 6
+		protection = 17, // бр 6
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_slick_b.mdl",
 		nobonemerge = true,
@@ -563,7 +563,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_beetle6a.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 20.5, // бр 6
+		protection = 17, // бр 6
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_beetle6a.mdl",
 		nobonemerge = true,
@@ -591,7 +591,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/cr/cr_black_knight.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 20.5, // бр 6
+		protection = 17, // бр 6
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/cr/cr_black_knight.mdl",
 		nobonemerge = true,
@@ -608,7 +608,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/cr/cr_tv110.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 20.5, // бр 6
+		protection = 17, // бр 6
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/cr/cr_tv110.mdl",
 		nobonemerge = true,
@@ -625,7 +625,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_6b43_body.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 22.5, // бр 7
+		protection = 19, // бр 7
 		shoulderProtection = 20.5, // бр 6
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_6b43_body.mdl",
@@ -651,7 +651,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_thor_intcar.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 22.5, // бр 7
+		protection = 19, // бр 7
 		shoulderProtection = 20.5, // бр 6
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_thor_intcar.mdl",
@@ -676,7 +676,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_korundvm.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 18.5,
+		protection = 15,
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_korundvm.mdl",
 		femPos = Vector(-0.8, 0, 1.4),
@@ -703,7 +703,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/cr/cr_precision_bigpipe.mdl",
 		Vector(-0.1, 3, 0),
 		Angle(0, 92, 90),
-		protection = 18.5,
+		protection = 15,
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/cr/cr_precision_bigpipe.mdl",
 		femPos = Vector(-0.4, 0, 1.4),
@@ -719,7 +719,7 @@ hg.armor.torso = {
 		"models/parts hl2/medic_kevlar.mdl",
 		Vector(-4.75, 3.2, -0.65),
 		Angle(0, 90, 90),
-		protection = 13.5,
+		protection = 10,
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/parts hl2/medic_kevlar.mdl",
 		customviewrender = function(ply)
@@ -739,7 +739,7 @@ hg.armor.torso = {
 		"models/parts hl2/hl2_kevlar.mdl",
 		Vector(-4.65, 3.7, -1.15),
 		Angle(0, 90, 90),
-		protection = 13.5,
+		protection = 10,
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/parts hl2/hl2_kevlar.mdl",
 		customviewrender = function(ply)
@@ -759,7 +759,7 @@ hg.armor.torso = {
 		"models/gruchk/jmod_dayz/vest/vt_chestplate.mdl",
 		Vector(0.2, 3.2, 0),
 		Angle(0, 90, 90),
-		protection = 20.5,
+		protection = 17,
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/gruchk/jmod_dayz/vest/vt_chestplate.mdl",
 		customviewrender = function(ply)
@@ -779,7 +779,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_6b13_killa.mdl",
 		Vector(-1, 2.7, 0),
 		Angle(0, 90, 90),
-		protection = 18.5, // бр 5
+		protection = 15, // бр 5
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_6b13_killa.mdl",
 		nobonemerge = true,
@@ -807,7 +807,7 @@ hg.armor.torso = {
 		"models/gruchk/jmod_dayz/vest/vt_stab_vest.mdl",
 		Vector(1.5, 3.2, 0),
 		Angle(0, 90, 90),
-		protection = 5.8,
+		protection = 2.3,
 		meleeProt = 16,
 		stabProt = 19,
 		bone = "ValveBiped.Bip01_Spine2",
@@ -835,7 +835,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_korundvm.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 15.5,
+		protection = 12,
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_korundvm.mdl",
 		femAng = Angle(0, 100, 90),
@@ -863,7 +863,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_thor_crv.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 13.5,
+		protection = 10,
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_thor_crv.mdl",
 		femAng = Angle(0, 100, 90),
@@ -891,7 +891,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_kirasa_black.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 13.5,
+		protection = 10,
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_kirasa_black.mdl",
 		femAng = Angle(0, 100, 90),
@@ -919,7 +919,7 @@ hg.armor.torso = {
 		"models/gruchk/jmod_dayz/vest/vt_plate_carrier_tan.mdl",
 		Vector(2.35, 3.2, 0),
 		Angle(0, 90, 90),
-		protection = 13.5,
+		protection = 10,
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/gruchk/jmod_dayz/vest/vt_plate_carrier_tan.mdl",
 		skins = {"1","2","3","4","5"},
@@ -940,7 +940,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_paca.mdl",
 		Vector(-0.4, 2.9, 0),
 		Angle(0, 92, 90),
-		protection = 9.9,
+		protection = 6.4,
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_paca.mdl",
 		femPos = Vector(-1.5, 0, 1.5),
@@ -957,7 +957,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/cr/cr_tagilla.mdl",
 		Vector(-0.5, 2.8, 0),
 		Angle(0, 92, 90),
-		protection = 12.5,
+		protection = 9,
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/cr/cr_tagilla.mdl",
 		femPos = Vector(-1, 0, 0.8),
@@ -973,7 +973,7 @@ hg.armor.torso = {
 		"",
 		Vector(-9, 2.5, 0),
 		Angle(0, 92, 90),
-		protection = 13.2,
+		protection = 9.7,
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "",
 		femPos = Vector(0, 0, 0),
@@ -992,7 +992,7 @@ hg.armor.torso = {
 		"",
 		Vector(-9, 2.5, 0),
 		Angle(0, 92, 90),
-		protection = 6.4,
+		protection = 2.9,
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "",
 		femPos = Vector(0, 0, 0),
@@ -1011,7 +1011,7 @@ hg.armor.torso = {
 		"",
 		Vector(-9, 2.5, 0),
 		Angle(0, 92, 90),
-		protection = 4,
+		protection = 0.5,
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "",
 		femPos = Vector(0, 0, 0),
@@ -2423,6 +2423,67 @@ local armorIcons = {
 	["visor_zsh"] = "entities/ent_jack_gmod_ezarmor_zshface.png",
 }
 hg.armorIcons = armorIcons
+
+-- Balance: give every armor piece durability/absorb suited to its protection
+-- class, and give helmets/visors a material ricochet chance instead of pure absorption.
+do
+	local function clamp(v, a, b) return math.max(a, math.min(b, v)) end
+
+	-- Characteristic durability per ballistic tier. Higher-tier plates and
+	-- helmets are tougher and survive more hits before breaking.
+	local helmetTier = {
+		[0] = {durability = 40, breakThreshold = 90},
+		[1.5] = {durability = 55, breakThreshold = 130},
+		[3.2] = {durability = 65, breakThreshold = 150},
+		[3.8] = {durability = 70, breakThreshold = 160},
+		[4.5] = {durability = 80, breakThreshold = 180},
+		[6] = {durability = 90, breakThreshold = 200},
+		[6.5] = {durability = 95, breakThreshold = 210},
+		[7.5] = {durability = 110, breakThreshold = 240},
+		[8] = {durability = 120, breakThreshold = 260},
+		[8.6] = {durability = 130, breakThreshold = 280},
+		[10.5] = {durability = 105, breakThreshold = 235},
+		[12] = {durability = 140, breakThreshold = 320},
+	}
+	local vestTier = {
+		[9.9] = {health = 2.3, healthDamageMul = 0.013},
+		[11.5] = {health = 2.6, healthDamageMul = 0.012},
+		[12.5] = {health = 2.8, healthDamageMul = 0.0115},
+		[13.5] = {health = 2.9, healthDamageMul = 0.011},
+		[15.5] = {health = 3.2, healthDamageMul = 0.01},
+		[18.5] = {health = 3.6, healthDamageMul = 0.009},
+		[20.5] = {health = 4.0, healthDamageMul = 0.008},
+		[22.5] = {health = 4.4, healthDamageMul = 0.0075},
+	}
+
+	for placement, tbl in pairs(hg.armor) do
+		for name, data in pairs(tbl) do
+			if istable(data) and isnumber(data.protection) then
+				local prot = data.protection
+				local isDurability = data.durabilityArmor ~= nil and data.durabilityArmor
+					or placement == "head" or placement == "face"
+
+				if isDurability then
+					local tier = helmetTier[prot]
+					data.durability = data.durability or (tier and tier.durability or math.floor(28 + prot * 11))
+					data.breakThreshold = data.breakThreshold or (tier and tier.breakThreshold or math.floor(55 + prot * 12))
+					data.absorbMultiplier = data.absorbMultiplier or 0.2
+					data.durabilityDamageMul = data.durabilityDamageMul or 5
+					data.durabilityArmor = true
+					-- Ballistic helmets/visors deflect more than they absorb; the
+					-- higher the protection class, the higher the ricochet tendency.
+					data.ricochetChance = data.ricochetChance or
+						(placement == "head" and clamp(0.2 + prot * 0.045, 0.2, 0.68)
+							or clamp(0.2 + prot * 0.02, 0.14, 0.4))
+				elseif placement == "torso" then
+					local tier = vestTier[prot]
+					data.health = data.health or (tier and tier.health or (1.25 + prot * 0.12))
+					data.healthDamageMul = data.healthDamageMul or (tier and tier.healthDamageMul or 0.012)
+				end
+			end
+		end
+	end
+end
 
 local entityMeta = FindMetaTable("Entity")
 function entityMeta:SyncArmor()

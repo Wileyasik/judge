@@ -85,6 +85,9 @@ local forcedExiting      = false
 
 local remoteKneeling = {}
 
+local ExitSurrender
+local ExitKneel
+
 local function ResolveSeq(ply, seqName, actFallback)
     local seq = ply:LookupSequence(seqName)
     if seq and seq ~= -1 then return seq, false end
@@ -316,7 +319,7 @@ local function CanExitSurrender()
     return CurTime() >= (surrenderStartTime + MIN_SURRENDER_TIME)
 end
 
-local function ExitSurrender(ply, silent)
+ExitSurrender = function(ply, silent)
     if not inSurrender then return end
     if not CanExitSurrender() then
         if SurrText() then ply:ChatPrint("You cannot lower your hands yet! ("..math.ceil(surrenderStartTime + MIN_SURRENDER_TIME - CurTime()).."s)") end
@@ -482,7 +485,7 @@ local function StartKneelLoop(ply, vi)
     end)
 end
 
-local function ExitKneel(ply, silent)
+ExitKneel = function(ply, silent)
     if not inKneel then return end
     if CurTime() < kneelCD then return end
     if inSurrender and not CanExitSurrender() then

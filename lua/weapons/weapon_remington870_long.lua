@@ -18,6 +18,9 @@ SWEP.PrintName = "Long Barrel Remington 870"
 SWEP.Author = "Remington Arms"
 SWEP.Instructions = "Pump-action shotgun chambered in 12/70 caliber"
 SWEP.Category = "Weapons - Shotguns"
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
@@ -117,10 +120,6 @@ SWEP.UseCustomWorldModel = true
 SWEP.attPos = Vector(17, -0.15, 0)
 SWEP.attAng = Angle(0, 0.2, 0)
 SWEP.lengthSub = 20
-
-SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
-SWEP.holsteredPos = Vector(4, 8, -6)
-SWEP.holsteredAng = Angle(210, 0, 180)
 
 
 

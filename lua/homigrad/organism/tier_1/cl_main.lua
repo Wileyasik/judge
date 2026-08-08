@@ -411,7 +411,6 @@ hook.Add("radialOptions", "DislocatedJoint", function()
     if !lply:Alive() or !lply.organism or lply.organism.otrub then return end
 	if (lply.tried_fixing_limb or 0) > CurTime() then return end
 	local org = lply.organism
-	if org.pain > 60 then return end
     
     if org.llegdislocation or org.rlegdislocation then
         local tbl = {
@@ -444,7 +443,6 @@ hook.Add("radialOptions", "DislocatedJoint2", function()
     if !lply:Alive() or !lply.organism or lply.organism.otrub then return end
 	if (lply.tried_fixing_limb or 0) > CurTime() then return end
 	local org = lply.organism
-	if org.pain > 60 then return end
 	
     if org.larmdislocation or org.rarmdislocation then
         local tbl = {
@@ -477,7 +475,6 @@ hook.Add("radialOptions", "DislocatedJaw", function()
     if !lply:Alive() or !lply.organism or lply.organism.otrub then return end
 	if (lply.tried_fixing_limb or 0) > CurTime() then return end
 	local org = lply.organism
-	if org.pain > 60 then return end
 	
     if org.jawdislocation then
         local tbl = {

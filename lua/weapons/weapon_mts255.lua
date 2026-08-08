@@ -8,6 +8,9 @@ SWEP.PrintName = "MTs-255"
 SWEP.Author = "KBP"
 SWEP.Instructions = "5-round revolving shotgun. Double-action."
 SWEP.Category = "Weapons - Shotguns"
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 

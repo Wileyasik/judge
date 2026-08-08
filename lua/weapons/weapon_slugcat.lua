@@ -26,7 +26,7 @@ SWEP.Category = "Weapons - Pistols"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/salat_port/slugcat_figure.mdl"
+SWEP.WorldModel = "models/weapons/w_pist_deagle.mdl"
 //SWEP.WorldModelFake = "models/salat_port/slugcat_figure.mdl"
 
 SWEP.FakePos = Vector(1, 1.005, -1.21)

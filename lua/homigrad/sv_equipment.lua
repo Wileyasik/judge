@@ -309,10 +309,11 @@ syncLinkedArmor = function(ent)
 	owner:SyncArmor()
 end
 
-function hg.HandleArmorShot(org, placement, armor, dmgInfo, hit)
+function hg.HandleArmorShot(org, placement, armor, dmgInfo, hit, ricochet)
 	local owner = org and org.owner
 
 	if not IsValid(owner) then return end
+	if ricochet then return end
 	if IsArmorBreakProtected(owner) then return end
 	if not owner.armors or owner.armors[placement] ~= armor then return end
 	if not dmgInfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT) then return end
@@ -771,6 +772,21 @@ local function protec(org, bone, dmg, dmgInfo, placement, armor, scale, scalepro
 		regionWear = math.Clamp(0.35 + regionHealth * 0.65, 0.35, 1)
 	end
 
+	local ricochetHit = false
+	if isBullet and impact and impact.ballisticVersion and IsDurabilityArmor(placement, armorData) then
+		local shotDir = (isvector(dir) and dir:GetNormalized()) or dmgInfo:GetDamageForce():GetNormalized()
+		local normal = impact.normal
+		local incidence = isvector(normal) and math.abs(shotDir:Dot(normal)) or 1
+		local angleFactor = math.Clamp((1 - incidence) / 0.5, 0, 1)
+		local bulletFactor = math.Clamp(1 - pen / math.max(baseProt * 1.5, 1), 0, 1)
+		local wearFactor = math.Clamp(0.4 + regionWear * 0.6, 0.4, 1)
+		local baseChance = armorData.ricochetChance or 0.3
+		-- Glancing hits genuinely deflect off the armor; near-perpendicular hits
+		-- mostly absorb so helmets never become flat-on bulletproof.
+		local chance = math.Clamp(baseChance * (0.18 + 0.82 * angleFactor) * (0.42 + 0.58 * bulletFactor) * wearFactor, 0, 0.85)
+		ricochetHit = math.Rand(0, 1) < chance
+	end
+
 	local prot = baseProt - pen
 	prot = math.max(prot, 0)
 
@@ -803,7 +819,7 @@ local function protec(org, bone, dmg, dmgInfo, placement, armor, scale, scalepro
 	
 	ArmorEffect(placement, armor, dmgInfo, org, hit, prot)
 	if IsDurabilityArmor(placement, armorData) then
-		hg.HandleArmorShot(org, placement, armor, dmgInfo, hit)
+		hg.HandleArmorShot(org, placement, armor, dmgInfo, hit, ricochetHit)
 	end
 
 	local isBullet = dmgInfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT)
@@ -822,7 +838,7 @@ local function protec(org, bone, dmg, dmgInfo, placement, armor, scale, scalepro
 	-- Helmets break and drop, vests wear out and protect less
 	if armorData then
 		local rawDmg = dmgInfo:GetDamage()
-		local broken = DamageArmor(org, placement, armor, dmgInfo, rawDmg)
+		local broken = DamageArmor(org, placement, armor, dmgInfo, ricochetHit and rawDmg * 0.15 or rawDmg)
 		if broken and placement == "head" then
 			-- The shot that knocks the helmet off fully protects the player:
 			-- the helmet stops the bullet and it does not punch through to the head.
@@ -859,8 +875,8 @@ local function protec(org, bone, dmg, dmgInfo, placement, armor, scale, scalepro
 			hg.ExplosionDisorientation(org.owner, 1 * meleeConcMul, 1 * meleeConcMul)
 		end
 
-		-- Ricochet: a stopped bullet pings off and deflects from the helmet/visor
-		if isBullet and not broken and prot > 0 and IsDurabilityArmor(placement, armorData) then
+		-- Ricochet: a deflected bullet pings off the helmet/visor
+		if ricochetHit and isBullet and not broken then
 			local hitPos = (isvector(hit) and hit) or dmgInfo:GetDamagePosition()
 			local bdir = (isvector(dir) and dir:GetNormalized()) or dmgInfo:GetDamageForce():GetNormalized()
 			local headBone = org.owner:LookupBone("ValveBiped.Bip01_Head1")
@@ -926,6 +942,19 @@ local function protec(org, bone, dmg, dmgInfo, placement, armor, scale, scalepro
 	dmgInfo:ScaleDamage(dmgScale)
 
 	if isBullet and impact and impact.ballisticVersion then
+		if ricochetHit then
+			dmgInfo:ScaleDamage(0)
+			dmgInfo:SetDamageForce(dmgInfo:GetDamageForce() * 0.4)
+			org.lastArmorMitigation = 1
+			org.lastHeadArmorMitigation = 1
+			return {
+				penetrationCost = impact.penetrationBefore,
+				energyCost = impact.energyBefore,
+				stopped = true,
+				armorStopped = true
+			}
+		end
+
 		local shotDir = (isvector(dir) and dir:GetNormalized()) or dmgInfo:GetDamageForce():GetNormalized()
 		local normal = impact.normal
 		local incidence = isvector(normal) and math.abs(shotDir:Dot(normal)) or 1

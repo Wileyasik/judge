@@ -5,6 +5,7 @@ SWEP.PrintName = "Glock 19x"
 SWEP.Author = "Glock GmbH"
 SWEP.Instructions = "Glock is a brand of polymer-framed, short recoil-operated, striker-fired, locked-breech semi-automatic pistols designed and produced by Austrian manufacturer Glock Ges.m.b.H. Thats version of Glock is subcompact 10 rounds chambered in 9x19 ammo."
 SWEP.Category = "Weapons - Pistols"
+SWEP.WorldModel = "models/weapons/w_pist_deagle.mdl"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 

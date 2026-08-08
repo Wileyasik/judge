@@ -189,6 +189,7 @@ hg.Binds:CreateBind("+alt2", KEY_NONE, nil, true, "Lean right", "+alt2")
 hg.Binds:CreateBind("+hmcd_holdbreath", KEY_NONE, nil, true, "Hold breath", "+hmcd_holdbreath")
 hg.Binds:CreateBind("+altlook", KEY_NONE, nil, true, "Look around", "+altlook")
 hg.Binds:CreateBind("+hg_zoom", KEY_NONE, nil, true, "Zoom camera", "+hg_zoom")
+hg.Binds:CreateBind("hg_drop", KEY_NONE, nil, true, "Drop weapon", "drop")
 
 if CLIENT then
     hg.Binds.LoadBinds()

@@ -18,9 +18,6 @@ local HeroWeaponData = {
 	["weapon_glock17"] = {extraClips = 0},
 	["weapon_usp"] = {extraClips = 0},
 	["weapon_chiappa_rhino"] = {extraClips = 0},
-	["weapon_remington870"] = {extraClips = 0, sling = true},
-	["weapon_remington870_long"] = {extraClips = 0, sling = true},
-	["weapon_remington870_sawed_off"] = {extraClips = 0},
 	["weapon_m590a1"] = {extraClips = 0, sling = true},
 	["weapon_mr43"] = {extraClips = 0, sling = true},
 	["weapon_mr43_short"] = {extraClips = 0},
@@ -38,16 +35,10 @@ local HeroUpgradeData = {
 	["hero_usp_ammo"] = {parent = "weapon_usp", type = "ammo", extraClips = 1},
 	["hero_usp_rmr"] = {parent = "weapon_usp", type = "attachment", attachment = "holo16"},
 	["hero_usp_supressor"] = {parent = "weapon_usp", type = "attachment", attachment = "supressor1"},
-	["hero_remington_sight"] = {parent = "weapon_remington870", type = "attachment", attachment = "holo16"},
-	["hero_remington_ammo"] = {parent = "weapon_remington870", type = "ammo", extraClips = 1},
-	["hero_remington_long_sight"] = {parent = "weapon_remington870_long", type = "attachment", attachment = "holo16"},
-	["hero_remington_long_ammo"] = {parent = "weapon_remington870_long", type = "ammo", extraClips = 1},
-	["hero_remington_sawedoff_sight"] = {parent = "weapon_remington870_sawed_off", type = "attachment", attachment = "holo16"},
-	["hero_remington_sawedoff_ammo"] = {parent = "weapon_remington870_sawed_off", type = "ammo", extraClips = 1},
 	["hero_m590a1_ammo"] = {parent = "weapon_m590a1", type = "ammo", extraClips = 1},
 	["hero_mr43_long_ammo"] = {parent = "weapon_mr43", type = "ammo", extraClips = 1},
 	["hero_mr43_ammo"] = {parent = "weapon_mr43_short", type = "ammo", extraClips = 1},
-	["hero_mp18_ammo"] = {parent = "weapon_mp18", type = "ammo", extraClips = 1},
+	["hero_mp18_ammo"] = {parent = "weapon_mp18", type = "ammo", extraClips = 8},
 	["hero_chiappa_ammo"] = {parent = "weapon_chiappa_rhino", type = "ammo", extraClips = 1},
 	["hero_kar98_scope"] = {parent = "weapon_kar98", type = "attachment", attachment = "optic12"},
 	["hero_kar98_ammo"] = {parent = "weapon_kar98", type = "ammo", extraClips = 1},
@@ -365,6 +356,24 @@ MODE.Roles.standard = {
 
 	innocent = {
 		name = "Victim",
+		color = Color(0,120,190)
+	},
+}
+
+MODE.Roles.suicidelunatic = {
+	traitor = {
+		objective = "You are the Suicide Lunatic. You have a bomb strapped to your chest. Walk into a crowd and detonate.",
+		name = "Lunatic",
+		color = Color(190,0,0)
+	},
+
+	gunner = {
+		name = "Innocent",
+		color = Color(0,120,190)
+	},
+
+	innocent = {
+		name = "Innocent",
 		color = Color(0,120,190)
 	},
 }

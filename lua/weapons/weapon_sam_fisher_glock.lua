@@ -5,6 +5,7 @@ SWEP.PrintName = "Sam Fisher Glock"
 SWEP.Author = "Glock GmbH"
 SWEP.Instructions = "Sam Fisher's suppressed Glock."
 SWEP.Category = "Weapons - Pistols"
+SWEP.WorldModel = "models/weapons/w_pist_deagle.mdl"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 

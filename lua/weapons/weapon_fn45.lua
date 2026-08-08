@@ -8,7 +8,7 @@ SWEP.Category = "Weapons - Pistols"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/w_pist_p228.mdl"
+SWEP.WorldModel = "models/weapons/w_pist_deagle.mdl"
 SWEP.WorldModelFake = "models/weapons/c_ins2_pist_fnp45.mdl"
 
 SWEP.WepSelectIcon2 = Material("pwb/sprites/fnp45.png")

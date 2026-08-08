@@ -108,10 +108,9 @@ MODE.LootTable = {
 		{7,"weapon_deagle"},
 		{7,"weapon_doublebarrel_short"},
 		{7,"weapon_doublebarrel"},
-		{6,"weapon_remington870"},
-		{6,"weapon_glock18c"},
-		{5,"weapon_mp5"},
-		{4,"weapon_xm1014"},
+		{6,"weapon_m590a1"},
+		{5,"weapon_saiga12"},
+		{4,"weapon_aa12"},
 		{4,"weapon_mp7"},
 		{4,"weapon_sks"},
 

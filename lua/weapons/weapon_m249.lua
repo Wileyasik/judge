@@ -5,6 +5,9 @@ SWEP.PrintName = "M249"
 SWEP.Author = "FN Herstal"
 SWEP.Instructions = "Machine gun chambered in 5.56x45 mm\n\nRate of fire 775 rounds per minute"
 SWEP.Category = "Weapons - Machineguns"
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Primary.ClipSize = 150
 SWEP.Primary.DefaultClip = 150
 SWEP.Primary.Automatic = true
@@ -193,12 +196,6 @@ SWEP.availableAttachments = {
 		[2] = {"supressor6", Vector(0, 0, 0), {}},
 		[3] = {"supressor15", Vector(1.3, 0, 0), {}},
 		["mount"] = Vector(-1, 0, 0),
-	},
-	sight = {
-		["mount"] = Vector(-0, 1, 0.2),
-		["mountType"] = "picatinny",
-		["mountBone"] = "mod_scope",
-		["mountAngle"] = Angle(0, -90, 90),
 	},
 	underbarrel = {
 		["mount"] = Vector(1.5, -1.1, -2.3),

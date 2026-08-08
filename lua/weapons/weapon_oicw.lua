@@ -5,6 +5,9 @@ SWEP.PrintName = "OICW"
 SWEP.Author = "Alliance"
 SWEP.Instructions = "Alliance assault rifle with an integrated optic and 20mm underbarrel grenade launcher.\n\n[G] toggles the grenade launcher."
 SWEP.Category = "Weapons - Assault Rifles"
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
@@ -154,10 +157,6 @@ SWEP.ReloadSoundes = {
 	"none",
 	"none"
 }
-
-SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
-SWEP.holsteredPos = Vector(3, 8, -6)
-SWEP.holsteredAng = Angle(210, 0, 180)
 
 SWEP.HoldType = "rpg"
 SWEP.ZoomPos = Vector(-21, -0.365, 7.4)

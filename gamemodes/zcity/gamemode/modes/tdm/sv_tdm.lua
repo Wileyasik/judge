@@ -203,6 +203,11 @@ function MODE:AssignArenaTeams()
 	for i, ply in ipairs(players) do
 		ply:SetTeam(i % 2)
 	end
+
+	for _, ply in ipairs(players) do
+		local spawnPos = zb:GetTeamSpawn(ply)
+		if spawnPos then ply:SetPos(spawnPos) end
+	end
 end
 
 function MODE:OverrideBalance()

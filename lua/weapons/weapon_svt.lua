@@ -6,6 +6,9 @@ SWEP.PrintName = "SVT-40"
 SWEP.Author = "Russia"
 SWEP.Instructions = "Sniper rifle chambered in 7.62x54R"
 SWEP.Category = "Weapons - Sniper Rifles"
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
@@ -97,7 +100,7 @@ SWEP.RHAng = Angle(0, -5, 90)
 SWEP.LHPos = Vector(15, -1, -3)
 SWEP.LHAng = Angle(-110, -90, -90)
 SWEP.UseCustomWorldModel = true
-SWEP.ViewPunchDiv = 1
+SWEP.ViewPunchDiv = 150
 
 -- Характеристики
 SWEP.Primary.ClipSize = 10
@@ -138,10 +141,6 @@ SWEP.WorldAng = Angle(0, 0, 0)
 SWEP.attPos = Vector(0.4, -0.15, 0)
 SWEP.attAng = Angle(0, 0.2, 0)
 SWEP.lengthSub = 20
-
-SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
-SWEP.holsteredPos = Vector(4, 8, -6)
-SWEP.holsteredAng = Angle(210, 0, 180)
 
 -- СПИСОК АНИМАЦИЙ
 SWEP.AnimList = {

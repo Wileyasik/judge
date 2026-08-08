@@ -5,6 +5,9 @@ SWEP.PrintName = "Kord 6P50"
 SWEP.Author = "Degtyarev plant"
 SWEP.Instructions = "Heavy machine gun chambered in 12.7x108 mm\n\nRate of fire 650 rounds per minute"
 SWEP.Category = "Weapons - Machineguns"
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Primary.ClipSize = 150
 SWEP.Primary.DefaultClip = 150
 SWEP.Primary.Automatic = true
@@ -64,10 +67,6 @@ SWEP.lengthSub = 15
 SWEP.DistSound = "m249/m249_dist.wav"
 SWEP.bipodAvailable = true
 SWEP.bipodsub = 40
-
-SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
-SWEP.holsteredPos = Vector(-13, -4, -10)
-SWEP.holsteredAng = Angle(320, 0, 0)
 
 SWEP.RHPos = Vector(7, -10, 5)
 SWEP.RHAng = Angle(0, 0, 0)

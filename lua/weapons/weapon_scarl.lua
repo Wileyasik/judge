@@ -5,6 +5,9 @@ SWEP.PrintName = "SCAR-L"
 SWEP.Author = "FN Herstal"
 SWEP.Instructions = "Selective-fire assault rifle chambered in 5.56x45 mm\n\nRate of fire 600 rounds per minute"
 SWEP.Category = "Weapons - Assault Rifles"
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
@@ -191,7 +194,7 @@ SWEP.ScrappersSlot = "Primary"
 
 SWEP.DistSound = "weapons/darsu_eft/scarh/scarh_dist.wav"
 
-SWEP.StartAtt = {"holo15"}
+SWEP.StartAtt = {}
 SWEP.availableAttachments = {
 	barrel = {
 		[1] = {"supressor5", Vector(0, 0, 0), {}},

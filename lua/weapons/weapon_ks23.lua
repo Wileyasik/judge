@@ -17,6 +17,9 @@ SWEP.PrintName = "KS 23"
 SWEP.Author = "Remington Arms"
 SWEP.Instructions = "Pump-action shotgun chambered in 23x75 caliber"
 SWEP.Category = "Weapons - Shotguns"
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
@@ -115,10 +118,6 @@ SWEP.attPos = Vector(0.4, -0.15, 0)
 SWEP.attAng = Angle(0, 0.2, 0)
 SWEP.lengthSub = 20
 SWEP.OpenBolt = false
-
-SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
-SWEP.holsteredPos = Vector(4, 8, -6)
-SWEP.holsteredAng = Angle(210, 0, 180)
 
 
 

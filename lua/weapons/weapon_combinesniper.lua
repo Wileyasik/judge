@@ -5,6 +5,9 @@ SWEP.PrintName = "Combine Sniper Rifle"
 SWEP.Author = "Universal Union"
 SWEP.Instructions = "A powerful combine semi-automatic sniper rifle. Fires the same pulse ammo, but the force of the bullet is much greater."
 SWEP.Category = "Weapons - Sniper Rifles"
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
@@ -40,10 +43,6 @@ SWEP.attPos = Vector(0,0,2)
 SWEP.attAng = Angle(-90,0,0)
 
 SWEP.DistSound = "weapons/tfa_ins2/m40a1/m40a1_fire.wav"
-
-SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
-SWEP.holsteredPos = Vector(8,8,-3)
-SWEP.holsteredAng = Angle(-150, -5, 180)
 
 SWEP.mat = Material("combine_sniper/huyhuy")
 SWEP.scopemat = Material("decals/scope.png")

@@ -54,9 +54,6 @@ local riotAnarchyWeapons = {
     "weapon_rpk",
     "weapon_vpo136",
     "weapon_vpo209",
-    "weapon_remington870_long",
-    "weapon_remington870_sawed_off",
-    "weapon_remington870",
     "weapon_p22",
     "weapon_pl15",
     "weapon_px4beretta",
@@ -79,8 +76,8 @@ local lawWeapons = {
 }
 
 local swatWeapons = {
-    {"weapon_m4a1", {"holo15","grip3","laser4"}},
-    {"weapon_hk416", {"holo15","grip3","laser4"}},
+    {"weapon_m4a1", {"grip3","laser4"}},
+    {"weapon_hk416", {"grip3","laser4"}},
     {"weapon_p90", {}},
     {"weapon_mp7", {"holo14"}},
     {"weapon_m4a1", {"optic2","grip3","supressor7"}}
@@ -334,7 +331,7 @@ local function GiveContainedRioter(ply)
     ply:SelectWeapon(weapon)
 end
 
-local function GiveEscalatedRioter(ply, index, shotgunIndex)
+local function GiveEscalatedRioter(ply, index)
     zb.GiveRole(ply, "Rioter", Color(190, 0, 0))
     ply:SetPlayerClass("terrorist")
     ply:SetNetVar("CurPluv", "pluvmajima")
@@ -350,7 +347,7 @@ local function GiveEscalatedRioter(ply, index, shotgunIndex)
 
     GiveRioterRandomArmor(ply)
 
-    local weapon = index == shotgunIndex and "weapon_remington870_sawed_off" or riotWeapons[math.random(#riotWeapons)]
+    local weapon = riotWeapons[math.random(#riotWeapons)]
     GiveWeaponNoReserve(ply, weapon)
     ply:SelectWeapon(weapon)
 end
@@ -415,13 +412,7 @@ local function GiveEscalatedLaw(ply, lawIndex, glockIndex)
     if lawIndex == 1 then
         ply:Give("weapon_ram")
     elseif lawIndex == 2 then
-        local wep = GiveWeaponNoReserve(ply, "weapon_remington870")
-        timer.Simple(1, function()
-            if IsValid(wep) then
-                wep:SetRandomBodygroups("000010302")
-                wep:ApplyAmmoChanges(2)
-            end
-        end)
+        GiveWeaponNoReserve(ply, "weapon_mp5")
     end
 
     ply:SelectWeapon("weapon_hg_tonfa")
@@ -482,7 +473,6 @@ function MODE:GiveEquipment()
 
     local numLawEnforcers = numPlayers - numRioters
     local glockIndex = numLawEnforcers > 0 and math.random(numLawEnforcers) or 1
-    local shotgunIndex = numRioters > 0 and math.random(numRioters) or 1
 
     for i = 1, numPlayers do
         local ply = players[i]
@@ -502,7 +492,7 @@ function MODE:GiveEquipment()
         elseif selectedIntensity == "ANARCHY" then
             GiveAnarchyRioter(ply)
         else
-            GiveEscalatedRioter(ply, i, shotgunIndex)
+            GiveEscalatedRioter(ply, i)
         end
     end
 

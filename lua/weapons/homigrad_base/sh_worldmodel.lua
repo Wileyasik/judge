@@ -53,7 +53,7 @@ SWEP.lerpaddcloseanim = 0
 SWEP.closeanimdis = 40
 SWEP.WepAngOffset = Angle(0,0,0)
 SWEP.weaponAngLerp = Angle(0,0,0)
-SWEP.WeaponInertiaScale = 0.5
+SWEP.WeaponInertiaScale = 0.3
 
 function SWEP:GetWeaponInertiaFactor()
 	local mass = math.max((self.weight or 1) + (self.addweight or 0), 0.25)
@@ -290,6 +290,9 @@ function SWEP:PosAngChanges(ply, desiredPos, desiredAng, bNoAdditional, closeani
 
 	if CLIENT and self:IsLocal() then
 		ang[3] = ang[3] + position_difference3[2] * -4 - GetViewPunchAngles2()[2] * 0.25
+
+		local leancam = ConVarExists("hg_leancam_mul") and GetConVar("hg_leancam_mul") or nil
+		if leancam then ang[3] = ang[3] + (lean_lerp or 0) * leancam:GetInt() end
 	end
 	self.fuckingfuckangle = ang
 	self.fuckingfuckpos = pos

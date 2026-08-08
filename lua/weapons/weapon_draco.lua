@@ -8,7 +8,7 @@ SWEP.Category = "Weapons - Pistols"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/draco/w_draco.mdl"
+SWEP.WorldModel = "models/weapons/w_pist_deagle.mdl"
 
 SWEP.WepSelectIcon2 = Material("entities/zcity/drako.png")
 SWEP.IconOverride = "entities/zcity/drako.png"

@@ -646,7 +646,7 @@ function hg.AddHarm(ply, harm, reason)
 		//ply:ChatPrint(reason..": harm count is "..math.Round(harm,2))
 	end
 
-	ply.harm = ply.harm + harm
+	ply.harm = (ply.harm or 0) + harm
 end
 
 function hg.ExplodeHead(ent, damage, slash, force)
@@ -1944,6 +1944,11 @@ local function velocityDamage(ent, data)
 		end
 	end
 	dmg = dmg * armorDmgMul
+
+	if (hitgroup == HITGROUP_LEFTARM and IsValid(ent.ConsLH)) or (hitgroup == HITGROUP_RIGHTARM and IsValid(ent.ConsRH))
+		or ((hitgroup == HITGROUP_LEFTARM or hitgroup == HITGROUP_RIGHTARM) and IsValid(ply) and (ply:KeyDown(IN_FORWARD) or ply:KeyDown(IN_BACK))) then
+		dmg = dmg * 0.1
+	end
 
 
 	org.fearadd = org.fearadd + dmg * 0.5 * (safeLanding and safePainMul or 1)

@@ -15,6 +15,9 @@ SWEP.PrintName = "XM-1014"
 SWEP.Author = "Benelli Armi SPA"
 SWEP.Instructions = "Semi-automatic shotgun chambered in 12/70"
 SWEP.Category = "Weapons - Shotguns"
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
@@ -80,10 +83,6 @@ SWEP.availableAttachments = {
 		[1] = {"supressor5", Vector(-2.5,0,0.2), {}},
 	}
 }
-
-SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
-SWEP.holsteredPos = Vector(6, 9, -1)
-SWEP.holsteredAng = Angle(210, 0, 180)
 
 SWEP.LocalMuzzlePos = Vector(27.415,0.388,1.061)
 SWEP.LocalMuzzleAng = Angle(0.1,-0.02,0)

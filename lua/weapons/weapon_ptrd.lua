@@ -5,6 +5,9 @@ SWEP.PrintName = "PTRD-41"
 SWEP.Author = "Degtyaryov Plant"
 SWEP.Instructions = "Single-shot bolt action anti-tank rifle of 1941 pattern. Chambered in 14.5x114mm"
 SWEP.Category = "Weapons - Sniper Rifles"
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
@@ -79,10 +82,6 @@ SWEP.UseCustomWorldModel = true
 SWEP.attPos = Vector(0.4, -0.15, 0)
 SWEP.attAng = Angle(0, 0.2, 0)
 SWEP.lengthSub = 20
-
-SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
-SWEP.holsteredPos = Vector(9, 8, -8)
-SWEP.holsteredAng = Angle(210, 0, 180)
 SWEP.PPSMuzzleEffect = "pcf_jack_mf_mshotgun" -- shared in sh_effects.lua
 
 -- bipod

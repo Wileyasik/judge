@@ -5,6 +5,9 @@ SWEP.PrintName = "Saiga-12K"
 SWEP.Author = "Izhevsk Machine-Building Plant"
 SWEP.Instructions = "Automatic shotgun chambered in 12/70\n\nRate of fire 400 rounds per minute"
 SWEP.Category = "Weapons - Shotguns"
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
@@ -178,10 +181,6 @@ SWEP.LHPos = Vector(11, 1.6, -3)
 SWEP.LHAng = Angle(-110, -180, 5)
 
 SWEP.ShootAnimMul = 2
-
-SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
-SWEP.holsteredPos = Vector(3, 8, -12)
-SWEP.holsteredAng = Angle(210, 0, 180)
 
 SWEP.punchmul = 4
 SWEP.punchspeed = 0.5

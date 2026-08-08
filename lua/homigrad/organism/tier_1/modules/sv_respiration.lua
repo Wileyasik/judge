@@ -206,7 +206,7 @@ module[2] = function(owner, org, timeValue)
 	local inwater = bit_band(util_PointContents(head),CONTENTS_WATER) == CONTENTS_WATER
 	local success = owner:IsBerserk() or (not org.heartstop and org.alive and not (org.brain >= 0.4 and math.random(10 - (org.brain * 10)) < 4) and org.lungsfunction)
 	if success and owner:IsPlayer() and inwater then success = false end
-	if success and org.choking then org.needfake = true success = false end
+	if success and org.choking then success = false end
 	if success and org.vomitInThroat then success = false end
 	org.choking = false
 	local pneumothorax = (org.lungsR[2] == 1 or org.lungsL[2] == 1) and org.needle == 0

@@ -8,7 +8,7 @@ SWEP.Category = "Weapons - Pistols"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/tfa_ins2/w_browninghp.mdl"
+SWEP.WorldModel = "models/weapons/w_pist_deagle.mdl"
 
 SWEP.WepSelectIcon2 = Material("vgui/icons/ico_browning_hi_power.png")
 SWEP.IconOverride = "vgui/icons/ico_browning_hi_power.png"

@@ -309,6 +309,11 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 
 	local _, angEye = LocalToWorld(vector_origin, ot, vector_origin, att_Ang)
 	angEye:Normalize()
+
+	if IsValid(lply) and (lply:KeyDown(IN_SPEED) or lply:KeyDown(IN_WALK)) and (lply:KeyDown(IN_FORWARD) or lply:KeyDown(IN_BACK)) then
+		angEye = LerpAngleFT(0.15, angEye, ang)
+		angEye:Normalize()
+	end
 	
 	angEye[3] = false--[[!hg_newfakecam:GetBool()]] and (math.Round(ply.fakeangles[3] / 180) * 180) or (ply.fakeangles and ply.fakeangles[3] or 0)
 	--angEye = ang

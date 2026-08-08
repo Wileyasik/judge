@@ -72,7 +72,7 @@ function PANEL:Paint(w, h)
     surface.SetDrawColor(50, 50, 50, 230)
     surface.DrawRect(w * 0.5 - barW * 0.5, h * 0.15, barW, barH)
     surface.SetDrawColor(180, 220, 180, 255)
-    surface.DrawRect(w * 0.5 - barW * 0.5, h * 0.15, barW * math.Clamp(self.holdProgress / 1.5, 0, 1), barH)
+    surface.DrawRect(w * 0.5 - barW * 0.5, h * 0.15, barW * math.Clamp(self.holdProgress / 2, 0, 1), barH)
 end
 
 function PANEL:Logic()
@@ -91,10 +91,10 @@ function PANEL:Logic()
     self.failCooldown = math.max(self.failCooldown - dt, 0)
     self.targetMoveTime = self.targetMoveTime + dt
 
-    local moveWidth = math.max(ScrW() * 0.14, 80)
-    local moveHeight = math.max(ScrH() * 0.1, 45)
-    self.ghostX = ScrW() * 0.5 + math.sin(self.targetMoveTime * 0.22) * moveWidth
-    self.ghostY = ScrH() * 0.5 + math.sin(self.targetMoveTime * 0.3) * moveHeight
+    local moveWidth = math.max(ScrW() * 0.18, 90)
+    local moveHeight = math.max(ScrH() * 0.13, 50)
+    self.ghostX = ScrW() * 0.5 + math.sin(self.targetMoveTime * 0.36) * moveWidth
+    self.ghostY = ScrH() * 0.5 + math.sin(self.targetMoveTime * 0.48) * moveHeight
     
     local mouseSpeed = math.sqrt((mx - self.lastMouseX)^2 + (my - self.lastMouseY)^2) / dt
     self.lastMouseX = mx
@@ -105,7 +105,6 @@ function PANEL:Logic()
     local hovering = mx >= (self.boneX - halfW) and mx <= (self.boneX + halfW) and
                      my >= (self.boneY - halfH) and my <= (self.boneY + halfH)
                      
-    -- Input handling
     if input.IsMouseDown(MOUSE_LEFT) then
         if not self.isDragging and hovering then
             self.isDragging = true
@@ -123,11 +122,11 @@ function PANEL:Logic()
         self.boneX = Lerp(dt * 10, self.boneX, targetX)
         self.boneY = Lerp(dt * 10, self.boneY, targetY)
         
-        if mouseSpeed > 320 then
-            self.shakeIntensity = math.min(self.shakeIntensity + dt * 30, 16)
+        if mouseSpeed > 260 then
+            self.shakeIntensity = math.min(self.shakeIntensity + dt * 45, 20)
             self.dangerTime = self.dangerTime + dt
 
-            if self.dangerTime > 0.6 and self.failCooldown <= 0 then
+            if self.dangerTime > 0.45 and self.failCooldown <= 0 then
                 self:Fail()
                 return
             end
@@ -137,12 +136,16 @@ function PANEL:Logic()
         end
         
         local dist = math.sqrt((self.boneX - self.ghostX)^2 + (self.boneY - self.ghostY)^2)
-        if dist < 48 then
+        if dist < 40 then
             self.holdProgress = self.holdProgress + dt
-            if self.holdProgress >= 1.5 then
+            if self.holdProgress >= 2 then
                 self:Win()
             end
         else
+            if self.holdProgress > 0 and self.failCooldown <= 0 then
+                self:Fail()
+                return
+            end
             self.holdProgress = math.max(self.holdProgress - dt * 2, 0)
         end
     else
@@ -202,4 +205,3 @@ function hg.StartDislocationMinigame(limbType, targetPly)
     end
     gui.EnableScreenClicker(true)
 end
---REUSIN MCITY 1 STUFF YAY

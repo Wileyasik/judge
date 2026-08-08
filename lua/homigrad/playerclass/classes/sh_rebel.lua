@@ -122,7 +122,6 @@ local secondary_weapons = {
 
 local shotgunner_primary = {
     "weapon_ks23",
-    "weapon_remington870_long",
     "weapon_m3super",
     "weapon_870",
     "weapon_m590a1",
@@ -130,8 +129,7 @@ local shotgunner_primary = {
     "weapon_mp153",
     "weapon_mr43",
     "weapon_mts255",
-    "weapon_mts255",
-    "weapon_xm1014"
+    "weapon_mts255"
 }
 
 local helmet_list = {
