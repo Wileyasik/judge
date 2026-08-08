@@ -350,11 +350,14 @@ MODE.Types.standard = {
 		ply:Give("weapon_traitor_poison_consumable")
 		ply:Give("weapon_traitor_suit")
 		local wep = ply:Give("weapon_zoraki")
-		timer.Simple(1,function() wep:ApplyAmmoChanges(2) end)
+		timer.Simple(1,function()
+			if IsValid(wep) then wep:ApplyAmmoChanges(2) end
+		end)
 
 		ply.organism.stamina.range = 220
 
-		local inv = ply:GetNetVar("Inventory")
+		local inv = ply:GetNetVar("Inventory") or {}
+		inv["Weapons"] = inv["Weapons"] or {}
 		inv["Weapons"]["hg_flashlight"] = true
 		ply:SetNetVar("Inventory",inv)
 	end,
@@ -706,8 +709,8 @@ MODE.Types.soe = {
 }
 
 MODE.Types.suicidelunatic = {
-	Chance = 0.2,
-	ChanceFunction = function() return (zb.GetWorldSize() < ZBATTLE_BIGMAP) and (zb.ModesChances["suicidelunatic"] or zb.modes["hmcd"].Types.suicidelunatic.Chance) or 0 end,
+	Chance = 0.05,
+	ChanceFunction = function() return zb.ModesChances["suicidelunatic"] or zb.modes["hmcd"].Types.suicidelunatic.Chance end,
 	LootTable = MODE.LootTableStandard,
 	Messages = {
 		[3] = "The blast left nothing behind.",
@@ -716,18 +719,19 @@ MODE.Types.suicidelunatic = {
 	},
 	Message = "The lunatic was ",
 	TraitorLoot = function(ply)
-		ply:Give("weapon_buck200knife")
+		ply:StripWeapons()
+		ply:RemoveAllAmmo()
+		ply:Give("weapon_hg_ritual")
+		ply:Give("weapon_apb")
+		ply:Give("weapon_traitor_ied")
+		ply:Give("weapon_hg_pipebomb_tpik")
+		ply:Give("weapon_hg_type59_tpik")
 		ply:Give("weapon_adrenaline")
-
 		ply.organism.stamina.range = 220
 
-		local inv = ply:GetNetVar("Inventory")
-		inv["Weapons"]["hg_flashlight"] = true
-		ply:SetNetVar("Inventory", inv)
-
 		local wep = ply:Give("weapon_traitor_c4")
+		if not IsValid(wep) then return end
 		ply.HMCD_BombWep = wep
-		ply:SetActiveWeapon(wep)
 
 		timer.Simple(0.5, function()
 			if not IsValid(ply) or not ply:Alive() or not IsValid(wep) or wep:GetChargePlaced() then return end
@@ -735,6 +739,9 @@ MODE.Types.suicidelunatic = {
 			local charge = wep:CreateC4Charge(ply:WorldSpaceCenter() + ply:GetUp() * -12, ply:EyeAngles())
 			if not IsValid(charge) then return end
 
+			charge:SetNoDraw(true)
+			charge:DrawShadow(false)
+			charge:SetNotSolid(true)
 			charge:SetParent(ply)
 			charge:SetLocalPos(charge:GetLocalPos())
 			charge:SetMoveType(MOVETYPE_NONE)
@@ -744,16 +751,29 @@ MODE.Types.suicidelunatic = {
 			ply.HMCD_BombCharge = charge
 
 			ply:ChatPrint("You are the Suicide Lunatic! A bomb is strapped to you. Run into a crowd and detonate it with LMB.")
-
-			timer.Simple(0.1, function()
-				if IsValid(ply) and ply:Alive() then
-					ply:SelectWeapon("weapon_traitor_c4")
-				end
-			end)
 		end)
 	end,
 	GunManLoot = function(ply)
-		ply:Give("weapon_px4beretta")
+		ply:StripWeapons()
+		ply:RemoveAllAmmo()
+		ply.armors = {}
+		if ply.SyncArmor then ply:SyncArmor() end
+
+		if hg and hg.AddArmor then
+			hg.AddArmor(ply, {"ent_armor_vest1", "ent_armor_helmet6"})
+		end
+
+		local weapon = ply:Give("weapon_vpo136")
+		if IsValid(weapon) then
+			timer.Simple(0, function()
+				if not IsValid(ply) or not ply:Alive() or not IsValid(weapon) then return end
+
+				local ammoType = weapon:GetPrimaryAmmoType()
+				weapon:SetClip1(math.min(10, weapon:GetMaxClip1()))
+				if ammoType >= 0 then ply:GiveAmmo(10, ammoType, true) end
+			end)
+		end
+
 		ply.organism.recoilmul = 1
 	end,
 	PoliceTime = 220,
@@ -808,7 +828,18 @@ function MODE:Intermission()
 
 	local _, CROUND = CurrentRound()
 
-	if CROUND ~= "standard" then
+	if CROUND == "hmcd" then
+		local subtypeChances = {}
+		local totalChance = 0
+
+		for _, subtype in ipairs(modes) do
+			local chance = math.max(0, zb.GetChance(subtype) or 0)
+			subtypeChances[subtype] = chance
+			totalChance = totalChance + chance
+		end
+
+		CROUND = totalChance > 0 and zb.WeightedChanceMode(subtypeChances) or "standard"
+	elseif not table.HasValue(modes, CROUND) then
 		CROUND = "standard"
 	end
 
@@ -836,7 +867,7 @@ function MODE:Intermission()
 	MODE.TraitorWord = MODE.TraitorWords[math.random(1, #MODE.TraitorWords)]
 	MODE.TraitorWordSecond = MODE.TraitorWords[math.random(1, #MODE.TraitorWords)]
 
-	local traitors_needed = GetHomicideTraitorCount(player_count)
+	local traitors_needed = self.Type == "suicidelunatic" and math.min(player_count, 1) or GetHomicideTraitorCount(player_count)
 	local main_traitor = nil
 	local traitors = {}
 	local forced_main
@@ -853,7 +884,8 @@ function MODE:Intermission()
 		end
 	end
 
-	traitors_needed = math.min(player_count - 1, math.max(traitors_needed, #forced_assistants + (IsValid(forced_main) and 1 or (#forced_assistants > 0 and 1 or 0))))
+	local max_traitors = self.Type == "suicidelunatic" and player_count or player_count - 1
+	traitors_needed = math.min(max_traitors, math.max(traitors_needed, #forced_assistants + (IsValid(forced_main) and 1 or (#forced_assistants > 0 and 1 or 0))))
 	MODE.TraitorExpectedAmt = traitors_needed
 
 	if IsValid(forced_main) and traitors_needed > 0 then
@@ -1842,21 +1874,29 @@ function MODE.SpawnPlayers(spawn_with_subroles)
             end
 
             if(MODE.Type == "suicidelunatic")then
-                local acc = current_ply:GetNetVar("Accessories", "none")
-                if istable(acc) then
-                    table.insert(acc, 1, "Allah")
-                elseif acc == "" or acc == "none" then
-                    acc = {"Allah"}
-                else
-                    acc = {"Allah", acc}
-                end
-                current_ply:SetNetVar("Accessories", acc)
+				local appearance = table.Copy(current_ply.CurAppearance or {})
+				local oldAccessories = appearance.AAttachments or {}
+				local accessories = {}
 
-                local cur = current_ply.CurAppearance
-                if cur then
-                    cur.AAttachments = cur.AAttachments or {}
-                    table.insert(cur.AAttachments, 1, "Allah")
-                end
+				for i = 1, 6 do
+					accessories[i] = oldAccessories[i] or "none"
+				end
+
+				for i = 1, 6 do
+					local accessory = hg.Accessories and hg.Accessories[accessories[i]]
+					if i ~= 5 and (accessories[i] == "Allah" or (accessory and accessory.placement == "face2")) then
+						accessories[i] = "none"
+					end
+				end
+
+				accessories[5] = "Allah"
+				appearance.AAttachments = accessories
+
+				if hg.Appearance and hg.Appearance.ForceApplyAppearance and current_ply.CurAppearance then
+					hg.Appearance.ForceApplyAppearance(current_ply, appearance, true)
+				else
+					current_ply:SetNetVar("Accessories", accessories)
+				end
             end
 
             local sub_role = nil

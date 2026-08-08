@@ -65,7 +65,12 @@ function SWEP:SetupDataTables()
 end
 
 function SWEP:DrawWorldModel2()
-	self.model = IsValid(self.model) and self.model or ClientsideModel( self:GetCurModel() )
+	local modelPath = self:GetCurModel()
+	if not IsValid(self.model) then
+		if modelPath == "" then return end
+		self.model = ClientsideModel( modelPath )
+		if not IsValid(self.model) then return end
+	end
 	self.model:SetNoDraw(true)
 	local WorldModel = self.model
 	local owner = self:GetOwner()

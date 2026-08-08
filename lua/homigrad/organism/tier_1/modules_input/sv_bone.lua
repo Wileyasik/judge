@@ -17,7 +17,9 @@ local function damageBone(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ric
 		//crush = false
 	end
 	
-	dmg = dmg * (dmgInfo:GetInflictor().BreakBoneMul or 1)
+	local breakBoneMul = dmgInfo:GetInflictor().BreakBoneMul or 1
+	if dmgInfo:IsDamageType(DMG_CLUB) then breakBoneMul = breakBoneMul * 0.8 end
+	dmg = dmg * breakBoneMul
 	
 	if crush then
 		crush = halfValue2(1 - org[key], 1, 0.5)

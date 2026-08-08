@@ -494,7 +494,7 @@ hook.Add("HomigradDamage", "hg_london_achievement", function(ply, dmgInfo)
 
     local wep = getDamageWeapon(dmgInfo)
     if not isKnifeWeapon(wep) or (tonumber(dmgInfo:GetDamage()) or 0) <= 0 then return end
-    if wep.MultiDmg2 and wep.attackedOnce then return end
+    if wep.ShouldAttackOnce and wep.attackedOnce then return end
 
     local attacker = dmgInfo:GetAttacker()
     local hitKey = tostring(IsValid(attacker) and attacker:EntIndex() or 0) .. ":" .. tostring(wep:EntIndex())

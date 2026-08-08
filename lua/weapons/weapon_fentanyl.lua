@@ -56,6 +56,8 @@ SWEP.modeNames = {
 
 SWEP.UseSpeed = 3
 SWEP.CallbackTimeAdjust = 0.5
+SWEP.AnalgesiaPerDose = 6
+SWEP.MaxAnalgesia = 6
 
 SWEP.AnimList = {
 	["deploy"] = { "deploy", 0.5, false },
@@ -254,7 +256,7 @@ function SWEP:Think()
 			local org = ent.organism
 			if org and self.modeValues[1] > 0 then
 				local injected = math.min(FrameTime() * 1, self.modeValues[1])
-				org.analgesiaAdd = math.min(org.analgesiaAdd + injected, 4)
+				org.analgesiaAdd = math.min(org.analgesiaAdd + injected * self.AnalgesiaPerDose, self.MaxAnalgesia)
 				self.modeValues[1] = math.max(self.modeValues[1] - injected, 0)
 				self:SetDose(self.modeValues[1])
 

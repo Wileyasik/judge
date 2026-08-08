@@ -1334,7 +1334,7 @@ hook.Add("Think", "Fake", function()
 					end
 					
 					if IsValid(choking) or (trace.Hit and not trace.HitSky) then
-						ent = trace.Entity
+						ent = IsValid(choking) and choking or trace.Entity
 						ragdoll.staminaRightModifyer = 1.5 - trace.HitNormal.z
 						
 						if IsValid(choking) and chokinghead then

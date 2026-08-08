@@ -920,13 +920,13 @@ local achievement_rarity_sounds = {
     Rare = "rare.MP3",
     Epic = "Epic.MP3",
     Legendary = "legendary.MP3",
-    Mythic = "exotic.MP3",
-    Exotic = "Mythic.MP3"
+    Mythic = "Mythic.MP3",
+    Exotic = "exotic.MP3"
 }
 
 local function PlayAchievementSound(rarity)
     local fileName = achievement_rarity_sounds[rarity] or achievement_rarity_sounds.Uncommon
-    sound.PlayFile(fileName, "noplay", function(channel, errorID, errorName)
+    sound.PlayFile("sound/" .. fileName, "noplay", function(channel, errorID, errorName)
         if IsValid(channel) then
             channel:SetVolume(1)
             channel:Play()

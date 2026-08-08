@@ -294,6 +294,10 @@ function SWEP:PostSetHandPos()
 	end
 end
 
+local colWhite = Color(255, 255, 255, 255)
+local colGray = Color(200, 200, 200, 200)
+local lerpthing = 1
+
 if CLIENT then
 	function SWEP:DrawHUD()
 		local owner = self:GetOwner()
