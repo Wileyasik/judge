@@ -6,7 +6,7 @@ SWEP.Author = "Zoraki"
 SWEP.Instructions = "Generic subcompact non-lethal gas pistol. Chambered in 9mm P.A.K"
 SWEP.Category = "Weapons - Pistols"
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/w_pist_deagle.mdl"
+SWEP.WorldModel = "models/zcity/weapons/zoraki/zoraki.mdl"
 
 SWEP.WepSelectIcon2 = Material("entities/zcity/zoraki.png")
 SWEP.IconOverride = "entities/zcity/zoraki.png"

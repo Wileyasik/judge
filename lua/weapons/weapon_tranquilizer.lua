@@ -7,7 +7,7 @@ SWEP.Category = "Weapons - Pistols"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/w_pist_deagle.mdl"
+SWEP.WorldModel = "models/fc5/weapons/handguns/m9.mdl"
 
 SWEP.WepSelectIcon2 = Material("vgui/inventory/9mmsidearm_5")
 SWEP.IconOverride = "vgui/inventory/9mmsidearm_5"
@@ -99,15 +99,13 @@ SWEP.shouldntDrawHolstered = true
 SWEP.Supressor = true
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"supressor4", Vector(0,0,0), {}},
+		[1] = {"supressor1", Vector(0,0,0), {}},
 		["mount"] = Vector(-2.8,0,4.7),
 		["mountAngle"] = Angle(0,0,90),
 		["noblock"] = true,
 		["cannotremove"] = true, -- blebleble
 	}
 }
-
-SWEP.StartAtt = {"supressor4"}
 
 SWEP.RHandPos = Vector(3, -1, 0)
 SWEP.LHandPos = false
