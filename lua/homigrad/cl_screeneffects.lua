@@ -75,7 +75,7 @@ hook.Add("RenderScreenspaceEffects", "homigrad", function()
 	//if not brain_motionblur then DrawMotionBlur(addtiveLayer.blur_addalpha, addtiveLayer.blur_drawalpha, addtiveLayer.blur_delay) end
 	//DrawToyTown(addtiveLayer.toytown, addtiveLayer.toytown_h * ScrH())
 	tab["$pp_colour_brightness"] = addtiveLayer.brightness
-	DrawColorModify(tab)
+	if math.abs(addtiveLayer.brightness) > 0.001 then DrawColorModify(tab) end
 
 	hook_Run("Post Pre Post Processing")
 

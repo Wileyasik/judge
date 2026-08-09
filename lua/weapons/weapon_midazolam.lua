@@ -193,16 +193,13 @@ function SWEP:Think()
 		self.healbuddy = nil
 		hook.Remove("Think", "AnimCallback" .. self:EntIndex())
 		if self.modeValues[1] > 0 then
-			self.reverseanim = true
+			if SERVER then self:ReverseAnimToIdle("use") end
 		elseif SERVER then
 			self:PlayAnim("idle")
 		end
 	end
 
-	if self.reverseanim and self.animtime and self.animtime <= curTime then
-		self.reverseanim = false
-		if SERVER then self:PlayAnim("idle") end
-	end
+	self:ThinkReverseAnimToIdle(curTime)
 end
 
 function SWEP:SetHandPos(noset)

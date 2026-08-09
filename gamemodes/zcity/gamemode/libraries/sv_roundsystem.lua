@@ -711,7 +711,7 @@ function zb:RoundStart()
 
 	local mode, round = CurrentRound()
 
-	VFIRE_DISABLED = (mode.name == "coop")
+	VFIRE_DISABLED = false
 
 	zb.ROUND_BEGIN = CurTime()
 	hg.UpdateRoundTime()

@@ -17,9 +17,6 @@ if SERVER then
 	local spawnedammout = 0
 	function CreateVFire(parent, pos, normal, newFeed, spreader)
 
-		--;; КАКАЩКЕ
-		if VFIRE_DISABLED then return end
-
 		-- Just to make sure
 		if vFireIsVFireEnt(parent) then return end
 		

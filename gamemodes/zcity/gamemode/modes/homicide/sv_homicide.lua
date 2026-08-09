@@ -59,7 +59,7 @@ function MODE:SetupChances()
 	for name, tbl in pairs(MODE.Types) do
 		local savedChance = tonumber(zb.ModesChances[name])
 
-		if name == "suicidelunatic" and (savedChance == 0.2 or savedChance == 0.062 or savedChance == 0.02) then
+		if name == "suicidelunatic" and (savedChance == 0.2 or savedChance == 0.062 or savedChance == 0.02 or savedChance == 0.005) then
 			savedChance = tbl.Chance
 		elseif name == "standard" and savedChance == 0.2 then
 			savedChance = tbl.Chance
@@ -719,7 +719,7 @@ MODE.Types.soe = {
 MODE.Types.suicidelunatic = {
 	PrintName = "Suicide Lunatic",
 	Description = "One executioner carries a hidden suicide bomb. Everyone wears the Allah accessory.",
-	Chance = 0.005,
+	Chance = 0.009,
 	ChanceFunction = function() return zb.ModesChances["suicidelunatic"] or zb.modes["hmcd"].Types.suicidelunatic.Chance end,
 	LootTable = MODE.LootTableStandard,
 	Messages = {
@@ -1831,8 +1831,8 @@ function MODE.SpawnPlayers(spawn_with_subroles)
 
     --= Профессии
     local professions = {}
-    if(spawn_with_subroles and MODE.RoleChooseRoundTypes[MODE.Type])then
-        local professions_possible_pre = MODE.RoleChooseRoundTypes[MODE.Type].Professions
+    if(spawn_with_subroles and MODE.ProfessionsRoundTypes[MODE.Type] and MODE.ProfessionsPool)then
+        local professions_possible_pre = MODE.ProfessionsPool
 
         if(professions_possible_pre)then
             local professions_possible = {}
@@ -1985,6 +1985,13 @@ function MODE.SpawnPlayers(spawn_with_subroles)
 			if current_ply.isTraitor and not current_ply.MainTraitor then
 				GiveTraitorAssistantStarterItem(current_ply)
 			end
+
+            if current_ply.Profession then
+                local profession_info = MODE.Professions[current_ply.Profession]
+                if profession_info and profession_info.SpawnFunction then
+                    profession_info.SpawnFunction(current_ply)
+                end
+            end
 
             local hands = current_ply:Give("weapon_hands_sh")
             current_ply:SetActiveWeapon(hands)

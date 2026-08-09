@@ -50,8 +50,8 @@ function ENT:Initialize()
             local pos = data.HitPos or ent1:GetPos()
             local ent = data.HitEntity
             --print(IsValid(ent), ignitable[ent:GetModel()], ent:GetModel())
-            if IsValid(ent) and (ignitable[ent:GetModel()] or (ent.shouldburn or 0) > 0) then
-                ent:Ignite(30 * ((ent.shouldburn or 0) + 1), 0)
+            if IsValid(ent) and ignitable[ent:GetModel()] then
+                ent:Ignite()
             end
 
             if hg.IgniteGasolineAt then
@@ -104,9 +104,8 @@ function ENT:Draw()
 
     local attach = self.effectAttachment
 
-    if not self.eff and self:GetFireLeft() > 0 then
+    if not IsValid(self.eff) and self:GetFireLeft() > 0 then
         self.eff = CreateParticleSystem(attach,"Lighter_flame",PATTACH_POINT_FOLLOW,1,Vector(0,0,0))
-        eff = self.eff
     end
     local pos = self:GetPos() + self:GetForward() * -1.3 + self:GetUp() * (2 * self:GetFireLeft())
     attach:SetPos(pos)
@@ -116,15 +115,7 @@ end
 local color_b = Color(255,255,255)
 function ENT:Think()
     if SERVER then
-        local fireLeft = math.max(0,self:GetFireLeft() - 1 * FrameTime())
-        self:SetFireLeft(fireLeft)
-
-        if fireLeft > 0 and (self.GasolineIgniteCheck or 0) <= CurTime() then
-            self.GasolineIgniteCheck = CurTime() + 0.1
-            if hg.IgniteGasolineAt then
-                hg.IgniteGasolineAt(self:GetPos(), self.debil, 40)
-            end
-        end
+        self:SetFireLeft(math.max(0,self:GetFireLeft() - 1 * FrameTime()))
     end
 
     if CLIENT then
@@ -151,8 +142,10 @@ function ENT:Think()
         self:SetColor(color_b)
         self.ColorCD = CurTime() + 0.1
 
-        if self:GetFireLeft() <= 0 and self.eff then
-            self.eff:StopEmissionAndDestroyImmediately()
+        if self:GetFireLeft() <= 0 then
+            if IsValid(self.eff) then
+                self.eff:StopEmissionAndDestroyImmediately()
+            end
             self.eff = nil
         end
     end

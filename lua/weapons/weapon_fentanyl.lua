@@ -110,7 +110,7 @@ function SWEP:Deploy()
 	end
 	local snd = self.DeploySnd
 	self.DeploySnd = ""
-	local base = weapons.GetStored(self.Base)
+	local base = weapons.GetStored("weapon_tpik_base")
 	if base and base.Deploy then
 		local ret = base.Deploy(self)
 		if SERVER and snd and snd ~= "" and not self._deploySndPlayed and self:GetOwner() and not self:GetOwner().noSound then
@@ -228,14 +228,9 @@ function SWEP:Think()
 		hook.Remove("Think", "AnimCallback" .. self:EntIndex())
 		if SERVER then
 			if self.modeValues[1] > 0 then
-				self.reverseanim = true
+				self:ReverseAnimToIdle("use")
 			else
 				self:PlayAnim("idle")
-			end
-		end
-		if CLIENT then
-			if self.modeValues[1] > 0 then
-				self.reverseanim = true
 			end
 		end
 	end
@@ -294,12 +289,7 @@ function SWEP:Think()
 		end
 	end
 
-	if self.reverseanim and self.animtime and self.animtime <= curTime then
-		self.reverseanim = false
-		if SERVER then
-			self:PlayAnim("idle")
-		end
-	end
+	self:ThinkReverseAnimToIdle(curTime)
 end
 
 function SWEP:SetHandPos(noset)
@@ -309,7 +299,8 @@ function SWEP:SetHandPos(noset)
 		self.setlh = true
 	end
 
-	return self.BaseClass.SetHandPos(self, noset)
+	local base = weapons.GetStored("weapon_tpik_base")
+	if base and base.SetHandPos then return base.SetHandPos(self, noset) end
 end
 
 function SWEP:PostSetHandPos()

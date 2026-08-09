@@ -224,24 +224,14 @@ function SWEP:Think()
 		hook.Remove("Think", "AnimCallback" .. self:EntIndex())
 		if SERVER then
 			if self.modeValues[1] > 0 then
-				self.reverseanim = true
+				self:ReverseAnimToIdle("use")
 			else
 				self:PlayAnim("idle")
 			end
 		end
-		if CLIENT then
-			if self.modeValues[1] > 0 then
-				self.reverseanim = true
-			end
-		end
 	end
 
-	if self.reverseanim and self.animtime and self.animtime <= curTime then
-		self.reverseanim = false
-		if SERVER then
-			self:PlayAnim("idle")
-		end
-	end
+	self:ThinkReverseAnimToIdle(curTime)
 end
 
 function SWEP:SetHandPos(noset)

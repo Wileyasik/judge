@@ -1062,6 +1062,9 @@ if CLIENT then
 	local hook_Run = hook.Run
 	hook.Add("Think", "homigrad-weapons", function()
 		local curTime = CurTime()
+		local localPlayer = LocalPlayer()
+		if not IsValid(localPlayer) then return end
+		local spectated = localPlayer:GetNWEntity("spect")
 
 		for i,wep in ipairs(hg.weapons) do
 			--local wep = ply:GetActiveWeapon()
@@ -1071,8 +1074,9 @@ if CLIENT then
 			if not IsValid(owner) and wep:GetVelocity():LengthSqr() < 5 then continue end
 			--hook_Run("SWEPStep", wep)
 			if wep.NotSeen or not wep.shouldTransmit then continue end
-			//if (wep.lasttimetick or 0) > CurTime() then continue end
-			//wep.lasttimetick = CurTime() + (IsValid(owner) and owner:IsPlayer() and (owner == LocalPlayer() or owner == LocalPlayer():GetNWEntity("spect")) and 0 or 0.1)
+			local important = IsValid(owner) and owner:IsPlayer() and (owner == localPlayer or owner == spectated)
+			if not important and (wep.hgNextClientStep or 0) > curTime then continue end
+			if not important then wep.hgNextClientStep = curTime + 0.05 end
 			if IsValid(owner) and owner:IsPlayer() then
 				wep:Step_HolsterDeploy(curTime)
 				continue

@@ -65,12 +65,7 @@ function SWEP:SetupDataTables()
 end
 
 function SWEP:DrawWorldModel2()
-	local modelPath = self:GetCurModel()
-	if not IsValid(self.model) then
-		if modelPath == "" then return end
-		self.model = ClientsideModel( modelPath )
-		if not IsValid(self.model) then return end
-	end
+	self.model = IsValid(self.model) and self.model or ClientsideModel( self:GetCurModel() )
 	self.model:SetNoDraw(true)
 	local WorldModel = self.model
 	local owner = self:GetOwner()
@@ -131,7 +126,7 @@ end
 
 local lang1, lang2 = Angle(0, -10, 0), Angle(0, 10, 0)
 function SWEP:Animation()
-	if (self:GetOwner().zmanipstart ~= nil and not self:GetOwner().organism.larmamputated) then return end
+	if (self:GetOwner().zmanipstart ~= nil and not ( self:GetOwner().organism and self:GetOwner().organism.larmamputated )) then return end
 	local hold = self:GetHolding()
     self:BoneSet("r_upperarm", vector_origin, Angle(0, -10 - hold, 10))
     self:BoneSet("r_forearm", vector_origin, Angle(-15, -hold, -hold))

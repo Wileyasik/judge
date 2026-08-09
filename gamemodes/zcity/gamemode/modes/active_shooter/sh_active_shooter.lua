@@ -4,7 +4,7 @@ MODE.name = "active_shooter"
 MODE.PrintName = "Active Shooter"
 MODE.Description = "Victims have one minute to hide before the armed shooter is released. Survive until SWAT arrives."
 MODE.ROUND_TIME = 420
-MODE.Chance = 0.005
+MODE.Chance = 0.009
 MODE.ForBigMaps = false
 MODE.randomSpawns = true
 MODE.LootSpawn = true
@@ -56,7 +56,7 @@ end
 function MODE:SetupChances()
 	local savedChance = tonumber(zb.ModesChances[self.name])
 
-	if savedChance == 0.02 then
+	if savedChance == 0.02 or savedChance == 0.005 then
 		savedChance = MODE.Chance
 	end
 
