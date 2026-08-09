@@ -20,6 +20,7 @@ local ZB_FORCED_MODE_POOL = {
         ["standard"] = true,
 	["suicidelunatic"] = true,
 	["active_shooter"] = true,
+	["juggernaut"] = true,
 	["dm"] = true,
 	["tdm"] = true,
 	["riot"] = true

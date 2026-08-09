@@ -1499,29 +1499,6 @@ hg.armor.head = {
 		mass = 1,
 		ScrappersSlot = "Armor",
 	},
-	["helmet31"] = {
-		"head",
-		"models/eft_props/gear/facecover/facecover_boss_welding_ubey.mdl",
-		Vector(2, -0.45, 0.15),
-		Angle(180, 100, 90),
-		protection = 7.5, // бр 5
-		bone = "ValveBiped.Bip01_Head1",
-		model = "models/eft_props/gear/facecover/facecover_boss_welding_ubey.mdl",
-		blocksHeadphones = true,
-		restricted = {"ears"},
-		femPos = Vector(-1.2, 0, 0.5),
-		scale = 0.95,
-		femscale = 0.93,
-		norender = true,
-		extraModels = {
-			{model = "models/eft_props/gear/headwear/cap_boss_tagillacap.mdl", pos = Vector(2, -0.45, 0.15), ang = Angle(180, 100, 90), femPos = Vector(-1.2, 0, 0.5), scale = 0.95, femscale = 0.93, nobonemerge = true}
-		},
-		viewmaterial = Material("mask_overlays/altyn.png"),
-		effect = "Impact",
-		surfaceprop = 67,
-		mass = 1,
-		ScrappersSlot = "Armor",
-	},
 	["helmet_killa"] = {
 		"head",
 		"models/eft_props/gear/helmets/helmet_maska_1sh_killa.mdl",
@@ -2031,6 +2008,29 @@ local colormodify02 = {
 }
 
 hg.armor.face = {
+	["helmet31"] = {
+		"face",
+		"models/eft_props/gear/facecover/facecover_boss_welding_ubey.mdl",
+		Vector(2, -0.45, 0.15),
+		Angle(180, 100, 90),
+		protection = 7.5, // бр 5
+		bone = "ValveBiped.Bip01_Head1",
+		model = "models/eft_props/gear/facecover/facecover_boss_welding_ubey.mdl",
+		blocksHeadphones = true,
+		restricted = {"head", "ears"},
+		femPos = Vector(-1.2, 0, 0.5),
+		scale = 0.95,
+		femscale = 0.93,
+		norender = true,
+		extraModels = {
+			{model = "models/eft_props/gear/headwear/cap_boss_tagillacap.mdl", pos = Vector(2, -0.45, 0.15), ang = Angle(180, 100, 90), femPos = Vector(-1.2, 0, 0.5), scale = 0.95, femscale = 0.93, nobonemerge = true}
+		},
+		viewmaterial = Material("mask_overlays/altyn.png"),
+		effect = "Impact",
+		surfaceprop = 67,
+		mass = 1,
+		ScrappersSlot = "Armor",
+	},
 	["mask1"] = {
 		"face", -- "face"
 		"models/jmod/ballistic_mask.mdl",

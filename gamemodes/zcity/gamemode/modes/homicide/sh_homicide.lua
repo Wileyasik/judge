@@ -264,6 +264,27 @@ Despite being zombie, still bears appearance of a normal human.]],
 		SpawnFunction = function(ply)
 		end,
 	},
+	["traitor_infiltrator"] = {
+		Name = "Infiltrator",
+		Description = "Break necks and disguise as victims.",
+		Objective = "Silently eliminate your victims by breaking necks and using disguises.",
+		SpawnFunction = function(ply)
+		end,
+	},
+	["traitor_assasin"] = {
+		Name = "Assassin",
+		Description = "Better gun control and more endurance.",
+		Objective = "Use your superior combat skills to eliminate everyone before the Judge stops you.",
+		SpawnFunction = function(ply)
+		end,
+	},
+	["traitor_chemist"] = {
+		Name = "Chemist",
+		Description = "Detect chemicals in the air.",
+		Objective = "Use your chemical expertise to eliminate everyone before the Judge stops you.",
+		SpawnFunction = function(ply)
+		end,
+	},
 }
 --//
 
