@@ -17,19 +17,23 @@ local ZB_FORCED_TEMP_MODE_WEIGHTS = {
 }
 local ZB_FORCED_MODE_POOL = {
         ["hmcd"] = true,
-        ["dm"] = true,
-        ["tdm"] = true,
-        ["riot"] = true
+        ["standard"] = true,
+	["suicidelunatic"] = true,
+	["active_shooter"] = true,
+	["dm"] = true,
+	["tdm"] = true,
+	["riot"] = true
 }
 local ZB_NO_BACK_TO_BACK_MODES = {
-        ["dm"] = true,
-        ["tdm"] = true,
-        ["riot"] = true
+	["dm"] = true,
+	["tdm"] = true,
+	["riot"] = true,
+	["active_shooter"] = true
 }
 local ZB_HAS_CHANGELEVEL
 
 local function ZB_NormalizeModeKey(mode)
-        if mode == "standard" or mode == "homicide/standard" or mode == "hmcd/standard" then return "hmcd" end
+        if mode == "homicide/standard" or mode == "hmcd/standard" then return "standard" end
 
         return mode
 end
@@ -42,8 +46,9 @@ local function ZB_IsForcedModeAllowed(mode)
         mode = ZB_NormalizeModeKey(mode)
         if !isstring(mode) or !ZB_FORCED_MODE_POOL[mode] then return false end
 
-        local tbl = zb.modes[mode]
-        return tbl and (!tbl.CanLaunch or tbl:CanLaunch())
+	local parentMode = zb:GetMode(mode)
+	local tbl = parentMode and zb.modes[parentMode]
+	return tbl and (!tbl.CanLaunch or tbl:CanLaunch())
 end
 
 local function ZB_GetForcedTempMode(previous)
@@ -168,6 +173,7 @@ hook.Add("CanListenOthers","RoundStartChat",function(output, input, isChat, team
 end)
 
 function zb:EndRound(skipPresentation)
+	if zb.ROUND_STATE ~= 1 then return end
 	zb.ROUND_STATE = 3
 	zb.Roundscount = (zb.Roundscount or 0) + 1
         zb.SKIP_END_PRESENTATION = skipPresentation and true or false
@@ -181,9 +187,10 @@ function zb:EndRound(skipPresentation)
 
 	--PrintMessage(HUD_PRINTTALK, "Раунд закончен.")
 	CurrentRound():EndRound()
-        if not zb.SKIP_END_PRESENTATION then
-                hook.Run("ZB_EndRound")
-                zb.AddFade()
+	hook.Run("HG_RoundFinished")
+	if not zb.SKIP_END_PRESENTATION then
+		hook.Run("ZB_EndRound")
+		zb.AddFade()
         else
                 zb.END_TIME = CurTime()
                 zb.SHOULD_FADE = false
@@ -271,6 +278,10 @@ function zb:EndRoundThink()
 			net.Broadcast()
 
 			hg.UpdateRoundTime(CurrentRound().ROUND_TIME, CurTime(), CurTime() + (CurrentRound().start_time or 5))
+
+			if CurrentRound().PrepareIntermission then
+				CurrentRound():PrepareIntermission()
+			end
 
 			self:KillPlayers()
 			self:AutoBalance()
@@ -578,8 +589,22 @@ function zb.GetModesInfo()
 				forBigMaps = mode.ForBigMaps or false,
 				canlaunch = (mode:CanLaunch() and 1 or 0)
 			})
+
+			for name2, mode2 in pairs(mode.Types or {}) do
+				if name2 == "standard" then continue end
+				if ZB_FORCE_LIMITED_MODE_POOL and !ZB_FORCED_MODE_POOL[name2] then continue end
+
+				table.insert(modesInfo, {
+					key = name2,
+					name = mode2.PrintName or ((mode.PrintName or mode.name or name) .. "/" .. name2),
+					description = mode2.Description or mode.Description or "",
+					forBigMaps = mode.ForBigMaps or false,
+					canlaunch = (mode:CanLaunch() and 1 or 0)
+				})
+			end
 		elseif mode.Types then
 			for name2, mode2 in pairs(mode.Types) do
+				if ZB_FORCE_LIMITED_MODE_POOL and !ZB_FORCED_MODE_POOL[name2] then continue end
 				table.insert(modesInfo, {
 					key = name2,
 					name = (mode.PrintName or mode.name or name).."/"..name2,
@@ -686,7 +711,7 @@ function zb:RoundStart()
 
 	local mode, round = CurrentRound()
 
-	VFIRE_DISABLED = (mode.name == "coop")
+	VFIRE_DISABLED = false
 
 	zb.ROUND_BEGIN = CurTime()
 	hg.UpdateRoundTime()

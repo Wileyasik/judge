@@ -77,7 +77,9 @@ input_list.stomach = function(org, bone, dmg, dmgInfo)
 	local result = damageOrgan(org, dmg, dmgInfo, "stomach")
 
 	hg.AddHarmToAttacker(dmgInfo, (org.stomach - oldDmg) * 2, "Stomach damage harm")
-	
+
+	org.painadd = org.painadd + dmg * 3
+	org.shock = org.shock + dmg * 1.5
 	addInternalBleed(org, (org.stomach - oldDmg) * 2, "stomach")
 	return result
 end
@@ -89,6 +91,8 @@ input_list.intestines = function(org, bone, dmg, dmgInfo)
 
 	hg.AddHarmToAttacker(dmgInfo, (org.intestines - oldDmg) * 2, "Intestines damage harm")
 
+	org.painadd = org.painadd + dmg * 2
+	org.shock = org.shock + dmg
 	addInternalBleed(org, (org.intestines - oldDmg) * 2, "intestines")
 	return result
 end

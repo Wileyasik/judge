@@ -27,6 +27,7 @@ local full_body_physics_speed_threshold = 3400
 local full_body_physics_damage_threshold = 4200
 local blast_gib_damage_mul = 700
 local melee_gib_damage_mul = 0.35
+local gore_damage_mul = 0.67
 local ragdoll_fall_skull_damage_mul = 1.2
 local ragdoll_fall_jaw_damage_mul = 0.45
 local ragdoll_fall_skull_break_blood_mul = 1.15
@@ -646,7 +647,7 @@ function hg.AddHarm(ply, harm, reason)
 		//ply:ChatPrint(reason..": harm count is "..math.Round(harm,2))
 	end
 
-	ply.harm = (ply.harm or 0) + harm
+	ply.harm = (ply.harm or 0) + (harm or 0)
 end
 
 function hg.ExplodeHead(ent, damage, slash, force)
@@ -828,6 +829,12 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	local inf = IsValid(dmgInfo:GetInflictor()) and not dmgInfo:GetInflictor():IsPlayer() and dmgInfo:GetInflictor() or (dmgInfo:GetAttacker():IsPlayer() and dmgInfo:GetAttacker():GetActiveWeapon()) or dmgInfo:GetAttacker()
 	inf = IsValid(inf.weapon) and inf.weapon or inf
 	if IsValid(inf) then dmgInfo:SetInflictor(inf) end
+
+	if dmgInfo:IsDamageType(DMG_BUCKSHOT) then
+		dmgInfo:ScaleDamage(1.35)
+	elseif dmgInfo:IsDamageType(DMG_BULLET) then
+		dmgInfo:ScaleDamage(1.15)
+	end
 	
 	local dmg = dmgInfo:GetDamage()
 
@@ -1201,7 +1208,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 		dmgBlood = dmgBlood * 1.5
 		local bleed_add = dmgBlood * bleedMul// / (RagdollDamageBoneMul[hitgroup] or 1)
 		--org.bleed = org.bleed + bleed_add
-		attacker.harm = attacker.harm + bleed_add / 50
+		attacker.harm = (attacker.harm or 0) + bleed_add / 50
 		local hurt_add = dmgHurt * 0.5 * hurtMul
 		org.hurtadd = org.hurtadd + hurt_add
 		local painadd = dmgHurt * painMul * 0.75
@@ -1212,7 +1219,9 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 		local instant_pain = instantPainMul * painadd
 		local slow_pain = (1 - instantPainMul) * painadd
 		org.painadd = org.painadd + slow_pain
-		//org.avgpain = org.avgpain + instant_pain
+		if dmgInfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT) then
+			org.avgpain = math.min((org.avgpain or 0) + instant_pain * 0.5, 150)
+		end
 		org.shock = math.min(org.shock + instaPain * shockMul * 4.5 * instant_pain_shock_scale * math.Clamp(pen / 5,1,2), 70)
 		org.immobilization = math.min(org.immobilization + immobilization * immobilizationMul, 30)
 		org.lasthit = CurTime()
@@ -1224,13 +1233,6 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	
 		org.shock_turn = 10 * (!org.otrub and 1 or 0.1)
 		local collapseThreshold = org.shock_turn * 1.5 * analgesiaMul * painkillerMul
-
-		if isRifleBullet and org.shock > collapseThreshold and IsValid(org.owner) and org.owner:IsPlayer() then
-			local interruptDuration = math.Clamp(0.45 + org.shock / 70, 0.6, 1.45)
-			local interruptUntil = math.max(org.owner.hgGunInterruptedUntil or 0, CurTime() + interruptDuration)
-			org.owner.hgGunInterruptedUntil = interruptUntil
-			org.owner:SetNWFloat("hgGunInterruptedUntil", interruptUntil)
-		end
 
 		if org.shock > collapseThreshold then
 			timer.Simple(0, function() hg.Fake(org.owner) end)
@@ -1363,6 +1365,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	local grenadeBlastMul = string.find(inflictorClass, "ent_hg_grenade") and 1.8 or 1
 	damageStack = damageStack * (dmgInfo:IsDamageType(DMG_BLAST) and blast_gib_damage_mul / lend * grenadeBlastMul or 1) * (!dmgInfo:IsDamageType(DMG_CLUB+DMG_SLASH+DMG_BULLET+DMG_BUCKSHOT+DMG_BLAST+DMG_SNIPER) and 0 or 1) * (ent:IsNPC() and 3 or 1)
 	if impact.armorStopped then damageStack = 0 end
+	damageStack = damageStack * gore_damage_mul
 	--damageStack = damageStack * (bullet and bullet.AmmoType and hg.ammotypeshuy[bullet.AmmoType] and hg.ammotypeshuy[bullet.AmmoType].BulletSettings and hg.ammotypeshuy[bullet.AmmoType].BulletSettings.Mass or 1) / 8
 	if not noDismemberment and hg.FullBodyExplode and not org.fullbodyexploded and dmgInfo:IsDamageType(DMG_BLAST) and (damageStack >= full_body_blast_gib_threshold or dmg_before >= full_body_blast_damage_threshold) then
 		return hg.FullBodyExplode(ent, dirCool * len, dmgInfo) or true
@@ -1822,6 +1825,7 @@ local bleedSurfaces = { -- https://developer.valvesoftware.com/wiki/Material_sur
 local hg_safe_landing_legmul = 0.6
 local hg_safe_landing_painmul = 0.7
 local hg_safe_landing_minspeed = 350
+local hg_safe_landing_maxspeed = 900
 
 local function velocityDamage(ent, data)
 	local relativeVelocity = data.OurOldVelocity - data.TheirOldVelocity
@@ -1894,13 +1898,12 @@ local function velocityDamage(ent, data)
                 dmg = dmg * (ply.hgSprintCollisionDamageMul or 0.08)
         end
 
-	-- Safe landing: holding crouch (Ctrl) while ragdolled dampens the fall.
-	-- Only kicks in on real impacts and only helps at moderate heights,
-	-- since the multipliers are constant and big falls still exceed the fracture threshold.
+	-- Crouching only softens moderate, mostly vertical impacts.
 	local safeLanding = false
 	local safeLegMul = hg_safe_landing_legmul
 	local safePainMul = hg_safe_landing_painmul
-	if (speed >= hg_safe_landing_minspeed) and IsValid(ply) and ply:Alive() and ply:KeyDown(IN_DUCK) then
+	if normalSpeed >= hg_safe_landing_minspeed and normalSpeed <= hg_safe_landing_maxspeed
+		and IsValid(ply) and ply:Alive() and ply:KeyDown(IN_DUCK) then
 		safeLanding = true
 	end
 

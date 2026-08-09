@@ -1083,9 +1083,10 @@ end
 local table_IsEmpty = table.IsEmpty
 local string_find = string.find
 
-hook.Add("PostDrawTranslucentRenderables", "huyCock333", function()
+hook.Add("PostDrawTranslucentRenderables", "huyCock333", function(depth, skybox)
+	if depth or skybox then return end
 	hg.weapons = hg.weapons or {}
-	for i=1, #hg.weapons do
+	for i = #hg.weapons, 1, -1 do
 		self = hg.weapons[i]
 		if not IsValid(self) then table.remove(hg.weapons,i) continue end
 		if IsValid(self:GetOwner()) and self:GetOwner().GetActiveWeapon and self:GetOwner():GetActiveWeapon() ~= self and self.shouldntDrawHolstered then removeFlashlights(self) continue end

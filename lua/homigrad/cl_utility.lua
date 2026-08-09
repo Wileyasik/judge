@@ -456,17 +456,14 @@ players : 1 humans, 0 bots (20 max)
 
 		if CLIENT then
 			lply = IsValid(lply) and lply or LocalPlayer()
+			if not IsValid(lply) then return end
 			local entities = hg.seenents
 			
 			for i = 1, #entities do
 				ent = entities[i]
 				
 				if not IsValid(ent) or (ent:IsPlayer() and not ent:Alive()) or IsValid(ent.FakeRagdoll) then continue end
-				--print(ent, CurTime())
 				local ply = ent:IsPlayer() and ent or IsValid(ent.ply) and ent.ply
-				-- limiter
-				//if (ent.lasttimethink or 0) > CurTime() then continue end
-				//ent.lasttimethink = CurTime() + (ply and ply == lply and 0 or 0.1)
 
 				if ply and ply:IsPlayer() and ply:Alive() then
 					hook_Run("Player Think", ply, time, dtime)
@@ -622,7 +619,7 @@ players : 1 humans, 0 bots (20 max)
 	hook.Add("Think", "CanBeSeenOrNot", function()
 		local curTime = CurTime()
 		if nextVisibilityCheck > curTime then return end
-		nextVisibilityCheck = curTime + 0.05
+		nextVisibilityCheck = curTime + 0.1
 		local entities = ents_FindByClass("prop_ragdoll")
 		table_Add(entities, player_GetAll())
 

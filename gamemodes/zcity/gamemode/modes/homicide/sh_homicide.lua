@@ -270,6 +270,7 @@ Despite being zombie, still bears appearance of a normal human.]],
 --\\Professions
 MODE.ProfessionsRoundTypes = {
 	["standard"] = true,
+	["suicidelunatic"] = true,
 }
 
 MODE.Professions = {
@@ -303,6 +304,23 @@ MODE.Professions = {
 			--; It's a bad practice to give professions any weapons or tools
 		end,
 	},
+	["reporter"] = {
+		Name = "Reporter",
+		SpawnFunction = function(ply)
+			ply:Give("weapon_tpik_microphone")
+			hg.AddArmor(ply, "ent_armor_vest3")
+			hg.AddArmor(ply, "ent_armor_helmet3")
+		end,
+	},
+}
+
+MODE.ProfessionsPool = {
+	["doctor"] = { Chance = 1 },
+	["huntsman"] = { Chance = 1 },
+	["engineer"] = { Chance = 1 },
+	["cook"] = { Chance = 1 },
+	["builder"] = { Chance = 1 },
+	["reporter"] = { Chance = 1 },
 }
 --//
 
@@ -319,23 +337,7 @@ MODE.RoleChooseRoundTypes = {
 		Traitor = {
 			["traitor_custom"] = true,
 		},
-		Professions = {
-			["doctor"] = {
-				Chance = 1,
-			},
-			["huntsman"] = {
-				Chance = 1,
-			},
-			["engineer"] = {
-				Chance = 1,
-			},
-			["cook"] = {
-				Chance = 1,
-			},
-			["builder"] = {
-				Chance = 1,
-			},
-		},
+		Professions = MODE.ProfessionsPool,
 	},
 }
 --//

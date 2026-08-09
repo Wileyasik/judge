@@ -1,12 +1,6 @@
--- Shared Judge loot pools.
--- Used by gamemode LootTables so every mode gets the full Judge arsenal
--- while keeping guns rare: melee > medicine > armor > sidearms > shotguns/smgs > rifles > marksman/lmg.
-
 hg.LootPools = hg.LootPools or {}
 local LP = hg.LootPools
 
--- Weapons/entities that must never roll from loot.
--- Filtered out in hg.GenerateLoot for every mode.
 hg.LootBlacklist = hg.LootBlacklist or {}
 local LootBlacklist = hg.LootBlacklist
 
@@ -49,10 +43,6 @@ for _, class in ipairs({
 }) do
 	LootBlacklist[class] = true
 end
-
--- Each pool is a list of { weight, entityClass }.
--- Weights are relative inside a single pool and tuned so that
--- anything that shoots hard is a rare find.
 
 LP.MeleeCommon = {
 	{4, "weapon_pan"},

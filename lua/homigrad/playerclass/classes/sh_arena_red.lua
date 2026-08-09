@@ -14,7 +14,11 @@ function CLASS.On(self)
     if CLIENT then return end
 
     ApplyAppearance(self, nil, nil, nil, true)
-    self:SetPlayerColor(Color(200, 30, 30):ToVector())
+    local Appearance = self.CurAppearance or hg.Appearance.GetRandomAppearance()
+    Appearance.AColor = Color(200, 30, 30)
+    self.CurAppearance = Appearance
+    hg.Appearance.SyncAppearanceColor(self)
+
     timer.Simple(0.1, function()
         if not IsValid(self) then return end
         local Appearance = self.CurAppearance or hg.Appearance.GetRandomAppearance()

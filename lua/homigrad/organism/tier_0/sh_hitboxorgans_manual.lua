@@ -237,7 +237,7 @@ local models_female = {
 table.insert(male["ValveBiped.Bip01_Spine2"],1,{"torso_armor", 1, Vector(3, 3, 0), Angle(0, 0, 0), Vector(8, 7, 6), Color(250, 255, 0), "torso", 0})
 table.insert(male["ValveBiped.Bip01_Spine1"],1,{"torso_armor", 1, Vector(-4, 2, 0), Angle(0, 0, 0), Vector(5, 7, 7), Color(250, 255, 0), "torso", 0})
 -- Generic head armor hitbox
-table.insert(male["ValveBiped.Bip01_Head1"],1,{"head_armor", 1, Vector(3.5, -0.9, 0), Angle(0, 0, 0), Vector(5, 6, 5.5), Color(250, 255, 0), "head", 0})
+table.insert(male["ValveBiped.Bip01_Head1"],1,{"head_armor", 1, Vector(5, 1, 0), Angle(0, 0, 0), Vector(3.8, 3.5, 4.5), Color(250, 255, 0), "head", 0})
 -- Generic face armor hitbox
 table.insert(male["ValveBiped.Bip01_Head1"],1,{"face_armor", 1, Vector(3.5, -4, 0), Angle(0, 0, 0), Vector(5, 3, 4.5), Color(255, 0, 221), "face", 0})
 -- Helmet accessories use separate zones so visors, mandibles and ear covers can coexist.
@@ -354,7 +354,7 @@ female["ValveBiped.Bip01_Neck1"] = {
 	},
 }
 
-table.insert(female["ValveBiped.Bip01_Head1"],1,{"head_armor", 1, Vector(3.5, -0.9, 0), Angle(0, 0, 0), Vector(5, 6, 5.5), Color(250, 255, 0), "head", 0})
+table.insert(female["ValveBiped.Bip01_Head1"],1,{"head_armor", 1, Vector(5, 1, 0), Angle(0, 0, 0), Vector(3.8, 3.5, 4.5), Color(250, 255, 0), "head", 0})
 table.insert(female["ValveBiped.Bip01_Head1"],1,{"face_armor", 1, Vector(3.5, -4, 0), Angle(0, 0, 0), Vector(5, 3, 4.5), Color(255, 0, 221), "face", 0})
 table.insert(female["ValveBiped.Bip01_Head1"],1,{"visor_eyes_armor", 1, Vector(4.8, -4, 0), Angle(0, 0, 0), Vector(2.2, 2.5, 4.5), Color(80, 180, 255), "visor", 0})
 table.insert(female["ValveBiped.Bip01_Head1"],1,{"visor_mouth_armor", 1, Vector(1.2, -4, 0), Angle(0, 0, 0), Vector(1.4, 2.5, 4.5), Color(80, 180, 255), "visor", 0})

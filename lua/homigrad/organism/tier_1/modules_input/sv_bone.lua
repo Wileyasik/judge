@@ -17,7 +17,9 @@ local function damageBone(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ric
 		//crush = false
 	end
 	
-	dmg = dmg * (dmgInfo:GetInflictor().BreakBoneMul or 1)
+	local breakBoneMul = dmgInfo:GetInflictor().BreakBoneMul or 1
+	if dmgInfo:IsDamageType(DMG_CLUB) then breakBoneMul = breakBoneMul * 0.8 end
+	dmg = dmg * breakBoneMul
 	
 	if crush then
 		crush = halfValue2(1 - org[key], 1, 0.5)
@@ -701,8 +703,8 @@ input_list.chest = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
 	
 	hg.AddHarmToAttacker(dmgInfo, (org.chest - oldDmg) * 3, "Ribs bone damage harm")
 
-	org.painadd = org.painadd + dmg * 1
-	org.shock = org.shock + dmg * 1
+	org.painadd = org.painadd + dmg * 1.5
+	org.shock = org.shock + dmg * 1.5
 
 	if org.isPly and (not org.brokenribs or (org.brokenribs ~= math.Round(org.chest * 3))) then
 		org.brokenribs = math.Round(org.chest * 3)

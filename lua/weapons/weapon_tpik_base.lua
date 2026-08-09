@@ -127,7 +127,11 @@ if CLIENT then
             local timing = 0
             if not self.cycling then
                 timing = (1 - math.Clamp((self.animtime - CurTime()) / self.animspeed,0,1))
-                timing = self.reverseanim and (1 - timing) or timing
+				if isnumber(self.animStartCycle) then
+					timing = self.reverseanim and self.animStartCycle * (1 - timing) or Lerp(timing, self.animStartCycle, 1)
+				else
+					timing = self.reverseanim and (1 - timing) or timing
+				end
                 timing = self.CustomTiming and self:CustomTiming() or timing
                 WorldModel:SetCycle(timing)
                 
@@ -488,7 +492,7 @@ elseif CLIENT then
         local sendtoclient = net.ReadBool()
         if IsValid(ent) and ent.PlayAnim and ( sendtoclient and sendtoclient or !ent:IsLocal()) then
             if tbl.anim == "Shove" and ent:IsLocal() and ent.anim == "Shove" and (ent.animtime or 0) > CurTime() then return end
-            ent:PlayAnim(tbl.anim,tbl.time,tbl.cycling,tbl.callback,tbl.reverse)
+            ent:PlayAnim(tbl.anim,tbl.time,tbl.cycling,tbl.callback,tbl.reverse,nil,tbl.startCycle)
             --if tbl.anim == "attack" or tbl.anim == "attack2" and ent:GetOwner().AnimRestartGesture then
             --    ent:GetOwner():AnimRestartGesture(GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_HL2MP_GESTURE_RANGE_ATTACK_SLAM, true)
             --end
@@ -496,7 +500,7 @@ elseif CLIENT then
     end)
 end
 
-function SWEP:PlayAnim(anim,time,cycling,callbackFuncName,reverse,sendtoclient)
+function SWEP:PlayAnim(anim,time,cycling,callbackFuncName,reverse,sendtoclient,startCycle)
     if SERVER then
         sendtoclient = true
         net.Start("melee_attack2")
@@ -505,7 +509,8 @@ function SWEP:PlayAnim(anim,time,cycling,callbackFuncName,reverse,sendtoclient)
                 time = time,
                 cycling = cycling,
                 callback = callbackFuncName,
-                reverse = reverse
+				reverse = reverse,
+				startCycle = startCycle
             }
             net.WriteTable(netTbl) 
             net.WriteEntity(self)
@@ -514,14 +519,23 @@ function SWEP:PlayAnim(anim,time,cycling,callbackFuncName,reverse,sendtoclient)
 
         local tAnim = self.AnimList[anim] or {}
         --self:GetWM():SetSequence(tAnim[1] or anim)
-        --self.animtime = CurTime() + ( time or tAnim[2] or 1)
         self.seq = tAnim and tAnim[1] or anim
         self.anim = anim
         self.animspeed = time or tAnim[2] or 1
-        --self.cycling = cycling or (tAnim[3] ~= nil and tAnim[3])
-        --self.reverseanim = reverse or (tAnim[4] ~= nil and tAnim[4])
+		self.animtime = CurTime() + self.animspeed
+		if cycling ~= nil then
+			self.cycling = cycling
+		else
+			self.cycling = tAnim[3] ~= nil and tAnim[3]
+		end
+		if reverse ~= nil then
+			self.reverseanim = reverse
+		else
+			self.reverseanim = tAnim[4] ~= nil and tAnim[4]
+		end
+		self.animStartCycle = startCycle
 
-        if self[callbackFuncName] or tAnim[5] then
+		if not reverse and (self[callbackFuncName] or tAnim[5]) then
             local timerAnim = self.animspeed - (tAnim[6] or self.CallbackTimeAdjust or 0)
             self.CallbackTime = CurTime() + timerAnim
             self.callback = self[callbackFuncName] or tAnim[5]
@@ -540,7 +554,7 @@ function SWEP:PlayAnim(anim,time,cycling,callbackFuncName,reverse,sendtoclient)
 		if self.tries > 0 then
 			timer.Simple(0.01,function()
                 if not IsValid(self) then return end
-				self:PlayAnim(anim,time,cycling,callback,reverse)
+				self:PlayAnim(anim,time,cycling,callbackFuncName,reverse,sendtoclient,startCycle)
 			end)
 		end
 		return
@@ -555,9 +569,18 @@ function SWEP:PlayAnim(anim,time,cycling,callbackFuncName,reverse,sendtoclient)
     mdl:SetSequence(tAnim[1] or anim)
     self.animtime = CurTime() + ( time or tAnim[2] or 1)
     self.animspeed = time or tAnim[2] or 1
-    self.cycling = cycling or (tAnim[3] ~= nil and tAnim[3])
-    self.reverseanim = reverse or (tAnim[4] ~= nil and tAnim[4])
-    if self[callbackFuncName] or tAnim[5] then
+	if cycling ~= nil then
+		self.cycling = cycling
+	else
+		self.cycling = tAnim[3] ~= nil and tAnim[3]
+	end
+	if reverse ~= nil then
+		self.reverseanim = reverse
+	else
+		self.reverseanim = tAnim[4] ~= nil and tAnim[4]
+	end
+	self.animStartCycle = startCycle
+	if not reverse and (self[callbackFuncName] or tAnim[5]) then
         self.callback = self[callbackFuncName] or tAnim[5]
     end
 
@@ -580,6 +603,49 @@ function SWEP:PlayAnim(anim,time,cycling,callbackFuncName,reverse,sendtoclient)
 			self.VM_TimerEvents[TimerID] = TimerName
 		end
 	end
+end
+
+function SWEP:GetCurrentAnimCycle(curTime)
+	curTime = curTime or CurTime()
+	if not self.animtime or not self.animspeed or self.animspeed <= 0 then return 0 end
+
+	if self.cycling then
+		return ((curTime - (self.animtime - self.animspeed)) % self.animspeed) / self.animspeed
+	end
+
+	local timing = 1 - math.Clamp((self.animtime - curTime) / self.animspeed, 0, 1)
+	if isnumber(self.animStartCycle) then
+		return self.reverseanim and self.animStartCycle * (1 - timing) or Lerp(timing, self.animStartCycle, 1)
+	end
+
+	return self.reverseanim and (1 - timing) or timing
+end
+
+function SWEP:ReverseAnimToIdle(anim)
+	self.callback = nil
+	hook.Remove("Think", "AnimCallback" .. self:EntIndex())
+	if not SERVER then return end
+
+	local cycle = self:GetCurrentAnimCycle()
+	if cycle <= 0.001 then
+		self._reverseToIdle = nil
+		self:PlayAnim("idle")
+		return
+	end
+
+	local fullDuration = self.animspeed > 0 and self.animspeed or 1
+	self._reverseToIdle = true
+	self:PlayAnim(anim or self.anim or "use", math.max(cycle * fullDuration, 0.01), false, nil, true, nil, cycle)
+end
+
+function SWEP:ThinkReverseAnimToIdle(curTime)
+	if not self._reverseToIdle then return end
+	if self.animtime and self.animtime > (curTime or CurTime()) then return end
+
+	self._reverseToIdle = nil
+	self.reverseanim = false
+	self.animStartCycle = nil
+	if SERVER then self:PlayAnim("idle") end
 end
 
 if CLIENT then

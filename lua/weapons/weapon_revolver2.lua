@@ -410,6 +410,9 @@ function SWEP:Shoot(override)
 		self.shooanim = 1
 
 		local ply = self:GetOwner()
+		if SERVER and IsValid(ply) and ply:IsPlayer() then
+			hook.Run("HG_RussianRouletteSurvived", ply)
+		end
 		if SERVER and IsValid(ply) and ply:IsPlayer() and ply.organism and self.Rolled and self:Clip1() > 0 and ply.suiciding and ply:GetNWFloat("willsuicide") < CurTime() then
 			ply.organism.adrenalineAdd = ply.organism.adrenalineAdd + self:Clip1()
 			ply.organism.fearadd = ply.organism.fearadd + 0.5

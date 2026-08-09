@@ -56,6 +56,8 @@ SWEP.modeNames = {
 
 SWEP.UseSpeed = 3
 SWEP.CallbackTimeAdjust = 0.5
+SWEP.AnalgesiaPerDose = 6
+SWEP.MaxAnalgesia = 6
 
 SWEP.AnimList = {
 	["deploy"] = { "deploy", 0.5, false },
@@ -108,7 +110,7 @@ function SWEP:Deploy()
 	end
 	local snd = self.DeploySnd
 	self.DeploySnd = ""
-	local base = weapons.GetStored(self.Base)
+	local base = weapons.GetStored("weapon_tpik_base")
 	if base and base.Deploy then
 		local ret = base.Deploy(self)
 		if SERVER and snd and snd ~= "" and not self._deploySndPlayed and self:GetOwner() and not self:GetOwner().noSound then
@@ -226,14 +228,9 @@ function SWEP:Think()
 		hook.Remove("Think", "AnimCallback" .. self:EntIndex())
 		if SERVER then
 			if self.modeValues[1] > 0 then
-				self.reverseanim = true
+				self:ReverseAnimToIdle("use")
 			else
 				self:PlayAnim("idle")
-			end
-		end
-		if CLIENT then
-			if self.modeValues[1] > 0 then
-				self.reverseanim = true
 			end
 		end
 	end
@@ -254,7 +251,7 @@ function SWEP:Think()
 			local org = ent.organism
 			if org and self.modeValues[1] > 0 then
 				local injected = math.min(FrameTime() * 1, self.modeValues[1])
-				org.analgesiaAdd = math.min(org.analgesiaAdd + injected, 4)
+				org.analgesiaAdd = math.min(org.analgesiaAdd + injected * self.AnalgesiaPerDose, self.MaxAnalgesia)
 				self.modeValues[1] = math.max(self.modeValues[1] - injected, 0)
 				self:SetDose(self.modeValues[1])
 
@@ -292,12 +289,7 @@ function SWEP:Think()
 		end
 	end
 
-	if self.reverseanim and self.animtime and self.animtime <= curTime then
-		self.reverseanim = false
-		if SERVER then
-			self:PlayAnim("idle")
-		end
-	end
+	self:ThinkReverseAnimToIdle(curTime)
 end
 
 function SWEP:SetHandPos(noset)
@@ -307,7 +299,8 @@ function SWEP:SetHandPos(noset)
 		self.setlh = true
 	end
 
-	return self.BaseClass.SetHandPos(self, noset)
+	local base = weapons.GetStored("weapon_tpik_base")
+	if base and base.SetHandPos then return base.SetHandPos(self, noset) end
 end
 
 function SWEP:PostSetHandPos()

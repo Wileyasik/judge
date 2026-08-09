@@ -389,7 +389,7 @@ module[2] = function(owner, org, timeValue)
 	if k < 0.25 then
 		if not org.alive and owner:IsPlayer() and death_from_braindamage and org.o2[1] == 0 then
 			hg.achievements.AddPlayerAchievement(owner,"brain",1)
-			if org.analgesia > 1 then
+			if org.analgesia > 1.5 or org.painkiller > 2.4 then
 				hg.achievements.AddPlayerAchievement(owner,"drugs",1)
 			end
 		end
