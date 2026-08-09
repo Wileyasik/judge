@@ -18,15 +18,17 @@ local ZB_FORCED_TEMP_MODE_WEIGHTS = {
 local ZB_FORCED_MODE_POOL = {
         ["hmcd"] = true,
         ["standard"] = true,
-        ["suicidelunatic"] = true,
-        ["dm"] = true,
-        ["tdm"] = true,
-        ["riot"] = true
+	["suicidelunatic"] = true,
+	["active_shooter"] = true,
+	["dm"] = true,
+	["tdm"] = true,
+	["riot"] = true
 }
 local ZB_NO_BACK_TO_BACK_MODES = {
-        ["dm"] = true,
-        ["tdm"] = true,
-        ["riot"] = true
+	["dm"] = true,
+	["tdm"] = true,
+	["riot"] = true,
+	["active_shooter"] = true
 }
 local ZB_HAS_CHANGELEVEL
 
@@ -171,6 +173,7 @@ hook.Add("CanListenOthers","RoundStartChat",function(output, input, isChat, team
 end)
 
 function zb:EndRound(skipPresentation)
+	if zb.ROUND_STATE ~= 1 then return end
 	zb.ROUND_STATE = 3
 	zb.Roundscount = (zb.Roundscount or 0) + 1
         zb.SKIP_END_PRESENTATION = skipPresentation and true or false
@@ -184,9 +187,10 @@ function zb:EndRound(skipPresentation)
 
 	--PrintMessage(HUD_PRINTTALK, "Раунд закончен.")
 	CurrentRound():EndRound()
-        if not zb.SKIP_END_PRESENTATION then
-                hook.Run("ZB_EndRound")
-                zb.AddFade()
+	hook.Run("HG_RoundFinished")
+	if not zb.SKIP_END_PRESENTATION then
+		hook.Run("ZB_EndRound")
+		zb.AddFade()
         else
                 zb.END_TIME = CurTime()
                 zb.SHOULD_FADE = false
@@ -274,6 +278,10 @@ function zb:EndRoundThink()
 			net.Broadcast()
 
 			hg.UpdateRoundTime(CurrentRound().ROUND_TIME, CurTime(), CurTime() + (CurrentRound().start_time or 5))
+
+			if CurrentRound().PrepareIntermission then
+				CurrentRound():PrepareIntermission()
+			end
 
 			self:KillPlayers()
 			self:AutoBalance()

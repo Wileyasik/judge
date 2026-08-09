@@ -57,7 +57,15 @@ end
 
 function MODE:SetupChances()
 	for name, tbl in pairs(MODE.Types) do
-		zb.ModesChances[name] = zb.ModesChances[name] or tbl.Chance
+		local savedChance = tonumber(zb.ModesChances[name])
+
+		if name == "suicidelunatic" and (savedChance == 0.2 or savedChance == 0.062 or savedChance == 0.02) then
+			savedChance = tbl.Chance
+		elseif name == "standard" and savedChance == 0.2 then
+			savedChance = tbl.Chance
+		end
+
+		zb.ModesChances[name] = savedChance or tbl.Chance
 	end
 end
 
@@ -711,7 +719,7 @@ MODE.Types.soe = {
 MODE.Types.suicidelunatic = {
 	PrintName = "Suicide Lunatic",
 	Description = "One executioner carries a hidden suicide bomb. Everyone wears the Allah accessory.",
-	Chance = 0.02,
+	Chance = 0.005,
 	ChanceFunction = function() return zb.ModesChances["suicidelunatic"] or zb.modes["hmcd"].Types.suicidelunatic.Chance end,
 	LootTable = MODE.LootTableStandard,
 	Messages = {
@@ -733,12 +741,10 @@ MODE.Types.suicidelunatic = {
 
 		local wep = ply:Give("weapon_traitor_c4")
 		if not IsValid(wep) or not IsValid(iedController) then return end
-		ply.HMCD_BombWep = wep
 		ply.HMCD_IEDController = iedController
-		wep.IEDController = iedController
 
 		timer.Simple(0.5, function()
-			if not IsValid(ply) or not ply:Alive() or not IsValid(wep) or not IsValid(iedController) or wep:GetChargePlaced() then return end
+			if not IsValid(ply) or not ply:Alive() or not IsValid(iedController) or iedController:GetPlanted() then return end
 
 			local charge = ents.Create("prop_physics")
 			if not IsValid(charge) then return end
@@ -764,8 +770,6 @@ MODE.Types.suicidelunatic = {
 				return
 			end
 
-			wep.C4Charge = charge
-			wep:SetChargePlaced(true)
 			ply.HMCD_BombCharge = charge
 
 			ply:ChatPrint("You are the Suicide Lunatic! A bomb is strapped to you. Run into a crowd and detonate it with LMB.")
@@ -1590,6 +1594,7 @@ function MODE:EndRound()
 					traitor:GiveExp( math.random(25,40) )
 					traitor:GiveSkill( math.Rand(0.1,0.3) )
 					traitor:SetPData("zb_hmcd_t_wins",traitor:GetPData("zb_hmcd_t_wins",0) + 1)
+					hook.Run("ZB_TraitorWinOrNot", traitor, winner)
 				end
 				PrintMessage(HUD_PRINTTALK, "Every innocent was murdered.")
 			end
@@ -2155,13 +2160,6 @@ end)
 hook.Add("PlayerDeath", "HMCD_SuicideLunaticDetonate", function(ply)
 	if not IsValid(ply) or not ply.isTraitor then return end
 	if MODE.Type ~= "suicidelunatic" then return end
-
-	local wep = ply.HMCD_BombWep
-	if IsValid(wep) and wep.DetonateC4 then
-		if wep.C4Detonating then return end
-		wep:DetonateC4()
-		return
-	end
 
 	local iedController = ply.HMCD_IEDController
 	if IsValid(iedController) and iedController.DetonateExternalIED then

@@ -839,18 +839,6 @@ local function protec(org, bone, dmg, dmgInfo, placement, armor, scale, scalepro
 	if armorData then
 		local rawDmg = dmgInfo:GetDamage()
 		local broken = DamageArmor(org, placement, armor, dmgInfo, ricochetHit and rawDmg * 0.15 or rawDmg)
-		if broken and placement == "head" then
-			-- The shot that knocks the helmet off fully protects the player:
-			-- the helmet stops the bullet and it does not punch through to the head.
-			dmgInfo:ScaleDamage(0)
-			dmgInfo:SetDamageForce(dmgInfo:GetDamageForce() * 0.4)
-			org.lastArmorMitigation = 1
-			org.lastHeadArmorMitigation = 1
-			if impact and impact.ballisticVersion then
-				return {penetrationCost = impact.penetrationBefore, energyCost = impact.energyBefore, stopped = true, armorStopped = true}
-			end
-			return 1
-		end
 
 		-- A fully broken plate carrier / mask offers no protection: let the bullet
 		-- pass straight through to the body at full damage (no penetration block,
@@ -924,7 +912,8 @@ local function protec(org, bone, dmg, dmgInfo, placement, armor, scale, scalepro
 	end
 
 	dmgInfo:SetDamageType(DMG_CLUB)
-	dmgInfo:SetDamageForce(dmgInfo:GetDamageForce() * 0.4)
+	local originalDamageForce = dmgInfo:GetDamageForce()
+	dmgInfo:SetDamageForce(originalDamageForce * 0.4)
 
 	if not IsDurabilityArmor(placement, armorData) then
 		local maxHealth = (armorData and armorData.health) or DEFAULT_VEST_HEALTH
@@ -964,13 +953,26 @@ local function protec(org, bone, dmg, dmgInfo, placement, armor, scale, scalepro
 		local penetrationCost = math.min(resistance, impact.penetrationBefore)
 		local absorbedFraction = math.Clamp(penetrationCost / math.max(impact.initialPenetration, 1), 0, 1)
 		local energyCost = math.min(impact.energyBefore, impact.initialEnergy * absorbedFraction)
-		local bluntTransfer = armorData.bluntTransfer or (placement == "head" and 0.22 or 0.14)
+		local bluntTransfer = armorData.bluntTransfer or (placement == "head" and 0.22 or 0.18)
 		local bluntDamage = energyCost * bluntTransfer
 
-		org.shock = (org.shock or 0) + bluntDamage * 0.8
-		org.painadd = (org.painadd or 0) + bluntDamage
+		org.shock = math.min((org.shock or 0) + bluntDamage * 0.65, 70)
+		org.painadd = (org.painadd or 0) + bluntDamage * 1.15
+		org.immobilization = math.min((org.immobilization or 0) + bluntDamage * 0.2, 30)
 		org.hurt = (org.hurt or 0) + bluntDamage / 35
 		dmgInfo:SetDamage(bluntDamage)
+
+		if placement == "torso" then
+			if stopped then
+				dmgInfo:SetDamageForce(originalDamageForce * 0.65)
+				if (org.owner.hgArmorTorsoPunch or 0) <= CurTime() then
+					org.owner.hgArmorTorsoPunch = CurTime() + 0.35
+					org.owner:ViewPunch(Angle(math.Rand(-1.5, -0.7), math.Rand(-0.8, 0.8), math.Rand(-0.5, 0.5)))
+				end
+			else
+				org.lastArmorMitigation = 0.85
+			end
+		end
 
 		return {
 			penetrationCost = penetrationCost,
@@ -1003,15 +1005,15 @@ ArmorEffect = function(placement, armor, dmgInfo, org, hit, prot)
 	
 	effdata:SetOrigin((hit and isvector(hit) and hit or dmgInfo:GetDamagePosition()) - dir)
 	effdata:SetNormal(dir)
-	effdata:SetMagnitude(0.25)
-	effdata:SetRadius(4)
+	effdata:SetMagnitude(placement == "torso" and 0.6 or 0.25)
+	effdata:SetRadius(placement == "torso" and 7 or 4)
 	effdata:SetNormal(dir)
 	effdata:SetStart((hit and isvector(hit) and hit or dmgInfo:GetDamagePosition()) + dir)
 	effdata:SetEntity(org.owner)
 	effdata:SetSurfaceProp(prot < 0 and 67 or armdata.surfaceprop or 67)
 	effdata:SetDamageType(dmgInfo:GetDamageType())
 
-	EmitSound("physics/metal/metal_solid_impact_bullet"..math.random(4)..".wav",dmgInfo:GetDamagePosition(),0,CHAN_AUTO,1,55,nil,100)
+	EmitSound("physics/metal/metal_solid_impact_bullet"..math.random(4)..".wav", hit and isvector(hit) and hit or dmgInfo:GetDamagePosition(), 0, CHAN_AUTO, 1, placement == "torso" and 75 or 55, nil, math.random(95, 105))
 	util.Effect(eff,effdata)
 end
 

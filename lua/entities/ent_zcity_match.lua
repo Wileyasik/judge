@@ -50,8 +50,8 @@ function ENT:Initialize()
             local pos = data.HitPos or ent1:GetPos()
             local ent = data.HitEntity
             --print(IsValid(ent), ignitable[ent:GetModel()], ent:GetModel())
-            if IsValid(ent) and ignitable[ent:GetModel()] then
-                ent:Ignite()
+            if IsValid(ent) and (ignitable[ent:GetModel()] or (ent.shouldburn or 0) > 0) then
+                ent:Ignite(30 * ((ent.shouldburn or 0) + 1), 0)
             end
 
             if hg.IgniteGasolineAt then
@@ -116,7 +116,15 @@ end
 local color_b = Color(255,255,255)
 function ENT:Think()
     if SERVER then
-        self:SetFireLeft(math.max(0,self:GetFireLeft() - 1 * FrameTime()))
+        local fireLeft = math.max(0,self:GetFireLeft() - 1 * FrameTime())
+        self:SetFireLeft(fireLeft)
+
+        if fireLeft > 0 and (self.GasolineIgniteCheck or 0) <= CurTime() then
+            self.GasolineIgniteCheck = CurTime() + 0.1
+            if hg.IgniteGasolineAt then
+                hg.IgniteGasolineAt(self:GetPos(), self.debil, 40)
+            end
+        end
     end
 
     if CLIENT then

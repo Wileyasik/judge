@@ -71,7 +71,7 @@ local function updatePlayer(ply)
 	local steamID64 = ply:SteamID64()
 
     if not hg.achievements.SqlActive then
-        hg.achievements.achievements_data.player_achievements[steamID64] = {}
+        hg.achievements.achievements_data.player_achievements[steamID64] = hg.achievements.achievements_data.player_achievements[steamID64] or {}
         return
     end
 
@@ -143,6 +143,7 @@ hook.Add( "PlayerInitialSpawn","hg_Exp_OnInitSpawn", updatePlayer)
 hook.Add("PlayerDisconnected", "savevalues", function(ply)
     if !hg.achievements.SqlActive then print("Tried to save achievement data to SQL, but it is not active.") return end
 
+    timer.Remove("hg_achievement_save_" .. ply:SteamID64())
     hg.achievements.SaveToSQL(ply)
 end)
 
@@ -263,8 +264,13 @@ function hg.achievements.SetPlayerAchievement(ply, key, val)
             net.WriteString(unlockRarityName)
         net.Send(ply)
 
+        timer.Remove("hg_achievement_save_" .. steamID)
         hg.achievements.SaveToSQL(ply, playerAchievements)
         timer.Simple(3, hg.achievements.RefreshRarity)
+    elseif hg.achievements.SqlActive then
+        timer.Create("hg_achievement_save_" .. steamID, 10, 1, function()
+            if IsValid(ply) then hg.achievements.SaveToSQL(ply) end
+        end)
     end
 
     return true
@@ -339,6 +345,7 @@ end)
     hg.achievements.CreateAchievementType("john_wicks_heir", 439, 0, "Deliver 439 fatal pistol headshots. The Baba Yaga returns.", "John Wick's Heir", nil, true)
     -- Splinter Cell: unlocks weapon_sam_fisher_glock
     hg.achievements.CreateAchievementType("samfisher", 10, 0, "Kill 10 enemies with a silenced weapon.", "Splinter Cell", "entities/sam.png", true)
+    hg.achievements.CreateAchievementType("brawler", 1, 0, "Win a Brawl round.", "Brawler", nil, false)
 
     //hg.init_ach = true
 //end
@@ -375,8 +382,7 @@ hook.Add("PlayerDeath", "hg_killemall_Acchivment", function(ply, inflictor, atta
     end
 
     if IsValid(inflictor) and inflictor.ishggrenade then
-        local grenadeOwner = IsValid(inflictor.owner) and inflictor.owner or inflictor.owner2
-        if attacker == ply or grenadeOwner == ply then
+        if inflictor.owner2 == ply then
             hg.achievements.SetPlayerAchievement(ply, "git_gud", 1)
         end
     end
@@ -387,13 +393,13 @@ hook.Add("PlayerDeath", "hg_killemall_Acchivment", function(ply, inflictor, atta
     end
 
     if ply.isTraitor then
+        if IsValid(inflictor) and inflictor.ishggrenade and inflictor.owner2 == ply and IsValid(inflictor.owner) and inflictor.owner:IsPlayer() and inflictor.owner ~= ply then
+            hg.achievements.SetPlayerAchievement(inflictor.owner, "hotpotato", 1)
+        end
+
         if IsValid(attacker) and attacker:IsPlayer() and ply ~= attacker then
             if attacker:Alive() and attacker.organism and attacker.organism.brain >= 0.1 then
                 hg.achievements.SetPlayerAchievement(attacker, "lobotomygaming", 1)
-            end
-
-            if IsValid(inflictor) and inflictor.ishggrenade and inflictor.owner2 == ply and IsValid(inflictor.owner) and inflictor.owner ~= ply then
-                hg.achievements.SetPlayerAchievement(inflictor.owner, "hotpotato", 1)
             end
         end
 
@@ -407,19 +413,26 @@ hook.Add("PlayerDeath", "hg_killemall_Acchivment", function(ply, inflictor, atta
     end
 end)
 
-hook.Add("HomigradDamage", "hg_git_gud_track", function(victim, dmgInfo)
+hook.Add("HomigradDamage", "hg_grenade_achievements_track", function(victim, dmgInfo)
     if not IsValid(victim) or not victim:IsPlayer() then return end
+    if (tonumber(dmgInfo:GetDamage()) or 0) <= 0 then return end
 
     local grenade = dmgInfo:GetInflictor()
     if IsValid(grenade) and grenade.ishggrenade then
-        local grenadeOwner = IsValid(grenade.owner) and grenade.owner or grenade.owner2
-        if dmgInfo:GetAttacker() == victim or grenadeOwner == victim then
-            victim.GitGudLastHit = CurTime()
-            return
+        victim.GitGudLastHit = grenade.owner2 == victim and CurTime() or nil
+
+        local returner = grenade.owner
+        if victim.isTraitor and grenade.owner2 == victim and IsValid(returner) and returner:IsPlayer() and returner ~= victim then
+            victim.HotPotatoLastHit = {attacker = returner, time = CurTime()}
+        else
+            victim.HotPotatoLastHit = nil
         end
+
+        return
     end
 
-    if dmgInfo:GetDamage() > 0 then victim.GitGudLastHit = nil end
+    victim.GitGudLastHit = nil
+    victim.HotPotatoLastHit = nil
 end)
 
 hook.Add("Player_Death", "hg_git_gud_achievement", function(victim)
@@ -428,6 +441,14 @@ hook.Add("Player_Death", "hg_git_gud_achievement", function(victim)
     if hitTime and CurTime() - hitTime <= 30 then
         hg.achievements.SetPlayerAchievement(victim, "git_gud", 1)
     end
+end)
+
+hook.Add("Player_Death", "hg_hotpotato_achievement", function(victim)
+    local hit = victim.HotPotatoLastHit
+    victim.HotPotatoLastHit = nil
+    if not hit or CurTime() - hit.time > 30 or not IsValid(hit.attacker) or not hit.attacker:IsPlayer() then return end
+
+    hg.achievements.SetPlayerAchievement(hit.attacker, "hotpotato", 1)
 end)
 
 hook.Add("PlayerSilentDeath","hg_killemall_Acchivment",function(ply)
@@ -440,6 +461,8 @@ hook.Add("PlayerSpawn", "hg_london_reset", function(ply)
     ply.LondonLastKnifeHits = nil
     ply.JohnWickLastHit = nil
     ply.GitGudLastHit = nil
+    ply.HotPotatoLastHit = nil
+    ply.SamFisherLastHit = nil
     local london = hg.achievements.GetPlayerAchievement(ply, "london")
     if (london.value or 0) < 28 then hg.achievements.SetPlayerAchievement(ply, "london", 0) end
 end)
@@ -449,14 +472,14 @@ hook.Add("HomigradDamage","hg_illbeback_Acchivment",function(ply, dmgInfo, hitgr
     if not IsValid(ply) or not ply:IsPlayer() then return end
     if not dmgInfo:IsDamageType(DMG_BULLET) or hitgroup ~= HITGROUP_HEAD then return end
 
-    timer.Simple(0, function()
-        if IsValid(ply) and ply:Alive() then
+    timer.Simple(2, function()
+        if IsValid(ply) and ply:Alive() and (not ply.organism or ply.organism.alive) then
             hg.achievements.AddPlayerAchievement(ply, "headmagnet", 1)
         end
     end)
 
     local value = hg.achievements.GetPlayerAchievement(ply, "illbeback").value or 0
-    if value == 0 then
+    if value == 0 or (value == 1 and (ply.illbeback or 0) <= CurTime()) then
         hg.achievements.SetPlayerAchievement(ply, "illbeback", 1)
         ply.illbeback = CurTime() + 10
     end
@@ -524,7 +547,7 @@ end)
 hook.Add("Player_Death", "hg_john_wicks_heir_achievement", function(victim)
     local hit = victim.JohnWickLastHit
     victim.JohnWickLastHit = nil
-    if not hit or CurTime() - hit.time > 1 or not IsValid(hit.attacker) then return end
+    if not hit or CurTime() - hit.time > 30 or not IsValid(hit.attacker) then return end
 
     hg.achievements.AddPlayerAchievement(hit.attacker, "john_wicks_heir", 1)
 end)
@@ -592,7 +615,7 @@ hook.Add("HG_PlayerChatSent","burgerking",function(ply, txt)
     end
 end)
 
-hook.Add("ZB_EndRound", "hg_roundsplayed_achievement", function()
+hook.Add("HG_RoundFinished", "hg_roundsplayed_achievement", function()
     for _, target in player.Iterator() do
         if IsValid(target) then
             hg.achievements.AddPlayerAchievement(target, "veteran", 1)
@@ -710,7 +733,7 @@ hook.Add("ZC_SomeoneGetFallBy", "hg_human_bowling_achievement", function(attacke
 end)
 
 hook.Add("ZB_InventoryChecked", "hg_professional_looter_achievement", function(ply, ent)
-    if IsValid(ply) and ply:IsPlayer() and IsValid(ent) and ent ~= ply and not ply.keypressed and ent:GetNetVar("Inventory") then
+    if IsValid(ply) and ply:IsPlayer() and IsValid(ent) and ent:IsPlayer() and ent ~= ply and not ply.keypressed and ent:GetNetVar("Inventory") then
         hg.achievements.AddPlayerAchievement(ply, "professional_looter", 1)
     end
 end)
@@ -741,9 +764,9 @@ end
 
 hook.Add("HomigradDamage", "hg_splinter_cell_track", function(victim, dmgInfo)
     if not IsValid(victim) or not victim:IsPlayer() then return end
-    if not (dmgInfo:IsDamageType(DMG_BULLET) or dmgInfo:IsDamageType(DMG_BUCKSHOT)) then return end
 
     victim.SamFisherLastHit = nil
+    if not (dmgInfo:IsDamageType(DMG_BULLET) or dmgInfo:IsDamageType(DMG_BUCKSHOT)) then return end
 
     local attacker = dmgInfo:GetAttacker()
     if not IsValid(attacker) or not attacker:IsPlayer() or attacker == victim then return end
@@ -758,7 +781,7 @@ end)
 hook.Add("Player_Death", "hg_splinter_cell_achievement", function(victim)
     local hit = victim.SamFisherLastHit
     victim.SamFisherLastHit = nil
-    if not hit or CurTime() - hit.time > 1 or not IsValid(hit.attacker) then return end
+    if not hit or CurTime() - hit.time > 30 or not IsValid(hit.attacker) then return end
 
     hg.achievements.AddPlayerAchievement(hit.attacker, "samfisher", 1)
 end)

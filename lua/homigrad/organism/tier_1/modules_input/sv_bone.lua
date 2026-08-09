@@ -703,8 +703,8 @@ input_list.chest = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
 	
 	hg.AddHarmToAttacker(dmgInfo, (org.chest - oldDmg) * 3, "Ribs bone damage harm")
 
-	org.painadd = org.painadd + dmg * 1
-	org.shock = org.shock + dmg * 1
+	org.painadd = org.painadd + dmg * 1.5
+	org.shock = org.shock + dmg * 1.5
 
 	if org.isPly and (not org.brokenribs or (org.brokenribs ~= math.Round(org.chest * 3))) then
 		org.brokenribs = math.Round(org.chest * 3)
