@@ -679,6 +679,7 @@ hook.Add("PreHomigradDamage","BurnScream", function( ent, dmgInfo )
 end)
 
 hook.Add("Org Think", "WhatsSoFunny",function(owner, org, timeValue)
+	if zb and zb.modes and zb.modes.juggernaut and zb.modes.juggernaut:IsJuggernaut(owner) then return end
 	if (owner.lastBerserkLaughSoundCD or 0) < CurTime() and !org.otrub and owner:IsBerserk() and mRandom(1, 50) == 1 then
 		local phrase = (ThatPlyIsFemale(owner) and table.Random(f_laugh)) or table.Random(laugh)
 

@@ -1,18 +1,23 @@
 local function IncluderFunc(fileName)
-	if (fileName:find("sv_")) then
-		include(fileName)
-	elseif (fileName:find("shared.lua") or fileName:find("sh_")) then
-		if (SERVER) then
-			AddCSLuaFile(fileName)
-		end
-
-		include(fileName)
-	elseif (fileName:find("cl_")) then
-		if (SERVER) then
-			AddCSLuaFile(fileName)
-		else
+	local ok, err = pcall(function()
+		if (fileName:find("sv_")) then
 			include(fileName)
+		elseif (fileName:find("shared.lua") or fileName:find("sh_")) then
+			if (SERVER) then
+				AddCSLuaFile(fileName)
+			end
+
+			include(fileName)
+		elseif (fileName:find("cl_")) then
+			if (SERVER) then
+				AddCSLuaFile(fileName)
+			else
+				include(fileName)
+			end
 		end
+	end)
+	if not ok then
+		MsgC(Color(255, 60, 60), "[MODELOAD-ERROR] " .. fileName .. " :: " .. tostring(err) .. "\n")
 	end
 end
 

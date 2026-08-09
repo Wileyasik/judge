@@ -807,13 +807,22 @@ function GM:ScoreboardShow()
 			surface.DrawOutlinedRect(0, 0, w, h, 1)
 
 			local xp = ply.exp or 0
-			local _, medal = zb.Experience.GetAwards(ply)
+			local band, medal = zb.Experience.GetAwards(ply)
 			draw.SimpleText(ply:Name(), "ZCity_SB_Row", nameX, h / 2, spectator and SB.textDim or SB.text, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-			draw.SimpleText("XP  " .. xp, "ZCity_SB_Tiny", w - SB_Unit(155), h / 2, SB.textDim, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+			draw.SimpleText("XP  " .. xp, "ZCity_SB_Tiny", w - SB_Unit(160), h / 2, SB.textDim, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
 			if medal and medal.icon then
+				local iconSize = SB_Unit(24)
+				local iconX = w - SB_Unit(154)
+				local iconY = h / 2 - iconSize / 2
+				surface.SetDrawColor(0, 0, 0, 155)
+				surface.DrawRect(iconX + SB_Unit(5), iconY + SB_Unit(5), iconSize, iconSize)
+				if band and band.icon then
+					surface.SetMaterial(band.icon)
+					surface.SetDrawColor(255, 255, 255, 255)
+					surface.DrawTexturedRect(iconX, iconY, iconSize, iconSize)
+				end
 				surface.SetMaterial(medal.icon)
-				surface.SetDrawColor(255, 255, 255, 220)
-				surface.DrawTexturedRect(w - SB_Unit(145), h / 2 - SB_Unit(7), SB_Unit(14), SB_Unit(14))
+				surface.DrawTexturedRect(iconX, iconY, iconSize, iconSize)
 			end
 			draw.SimpleText("PING  " .. ply:Ping(), "ZCity_SB_Tiny", w - SB_Unit(58), h / 2, SB.textDim, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
 		end

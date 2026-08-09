@@ -110,7 +110,7 @@ zb.Experience.Bands = {
 }
 
 for i, b in ipairs(zb.Experience.Bands) do
-    if b.name == "" then b.name = tostring(i) end
+	if b.name == "" then b.name = tostring(i) end
 end
 
 local SHTable = zb.Experience

@@ -442,7 +442,7 @@ if SERVER then
 		hg._origFakeGodWrapped = true
 		local origFake = hg.Fake
 		function hg.Fake(ply, huyragdoll, no_freemove, force)
-			if IsValid(ply) and ply:IsPlayer() and ply.organism and ply.organism.godmode and not ply._godFakeBypass then
+			if IsValid(ply) and ply:IsPlayer() and ply.organism and (ply.organism.godmode or (ply.IsJuggernaut and zb and zb.modes and zb.modes.juggernaut and zb.modes.juggernaut:IsJuggernaut(ply))) and not ply._godFakeBypass then
 				return
 			end
 			return origFake(ply, huyragdoll, no_freemove, force)
@@ -464,7 +464,7 @@ if SERVER then
 		hg._origStunGodWrapped = true
 		local origStun = hg.StunPlayer
 		function hg.StunPlayer(ply, time)
-			if IsValid(ply) and ply:IsPlayer() and ply.organism and ply.organism.godmode then return end
+			if IsValid(ply) and ply:IsPlayer() and ply.organism and (ply.organism.godmode or (ply.IsJuggernaut and zb and zb.modes and zb.modes.juggernaut and zb.modes.juggernaut:IsJuggernaut(ply))) then return end
 			return origStun(ply, time)
 		end
 	end
@@ -484,7 +484,7 @@ if SERVER then
 		hg._origLightStunGodWrapped = true
 		local origLightStun = hg.LightStunPlayer
 		function hg.LightStunPlayer(ply, time)
-			if IsValid(ply) and ply:IsPlayer() and ply.organism and ply.organism.godmode then return end
+			if IsValid(ply) and ply:IsPlayer() and ply.organism and (ply.organism.godmode or (ply.IsJuggernaut and zb and zb.modes and zb.modes.juggernaut and zb.modes.juggernaut:IsJuggernaut(ply))) then return end
 			return origLightStun(ply, time)
 		end
 	end

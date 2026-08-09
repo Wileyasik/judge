@@ -259,7 +259,7 @@ local function send_organism(org, ply)
 	sendtable.eyeR = org.eyeR
 	sendtable.consciousness = org.consciousness
 	sendtable.assimilated = org.assimilated
-	sendtable.berserk = org.berserk
+	sendtable.berserk = org.silentBerserk and 0 or org.berserk
 	sendtable.noradrenaline = org.noradrenaline
 	sendtable.panicattackadd = org.panicattackadd
 	sendtable.panicattack = org.panicattack
@@ -273,7 +273,7 @@ local function send_organism(org, ply)
 	sendtable.critical = org.critical
 	sendtable.incapacitated = org.incapacitated
 	sendtable.deathStateEnd = org.deathStateEnd or 0
-	sendtable.berserkActive2 = org.berserkActive2
+	sendtable.berserkActive2 = org.silentBerserk and false or org.berserkActive2
 	sendtable.noradrenalineActive = org.noradrenalineActive
 	sendtable.superfighter = org.superfighter
 	sendtable.concussion = org.concussion
@@ -343,7 +343,7 @@ local function send_bareinfo(org)
 	sendtable.rlegupamputated = org.rlegupamputated
 	sendtable.headamputated = org.headamputated
 	sendtable.LodgedEntities = org.LodgedEntities
-	sendtable.berserkActive2 = org.berserkActive2
+	sendtable.berserkActive2 = org.silentBerserk and false or org.berserkActive2
 	sendtable.CantCheckPulse = org.CantCheckPulse
 	sendtable.noradrenalineActive = org.noradrenalineActive
 	sendtable.panicattackadd = org.panicattackadd
@@ -754,15 +754,20 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	else
 		org.uncon_timer = 0
 	end
-	local just_went_uncon = not org.otrub and org.needotrub
+	local just_went_uncon = not org.otrub and org.needotrub and not org.NoKnockdown
 	local just_woke_up = not org.needotrub and org.otrub
 	if isPly and just_went_uncon then hook.Run("HG_OnOtrub", owner); hook.Run("PlayerDropWeapon", owner) end
 	if isPly and just_woke_up then hook.Run("HG_OnWakeOtrub", owner) end
-	org.canmove = (org.spine2 < hg.organism.fake_spine2 and org.spine3 < hg.organism.fake_spine3) and not org.otrub
-	org.canmovehead = (org.spine3 < hg.organism.fake_spine3) and not org.otrub
-	if not (org.canmove and org.canmovehead and (org.stun - CurTime()) < 0) then org.needfake = true end
-	if (org.blood < 2700) then org.needfake = true end
-	if org.neckslit and not org.otrub then org.needfake = true end
+	if org.NoKnockdown then
+		org.canmove = true
+		org.canmovehead = true
+	else
+		org.canmove = (org.spine2 < hg.organism.fake_spine2 and org.spine3 < hg.organism.fake_spine3) and not org.otrub
+		org.canmovehead = (org.spine3 < hg.organism.fake_spine3) and not org.otrub
+		if not (org.canmove and org.canmovehead and (org.stun - CurTime()) < 0) then org.needfake = true end
+		if (org.blood < 2700) then org.needfake = true end
+		if org.neckslit and not org.otrub then org.needfake = true end
+	end
 	local just_went_uncon = not org.otrub and org.needotrub
 	if org.brain < 0.4 then
 		local naturalHeal = org.thiamine > 0 and timeValue / 480 or timeValue / 1800
@@ -820,8 +825,15 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 			org.needfake = true
 		end
 	end
-	org.otrub = org.needotrub
-	org.fake = org.needfake
+	if org.NoKnockdown then
+		org.otrub = false
+		org.needotrub = false
+		org.fake = false
+		org.needfake = false
+	else
+		org.otrub = org.needotrub
+		org.fake = org.needfake
+	end
 	if org.needfake and owner:IsNPC() then
 		local dmgInfo = DamageInfo()
 		dmgInfo:SetDamage(10000)
@@ -877,6 +889,7 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 end)
 hook.Add("Org Think", "regenerationberserk", function(owner, org, timeValue)
 	if not owner:IsPlayer() or not owner:Alive() then return end
+	if zb and zb.modes and zb.modes.juggernaut and zb.modes.juggernaut:IsJuggernaut(owner) then return end
 	if !owner:IsBerserk() then return end
 	org.blood = math.Approach(org.blood, 5000, timeValue * 60)
 	for i, wound in pairs(org.wounds) do

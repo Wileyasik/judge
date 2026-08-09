@@ -366,6 +366,7 @@ RoleConfigs.hero.items["weapon_walkie_talkie"] = {cost = 1, name = "Walkie-Talki
 do
     local heroWeaponIds = {
         "weapon_px4beretta",
+        "weapon_chiappa_rhino",
         "weapon_glock17",
         "weapon_usp",
         "weapon_m590a1",
