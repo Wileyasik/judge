@@ -5,6 +5,7 @@ SWEP.PrintName = "AK-100"
 SWEP.Author = "Izhmash"
 SWEP.Instructions = "Assault rifle chambered in 5.56x45 mm"
 SWEP.Category = "Weapons - Assault Rifles"
+SWEP.WeaponRecoilMul = 0.7
 SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
 SWEP.holsteredPos = Vector(4, 6, -6)
 SWEP.holsteredAng = Angle(220, 0, 180)
@@ -119,7 +120,7 @@ SWEP.Primary.ClipSize = 30
 SWEP.Primary.DefaultClip = 30
 SWEP.Primary.Automatic = true
 SWEP.Primary.Ammo = "5.56x45 mm"
-SWEP.Primary.Damage = 33
+SWEP.Primary.Damage = 37
 SWEP.Primary.Force = 28
 SWEP.Primary.Wait = 0.1
 

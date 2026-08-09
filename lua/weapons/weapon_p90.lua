@@ -133,7 +133,7 @@ SWEP.CustomShell = "57x28"
 
 SWEP.ScrappersSlot = "Primary"
 SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 32
+SWEP.Primary.Damage = 34
 SWEP.Primary.Spread = 0
 SWEP.Primary.Force = 25
 SWEP.Primary.Sound = {"weapons/darsu_eft/p90/fire/p90_indoor1.wav", 75, 120, 130}
@@ -167,7 +167,7 @@ SWEP.availableAttachments = {
 
 SWEP.RHandPos = Vector(-12, -1, 4)
 SWEP.LHandPos = Vector(7, -2, -2)
-SWEP.Penetration = 10
+SWEP.Penetration = 12
 SWEP.Spray = {}
 for i = 1, 50 do
 	SWEP.Spray[i] = Angle(-0.01 - math.cos(i) * 0.01, math.cos(i * 8) * 0.02, 0) * 1

@@ -418,10 +418,17 @@ function SWEP:SecondaryAttack()
 			end
 
 			ent2.lovushka = self
+			ent2.TrapSpawnTime = CurTime()
 			ent2:SetNoDraw(true)
-			ent2:AddCallback("PhysicsCollide",function()
-				if IsValid(ent2.lovushka) then
-					ent2.lovushka:Arm(CurTime() - ent2.lovushka.timeToBoom + 1,Vector(0,0,0))
+			ent2:AddCallback("PhysicsCollide",function(data)
+				local other = data and data.Entity
+				local lovushka = ent2.lovushka
+				if IsValid(lovushka) and other and IsValid(other) and not other:IsWorld() then
+					local ref = lovushka.trapSetTime or ent2.TrapSpawnTime
+					local settling = ref and ( CurTime() - ref ) < ( lovushka.TrapSettleTime or 1.5 )
+					if not settling then
+						lovushka:Arm(CurTime() - lovushka.timeToBoom + 1,Vector(0,0,0))
+					end
 				end
 				timer.Simple(0,function()
 					--ent2:Remove()

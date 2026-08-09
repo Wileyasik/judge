@@ -333,19 +333,23 @@ SWEP.ReloadAnimWepAng = {
 	Angle(0,0,0)
 }
 
+SWEP.ReloadViewPunchTravel = 0
+SWEP.PistolInspectViewPunchMul = 0
+SWEP.InspectViewPunchMul = 0
+
 -- Inspect Assault
 
 SWEP.InspectAnimWepAng = {
 	Angle(0,0,0),
-	Angle(4,4,15),
-	Angle(10,15,25),
-	Angle(10,15,25),
-	Angle(10,15,25),
-	Angle(-6,-15,-15),
-	Angle(1,15,-45),
-	Angle(15,25,-55),
-	Angle(15,25,-55),
-	Angle(15,25,-55),
+	Angle(2,2,6),
+	Angle(4,6,12),
+	Angle(5,8,14),
+	Angle(5,8,14),
+	Angle(2,0,6),
+	Angle(0,6,-10),
+	Angle(3,10,-16),
+	Angle(3,10,-16),
+	Angle(2,6,-8),
 	Angle(0,0,0),
 	Angle(0,0,0)
 }

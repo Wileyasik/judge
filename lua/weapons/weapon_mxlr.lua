@@ -78,7 +78,7 @@ SWEP.availableAttachments = {
 }
 
 SWEP.Primary.Wait = 0.25
-SWEP.Primary.Damage = 16
+SWEP.Primary.Damage = 20
 SWEP.Primary.Force = 12
 SWEP.NumBullet = 2
 SWEP.AnimShootMul = 1
@@ -90,7 +90,7 @@ SWEP.ZoomPos = Vector(0, -0.6667, 5.0008)
 SWEP.RHandPos = Vector(0, 0, -1)
 SWEP.LHandPos = Vector(7, 0, -2)
 SWEP.Ergonomics = 1.2
-SWEP.Penetration = 7
+SWEP.Penetration = 11
 SWEP.WorldPos = Vector(0.2, -0.5, 1.2)
 SWEP.WorldAng = Angle(0.7, -0.1, 0)
 SWEP.attPos = Vector(0.4, -0.15, 0)

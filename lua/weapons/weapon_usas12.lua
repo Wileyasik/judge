@@ -135,7 +135,7 @@ SWEP.CustomShell = "12x70"
 
 SWEP.ScrappersSlot = "Primary"
 SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 35
+SWEP.Primary.Damage = 40
 SWEP.Primary.Spread = Vector(0.01, 0.01, 0.01)
 SWEP.NumBullet = 8
 SWEP.Primary.Force = 35
@@ -155,7 +155,7 @@ SWEP.HoldType = "rpg"
 
 SWEP.RHandPos = Vector(-12, -1, 4)
 SWEP.LHandPos = Vector(7, -2, -2)
-SWEP.Penetration = 11
+SWEP.Penetration = 16
 SWEP.Spray = {}
 for i = 1, 30 do
 	SWEP.Spray[i] = Angle(-0.01 - math.cos(i) * 0.02, math.cos(i * i) * 0.02, 0) * 0.5

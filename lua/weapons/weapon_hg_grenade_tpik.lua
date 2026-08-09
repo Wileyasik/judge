@@ -574,7 +574,7 @@ function SWEP:OwnerChanged()
 end
 
 --// Booby trap stuff
-SWEP.lpos = Vector(2,0,0)
+SWEP.lpos = Vector(6,0,0)
 SWEP.lang = Angle(0,0,0)
 
 function SWEP:ResetTrap()
@@ -611,6 +611,7 @@ function SWEP:PlaceTrap()
 		local tr = hg.eyeTrace(ply)
 		local ent = ents.Create(self.ENT)
 		local pos,ang = LocalToWorld(self.lpos, self.lang, tr.HitPos, tr.HitNormal:Angle())
+		ang:RotateAroundAxis(ang:Right(), -90)
 		ent:SetPos(pos)
 		ent:SetAngles(ang)
 		ent:Spawn()
@@ -618,33 +619,74 @@ function SWEP:PlaceTrap()
 		ent.owner2 = self.lastOwner
 		ent:SetOwner(self.lastOwner)
 		
-		ent.cons2 = constraint.Weld(ent,tr.Entity,0,tr.PhysicsBone or 0, 200, true, false)
+		local peg = nil
+		if util.IsValidModel("models/weapons/eftnades/darsu_eft/mining_kit_peg1.mdl") then
+			peg = ents.Create("prop_physics")
+			if IsValid(peg) then
+				peg:SetModel("models/weapons/eftnades/darsu_eft/mining_kit_peg1.mdl")
+				peg:SetPos(tr.HitPos + tr.HitNormal * 1)
+				local pegAng = tr.HitNormal:Angle()
+				pegAng:RotateAroundAxis(pegAng:Right(), -90)
+				peg:SetAngles(pegAng)
+				peg:Spawn()
+				peg:SetMoveType(MOVETYPE_NONE)
+				peg:SetSolid(SOLID_VPHYSICS)
+				constraint.Weld(peg, tr.Entity, 0, tr.PhysicsBone or 0, 0, true, false)
+				ent.cons2 = constraint.Weld(ent, peg, 0, 0, 0, true, false)
+				ent.peg = peg
+			end
+		end
+		if not peg then
+			ent.cons2 = constraint.Weld(ent,tr.Entity,0,tr.PhysicsBone or 0, 200, true, false)
+		end
 		
 		self.Trap = ent
 		
 		self:SetNWBool("PlacedTrap", true)
 	elseif IsValid(self.Trap) then
-		local tr = hg.eyeTrace(ply)
+		local tr = hg.eyeTrace(ply, nil, nil, nil, nil, { self.Trap, self.Trap.peg })
 
 		local tr2 = {}
 		tr2.start = self.Trap:GetPos()
 		tr2.endpos = tr.HitPos
-		tr2.filter = self.Trap
+		tr2.filter = { self.Trap, self.Trap.peg }
 		local trace = util.TraceLine(tr2)
 
 		if trace.Hit then return end
 		
 		local len = tr.HitPos:Distance(self.Trap:GetPos())
 		if len < 200 and len > 10 then
-			self.Trap.ent = tr.Entity
-			self.Trap.lpos = tr.Entity:WorldToLocal(tr.HitPos)
-			self.Trap.origlen = tr.HitPos:Distance(self.Trap:GetPos())
+			local peg2 = nil
+			if util.IsValidModel("models/weapons/eftnades/darsu_eft/mining_kit_peg2.mdl") then
+				peg2 = ents.Create("prop_physics")
+				if IsValid(peg2) then
+					peg2:SetModel("models/weapons/eftnades/darsu_eft/mining_kit_peg2.mdl")
+					peg2:SetPos(tr.HitPos + tr.HitNormal * 1)
+					local peg2Ang = tr.HitNormal:Angle()
+					peg2Ang:RotateAroundAxis(peg2Ang:Right(), -90)
+					peg2:SetAngles(peg2Ang)
+					peg2:Spawn()
+					peg2:SetMoveType(MOVETYPE_NONE)
+					peg2:SetSolid(SOLID_VPHYSICS)
+					constraint.Weld(peg2, tr.Entity, 0, tr.PhysicsBone or 0, 0, true, false)
+					self.Trap.peg2 = peg2
+				end
+			end
+
+			local ropeEnd = tr.HitPos + tr.HitNormal * (self.lpos and self.lpos.x or 6)
+			local ropeEnt = peg2 or tr.Entity
+			local ropePos = peg2 and peg2:WorldToLocal(ropeEnd) or tr.Entity:WorldToLocal(ropeEnd)
+			local ropeBone = peg2 and 0 or (tr.PhysicsBone or 0)
+
+			self.Trap.ent = ropeEnt
+			self.Trap.lpos = ropePos
+			self.Trap.origlen = ropeEnd:Distance(self.Trap:GetPos())
 			local cons = constraint.CreateKeyframeRope(
-				tr.HitPos, 0.05, "cable/cable2", nil,
-				self.Trap.ent, self.Trap.lpos, tr.PhysicsBone, self.Trap,
+				ropeEnd, 0.05, "cable/cable2", nil,
+				ropeEnt, ropePos, ropeBone, self.Trap,
 				vector_origin, 0,
 				{
-					["Slack"] = 50,
+					["Slack"] = 0,
 					["Collide with world"] = false,
 				}
 			)
@@ -676,10 +718,17 @@ function SWEP:PlaceTrap()
 			end
 
 			ent2.Trap = self.Trap
+			ent2.TrapSpawnTime = CurTime()
 			ent2:SetNoDraw(true)
-			ent2:AddCallback("PhysicsCollide",function()
-				if IsValid(ent2.Trap) and ent2.Trap.Arm then
-					ent2.Trap:Arm(CurTime() - ent2.Trap.timeToBoom + 1, vector_origin)
+			ent2:AddCallback("PhysicsCollide",function(data)
+				local other = data and data.Entity
+				local trap = ent2.Trap
+				if IsValid(trap) and trap.Arm and other and IsValid(other) and not other:IsWorld() and other ~= trap and other ~= trap.ent and other ~= trap.ent2 and other ~= trap.peg then
+					local ref = trap.trapSetTime or ent2.TrapSpawnTime
+					local settling = ref and ( CurTime() - ref ) < ( trap.TrapSettleTime or 1.5 )
+					if not settling then
+						trap:Arm(CurTime() - trap.timeToBoom + 1, vector_origin)
+					end
 				end
 			end)
 

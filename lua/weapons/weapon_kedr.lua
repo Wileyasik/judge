@@ -150,7 +150,7 @@ SWEP.Primary.DefaultClip = 20
 SWEP.Primary.Automatic = true
 SWEP.Primary.Ammo = "9x18 mm"
 SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 21
+SWEP.Primary.Damage = 23
 SWEP.Primary.Spread = 0
 SWEP.Primary.Force = 18
 SWEP.animposmul = 2
@@ -179,7 +179,7 @@ SWEP.ScrappersSlot = "Primary"
 
 SWEP.RHandPos = Vector(0, -1, 0)
 SWEP.LHandPos = Vector(5, -1, 0)
-SWEP.Penetration = 4
+SWEP.Penetration = 6
 SWEP.Spray = {}
 for i = 1, 30 do
 	SWEP.Spray[i] = Angle(-0.0, 0, 0) * 1

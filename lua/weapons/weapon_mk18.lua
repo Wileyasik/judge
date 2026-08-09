@@ -169,7 +169,7 @@ SWEP.Primary.DefaultClip = 10
 SWEP.Primary.Automatic = false
 SWEP.Primary.Ammo = ".338 Lapua Magnum"
 SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 120
+SWEP.Primary.Damage = 124
 SWEP.Primary.Spread = 0
 SWEP.Primary.Force = 28
 SWEP.Primary.Sound = {"weapons/darsu_eft/mk18/mk18_fire_indoor_close.wav", 85, 90, 100}
@@ -221,7 +221,7 @@ SWEP.availableAttachments = {
 
 SWEP.RHandPos = Vector(0, -1, 0)
 SWEP.LHandPos = Vector(7, -2, -2)
-SWEP.Penetration = 15
+SWEP.Penetration = 19
 SWEP.Spray = {}
 for i = 1, 20 do
 	SWEP.Spray[i] = Angle(-0.04 - math.cos(i) * 0.03, math.cos(i * i) * 0.05, 0) * 2

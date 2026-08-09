@@ -147,7 +147,7 @@ SWEP.CustomShell = "545x39"
 
 SWEP.ScrappersSlot = "Primary"
 SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 35
+SWEP.Primary.Damage = 38
 SWEP.Primary.Spread = 0
 SWEP.Primary.Force = 35
 SWEP.Primary.Sound = {"weapons/newsndw/rpk2_fp.wav", 75, 120, 140}
@@ -177,7 +177,7 @@ SWEP.HoldType = "rpg"
 
 SWEP.RHandPos = Vector(-12, -1, 4)
 SWEP.LHandPos = Vector(7, -2, -2)
-SWEP.Penetration = 11
+SWEP.Penetration = 14
 SWEP.Spray = {}
 for i = 1, 30 do
 	SWEP.Spray[i] = Angle(-0.01 - math.cos(i) * 0.02, math.cos(i * i) * 0.02, 0) * 0.5

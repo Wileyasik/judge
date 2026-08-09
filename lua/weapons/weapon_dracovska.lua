@@ -65,6 +65,7 @@ SWEP.Primary.Automatic = false
 SWEP.Primary.Ammo = "7.62x39 mm"
 SWEP.Primary.Cone = 0
 SWEP.Primary.Damage = 50
+SWEP.Penetration = 15
 SWEP.Primary.Sound = {"homigrad/weapons/rifle/fal.wav", 85, 90, 100}
 SWEP.SupressedSound = {"ak74/ak74_suppressed_fp.wav", 65, 90, 100}
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/ak47/handling/ak47_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}

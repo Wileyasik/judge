@@ -151,7 +151,7 @@ SWEP.Primary.DefaultClip = 10
 SWEP.Primary.Automatic = false
 SWEP.Primary.Ammo = "9x39 mm"
 SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 45
+SWEP.Primary.Damage = 49
 SWEP.Primary.Spread = 0
 SWEP.Primary.Force = 42
 SWEP.animposmul = 2
@@ -198,7 +198,7 @@ SWEP.availableAttachments = {
 
 SWEP.RHandPos = Vector(4, -5.5, 3.5)
 SWEP.LHandPos = Vector(12, 0.2, -3.5)
-SWEP.Penetration = 15
+SWEP.Penetration = 19
 SWEP.Spray = {}
 for i = 1, 20 do
 	SWEP.Spray[i] = Angle(-0.02 - math.cos(i) * 0.01, math.cos(i * i) * 0.03, 0) * 1

@@ -57,7 +57,7 @@ SWEP.Primary.ClipSize = 5
 SWEP.Primary.DefaultClip = 5
 SWEP.Primary.Automatic = false
 SWEP.Primary.Ammo = "12/70 gauge"
-SWEP.Primary.Damage = 14 * 8
+SWEP.Primary.Damage = 19 * 8
 SWEP.Primary.Force = 10
 SWEP.Primary.Cone = 0
 SWEP.Primary.Spread = 0.04
@@ -94,7 +94,7 @@ SWEP.InspectViewPunchMul = 0
 SWEP.ReloadViewPunchTravel = 4
 SWEP.ReloadViewPunchMaxStep = 0.08
 SWEP.ReloadViewPunchRollMul = 0.15
-SWEP.Penetration = 5
+SWEP.Penetration = 10
 
 SWEP.GunCamPos = Vector(6, -12, -5)
 SWEP.GunCamAng = Angle(190, -5, -95)

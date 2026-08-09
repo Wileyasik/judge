@@ -201,7 +201,7 @@ SWEP.Primary.DefaultClip = 20
 SWEP.Primary.Automatic = false
 SWEP.Primary.Ammo = "7.62x51 mm"
 SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 65
+SWEP.Primary.Damage = 69
 SWEP.Primary.Spread = 0
 SWEP.Primary.Force = 30
 SWEP.Primary.Sound = {"weapons/darsu_eft/sr25/sr25_fire_outdoor_close.wav", 85, 90, 100}
@@ -251,7 +251,7 @@ SWEP.availableAttachments = {
 
 SWEP.RHandPos = Vector(0, -1, 0)
 SWEP.LHandPos = Vector(7, -2, -2)
-SWEP.Penetration = 15
+SWEP.Penetration = 19
 SWEP.Spray = {}
 for i = 1, 20 do
 	SWEP.Spray[i] = Angle(-0.03 - math.cos(i) * 0.02, math.cos(i * i) * 0.04, 0) * 1.5

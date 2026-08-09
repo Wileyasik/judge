@@ -5,6 +5,7 @@ SWEP.PrintName = "Famas"
 SWEP.Author = "Paul Tellie"
 SWEP.Instructions = "The FAMAS is the iconic French bullpup assault rifle, instantly recognizable by its distinctive 'bugle' shape and high rate of fire. Chambered in 5.56×45mm, it served as the standard infantry rifle of the French military for decades, known for its unique lever-delayed blowback action."
 SWEP.Category = "Weapons - Assault Rifles"
+SWEP.WeaponRecoilMul = 0.7
 SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
 SWEP.holsteredPos = Vector(4, 6, -6)
 SWEP.holsteredAng = Angle(220, 0, 180)
@@ -111,7 +112,7 @@ SWEP.Primary.DefaultClip = 32
 SWEP.Primary.Automatic = true
 SWEP.Primary.Ammo = "5.56x45 mm"
 SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 30
+SWEP.Primary.Damage = 34
 SWEP.Primary.Spread = 0
 SWEP.Primary.Force = 30
 SWEP.animposmul = 2
@@ -155,7 +156,7 @@ for i = 1, 40 do
 end
 
 SWEP.Ergonomics = 1.1
-SWEP.Penetration = 9
+SWEP.Penetration = 13
 SWEP.WorldPos = Vector(-2, 0, -2.5)
 SWEP.WorldAng = Angle(0, 0, 0)
 SWEP.UseCustomWorldModel = true

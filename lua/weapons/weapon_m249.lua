@@ -13,7 +13,7 @@ SWEP.Primary.DefaultClip = 150
 SWEP.Primary.Automatic = true
 SWEP.Primary.Ammo = "5.56x45 mm"
 SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 44
+SWEP.Primary.Damage = 47
 SWEP.Primary.Spread = 0
 SWEP.Primary.Force = 44
 SWEP.Primary.Sound = {"weapons/zwei/m249/fire/m249_outdoor_close1.wav", 75, 90, 100}
@@ -180,7 +180,7 @@ SWEP.WeaponEyeAngles = Angle(0, 0, 0)
 
 SWEP.Ergonomics = 0.5
 SWEP.OpenBolt = true
-SWEP.Penetration = 15
+SWEP.Penetration = 18
 SWEP.WorldPos = Vector(4, -0.5, 1)
 SWEP.WorldAng = Angle(0, 0, 0)
 SWEP.UseCustomWorldModel = true

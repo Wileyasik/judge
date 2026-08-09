@@ -13,7 +13,7 @@ SWEP.Primary.DefaultClip = 100
 SWEP.Primary.Automatic = true
 SWEP.Primary.Ammo = "7.62x39 mm"
 SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 70
+SWEP.Primary.Damage = 73
 SWEP.Primary.Spread = 0
 SWEP.Primary.Force = 70
 SWEP.Primary.Sound = {"weapons/darsu_eft/rpd/fire/rpd_indoor_distant_loop1.wav", 75, 100, 110}
@@ -213,7 +213,7 @@ SWEP.WeaponEyeAngles = Angle(0, 0, 0)
 
 SWEP.Ergonomics = 0.5
 SWEP.OpenBolt = true
-SWEP.Penetration = 20
+SWEP.Penetration = 23
 SWEP.WorldPos = Vector(-1, -0.5, 0)
 SWEP.WorldAng = Angle(0, 0, 0)
 SWEP.UseCustomWorldModel = true

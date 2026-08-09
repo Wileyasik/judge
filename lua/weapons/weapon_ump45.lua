@@ -150,7 +150,7 @@ SWEP.Primary.DefaultClip = 25
 SWEP.Primary.Automatic = true
 SWEP.Primary.Ammo = ".45 ACP"
 SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 28
+SWEP.Primary.Damage = 30
 SWEP.Primary.Spread = 0
 SWEP.Primary.Force = 25
 SWEP.Primary.Sound = {"weapons/darsu_eft/ump/fire_new/ump_outdoor_close1.wav", 85, 120, 130}
@@ -198,7 +198,7 @@ SWEP.availableAttachments = {
 
 SWEP.RHandPos = Vector(1, -1, 0)
 SWEP.LHandPos = false
-SWEP.Penetration = 6
+SWEP.Penetration = 8
 SWEP.Spray = {}
 for i = 1, 30 do
 	SWEP.Spray[i] = Angle(-0.0, 0, 0) * 1
