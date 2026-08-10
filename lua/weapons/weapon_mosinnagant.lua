@@ -414,7 +414,7 @@ local vector_full = Vector(1, 1, 1)
 
 local function reloadFunc(self)
     if not SERVER then return end
-    if SERVER then self:SetNetVar("shootgunReload", CurTime() + 0.8) end
+    if SERVER then self:SetNetVar("shootgunReload", CurTime() + 1.2) end
     if self.MagIndex then
         self:GetWM():ManipulateBoneScale(self.MagIndex, vector_full)
     end
@@ -459,7 +459,7 @@ function SWEP:Reload(time)
     if not self:CanReload() then return end
 
     if SERVER then
-        self:SetNetVar("shootgunReload", CurTime() + 0.8)
+        self:SetNetVar("shootgunReload", CurTime() + 1.2)
         self:PlayAnim(self.AnimList["start"] or "sgreload_start", 1, false, function()
             reloadFunc(self)
         end, false, true)

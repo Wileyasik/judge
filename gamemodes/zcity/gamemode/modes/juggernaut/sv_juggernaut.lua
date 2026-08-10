@@ -2,7 +2,7 @@ local MODE = MODE
 
 MODE.name = "juggernaut"
 MODE.PrintName = "Juggernaut"
-MODE.start_time = 1
+MODE.start_time = 9
 MODE.end_time = 7
 MODE.grace_time = 0
 MODE.ROUND_TIME = 420
@@ -19,6 +19,7 @@ MODE.StaminaMul = 3.5
 MODE.BerserkStrength = 2 / 1.5
 
 util.AddNetworkString("juggernaut_state")
+util.AddNetworkString("juggernaut_variant")
 
 local damageReduction = CreateConVar("zb_jugg_damage_reduction", "0.5", FCVAR_LUA_SERVER, "Juggernaut damage taken multiplier (1 = normal)")
 local bleedMul = CreateConVar("zb_jugg_bleed_mul", "0.35", FCVAR_LUA_SERVER, "Juggernaut bleeding multiplier (lower = less blood loss)")
@@ -288,6 +289,10 @@ function MODE:Intermission()
 
 	self.variant = self:PickVariant()
 
+	net.Start("juggernaut_variant")
+		net.WriteInt(self.variant or 1, 8)
+	net.Broadcast()
+
 	for _, ply in player.Iterator() do
 		if ply:Team() == TEAM_SPECTATOR then continue end
 		ply.IsJuggernaut = nil
@@ -296,6 +301,7 @@ function MODE:Intermission()
 		ClearJuggBuffs(ply)
 		ApplyAppearance(ply)
 		ply:SetupTeam(0)
+		if ply:Alive() then ply:Freeze(true) end
 	end
 end
 

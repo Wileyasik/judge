@@ -1989,6 +1989,24 @@ function MODE.SpawnPlayers(spawn_with_subroles)
 				GiveTraitorAssistantStarterItem(current_ply)
 			end
 
+			if current_ply.isTraitor then
+				local giveActivator = current_ply.MainTraitor
+				if not giveActivator then
+					local chanceConvar = GetConVar("ttt_activator_assistant_chance")
+					local chance = chanceConvar and chanceConvar:GetFloat() or 0
+					giveActivator = chance > 0 and math.random() <= chance
+				end
+				if giveActivator then
+					local activator = current_ply:Give("weapon_ttt_activator")
+					if IsValid(activator) then
+						local startConvar = GetConVar("ttt_activator_start_points")
+						current_ply:SetNWInt("ttt_activator_points", startConvar and startConvar:GetInt() or 30)
+						local maxConvar = GetConVar("ttt_activator_max_points")
+						current_ply:SetNWInt("ttt_activator_max_points", maxConvar and maxConvar:GetInt() or 30)
+					end
+				end
+			end
+
             if current_ply.Profession then
                 local profession_info = MODE.Professions[current_ply.Profession]
                 if profession_info and profession_info.SpawnFunction then

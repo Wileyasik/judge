@@ -243,7 +243,7 @@ function SWEP:Reload(time)
         
         -- НЕ МЕНЯЕМ (как просил)
         local animSpeed = 5
-        local reloadTime = isEmpty and 4.0 or 3.2
+        local reloadTime = animSpeed + 0.1
         
         self:SetNetVar("shootgunReload", CurTime() + reloadTime)
         self.reloadCoolDown = CurTime() + reloadTime

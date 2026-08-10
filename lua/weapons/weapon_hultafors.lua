@@ -23,6 +23,10 @@ SWEP.CanSuicide = false
 SWEP.SuicideNoLH = false
 SWEP.SuicideHoldType = "slam"
 
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(-2, 4, -13)
+SWEP.holsteredAng = Angle(230, 0, 180)
+
 SWEP.Weight = 0
 SWEP.weight = 2.5
 

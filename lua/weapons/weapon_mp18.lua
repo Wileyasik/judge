@@ -193,7 +193,7 @@ function SWEP:Reload(time)
         local animSpeed = 4 -- Нормальная скорость
         
         -- Тайминги (примерно из ARC9, анимация долгая ~5с)
-        local reloadTime = 4.0
+        local reloadTime = animSpeed + 0.1
         
         self:SetNetVar("shootgunReload", CurTime() + reloadTime)
         self.reloadCoolDown = CurTime() + reloadTime

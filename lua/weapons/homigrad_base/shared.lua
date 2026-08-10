@@ -2667,6 +2667,7 @@ function SWEP:PlayAnim(anim, data, cycling, callback, reverse, sendtoclient)
 	local mdl = self:GetWM()
 	self.tries = 10
 	self.seq = self.AnimList[anim] or anim
+	if self.VM_TimerEvents then self:VM_RemoveAllEvents() end
 	mdl:SetSequence(self.seq)
     self.animtime = CurTime() + time - start
     self.animspeed = time
@@ -2689,7 +2690,7 @@ function SWEP:PlayAnim(anim, data, cycling, callback, reverse, sendtoclient)
 			if kn < 0 then v(self) continue end
 			timer.Create(TimerName, Time * kn, 1, function()
 				if not IsValid(self) then return end
-				if seq != self.seq then self:VM_RemoveAllEvents() end
+				if seq != self.seq then self:VM_RemoveAllEvents() return end
 				v(self, mdl)
 				self.VM_TimerEvents[TimerID] = nil
 			end)
