@@ -50,7 +50,7 @@ SWEP.ModularParts = {
 		model = "models/weapons/mods/stock_ar15_hk_slim_line.mdl",
 		bonemerge = false,
 		bone = "mod_stock",
-		pos = Vector(0, 2.25, -0.8),
+		pos = Vector(0, 3, -0.8),
 		ang = Angle(0, -90, 0)
 	},
 	charge = {

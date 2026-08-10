@@ -46,13 +46,6 @@ SWEP.ModularParts = {
 		pos = Vector(0, -6, -1),
 		ang = Angle(0, -90, 0)
 	},
-	stock1 = {
-		model = "models/weapons/mods/stock_ar15_hk_slim_line.mdl",
-		bonemerge = false,
-		bone = "weapon",
-		pos = Vector(0, -8.8, -0.1),
-		ang = Angle(0, -90, 0)
-	},
 }
 SWEP.HeldMagOffsetPos = Vector(0, 0, 0.2)
 SWEP.HeldMagOffsetAng = Angle(-5, -90, 0)
@@ -198,7 +191,7 @@ SWEP.IconOverride = "entities/arc9_eft_stm9.png"
 SWEP.weight = 2.7
 SWEP.ScrappersSlot = "Primary"
 
-SWEP.StartAtt = {"holo9", "stock_ar15_hk_slim_line"}
+SWEP.StartAtt = {"holo9"}
 SWEP.availableAttachments = {
 	barrel = {
 		[1] = {"supressor2", Vector(0, 0, 0), {}},
@@ -220,7 +213,6 @@ SWEP.availableAttachments = {
 		["mountAngle"] = Angle(0, -0.75,0),
 		["mountType"] = "picatinny_small"
 	},
-	stock = hg.GetAR15StockProfile("stock_ar15_hk_slim_line"),
 }
 
 SWEP.RHandPos = Vector(0, -1, 0)
@@ -255,8 +247,6 @@ end
 function SWEP:GetModularPartModel(partName, fallback, role)
 	if partName == "magazine" then
 		return self:GetActiveMagazineModel(fallback, role)
-	elseif partName == "stock1" then
-		return self:GetActiveStockModel(fallback)
 	end
 	return fallback
 end

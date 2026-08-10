@@ -68,6 +68,8 @@ end
 local function getArmorShotRange(equipment)
 	local placement = hg.GetArmorPlacement(equipment)
 	local range = armorBreakShotRanges[placement] or armorBreakShotRanges.default
+	local armorData = placement and hg.armor[placement] and hg.armor[placement][equipment]
+	if armorData and armorData.breakShotRange then return armorData.breakShotRange[1], armorData.breakShotRange[2] end
 
 	return range[1], range[2]
 end

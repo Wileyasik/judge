@@ -27,7 +27,7 @@ SWEP.ModularParts = {
 SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
 SWEP.HeldMagOffsetAng = Angle(0, 0, 0)
 
-SWEP.FakePos = Vector(-13, 1, 12)
+SWEP.FakePos = Vector(-13, 3, 12)
 SWEP.FakeAng = Angle(0, 0, -0.5)
 SWEP.AttachmentPos = Vector(0,0,-0)
 SWEP.AttachmentAng = Angle(0,0,0)
@@ -147,7 +147,7 @@ SWEP.StartAtt = {"holo7"}
 SWEP.availableAttachments = {
 	sight = {
 		["mountType"] = {"picatinny"},
-		["mount"] = {["picatinny"] = Vector(-22.5, 0.12, 2)},
+		["mount"] = {["picatinny"] = Vector(-22.5, 0.02, 2)},
 		["mountAngle"] = Angle(0,0,90) 
 	},
     barrel = {

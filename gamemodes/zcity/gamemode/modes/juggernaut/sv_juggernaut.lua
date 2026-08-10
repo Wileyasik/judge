@@ -13,7 +13,8 @@ MODE.LootSpawn = false
 
 MODE.VariantMinPlayers = 10
 MODE.HealthMul = 3.5
-MODE.Variant2HealthMul = 5
+MODE.Variant2HealthMul = 7.5
+MODE.Variant3HealthMul = 5
 MODE.StaminaMul = 3.5
 MODE.BerserkStrength = 2 / 1.5
 
@@ -123,7 +124,9 @@ end
 
 local function ApplyHealthBuff(ply)
 	if not ply.JuggBaseHealth then ply.JuggBaseHealth = math.max(1, ply:GetMaxHealth()) end
-	local mul = (MODE.variant == 2) and MODE.Variant2HealthMul or MODE.HealthMul
+	local mul = MODE.HealthMul
+	if MODE.variant == 2 then mul = MODE.Variant2HealthMul
+	elseif MODE.variant == 3 then mul = MODE.Variant3HealthMul end
 	local hp = math.ceil(ply.JuggBaseHealth * mul)
 	ply:SetMaxHealth(math.max(100, hp))
 	ply:SetHealth(ply:GetMaxHealth())
@@ -174,8 +177,13 @@ local function ApplyJuggernautBuffs(ply)
 	end
 
 	if MODE.variant == 2 then
+		org.armorMul = 6
+		org.painToleranceMul = 4
+		org.blood = 7500
+	elseif MODE.variant == 3 then
 		org.armorMul = 3
 		org.painToleranceMul = 2
+		org.blood = 6000
 	else
 		org.armorMul = nil
 		org.painToleranceMul = nil
@@ -203,13 +211,22 @@ function MODE:GiveJuggLoadout(ply, loadout)
 		hg.AddArmor(ply, "vest30")
 		hg.AddArmor(ply, "helmet31")
 		GiveWeapon(ply, "weapon_hg_eft_zarya")
-		GiveWeapon(ply, "weapon_saiga12", 2)
+		local saiga = GiveWeapon(ply, "weapon_saiga12", 2)
+		if IsValid(saiga) and hg.AddAttachmentForce then
+			hg.AddAttachmentForce(ply, saiga, "supressor13")
+			hg.AddAttachmentForce(ply, saiga, "holo19")
+		end
 		GiveWeapon(ply, "weapon_morphine")
 	elseif loadout == "killa" then
 		hg.AddArmor(ply, "vest_killa")
 		hg.AddArmor(ply, "helmet_killa")
 		hg.AddArmor(ply, "visor_killa")
-		GiveWeapon(ply, "weapon_rpk16", 2)
+		local rpk = GiveWeapon(ply, "weapon_rpk16", 2)
+		if IsValid(rpk) and hg.AddAttachmentForce then
+			hg.AddAttachmentForce(ply, rpk, "holo14")
+			hg.AddAttachmentForce(ply, rpk, "grip1")
+			hg.AddAttachmentForce(ply, rpk, "muzzle_545_recoil_1")
+		end
 		GiveWeapon(ply, "weapon_hg_smokenade")
 		GiveWeapon(ply, "weapon_morphine")
 	elseif loadout == "scream" then
@@ -249,10 +266,8 @@ function MODE:GiveGruntLoadout(ply, grunt)
 		ply:SelectWeapon(melee)
 	elseif grunt == "usec" then
 		hg.AddArmor(ply, "vest7")
-		GiveWeapon(ply, "weapon_6x5")
-		local smg = self.GruntUsecSMGs[math.random(#self.GruntUsecSMGs)]
-		GiveWeapon(ply, smg, 2)
-		ply:SelectWeapon(smg)
+		local smg = GiveWeapon(ply, "weapon_mp5k", 2)
+		if IsValid(smg) then ply:SelectWeapon("weapon_mp5k") end
 	end
 end
 
@@ -487,7 +502,7 @@ local function JuggernautThink(owner, org, timeValue)
 	if IsFury(owner) then org.berserk = MODE.BerserkStrength end
 	ApplyStaminaBuff(org)
 
-	org.blood = math.Approach(org.blood, 5000, timeValue * 40)
+	org.blood = math.Approach(org.blood, (MODE.variant == 2 and 7500 or MODE.variant == 3 and 6000) or 5000, timeValue * 40)
 
 	for i, wound in pairs(org.wounds or {}) do
 		wound[1] = math.max(wound[1] - timeValue * 4, 0)

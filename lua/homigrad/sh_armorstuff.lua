@@ -779,7 +779,10 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_6b13_killa.mdl",
 		Vector(-1, 2.7, 0),
 		Angle(0, 90, 90),
-		protection = 15, // бр 5
+		protection = 25, // бр 5
+		healthDamageMul = 0.0005,
+		wornThreshold = 0,
+		breakShotRange = {100000, 100000},
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_6b13_killa.mdl",
 		nobonemerge = true,
@@ -957,7 +960,10 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/cr/cr_tagilla.mdl",
 		Vector(-0.5, 2.8, 0),
 		Angle(0, 92, 90),
-		protection = 9,
+		protection = 19,
+		healthDamageMul = 0.0005,
+		wornThreshold = 0,
+		breakShotRange = {100000, 100000},
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/cr/cr_tagilla.mdl",
 		femPos = Vector(-1, 0, 0.8),
@@ -1504,7 +1510,11 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_maska_1sh_killa.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 7.5, // бр 5
+		protection = 17.5, // бр 5
+		durability = 10000,
+		breakThreshold = 10000,
+		durabilityDamageMul = 0.1,
+		breakShotRange = {100000, 100000},
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_maska_1sh_killa.mdl",
 		blocksHeadphones = true,
@@ -2013,7 +2023,11 @@ hg.armor.face = {
 		"models/eft_props/gear/facecover/facecover_boss_welding_ubey.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 7.5, // бр 5
+		protection = 17.5, // бр 5
+		durability = 10000,
+		breakThreshold = 10000,
+		durabilityDamageMul = 0.1,
+		breakShotRange = {100000, 100000},
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/facecover/facecover_boss_welding_ubey.mdl",
 		blocksHeadphones = true,
