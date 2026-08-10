@@ -1993,7 +1993,7 @@ function PANEL:PostInit()
         {"Face", function() OpenAccessorySlot(2,"Face",{face=true}) end, function() return main.ActiveSection=="Face" end},
         {"Body", function() OpenAccessorySlot(3,"Body",{torso=true,spine=true}) end, function() return main.ActiveSection=="Body" end},
         {"Hair", function() OpenAccessorySlot(4,"Hair",{head1=true}) end, function() return main.ActiveSection=="Hair" end},
-        {"Mask", function() OpenAccessorySlot(5,"Mask",{face2=true}) end, function() return main.ActiveSection=="Mask" end},
+        {"Mask", function() OpenAccessorySlot(5,"Mask",{face2=true,mask=true}) end, function() return main.ActiveSection=="Mask" end},
         {"Body 2", function() OpenAccessorySlot(6,"Body 2",{spine2=true}) end, function() return main.ActiveSection=="Body 2" end},
         {"Tint", function() OpenAccessoryColorMenu() end, function() return main.ActiveSection=="Acc. Tint" end},
         {"Poses", function() OpenPosesMenu() end, function() return main.ActiveSection=="Poses" end}

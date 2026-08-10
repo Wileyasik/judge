@@ -144,8 +144,10 @@ if CLIENT then
 			local fem = ThatPlyIsFemale(ent)
 
 			if not IsValid(ply.modelArmor[armor]) then
-				ply.modelArmor[armor] = ClientsideModel(armorData["model"])
-				local model = ply.modelArmor[armor]
+				local model = ClientsideModel(ply:GetNWString("ArmorModel" .. armor) or armorData["model"])
+				if not IsValid(model) then model = ClientsideModel(armorData["model"]) end
+				if not IsValid(model) then continue end
+				ply.modelArmor[armor] = model
 				model:SetNoDraw(true)
 				model:SetModelScale((fem and armorData.femscale) or armorData.scale or 1)
 				local fallback_mat = istable(armorData.material) and armorData.material[1] or armorData.material
@@ -176,16 +178,19 @@ if CLIENT then
 
 				ply.modelArmorBroken = ply.modelArmorBroken or {}
 				if not IsValid(ply.modelArmorBroken[armor]) then
-					local omodel = ClientsideModel(armorData["model"])
-					omodel:SetNoDraw(true)
-					omodel:SetModelScale(((fem and armorData.femscale) or armorData.scale or 1) * 1.01)
-					omodel:SetSubMaterial(0, "armor/brokenarmor")
-					omodel:SetRenderMode(RENDERMODE_TRANSALPHA)
-					omodel:SetColor(Color(255, 255, 255, 0))
-					if not armorData.nobonemerge then
-						omodel:AddEffects(EF_BONEMERGE)
+					local omodel = ClientsideModel(ply:GetNWString("ArmorModel" .. armor) or armorData["model"])
+					if not IsValid(omodel) then omodel = ClientsideModel(armorData["model"]) end
+					if IsValid(omodel) then
+						omodel:SetNoDraw(true)
+						omodel:SetModelScale(((fem and armorData.femscale) or armorData.scale or 1) * 1.01)
+						omodel:SetSubMaterial(0, "armor/brokenarmor")
+						omodel:SetRenderMode(RENDERMODE_TRANSALPHA)
+						omodel:SetColor(Color(255, 255, 255, 0))
+						if not armorData.nobonemerge then
+							omodel:AddEffects(EF_BONEMERGE)
+						end
+						ply.modelArmorBroken[armor] = omodel
 					end
-					ply.modelArmorBroken[armor] = omodel
 				end
 			end
 

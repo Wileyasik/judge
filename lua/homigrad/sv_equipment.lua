@@ -488,10 +488,12 @@ function hg.AddArmor(ply, equipment, ent)
         end
     end
 
+	local item = hg.armor[placement][equipment]
+	ply:SetNWString("ArmorModel" .. equipment, istable(item.models) and table.Random(item.models) or item.model)
+
 	if ent then
 		ent:ApplyData(ply,equipment)
 	else
-		local item = hg.armor[placement][equipment]
 		local mat = istable(item.material) and item.material[1] or item.material
 		ply:SetNWString("ArmorMaterials" .. equipment, mat)
 

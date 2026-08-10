@@ -2053,7 +2053,7 @@ hg.Accessories = {
         norender = false,
         placement = "spine2",
     },
-    ["Allah"] = {
+    ["Arafatka"] = {
         model = "models/eft_props/gear/facecover/facecover_shemagh.mdl",
         bone = "ValveBiped.Bip01_Head1",
         malepos = {Vector(1.9,-0.6,0.1),Angle(180,105,90),1},
@@ -2606,6 +2606,126 @@ hg.Accessories = {
         bSetColor = true,
         vpos = Vector(0,0,69),
         name = "Hood v2"
+    },
+
+    ["inverted boston cap"] = {
+        model = "models/eft/gear/headwear/cap_inverted_boston.mdl",
+        bone = "ValveBiped.Bip01_Head1",
+        malepos = {Vector(-60,-17.45,0.1),Angle(180,105,90),1},
+        fempos ={Vector(-60,-17.3,0.1),Angle(180,105,90),1},
+        skin = 1,
+        norender = true,
+        placement = "head",
+    },
+
+    ["security flag cap"] = {
+        model = "models/eft/gear/headwear/cap_security_flagcap.mdl",
+        bone = "ValveBiped.Bip01_Head1",
+        malepos = {Vector(-60,-17.3,0.1),Angle(180,105,90),1},
+        fempos = {Vector(2,-1,0),Angle(180,105,90),1},
+        skin = 4,
+        norender = true,
+        placement = "head",
+    },
+
+    ["buffalo half mask"] = {
+        model = "models/eft/gear/facecover/half_mask_buffalo.mdl",
+        bone = "ValveBiped.Bip01_Head1",
+        malepos = {Vector(-61.5,-11.65,0.1),Angle(180,100,90),1},
+        fempos = {Vector(1.2,-0.9,0.1),Angle(180,100,90),0.95},
+        skin = 0,
+        norender = true,
+        placement = "mask",
+    },
+
+    ["skull half mask"] = {
+        model = "models/eft/gear/facecover/facecover_skull_half_mask.mdl",
+        bone = "ValveBiped.Bip01_Head1",
+        malepos = {Vector(-61.5,-11.65,0.1),Angle(180,100,90),1},
+        fempos = {Vector(1.2,-0.9,0.1),Angle(180,100,90),0.95},
+        skin = 0,
+        norender = true,
+        placement = "mask",
+    },
+
+    ["tagilla cap"] = {
+        model = "models/eft/gear/headwear/cap_boss_tagillacap.mdl",
+        bone = "ValveBiped.Bip01_Head1",
+        malepos = {Vector(-60,-17.2,0.1),Angle(180,105,90),1},
+        fempos = {Vector(2,-1,0),Angle(180,105,90),1},
+        skin = 0,
+        norender = true,
+        placement = "head",
+    },
+
+    ["grinch mask"] = {
+        model = "models/eft/gear/facecover/mask_grinch.mdl",
+        bone = "ValveBiped.Bip01_Head1",
+        malepos = {Vector(-61.5,-11.65,0.1),Angle(180,100,90),1},
+        fempos = {Vector(1.2,-0.9,0.1),Angle(180,100,90),0.95},
+        skin = 0,
+        norender = true,
+        placement = "mask",
+    },
+
+    ["jason mask"] = {
+        model = "models/eft/gear/facecover/facecover_halloween_jason.mdl",
+        bone = "ValveBiped.Bip01_Head1",
+        malepos = {Vector(-61.5,-11.65,0.1),Angle(180,100,90),1},
+        fempos = {Vector(1.2,-0.9,0.1),Angle(180,100,90),0.95},
+        skin = 0,
+        norender = true,
+        placement = "mask",
+    },
+
+    ["kaonasi mask"] = {
+        model = "models/eft/gear/facecover/facecover_halloween_kaonasi.mdl",
+        bone = "ValveBiped.Bip01_Head1",
+        malepos = {Vector(-60,-17.2,0.1),Angle(180,105,90),1},
+        fempos = {Vector(2,-1,0),Angle(180,105,90),1},
+        skin = 0,
+        norender = true,
+        placement = "head",
+    },
+
+    ["cowboy hat"] = {
+        model = "models/eft/gear/headwear/head_cowboy.mdl",
+        bone = "ValveBiped.Bip01_Head1",
+        malepos = {Vector(-60,-17.4,0.1),Angle(180,105,90),1},
+        fempos = {Vector(2,-1,0),Angle(180,105,90),1},
+        skin = 0,
+        norender = true,
+        placement = "head",
+    },
+
+    ["captain hat"] = {
+        model = "models/eft/gear/headwear/hat_captain.mdl",
+        bone = "ValveBiped.Bip01_Head1",
+        malepos = {Vector(-60,-17.2,0.1),Angle(180,105,90),1},
+        fempos = {Vector(2,-1,0),Angle(180,105,90),1},
+        skin = 0,
+        norender = true,
+        placement = "head",
+    },
+
+    ["big pipe bandana"] = {
+        model = "models/eft/gear/headwear/head_bandana_boss_big_pipe.mdl",
+        bone = "ValveBiped.Bip01_Head1",
+        malepos = {Vector(-60,-17.2,0.1),Angle(180,105,90),1},
+        fempos = {Vector(2,-1,0),Angle(180,105,90),1},
+        skin = 0,
+        norender = true,
+        placement = "head",
+    },
+
+    ["micheal mask"] = {
+        model = "models/eft/gear/facecover/facecover_halloween_micheal.mdl",
+        bone = "ValveBiped.Bip01_Head1",
+        malepos = {Vector(-60.5,-17.4,0.1),Angle(180,105,90),1},
+        fempos = {Vector(2,-1,0),Angle(180,105,90),1},
+        skin = 0,
+        norender = true,
+        placement = "head",
     },
 
 }
