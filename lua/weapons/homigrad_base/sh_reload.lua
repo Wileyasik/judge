@@ -279,6 +279,7 @@ function SWEP:AnimationReload(time, staminaReload)
 	if pos1 == "removemag" and self.ProceduralMagMethod then
 		local method, rem = self.ProceduralMagMethod, self.ProceduralMagSets["remove"]
 		local wm = self:GetWM()
+		if not IsValid(wm) then return end
 
 		if method == 0 then --// Single bodygroup
 			wm:SetBodygroup(self.ProceduralMagID or 1, rem or 1)
@@ -292,6 +293,7 @@ function SWEP:AnimationReload(time, staminaReload)
 	elseif pos1 == "returnmag" and self.ProceduralMagID and istable(self.ProceduralMagSets) then
 		local method, ret = self.ProceduralMagMethod, self.ProceduralMagSets["return"]
 		local wm = self:GetWM()
+		if not IsValid(wm) then return end
 
 		if method == 0 then --// Single bodygroup
 			wm:SetBodygroup(self.ProceduralMagID or 1, ret or 0)
