@@ -801,13 +801,14 @@ if SERVER then
 
 
 		-- Loop through whatever we're burning
-		for k, ent in pairs(self.burning) do
+		for _, ent in pairs(self.burning) do
 			
 			if IsValid(ent) then
 
-				local canDamage = not (ent:IsPlayer() and ent:InVehicle() and !vFireEnableDamageInVehicles)
+				-- Don't burn players that are in vehicles
+				if ent:IsPlayer() and ent:InVehicle() and !vFireEnableDamageInVehicles then continue end
 
-				if damageEnabled and canDamage then
+				if damageEnabled then
 
 					-- Create the damage information
 					local dmg = DamageInfo()
@@ -835,22 +836,13 @@ if SERVER then
 				
 
 				-- If we're burning a character, use the oppurtunity to spread to it
-				if vFireIsCharacter(ent) then
-					local character = hg and hg.GetCurrentCharacter and hg.GetCurrentCharacter(ent) or ent
-					if IsValid(character) then
-						local hasAttachedFire = false
-						for fire in pairs(character.fires or {}) do
-							if IsValid(fire) then
-								hasAttachedFire = true
-								break
-							end
-						end
-
-						if not hasAttachedFire then
-							local newFeed = self.feed + vFireTakeFuel(ent, 12)
-							if newFeed > 0 then
-								CreateVFire(character, character:GetPos(), Vector(), newFeed, self)
-							end
+				if vFireIsCharacter(ent) and vFireEnableSpread then
+					local target = ent:IsPlayer() and hg.GetCurrentCharacter(ent) or ent
+					-- Players spread fire less often; fake players burn through their physical ragdoll.
+					if IsValid(target) and (!ent:IsPlayer() or math.random(1, 6) == 1) then
+						local newFeed = self.feed + vFireTakeFuel(target, 12)
+						if newFeed > 0 then
+							CreateVFire(target, target:GetPos(), Vector(), newFeed, self)
 						end
 					end
 				end
@@ -942,10 +934,6 @@ if SERVER then
 	}
 
 	function ENT:SpreadThink(ran)
-		if SERVER and hg and hg.IgniteGasolineAt then
-			hg.IgniteGasolineAt(self:GetPos(), self:GetOwner(), vFireBaseRadius(self:GetFireState() or 1) or 32)
-		end
-
 		-- Attempt to spread
 		if vFireEnableSpread then
 
@@ -953,6 +941,12 @@ if SERVER then
 			
 			-- We only spread if our random variable is below 1000 - the more throttle there is, the higher the probability of ran being >= 1000
 			-- and as a result, fire spreading is throttled
+
+			for _,v in ipairs(hg.gasolinePath) do
+				if v[1]:Distance(self:GetPos()) > (vFireBaseRadius(self:GetFireState() or 1) or 1) or v[2] ~= false then continue end
+				v[2] = CurTime()
+				v[3] = self:GetOwner()
+			end
 
 			if self.NextParticle < CurTime() and vFireLifeToState(self.life) > 4 then
 				self.NextParticle = CurTime() + 2

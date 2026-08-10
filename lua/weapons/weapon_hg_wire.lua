@@ -190,6 +190,22 @@ local function GetFiberwireVictimPlayer(rag)
     return victim
 end
 
+local function ComputeVoiceEffectForPlayer(ply)
+    if not eightbit then return 0 end
+    local effNone  = eightbit.EFF_NONE  or 0
+    local effProot = eightbit.EFF_PROOT or 1
+    local effMask  = eightbit.EFF_MASKVOICE or 2
+    if not IsValid(ply) then return effNone end
+    if ply.PlayerClassName == "furry" then return effProot end
+    if ply.armors and hg.armor then
+        for place, armor in pairs(ply.armors) do
+            local armorData = hg.armor[place] and hg.armor[place][armor]
+            if armorData and armorData.voice_change then return effMask end
+        end
+    end
+    return effNone
+end
+
 local function WriteFiberwireKarma(self, rag, hitgroup, harm, dmginfo)
     if CLIENT then return end
     if not zb then return end
@@ -342,10 +358,22 @@ local function StartStrangle(self, victim)
         ragPly._fiberwire_old_o2regen = ragPly.organism.o2.regen
         ragPly.organism.o2.regen = 0
         self._fw_last_victim_o2 = ragPly.organism.o2[1]
-    -- === НОВОЕ: уведомление жертве ===
+        -- === НОВОЕ: уведомление жертве ===
         ragPly:Notify("I'm being strangled..", true, "fiberwire_strangle_start", 3)
+
+        local prevEff = ComputeVoiceEffectForPlayer(ragPly)
+        if eightbit and eightbit.EnableEffect and eightbit.EFF_MASKVOICE and ragPly.UserID then
+            eightbit.EnableEffect(ragPly:UserID(), eightbit.EFF_MASKVOICE)
+        end
+        self.FiberwireVictimOldEffect = prevEff
+        self.FiberwireVictimEffectApplied = (eightbit and eightbit.EFF_MASKVOICE ~= nil) and true or false
+        ragPly:SetNW2Float("fw_voicemuffle", 1)
+        self.FiberwireVictimPly = ragPly
     else
         self._fw_last_victim_o2 = nil
+        self.FiberwireVictimPly = nil
+        self.FiberwireVictimOldEffect = nil
+        self.FiberwireVictimEffectApplied = nil
     end
 
 
@@ -408,6 +436,16 @@ local function StopStrangle(self)
                 ragPly.organism.o2.regen = ragPly._fiberwire_old_o2regen
                 ragPly._fiberwire_old_o2regen = nil
             end
+
+            -- === POWERDOWN: снимаем маску голоса eightbit и сбрасываем множитель глушения ===
+            if self.FiberwireVictimEffectApplied and eightbit and eightbit.EnableEffect and ragPly.UserID then
+                local effToRestore = self.FiberwireVictimOldEffect
+                if effToRestore == nil then
+                    effToRestore = ComputeVoiceEffectForPlayer(ragPly)
+                end
+                eightbit.EnableEffect(ragPly:UserID(), effToRestore or 0)
+            end
+            ragPly:SetNW2Float("fw_voicemuffle", 1)
         end
 
         rag.Strangler = nil
@@ -422,6 +460,10 @@ local function StopStrangle(self)
     self:SetStrangling(false)
     self.StrangleRag = nil
     self.NoIdleLoop = nil -- allow idle again
+
+    self.FiberwireVictimPly = nil
+    self.FiberwireVictimOldEffect = nil
+    self.FiberwireVictimEffectApplied = nil
 
 
     -- === НОВОЕ: сброс звуковых переменных ===
@@ -755,7 +797,6 @@ function SWEP:CustomThink()
     local owner = self:GetOwner()
     if not IsValid(owner) or not owner:IsPlayer() then return end
 
-    -- Allow strangling to continue even if the strangler is fake (ragdolled), but we need to control from the fake ragdoll instead
     local isFake = IsValid(owner.FakeRagdoll)
 
     local rag = self.StrangleRag
@@ -778,21 +819,16 @@ function SWEP:CustomThink()
         return
     end
 
-    -- stop if ragdoll vanished
     if not IsValid(rag) or not rag:IsRagdoll() then
         StopStrangle(self) -- clean state
         return
     end
 
-    -- stop if attacker died; dead victims/ragdolls are allowed targets by design
     if not owner:Alive() then
         StopStrangle(self)
         return
     end
     
-    -- When the strangler is fake (ragdolled), if they get up (FakeRagdoll vanishes), we need to handle it or re-grab.
-    -- Wait, if they get up, isFake becomes false, and the normal stragling logic will just resume since owner:Alive() is still true.
-    -- However, if the attacker is completely dead or despawns, StopStrangle triggers.
     
     if isFake then
         if not self.FakeGraceStart then
@@ -812,22 +848,18 @@ function SWEP:CustomThink()
 
 
 
-        -- === НОВОЕ: звуки жертвы ===
     if IsValid(rag) then
         local ragPly = hg.RagdollOwner and hg.RagdollOwner(rag)
         if IsValid(ragPly) and ragPly:IsPlayer() then
-            -- Проверяем, функционируют ли лёгкие (если нет – звуки не проигрываем)
             if not (ragPly.organism and ragPly.organism.lungsfunction == false) then
                 if CurTime() >= (self.nextBreathSound or 0) then
                     local soundToPlay
-                    -- Определяем пол жертвы (функция ThatPlyIsFemale должна быть доступна глобально)
                     local isFemale = false
                     if ThatPlyIsFemale then
                         isFemale = ThatPlyIsFemale(ragPly)
                     end
 
                     if self.breathStage == 0 then
-                        -- Вдохи (inhale)
                         if isFemale then
                             local r = math.random(1, 5)
                             soundToPlay = "breathing/inhale/female/inhale_0" .. r .. ".wav"
@@ -837,20 +869,17 @@ function SWEP:CustomThink()
                         end
                         self.inhaleCount = (self.inhaleCount or 0) + 1
                         if self.inhaleCount >= 5 then
-                            self.breathStage = 1   -- после пяти вдохов переключаемся на агональное дыхание
+                            self.breathStage = 1
                         end
                     else
-                        -- Агональное дыхание (общие звуки)
                         local r = math.random(1, 13)
                         soundToPlay = "breathing/agonalbreathing_" .. r .. ".wav"
                     end
 
                     if soundToPlay then
-                        -- Проигрываем звук от регдолла жертвы с невысокой громкостью (уровень 50)
                         rag:EmitSound(soundToPlay, 50, 100)
                     end
 
-                    -- Устанавливаем следующий интервал (3-5 секунд)
                     self.nextBreathSound = CurTime() + math.Rand(3, 5)
                 end
             end
@@ -936,6 +965,12 @@ function SWEP:CustomThink()
         local lhandPhys = rag:GetPhysicsObjectNum(hg.realPhysNum(rag, 5))
         local rhandPhys = rag:GetPhysicsObjectNum(hg.realPhysNum(rag, 7))
         
+        local fwStruggleMul = 1
+        if ragOrg and ragOrg.o2 and ragOrg.o2.range and ragOrg.o2.range > 0 then
+            local o2frac = math.Clamp((ragOrg.o2[1] or 0) / ragOrg.o2.range, 0, 1)
+            fwStruggleMul = 0.1 + (0.6 - 0.1) * o2frac
+        end
+
         if IsValid(headPhysRef) and IsValid(lhandPhys) and IsValid(rhandPhys) then
             local pos = headPhysRef:GetPos()
             local lpos = lhandPhys:GetPos()
@@ -944,8 +979,8 @@ function SWEP:CustomThink()
             local leftOffset = pos - (pos - lpos):GetNormalized() * (2 + math.sin(CurTime() * 2) * 0.5)
             local rightOffset = pos - (pos - rpos):GetNormalized() * (2 + math.cos(CurTime() * 1.8) * 0.5)
 
-            hg.ShadowControl(rag, 5, 0.001, nil, nil, nil, leftOffset, 80, 60)
-            hg.ShadowControl(rag, 7, 0.001, nil, nil, nil, rightOffset, 80, 60)
+            hg.ShadowControl(rag, 5, 0.001, nil, nil, nil, leftOffset, 80 * fwStruggleMul, 60 * fwStruggleMul)
+            hg.ShadowControl(rag, 7, 0.001, nil, nil, nil, rightOffset, 80 * fwStruggleMul, 60 * fwStruggleMul)
         end
         
         if self._fw_punchshit < CurTime() then 
@@ -960,7 +995,6 @@ function SWEP:CustomThink()
 
 
 
-         -- FIX: Принудительно блокируем регенерацию кислорода, пока длится удушье
     local ragPly = hg.RagdollOwner(rag)
     
 
@@ -990,6 +1024,10 @@ function SWEP:CustomThink()
                 WriteFiberwireKarma(self, rag, HITGROUP_NECK, (lastO2 - currentO2) / math.max(org.o2.range, 1) * (zb and zb.MaximumHarm or 10))
             end
             self._fw_last_victim_o2 = currentO2
+            local rng = math.max(org.o2.range, 1)
+            local o2frac = math.Clamp(currentO2 / rng, 0, 1)
+            local muffle = math.Clamp(0.025 + (1 - 0.025) * o2frac, 0, 1)
+            ragPly:SetNW2Float("fw_voicemuffle", muffle)
         end
         -- light, continuous choke effects
         --[[if org.o2 and org.o2[1] then
@@ -1000,18 +1038,15 @@ function SWEP:CustomThink()
         end
     end
 
-    -- Keep strangulation animation looping reliably while active
     if (self._fw_loop_at or 0) > 0 and CurTime() >= self._fw_loop_at and not self._fw_looping then
         -- keep loop playing for local and remote viewers
         self:PlayAnim("strangle_loop", 4.0, true, nil, false, true)
         self._fw_looping = true
     end
     
-    -- Always hide dummy bone during gameplay
     self:HideDummyBone()
 end
 
--- Hook into melee hit resolution and start strangulation when appropriate
 function SWEP:PrimaryAttackAdd(ent, trace)
     if CLIENT then return end
     local owner = self:GetOwner()
@@ -1092,15 +1127,6 @@ if SERVER then
         end
     end)
 
-    -- block fake controls while strangled
-    hook.Add("CanControlFake", "FiberwireStrangleLock", function(ply, rag)
-        local r = ply and ply.FakeRagdoll
-        if IsValid(r) and r.StrangleLocked then
-            return false
-        end
-    end)
-
-    -- prevent getting up while strangled
     hook.Add("Should Fake Up", "FiberwireStrangleLockUp", function(ply)
         local r = ply and ply.FakeRagdoll
         if IsValid(r) and r.StrangleLocked then

@@ -108,7 +108,6 @@ else
 end
 
 function SWEP:PrimaryAttack()
-    if CLIENT and not IsFirstTimePredicted() then return end
     if self:Clip1() <= 0 then return end
 
     --self:SetNextPrimaryFire(CurTime() + 1)
@@ -118,21 +117,12 @@ function SWEP:PrimaryAttack()
     self:SetNextPrimaryFire(CurTime() + 1)
     self:EmitSound("f_firematch_strike.wav")
 
-    local tr = hg and hg.eyeTrace and hg.eyeTrace(self:GetOwner(), 120)
-    if not tr then return end
-
-    if IsValid(tr.Entity) and tr.Entity.OnMatches then
-        if SERVER then
-            tr.Entity:OnMatches()
-            self:TakePrimaryAmmo(1)
-        end
+    local tr = hg.eyeTrace(self:GetOwner(), 120)
+    if tr.Entity and tr.Entity.OnMatches then
+        tr.Entity:OnMatches()
+        self:TakePrimaryAmmo(1)
         return 
     end
-
-	if SERVER and hg and hg.IgniteGasolineAt and hg.IgniteGasolineAt(tr.HitPos, self:GetOwner(), 48) then
-		self:TakePrimaryAmmo(1)
-		return
-	end
 
     if SERVER then
         local ent = ents.Create("ent_zcity_match")

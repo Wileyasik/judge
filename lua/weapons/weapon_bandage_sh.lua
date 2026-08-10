@@ -35,6 +35,34 @@ SWEP.Slot = 3
 SWEP.SlotPos = 1
 
 SWEP.WorkWithFake = true
+SWEP.BandageTPIK = true
+SWEP.BandageUseTime = 4.6
+SWEP.BandageMinUseTime = 2
+SWEP.BandageSequenceTime = 139 / 30
+SWEP.BandageAnimStart = 0.5
+SWEP.BandageAnimEndTrim = 0.7
+SWEP.AnimBlendTime = 0.3
+SWEP.AnimBlendHands = false
+SWEP.AnimBlendMeshes = false
+SWEP.BandageTransitionCycleWidth = 0.075
+SWEP.BandageTransitionDown = 18
+SWEP.BandageTransitionIn = 8
+SWEP.BandageTPIKWorldModel = "models/weapons/nmrih/items/bandage/w_bandages.mdl"
+SWEP.BandageTPIKViewModel = "models/weapons/nmrih/items/bandage/v_item_bandages.mdl"
+SWEP.BandageTPIKAnimList = {
+	["deploy"] = {"draw", 1, false},
+	["use"] = {"bandage", 4.6, false},
+	["idle"] = {"idle", 10, true},
+}
+SWEP.BandageTPIKHiddenBonesIdle = {}
+for boneIndex = 53, 82 do
+	SWEP.BandageTPIKHiddenBonesIdle[#SWEP.BandageTPIKHiddenBonesIdle + 1] = boneIndex
+end
+SWEP.BandageTPIKHiddenBonesUse = {83}
+SWEP.HideMeshOnlyScale = {}
+for _, bone in ipairs(SWEP.BandageTPIKHiddenBonesIdle) do
+	SWEP.HideMeshOnlyScale[bone] = true
+end
 SWEP.offsetVec = Vector(4, -3.5, 0)
 SWEP.offsetAng = Angle(90, 90, 0)
 
@@ -43,12 +71,22 @@ local hg_healanims = CreateConVar("hg_healanims", 0, FCVAR_REPLICATED + FCVAR_AR
 modelshuy = modelshuy or {}
 
 function SWEP:DrawWorldModel()
+	if self.BandageTPIK then
+		local base = weapons.GetStored("weapon_tpik_base")
+		if base and base.DrawWorldModel then return base.DrawWorldModel(self) end
+	end
+
 	if not IsValid(self:GetOwner()) then
 		self:DrawWorldModel2()
 	end
 end
 
 function SWEP:DrawWorldModel2(nodraw)
+	if self.BandageTPIK then
+		local base = weapons.GetStored("weapon_tpik_base")
+		if base and base.DrawWorldModel2 then return base.DrawWorldModel2(self) end
+	end
+
 	if self.Color then
 		render.SetColorModulation(self.Color.r/255,self.Color.g/255,self.Color.b/255)
 	end
@@ -102,6 +140,12 @@ function SWEP:DrawWorldModel2(nodraw)
 end
 
 function SWEP:OnRemove()
+	if self.BandageTPIK then
+		self:CancelBandageTPIK(false)
+		local base = weapons.GetStored("weapon_tpik_base")
+		if base and base.OnRemove then return base.OnRemove(self) end
+	end
+
 	if SERVER then return end
 end
 
@@ -138,6 +182,8 @@ end
 SWEP.usetime = 2
 local math = math
 function SWEP:Think()
+	if self.BandageTPIK then return self:BandageTPIKThink() end
+
 	self:SetHold(self.HoldType)
 
 	if self:GetClass() == "weapon_bandage_sh" then
@@ -187,6 +233,8 @@ function SWEP:Think()
 end
 SWEP.net_cooldown2 = 0
 function SWEP:PrimaryAttack()
+	if self.BandageTPIK then return self:StartBandageTPIK(self:GetOwner(), IN_ATTACK) end
+
 	if SERVER then--and not self.modeValuesdef[self.mode][2] then
 
 		self.healbuddy = self:GetOwner()
@@ -217,7 +265,6 @@ if CLIENT then
 		if !owner:IsPlayer() then return end
 		if GetViewEntity() ~= owner then return end
 		if owner:InVehicle() then return end
-		if not IsValid(modelshuy[self.Model or self.WorldModel]) then return end
 		local Tr = hg.eyeTrace(owner)
 		if !Tr then return end
 		local Size = math.max(math.min(1 - Tr.Fraction, 0.5), 0.1)
@@ -237,10 +284,6 @@ if CLIENT then
 			draw.DrawText(Tr.Entity:IsPlayer() and Tr.Entity:GetPlayerName() or Tr.Entity:IsRagdoll() and Tr.Entity:GetPlayerName() or "", "HomigradFontLarge", x + 1, y + 31, coloutline, TEXT_ALIGN_CENTER)
 			draw.DrawText(Tr.Entity:IsPlayer() and Tr.Entity:GetPlayerName() or Tr.Entity:IsRagdoll() and Tr.Entity:GetPlayerName() or "", "HomigradFontLarge", x, y + 30, col, TEXT_ALIGN_CENTER)
 		end
-		local mdl = modelshuy[self.Model or self.WorldModel]
-		self:DrawWorldModel2(true)
-		local p,a = mdl:GetPos(), mdl:GetAngles()
-		local pos,ang = LocalToWorld(self.ofsV,self.ofsA,p,a)
 		if self.showstats and self.modeValues and istable(self.modeValues) then
 			//cam.Start3D()
 				//cam.Start3D2D(pos,ang,0.01)
@@ -346,6 +389,14 @@ function SWEP:SetInfo(info)
 end
 
 function SWEP:SecondaryAttack()
+	if self.BandageTPIK then
+		if IsValid(self:GetNWEntity("fakeGun")) then return end
+		local ent = hg.eyeTrace(self:GetOwner()).Entity
+		if not IsValid(ent) then return end
+		if hg.GetCurrentCharacter(ent) == hg.GetCurrentCharacter(self:GetOwner()) then return end
+		return self:StartBandageTPIK(ent, IN_ATTACK2)
+	end
+
 	--self:SetHolding(math.min(self:GetHolding() + 9, 100))
 	if SERVER then
 		if IsValid(self:GetNWEntity("fakeGun")) then return end
@@ -599,7 +650,9 @@ if SERVER then
 		end
 
 		if done then
+			if not self.BandageTPIK then
 			owner:EmitSound("snd_jack_hmcd_bandage.wav", 60, math.random(95, 105))
+			end
 
 			if self.poisoned2 then
 				org.poison4 = CurTime()
@@ -1200,7 +1253,7 @@ else
 		end
 		model:DrawModel()
 
-		if ent.bandaged_limbs["ValveBiped.Bip01_Head1"] then
+		if ent.bandaged_limbs["ValveBiped.Bip01_Head1"] and not (ply == LocalPlayer() and GetViewEntity() == LocalPlayer()) then
 			local female = ThatPlyIsFemale(ent)
 			local mdlpath = female and HeadBandageModelFemale or HeadBandageModelMale
 			if not IsValid(ent.bandagesHeadModel) or ent.bandagesHeadModel:GetModel() ~= mdlpath then
@@ -1241,6 +1294,11 @@ function SWEP:IsLocal()
 end
 
 function SWEP:Holster(wep)
+	if self.BandageTPIK then
+		self:CancelBandageTPIK(false)
+		return true
+	end
+
 	if not IsValid(wep) or wep == self then return true end
 
 	if SERVER or CLIENT and self:IsLocal() then
@@ -1277,6 +1335,22 @@ function SWEP:OwnerChanged()
 end
 
 function SWEP:Deploy()
+	if self.BandageTPIK then
+		self:CancelBandageTPIK(false)
+		self._idleScheduled = nil
+		local base = weapons.GetStored("weapon_tpik_base")
+		if base and base.Deploy then base.Deploy(self) end
+		if SERVER then
+			local timerName = "bandage_deploy_" .. self:EntIndex()
+			timer.Create(timerName, 1, 1, function()
+				if IsValid(self) and self.anim == "deploy" then
+					self:PlayAnim("idle")
+				end
+			end)
+		end
+		return true
+	end
+
 	if SERVER or CLIENT and self:IsLocal() then
 		self:EmitSound(self.DeploySnd, 50, math.random(90, 110))
 	end
@@ -1285,6 +1359,266 @@ function SWEP:Deploy()
 
 	return true
 end
+
+function SWEP:EnableBandageTPIK()
+	self.BandageTPIK = true
+	self.supportTPIK = true
+	self.isTPIKBase = true
+	self.WorldModel = self.BandageTPIKWorldModel
+	self.WorldModelReal = self.BandageTPIKViewModel
+	self.WorldModelExchange = false
+	self.AnimList = self.BandageTPIKAnimList
+	self.HoldPos = Vector(1, 0, 0)
+	self.HoldAng = Angle(0, 0, 0)
+	self.sprint_pos = Vector(0, 0, 0)
+	self.sprint_ang = Angle(20, 0, 0)
+	self.setlh = true
+	self.setrh = true
+	self.modelscale = 1
+	self.modelscale2 = 1
+	self.CallbackTimeAdjust = 0
+	self.animtime = 0
+	self.animspeed = 1
+	self.cycling = false
+	self.reverseanim = false
+end
+
+function SWEP:GetBandageTPIKUseTime(target)
+	local org = IsValid(target) and target.organism
+	if not org then return self.BandageUseTime end
+
+	local required = 0
+	for _, wound in ipairs(org.wounds or {}) do
+		required = required + math.max(wound[1] or 0, 0)
+	end
+
+	local owner = self:GetOwner()
+	local treatmentCost = 25 * (IsValid(owner) and owner.Profession == "doctor" and 0.2 or 1)
+	if (org.skull or 0) >= 0.6 then required = required + treatmentCost end
+	if org.chest == 1 then required = required + treatmentCost end
+	if org.lleg == 1 and not org.llegamputated then required = required + treatmentCost end
+	if org.rleg == 1 and not org.rlegamputated then required = required + treatmentCost end
+	if org.larm == 1 and not org.larmamputated then required = required + treatmentCost end
+	if org.rarm == 1 and not org.rarmamputated then required = required + treatmentCost end
+
+	local used = math.min(required, self.modeValues and self.modeValues[1] or 0)
+	return math.Clamp(2 + used / 40 * 3.1, 2, 10)
+end
+
+function SWEP:CanBandageTPIK(target)
+	local org = IsValid(target) and target.organism
+	local available = self.modeValues and self.modeValues[1] or 0
+	if not org or available <= 0 then return false end
+
+	for _, wound in ipairs(org.wounds or {}) do
+		if (wound[1] or 0) > 0.1 then return true end
+	end
+
+	local owner = self:GetOwner()
+	local treatmentCost = 25 * (IsValid(owner) and owner.Profession == "doctor" and 0.2 or 1)
+	if available < treatmentCost then return false end
+	if (org.skull or 0) >= 0.6 or org.chest == 1 then return true end
+	if org.lleg == 1 and not org.llegamputated then return true end
+	if org.rleg == 1 and not org.rlegamputated then return true end
+	if org.larm == 1 and not org.larmamputated then return true end
+	if org.rarm == 1 and not org.rarmamputated then return true end
+
+	return false
+end
+
+function SWEP:StartBandageTPIK(target, button)
+	if not SERVER or self.bandageTPIKUsing or self.bandageTPIKAwaitRelease or self._reverseToIdle then return end
+	if not self:CanBandageTPIK(target) then return end
+
+	self.bandageTPIKUsing = true
+	self.bandageTPIKAwaitRelease = true
+	self.bandageTPIKTarget = target
+	self.bandageTPIKButton = button
+	self.bandageTPIKStart = CurTime()
+	self._idleScheduled = nil
+	local fullUseTime = self:GetBandageTPIKUseTime(target)
+	local endCycle = 1 - self.BandageAnimEndTrim / self.BandageSequenceTime
+	local visibleFraction = endCycle
+	self.bandageTPIKUseTime = math.max(fullUseTime * visibleFraction, self.BandageMinUseTime)
+	self.bandageTPIKEndTime = CurTime() + self.bandageTPIKUseTime
+	self.bandageTPIKSounds = 0
+	self:SetNextPrimaryFire(self.bandageTPIKEndTime)
+	self:SetNextSecondaryFire(self.bandageTPIKEndTime)
+	self:PlayAnim("use", self.bandageTPIKUseTime, false, nil, false, nil,
+		0,
+		endCycle,
+		self.bandageTPIKEndTime)
+
+	local timerName = "bandage_finish_" .. self:EntIndex()
+	timer.Create(timerName, self.bandageTPIKUseTime, 1, function()
+		if IsValid(self) and self.bandageTPIKUsing then
+			self:FinishBandageTPIK()
+		end
+	end)
+end
+
+function SWEP:CancelBandageTPIK(reverse)
+	local wasUsing = self.bandageTPIKUsing
+	self.bandageTPIKUsing = nil
+	self.bandageTPIKTarget = nil
+	self.bandageTPIKButton = nil
+	self.bandageTPIKStart = nil
+	self.bandageTPIKUseTime = nil
+	self.bandageTPIKEndTime = nil
+	self.bandageTPIKSounds = nil
+	if SERVER then
+		local timerName = "bandage_finish_" .. self:EntIndex()
+		timer.Remove(timerName)
+		local deployTimerName = "bandage_deploy_" .. self:EntIndex()
+		timer.Remove(deployTimerName)
+	end
+	if reverse and wasUsing and SERVER then
+		self:ReverseAnimToIdle("use", 0)
+	end
+end
+
+function SWEP:FinishBandageTPIK()
+	if not SERVER or not self.bandageTPIKUsing then return end
+
+	local timerName = "bandage_finish_" .. self:EntIndex()
+	timer.Remove(timerName)
+
+	local target = self.bandageTPIKTarget
+	self:CancelBandageTPIK(false)
+	if not IsValid(target) then
+		self:PlayAnim("idle")
+		return
+	end
+
+	if hg.GetCurrentCharacter(target) == hg.GetCurrentCharacter(self:GetOwner()) then
+		self:SetHolding(100)
+	end
+	local done = self:Heal(target, self.mode)
+	if done and self.PostHeal then self:PostHeal(target, self.mode) end
+	if IsValid(self) then
+		self:SetNetVar("modeValues", self.modeValues)
+		self:PlayAnim("idle")
+	end
+end
+
+function SWEP:BandageTPIKThink()
+	local base = weapons.GetStored("weapon_tpik_base")
+	if base and base.ThinkReverseAnimToIdle then base.ThinkReverseAnimToIdle(self, CurTime()) end
+	if CLIENT then
+		if self.anim == "use" and not self.reverseanim and not self._reverseToIdle and not self._idleScheduled and self.animtime and self.animtime <= CurTime() then
+			self._idleScheduled = true
+			self.animtime = nil
+			self:PlayAnim("idle")
+		end
+		if self.anim == "deploy" and not self.reverseanim and not self._reverseToIdle and not self._idleScheduled and self.animtime and self.animtime <= CurTime() then
+			self._idleScheduled = true
+			self.animtime = nil
+			self:PlayAnim("idle")
+		end
+		if self.anim == "idle" then
+			self._idleScheduled = nil
+		end
+		return
+	end
+	local owner = self:GetOwner()
+	if self.bandageTPIKAwaitRelease and IsValid(owner)
+		and not owner:KeyDown(IN_ATTACK) and not owner:KeyDown(IN_ATTACK2) then
+		self.bandageTPIKAwaitRelease = nil
+	end
+	if not self.bandageTPIKUsing then
+		if not self._reverseToIdle and self.anim == "deploy" and self.animtime and self.animtime <= CurTime() then
+			self:PlayAnim("idle")
+		end
+		return
+	end
+
+	if not IsValid(owner) or not self.bandageTPIKButton or not owner:KeyDown(self.bandageTPIKButton) then
+		self:CancelBandageTPIK(true)
+		return
+	end
+
+	local elapsed = CurTime() - self.bandageTPIKStart
+	local useTime = self.bandageTPIKUseTime or self.BandageUseTime
+	local sndOwner = IsValid(owner.FakeRagdoll) and owner.FakeRagdoll or owner
+	if self.bandageTPIKSounds < 1 and elapsed >= useTime * 0.08 then
+		self.bandageTPIKSounds = 1
+		sndOwner:EmitSound("weapons/nmrih/items/bandage/bandage_unravel_0" .. math.random(1, 2) .. ".wav", 60, 100)
+	end
+	if self.bandageTPIKSounds < 2 and elapsed >= useTime * 0.47 then
+		self.bandageTPIKSounds = 2
+		sndOwner:EmitSound("weapons/nmrih/items/bandage/bandage_apply_0" .. math.random(1, 2) .. ".wav", 60, 100)
+	end
+
+	if self.bandageTPIKEndTime and CurTime() >= self.bandageTPIKEndTime then self:FinishBandageTPIK() end
+end
+
+function SWEP:Camera(eyePos, eyeAng, view, vellen)
+	if not self.BandageTPIK then return end
+	local base = weapons.GetStored("weapon_tpik_base")
+	if base and base.Camera then return base.Camera(self, eyePos, eyeAng, view, vellen) end
+end
+
+function SWEP:SetHandPos(noset)
+	if not self.BandageTPIK then return end
+	local base = weapons.GetStored("weapon_tpik_base")
+	if base and base.SetHandPos then return base.SetHandPos(self, noset) end
+end
+
+function SWEP:GetWM()
+	local base = weapons.GetStored("weapon_tpik_base")
+	if base and base.GetWM then return base.GetWM(self) end
+end
+
+function SWEP:GetHideMeshBones()
+	if not self.BandageTPIK then return self.HideMeshBones end
+	if self.anim == "idle" then return self.BandageTPIKHiddenBonesIdle end
+	if self.anim == "use" then
+		local cycle = self:GetCurrentAnimCycle()
+		if cycle < self.BandageAnimStart / self.BandageSequenceTime then
+			return self.BandageTPIKHiddenBonesIdle
+		end
+		return self.BandageTPIKHiddenBonesUse
+	end
+	if self.anim == "deploy" then return self.BandageTPIKHiddenBonesIdle end
+end
+
+function SWEP:GetHideMeshCollapseBone()
+end
+
+function SWEP:GetTPIKHoldPos(holdPos)
+	if not self.BandageTPIK or self.anim ~= "use" then return holdPos end
+
+	local switchCycle = self.BandageAnimStart / self.BandageSequenceTime
+	local distance = math.abs(self:GetCurrentAnimCycle() - switchCycle)
+	local amount = 1 - math.Clamp(distance / self.BandageTransitionCycleWidth, 0, 1)
+	if amount <= 0 then return holdPos end
+	amount = amount * amount * (3 - 2 * amount)
+
+	return holdPos + Vector(
+		-self.BandageTransitionIn * amount,
+		0,
+		-self.BandageTransitionDown * amount
+	)
+end
+
+function SWEP:PlayAnim(...)
+	local base = weapons.GetStored("weapon_tpik_base")
+	if base and base.PlayAnim then return base.PlayAnim(self, ...) end
+end
+
+function SWEP:GetCurrentAnimCycle(...)
+	local base = weapons.GetStored("weapon_tpik_base")
+	if base and base.GetCurrentAnimCycle then return base.GetCurrentAnimCycle(self, ...) end
+	return 0
+end
+
+function SWEP:ReverseAnimToIdle(...)
+	local base = weapons.GetStored("weapon_tpik_base")
+	if base and base.ReverseAnimToIdle then return base.ReverseAnimToIdle(self, ...) end
+end
+
+
+SWEP:EnableBandageTPIK()
 
 function SWEP:CanBePickedUpByNPCs()
 	return true

@@ -1,7 +1,6 @@
 hg.drums = hg.drums or {}
 hg.drums2 = hg.drums2 or {}
 hg.gasolinePath = hg.gasolinePath or {}
-hg.gasolineNextId = hg.gasolineNextId or 0
 
 local math_random = math.random
 local math_Round = math.Round
@@ -61,40 +60,8 @@ if SERVER then
 	
 	local time = CurTime()
 	local CurTime = CurTime
-	local IsValid = IsValid
-	local isnumber = isnumber
-	local ipairs = ipairs
-	local pairs = pairs
-	local TraceLine = util.TraceLine
-	local net_Start = net.Start
-	local net_WriteTable = net.WriteTable
-	local net_WriteVector = net.WriteVector
-	local net_WriteEntity = net.WriteEntity
-	local net_Broadcast = net.Broadcast
-
-	function hg.IgniteGasolineAt(pos, owner, radius)
-		if not isvector(pos) then return false end
-
-		local ignited = 0
-		local radiusSqr = (radius or 32) ^ 2
-		for _, point in ipairs(hg.gasolinePath) do
-			if point[2] == false and point[1]:DistToSqr(pos) <= radiusSqr then
-				point[2] = CurTime()
-				point[3] = IsValid(owner) and owner or nil
-				ignited = ignited + 1
-			end
-		end
-
-		if ignited > 0 then
-			MsgN("[HGBENZIN] ignited " .. ignited .. " point(s) at " .. tostring(pos))
-		end
-
-		return ignited > 0
-	end
-
 	hook.Add("Think", "drum_think", function()
-		local now = CurTime()
-		if time > now then return end
+		if time > CurTime() then return end
 		time = time + 0.1
 
 		for i, drum in pairs(hg.drums) do
@@ -104,38 +71,27 @@ if SERVER then
 
 	local time2 = CurTime()
 	local ents_FindInSphere = ents.FindInSphere
-	local function isGasolineIgniter(ent)
-		if not IsValid(ent) then return false end
-		if vFireIsVFireEnt and vFireIsVFireEnt(ent) then return true end
-
-		local class = ent:GetClass()
-		if class == "env_fire" or class == "entityflame" then return true end
-
-		return ent.IsOnFire and ent:IsOnFire()
-	end
-
 	hook.Add("Think", "path_think", function()
-		local now = CurTime()
-		if time2 > now then return end
+		if time2 > CurTime() then return end
 		time2 = time2 + 1
 
 		for i, tbl in ipairs(hg.gasolinePath) do
 			local pos, ignited = tbl[1], tbl[2]
 			
-			if isnumber(ignited) and (ignited + 60) < now then tbl[2] = true continue end
+			if isnumber(ignited) and (ignited + 60) < CurTime() then tbl[2] = true continue end
 			
 			if isnumber(ignited) then
 				local something_ignited = false
 				
-				for _, tbl2 in ipairs(hg.gasolinePath) do
-					if not tbl2[2] and pos:DistToSqr(tbl2[1]) < 2048 then
-						tbl2[2] = now
+				for i, tbl2 in ipairs(hg.gasolinePath) do
+					if not tbl2[2] and (tbl[1] - tbl2[1]):LengthSqr() < 2048 then
+						tbl2[2] = CurTime()
 						tbl2[3] = tbl[3] or tbl2[3]
 						something_ignited = true
 					end
 				end
 			
-				for _, obj in ipairs(ents_FindInSphere(pos, 32)) do
+				for i, obj in ipairs(ents_FindInSphere(pos, 32)) do
 					if obj:GetMoveType() == MOVETYPE_NONE then continue end
 					
 					if IsValid(obj) and (((not obj:IsPlayer()) or (obj:Alive() and obj:GetMoveType() != MOVETYPE_NOCLIP and !IsValid(obj.FakeRagdoll))) and not obj:IsOnFire() and obj:WaterLevel() < 1)  then
@@ -144,29 +100,7 @@ if SERVER then
 						--CreateVFire(parent, pos, normal, newFeed, spreader)
 					end
 				end
-			elseif not ignited then
-				for _, obj in ipairs(ents_FindInSphere(pos, 32)) do
-					if isGasolineIgniter(obj) then
-						tbl[2] = now
-						local owner = obj:GetOwner()
-						tbl[3] = IsValid(owner) and owner or obj
-						break
-					end
-				end
 			end
-		end
-
-		-- prune dead/expired points so the table doesn't grow without bound
-		-- and overflow the net message when broadcast
-		for i = #hg.gasolinePath, 1, -1 do
-			local t = hg.gasolinePath[i]
-			if t[2] == true or (t[2] == false and (t[5] or 0) + 300 < CurTime()) then
-				table.remove(hg.gasolinePath, i)
-			end
-		end
-
-		while #hg.gasolinePath > 4000 do
-			table.remove(hg.gasolinePath, 1)
 		end
 
 		net.Start("gasoline_path")
@@ -181,8 +115,6 @@ if SERVER then
 	end)
 
 	local vecTemp = Vector(0, 0, 0)
-	local vecCenter = Vector(0, 0, 0)
-	local worldEnt = Entity(0)
 	
 	hook.Add("Drum Think", "Main", function(i, drum)
 		local ent = drum.Entity
@@ -193,17 +125,14 @@ if SERVER then
 			return
 		end
 
-		local now = CurTime()
 		local pos = ent:GetPos()
-		local ang = ent:GetAngles()
-		local vel = ent:GetVelocity()
-		local obbCenter = ent:OBBCenter()
+		local maxs, mins, center = ent:OBBMaxs(), ent:OBBMins(), ent:OBBCenter()
 		
-		ent.lastvel = ent.lastvel or vel
+		ent.lastvel = ent.lastvel or ent:GetVelocity()
 
-		local diff = ent.lastvel:LengthSqr() - vel:LengthSqr()
+		local diff = ent.lastvel:LengthSqr() - ent:GetVelocity():LengthSqr()
 		if math.abs(diff) > 75 * 75 and drum.Volume > 1 then
-			ent.lastvel = vel
+			ent.lastvel = ent:GetVelocity()
 
 			ent:EmitSound("player/footsteps/wade3.wav", 65, math.random(55, 75) * math.Clamp(2 - drum.Volume * 0.1, 1, 2))
 		--elseif diff > 0 then
@@ -214,17 +143,16 @@ if SERVER then
 			ent.Volume = drum.Volume
 			local high_point = vecZero
 			high_point:Set(point[1])
-			high_point:Rotate(ang)
+			high_point:Rotate(ent:GetAngles())
 
-			local center = vecCenter
-			center:Set(obbCenter)
-			center:Rotate(ang)
+			local center = ent:OBBCenter()
+			center:Rotate(ent:GetAngles())
 			
 			local dot = math.max(math.abs(vector_up:Dot(ent:GetUp())), 0.99)
-			vecTemp[3] = drum.Volume / dot - obbCenter[3]
+			vecTemp[3] = drum.Volume / dot - ent:OBBCenter()[3]
 			
 			local volumePos = center + vecTemp
-			volumePos:Add(vel / 8)
+			volumePos:Add(ent:GetVelocity() / 8)
 			
 			if math_Round(high_point[3], 1) < math_Round(volumePos[3], 1) + 1 then
 				drum.Volume = math_max(drum.Volume - 0.1, 0)
@@ -232,33 +160,28 @@ if SERVER then
 				drum.loopsound = drum.loopsound or CreateSound(ent,"ambient/water/leak_1.wav")
 				drum.loopsound:Play()
 
-				local tr = drum._traceData
-				if not tr then
-					tr = {filter = ent}
-					drum._traceData = tr
-				end
+				local tr = {}
 				tr.start = pos + high_point
 				tr.endpos = tr.start + -vector_up * 256
+				tr.filter = ent
 
-				tr = TraceLine(tr)
+				tr = util.TraceLine(tr)
 				
-					if tr.Hit and tr.Entity == worldEnt then
-						if (drum.lastFireCreated or 0) < now then
-							drum.lastFireCreated = now + 0.2
+				if tr.Hit and tr.Entity == Entity(0) then
+					if (drum.lastFireCreated or 0) < CurTime() then
+						drum.lastFireCreated = CurTime() + 0.2
 
-							hg.gasolineNextId = hg.gasolineNextId + 1
-							table.insert(hg.gasolinePath, {tr.HitPos, false, nil, hg.gasolineNextId, CurTime()})
-							MsgN("[HGBENZIN] created gasoline point #" .. hg.gasolineNextId .. " at " .. tostring(tr.HitPos))
-						end
-					elseif tr.Entity != worldEnt then
-						tr.Entity.shouldburn = tr.Entity.shouldburn and tr.Entity.shouldburn + 1 or 1
+						table.insert(hg.gasolinePath, {tr.HitPos, false})
 					end
+				elseif tr.Entity != Entity(0) then
+					tr.Entity.shouldburn = tr.Entity.shouldburn and tr.Entity.shouldburn + 1 or 1
+				end
 
-				net_Start("gas particle")
-				net_WriteVector(pos + high_point)
-				net_WriteVector(vel + VectorRand(-15, 15) + (pos + high_point - (center + pos)):GetNormalized() * 60)
-				net_WriteEntity(ent)
-				net_Broadcast()
+				net.Start("gas particle")
+				net.WriteVector(pos + high_point)
+				net.WriteVector(vector_up * 0 + ent:GetVelocity() + VectorRand(-15, 15) + (pos + high_point - (center + ent:GetPos())):GetNormalized() * 60)
+				net.WriteEntity(ent)
+				net.Broadcast()
 			else
 				if drum.loopsound then
 					drum.loopsound:Stop()
@@ -267,7 +190,7 @@ if SERVER then
 				drum.leaking = false
 			end
 
-			if point[2] < now then point[2] = point[2] + 0.1 end
+			if point[2] < CurTime() then point[2] = point[2] + 0.1 end
 		end
 
 		if drum.Volume <= 0.5 then
@@ -320,41 +243,34 @@ else
 
 		hg.gasolinePath = net.ReadTable()
 
-		local present = {}
-		for i, tbl in ipairs(hg.gasolinePath) do
-			present[tbl[4]] = true
-		end
-
-		for id, eff in pairs(hg.effparticles) do
-			if present[id] then continue end
+		for i, eff in pairs(hg.effparticles) do
+			if hg.gasolinePath[i] then continue end
 
 			if eff and eff:IsValid() then
 				eff:StopEmissionAndDestroyImmediately()
 			end
-
-			hg.effparticles[id] = nil
 		end
 	end)
 		
 	hook.Add("PreDrawEffects","fireeffects",function()
 		for i, tbl in ipairs(hg.gasolinePath) do
-			local pos, ignited, id = tbl[1], tbl[2], tbl[4]
-
+			local pos, ignited = tbl[1], tbl[2]
+			
 			local effparticles = hg.effparticles
-
-			if isnumber(tbl[2]) and (!effparticles[id] or !effparticles[id]:IsValid()) then
-				effparticles[id] = CreateParticleSystemNoEntity("vFire_Base_Medium",tbl[1],AngleRand()*5)
+			
+			if isnumber(tbl[2]) and (!effparticles[i] or !effparticles[i]:IsValid()) then
+				effparticles[i] = CreateParticleSystemNoEntity("vFire_Base_Medium",tbl[1],AngleRand()*5)
 			end
 
 			if tbl[2] == true then -- do not change to "if tbl[2] then"
-				if effparticles[id] and effparticles[id]:IsValid() then
-					effparticles[id]:StopEmission()
+				if effparticles[i] and effparticles[i]:IsValid() then
+					effparticles[i]:StopEmission()
 				end
 			end
 
 			if isnumber(tbl[2]) and (tbl[2] + 60) < CurTime() then
-				if effparticles[id] and effparticles[id]:IsValid() then
-					effparticles[id]:StopEmission()
+				if effparticles[i] and effparticles[i]:IsValid() then
+					effparticles[i]:StopEmission()
 				end
 			end
 		end

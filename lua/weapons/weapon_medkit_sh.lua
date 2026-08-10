@@ -1,5 +1,6 @@
 if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_bandage_sh"
+SWEP.BandageTPIK = false
 SWEP.PrintName = "Medkit"
 SWEP.Instructions = "A small bag containing medical supplies. Has bandages, painkillers, tourniquets and internal bleeding medicine. A necessary thing in hiking, military conditions and just a necessary thing in everyday life. RMB to apply on others, R to change use mode."
 SWEP.Category = "ZCity Medicine"

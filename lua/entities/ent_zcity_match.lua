@@ -28,6 +28,19 @@ local ignitable = { -- Very sorry for this silly table, but i don't want allow t
     ["models/gibs/wood_gib01e.mdl"] = true
 }
 
+local function IgniteGasoline(pos, owner)
+    for _, gasoline in ipairs(hg.gasolinePath or {}) do
+        if gasoline[2] == false and gasoline[1]:DistToSqr(pos) <= 30 * 30 then
+            gasoline[2] = CurTime()
+            gasoline[3] = owner
+        end
+    end
+end
+
+local function GetFlamePos(ent)
+    return ent:GetPos() - ent:GetForward() * 1.3 + ent:GetUp() * (2 * ent:GetFireLeft())
+end
+
 function ENT:Initialize()
     self:SetModel(self.Model)
 
@@ -47,26 +60,27 @@ function ENT:Initialize()
     if SERVER then
         self:AddCallback("PhysicsCollide",function(ent1, data)
             if ent1:GetFireLeft() <= 0 then return end
-            local pos = data.HitPos or ent1:GetPos()
+            local pos = ent1:GetPos()
             local ent = data.HitEntity
             --print(IsValid(ent), ignitable[ent:GetModel()], ent:GetModel())
             if IsValid(ent) and ignitable[ent:GetModel()] then
                 ent:Ignite()
             end
 
-            if hg.IgniteGasolineAt then
-                local ok = hg.IgniteGasolineAt(pos, ent1.debil, 40)
-                if ok then MsgN("[HGBENZIN] match ignited gasoline at " .. tostring(pos)) end
-            end
+            IgniteGasoline(pos, ent1.debil or ent1.owner)
+
             if IsValid(data.HitEntity) and hg.drums[data.HitEntity:EntIndex()] then
                 local drum = hg.drums[data.HitEntity:EntIndex()]
                 local drumEnt = data.HitEntity
                 local tbl = hg.expItems[drumEnt:GetModel()]
+                if not tbl then return end
+
                 for i, point in ipairs(drum.high_point) do
                     local pos2 = LocalToWorld(point[1], angle_zero, drumEnt:GetPos(), drumEnt:GetAngles())
                     if pos:DistToSqr(pos2) < 5 * 5 then
-                        drumEnt.owner = ent1.debil
+                        drumEnt.owner = ent1.debil or ent1.owner
                         hg.PropExplosion( drumEnt, tbl.ExpType, (drumEnt.Volume or tbl.Force) * 2, drumEnt:GetPhysicsObject():GetMass() )
+                        return
                     end
                 end
             end
@@ -104,10 +118,11 @@ function ENT:Draw()
 
     local attach = self.effectAttachment
 
-    if not IsValid(self.eff) and self:GetFireLeft() > 0 then
+    if not self.eff and self:GetFireLeft() > 0 then
         self.eff = CreateParticleSystem(attach,"Lighter_flame",PATTACH_POINT_FOLLOW,1,Vector(0,0,0))
+        eff = self.eff
     end
-    local pos = self:GetPos() + self:GetForward() * -1.3 + self:GetUp() * (2 * self:GetFireLeft())
+    local pos = GetFlamePos(self)
     attach:SetPos(pos)
     self:DrawModel()
 end
@@ -116,6 +131,10 @@ local color_b = Color(255,255,255)
 function ENT:Think()
     if SERVER then
         self:SetFireLeft(math.max(0,self:GetFireLeft() - 1 * FrameTime()))
+
+        if self:GetFireLeft() > 0 then
+            IgniteGasoline(GetFlamePos(self), self.debil or self.owner)
+        end
     end
 
     if CLIENT then
@@ -142,10 +161,8 @@ function ENT:Think()
         self:SetColor(color_b)
         self.ColorCD = CurTime() + 0.1
 
-        if self:GetFireLeft() <= 0 then
-            if IsValid(self.eff) then
-                self.eff:StopEmissionAndDestroyImmediately()
-            end
+        if self:GetFireLeft() <= 0 and self.eff then
+            self.eff:StopEmissionAndDestroyImmediately()
             self.eff = nil
         end
     end

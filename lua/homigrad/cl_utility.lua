@@ -737,6 +737,11 @@ players : 1 humans, 0 bots (20 max)
 			local volume = (talker:WaterLevel() == 3) and 0.25 or (trace.Hit and 0.5 or 1)
 			if hg.IsVoiceMuffled and hg.IsVoiceMuffled(talker) then volume = volume * 0.65 end
 
+			-- Fiber Wire powerdown: душимая жертва говорит всё тише по мере того,
+			-- как у неё кончается кислород (NW2 "fw_voicemuffle" обновляется
+			-- сервером в CustomThink оружия). 1 = нет приглушения, ~0 = шёпот.
+			volume = volume * math.max(talker.GetNW2Float and talker:GetNW2Float("fw_voicemuffle", 1) or 1, 0)
+
 			talker:SetVoiceVolumeScale(!hg.muteall and math.min(hg.playerInfo[talker:SteamID()] and hg.playerInfo[talker:SteamID()][2] or 1, volume) or 0)
 		end
 

@@ -248,8 +248,8 @@ local function ApplyBlastBurst(data)
 	data.DisorientPower = data.DisorientPower or 5
 	data.DisorientTime = data.DisorientTime or 6
 	data.BehindWallDisorientDiv = data.BehindWallDisorientDiv or 1
-	data.Distance = math_min(data.Distance, BlastMaxDistance)
-	data.Damage = math_min(data.Damage, BlastMaxDamage)
+	data.Distance = math_min(data.Distance, data.MaxDistance or BlastMaxDistance)
+	data.Damage = math_min(data.Damage, data.MaxDamage or BlastMaxDamage)
 	data.DistanceSqr = data.Distance * data.Distance
 	data.Attacker = IsValid(data.Owner) and data.Owner or game.GetWorld()
 	data.Inflictor = IsValid(data.Ent) and data.Ent or data.Attacker
@@ -360,6 +360,8 @@ local ExpTypes = {
 			Owner = owner,
 			Pos = selfPos,
 			Distance = distance,
+			MaxDistance = info.MaxDistance,
+			MaxDamage = info.MaxDamage,
 			Damage = blastDamage,
 			DamageType = DMG_BLAST + DMG_BURN,
 			ForceMul = BlastWaveForce * (info.KnockbackMul or 1),
@@ -370,7 +372,7 @@ local ExpTypes = {
 		})
 
 		util.ScreenShake(selfPos, 100, 900, 1, 5000)
-		StartShrapnel(ent, selfPos, owner, scaledForce, mass, 3)
+		StartShrapnel(ent, selfPos, owner, scaledForce, mass, info.ShrapnelMul or 3)
 	end,
 	Sharpnel = function(ent, force, mass, info)
 		mass = mass or 10
@@ -511,7 +513,7 @@ local function ConsumeIEDBonus(ent)
 end
 
 local expItems = {
-	["models/props_c17/oildrum001_explosive.mdl"] = {ExpType = "Fire", Force = 40, RangeMul = 1.1, KnockbackMul = 0.55, DamageMul = 0.65},
+	["models/props_c17/oildrum001_explosive.mdl"] = {ExpType = "Fire", Force = 75, RangeMul = 11, MaxDistance = math.huge, MaxDamage = math.huge, ShrapnelMul = 10},
 	["models/props_junk/gascan001a.mdl"] = {ExpType = "Fire", Force = 40, RangeMul = 1.3},
 	["models/props_junk/propane_tank001a.mdl"] = {ExpType = "Sharpnel", Force = 30, RangeMul = 1.35},
 	["models/props_junk/metalgascan.mdl"] = {ExpType = "Fire", Force = 40, RangeMul = 1.3},

@@ -126,12 +126,12 @@ if CLIENT then
         if (IsValid(owner)) and (ent == owner or hg.KeyDown(owner,IN_USE) or (owner:GetNetVar("lastFake",0) > CurTime())) then
             local timing = 0
             if not self.cycling then
-                timing = (1 - math.Clamp((self.animtime - CurTime()) / self.animspeed,0,1))
-				if isnumber(self.animStartCycle) then
-					timing = self.reverseanim and self.animStartCycle * (1 - timing) or Lerp(timing, self.animStartCycle, 1)
-				else
-					timing = self.reverseanim and (1 - timing) or timing
-				end
+				local animtime = self.animtime or CurTime()
+				local animspeed = math.max(self.animspeed or 1, 0.001)
+                timing = (1 - math.Clamp((animtime - CurTime()) / animspeed,0,1))
+				local startCycle = isnumber(self.animStartCycle) and self.animStartCycle or (self.reverseanim and 1 or 0)
+				local endCycle = isnumber(self.animEndCycle) and self.animEndCycle or (self.reverseanim and 0 or 1)
+				timing = Lerp(timing, startCycle, endCycle)
                 timing = self.CustomTiming and self:CustomTiming() or timing
                 WorldModel:SetCycle(timing)
                 
@@ -140,7 +140,9 @@ if CLIENT then
                     self.callback = nil
                 end
             else
-                timing = ((CurTime() - (self.animtime - self.animspeed))%self.animspeed) / self.animspeed
+				local animspeed = math.max(self.animspeed or 1, 0.001)
+				local animtime = self.animtime or (CurTime() + animspeed)
+                timing = ((CurTime() - (animtime - animspeed)) % animspeed) / animspeed
                 WorldModel:SetCycle(timing)
             end
 
@@ -152,7 +154,9 @@ if CLIENT then
 
             if WorldModel:GetModel() ~= self.WorldModelReal then WorldModel:SetModel(self.WorldModelReal); WorldModel:SetSkin(self.WMSkinV or self.WMSkin or 0) end
 
-			local pos = tr.StartPos + ang:Forward() * (self.HoldPos[1] - 4) + ang:Right() * self.HoldPos[2] + ang:Up() * self.HoldPos[3]
+			local holdPos = self.HoldPos
+			if self.GetTPIKHoldPos then holdPos = self:GetTPIKHoldPos(holdPos) or holdPos end
+			local pos = tr.StartPos + ang:Forward() * (holdPos[1] - 4) + ang:Right() * holdPos[2] + ang:Up() * holdPos[3]
 			--pos = pos + ang:Forward() * self.AttackPos[1] * self.attackanim + ang:Right() * self.AttackPos[2] * self.attackanim + ang:Up() * self.AttackPos[3] * self.attackanim
 			local ang = owner:EyeAngles()
             local _,ang = LocalToWorld(vector_origin,(self.HoldAng or angle_zero),vector_origin,ang)
@@ -189,19 +193,56 @@ if CLIENT then
             self.worldModel2:SetNoDraw(true)
         end
 
-        if not self.WorldModelExchange or self.HideMeshBones then
-            if self.HideMeshBones then
-                for k,v in ipairs(self.HideMeshBones) do
-                    if not WorldModel:LookupBone(v) then continue end
+        local hideMeshBones = self.GetHideMeshBones and self:GetHideMeshBones() or self.HideMeshBones
+		local meshBlendFraction
+		local meshBlendFrom = self.animBlendHiddenFrom
+		local meshBlendTo = self.animBlendHiddenTo
+		if self.animBlendStart and self.animBlendEnd and self.animBlendEnd > self.animBlendStart and meshBlendFrom and meshBlendTo then
+			meshBlendFraction = math.Clamp((CurTime() - self.animBlendStart) / (self.animBlendEnd - self.animBlendStart), 0, 1)
+			meshBlendFraction = meshBlendFraction * meshBlendFraction * (3 - 2 * meshBlendFraction)
+			local blendBones = {}
+			hideMeshBones = {}
+			for bone in pairs(meshBlendFrom) do blendBones[bone] = true end
+			for bone in pairs(meshBlendTo) do blendBones[bone] = true end
+			for bone in pairs(blendBones) do hideMeshBones[#hideMeshBones + 1] = bone end
+		end
+        if not self.WorldModelExchange or hideMeshBones then
+            if hideMeshBones then
+				local collapseBone = self.GetHideMeshCollapseBone and self:GetHideMeshCollapseBone()
+				local collapseIndex = isnumber(collapseBone) and collapseBone
+					or collapseBone and WorldModel:LookupBone(collapseBone)
+				local collapseMatrix = collapseIndex and WorldModel:GetBoneMatrix(collapseIndex)
+				local collapsePos = collapseMatrix and collapseMatrix:GetTranslation()
+				local collapseAng = collapseMatrix and collapseMatrix:GetAngles()
+
+                for k,v in ipairs(hideMeshBones) do
+					local boneIndex = isnumber(v) and v or WorldModel:LookupBone(v)
+					if not boneIndex or boneIndex < 0 or boneIndex >= WorldModel:GetBoneCount() then continue end
                     --print(v)
                     --WorldModel:ManipulateBoneScale(WorldModel:LookupBone(v),vecPochtiZero)
-                    local matrix = WorldModel:GetBoneMatrix(WorldModel:LookupBone(v))
-                    if self.HideMeshOnlyScale and self.HideMeshOnlyScale[v] then
+					local matrix = WorldModel:GetBoneMatrix(boneIndex)
+					if not matrix then continue end
+					local hiddenFraction = 1
+					if meshBlendFraction then
+						local wasHidden = meshBlendFrom[v] and 1 or 0
+						local isHidden = meshBlendTo[v] and 1 or 0
+						hiddenFraction = Lerp(meshBlendFraction, wasHidden, isHidden)
+					end
+					if hiddenFraction < 1 then
+						matrix:SetScale(LerpVector(hiddenFraction, matrix:GetScale(), vecPochtiZero))
+						WorldModel:SetBoneMatrix(boneIndex,matrix)
+						continue
+					end
+					if collapsePos then
+						matrix:SetTranslation(collapsePos)
+						matrix:SetAngles(collapseAng)
+						matrix:SetScale(vecPochtiZero)
+                    elseif self.HideMeshOnlyScale and self.HideMeshOnlyScale[v] then
                         matrix:SetScale(vecPochtiZero)
                     else
                         matrix:Zero()
                     end
-                    WorldModel:SetBoneMatrix(WorldModel:LookupBone(v),matrix)
+                    WorldModel:SetBoneMatrix(boneIndex,matrix)
                 end
             end
             WorldModel:DrawModel()
@@ -327,6 +368,12 @@ function SWEP:SetHandPos(noset)
 
 	local wm = self:GetWM()
 	if !IsValid(wm) then return end
+	local blendFraction = 1
+	if self.animBlendStart and self.animBlendEnd and self.animBlendEnd > self.animBlendStart then
+		blendFraction = math.Clamp((CurTime() - self.animBlendStart) / (self.animBlendEnd - self.animBlendStart), 0, 1)
+		blendFraction = blendFraction * blendFraction * (3 - 2 * blendFraction)
+	end
+	local blendPose = self.animBlendPose
 	-- ent:SetupBones()
 
 	self.rhandik = self.setrh
@@ -351,6 +398,11 @@ function SWEP:SetHandPos(noset)
 
 			local bonepos = wm_bonematrix:GetTranslation()
 			local boneang = wm_bonematrix:GetAngles()
+			local oldPose = blendPose and blendPose[bone]
+			if oldPose and blendFraction < 1 then
+				bonepos = LerpVector(blendFraction, oldPose[1], bonepos)
+				boneang = LerpAngle(blendFraction, oldPose[2], boneang)
+			end
 
 			bonepos.x = math.Clamp(bonepos.x, wmpos.x - 38, wmpos.x + 38)
 			bonepos.y = math.Clamp(bonepos.y, wmpos.y - 38, wmpos.y + 38)
@@ -381,6 +433,11 @@ function SWEP:SetHandPos(noset)
 
 			local bonepos = wm_bonematrix:GetTranslation()
 			local boneang = wm_bonematrix:GetAngles()
+			local oldPose = blendPose and blendPose[bone]
+			if oldPose and blendFraction < 1 then
+				bonepos = LerpVector(blendFraction, oldPose[1], bonepos)
+				boneang = LerpAngle(blendFraction, oldPose[2], boneang)
+			end
 
 			bonepos.x = math.Clamp(bonepos.x, wmpos.x - 38, wmpos.x + 38)
 			bonepos.y = math.Clamp(bonepos.y, wmpos.y - 38, wmpos.y + 38)
@@ -398,6 +455,14 @@ function SWEP:SetHandPos(noset)
     if self.PostSetHandPos then
         self:PostSetHandPos()
     end
+	if blendFraction >= 1 then
+		self.animBlendPose = nil
+		self.animBlendMeshPose = nil
+		self.animBlendHiddenFrom = nil
+		self.animBlendHiddenTo = nil
+		self.animBlendStart = nil
+		self.animBlendEnd = nil
+	end
 
     --return rhmat,lhmat
 end
@@ -492,7 +557,8 @@ elseif CLIENT then
         local sendtoclient = net.ReadBool()
         if IsValid(ent) and ent.PlayAnim and ( sendtoclient and sendtoclient or !ent:IsLocal()) then
             if tbl.anim == "Shove" and ent:IsLocal() and ent.anim == "Shove" and (ent.animtime or 0) > CurTime() then return end
-            ent:PlayAnim(tbl.anim,tbl.time,tbl.cycling,tbl.callback,tbl.reverse,nil,tbl.startCycle)
+			local remaining = tbl.endTime and math.max(tbl.endTime - CurTime(), 0.001) or tbl.time
+            ent:PlayAnim(tbl.anim,remaining,tbl.cycling,tbl.callback,tbl.reverse,nil,tbl.startCycle,tbl.endCycle,tbl.endTime)
             --if tbl.anim == "attack" or tbl.anim == "attack2" and ent:GetOwner().AnimRestartGesture then
             --    ent:GetOwner():AnimRestartGesture(GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_HL2MP_GESTURE_RANGE_ATTACK_SLAM, true)
             --end
@@ -500,8 +566,9 @@ elseif CLIENT then
     end)
 end
 
-function SWEP:PlayAnim(anim,time,cycling,callbackFuncName,reverse,sendtoclient,startCycle)
+function SWEP:PlayAnim(anim,time,cycling,callbackFuncName,reverse,sendtoclient,startCycle,endCycle,endTime)
     if SERVER then
+		endTime = endTime or (CurTime() + (time or (self.AnimList[anim] and self.AnimList[anim][2]) or 1))
         sendtoclient = true
         net.Start("melee_attack2")
             local netTbl = {
@@ -510,7 +577,9 @@ function SWEP:PlayAnim(anim,time,cycling,callbackFuncName,reverse,sendtoclient,s
                 cycling = cycling,
                 callback = callbackFuncName,
 				reverse = reverse,
-				startCycle = startCycle
+				startCycle = startCycle,
+				endCycle = endCycle,
+				endTime = endTime
             }
             net.WriteTable(netTbl) 
             net.WriteEntity(self)
@@ -522,7 +591,7 @@ function SWEP:PlayAnim(anim,time,cycling,callbackFuncName,reverse,sendtoclient,s
         self.seq = tAnim and tAnim[1] or anim
         self.anim = anim
         self.animspeed = time or tAnim[2] or 1
-		self.animtime = CurTime() + self.animspeed
+		self.animtime = endTime
 		if cycling ~= nil then
 			self.cycling = cycling
 		else
@@ -534,6 +603,7 @@ function SWEP:PlayAnim(anim,time,cycling,callbackFuncName,reverse,sendtoclient,s
 			self.reverseanim = tAnim[4] ~= nil and tAnim[4]
 		end
 		self.animStartCycle = startCycle
+		self.animEndCycle = endCycle
 
 		if not reverse and (self[callbackFuncName] or tAnim[5]) then
             local timerAnim = self.animspeed - (tAnim[6] or self.CallbackTimeAdjust or 0)
@@ -550,11 +620,11 @@ function SWEP:PlayAnim(anim,time,cycling,callbackFuncName,reverse,sendtoclient,s
 
     return end
     if not IsValid(self:GetWM()) or not IsValid(self:GetOwner()) or self:GetOwner():GetActiveWeapon() ~= self then
-		self.tries = self.tries - 1
+		self.tries = (self.tries or 10) - 1
 		if self.tries > 0 then
 			timer.Simple(0.01,function()
                 if not IsValid(self) then return end
-				self:PlayAnim(anim,time,cycling,callbackFuncName,reverse,sendtoclient,startCycle)
+				self:PlayAnim(anim,time,cycling,callbackFuncName,reverse,sendtoclient,startCycle,endCycle,endTime)
 			end)
 		end
 		return
@@ -562,12 +632,42 @@ function SWEP:PlayAnim(anim,time,cycling,callbackFuncName,reverse,sendtoclient,s
     self.tries = 10
 
     local mdl = self:GetWM()
+	local previousHiddenBones
+	if self.anim ~= anim and (self.AnimBlendTime or 0) > 0 then
+		local hiddenBones = self.GetHideMeshBones and self:GetHideMeshBones() or self.HideMeshBones
+		if self.AnimBlendMeshes ~= false then
+			previousHiddenBones = {}
+			for _, bone in ipairs(hiddenBones or {}) do previousHiddenBones[bone] = true end
+		end
+		mdl:SetupBones()
+		if self.AnimBlendHands ~= false then
+			self.animBlendPose = {}
+			local blendBones = {}
+			for _, bone in ipairs(hg.TPIKBonesLH or {}) do blendBones[bone] = true end
+			for _, bone in ipairs(hg.TPIKBonesRH or {}) do blendBones[bone] = true end
+			for bone in pairs(blendBones) do
+				local index = mdl:LookupBone(bone)
+				local matrix = index and mdl:GetBoneMatrix(index)
+				if matrix then
+					self.animBlendPose[bone] = {matrix:GetTranslation(), matrix:GetAngles()}
+				end
+			end
+		end
+		self.animBlendStart = CurTime()
+		self.animBlendEnd = self.animBlendStart + self.AnimBlendTime
+	end
     if mdl:GetModel() ~= self.WorldModelReal then mdl:SetModel(self.WorldModelReal) end
     local tAnim = self.AnimList[anim] or {}
     self.seq = tAnim and tAnim[1] or anim
     self.anim = anim
+	if previousHiddenBones then
+		self.animBlendHiddenFrom = previousHiddenBones
+		self.animBlendHiddenTo = {}
+		local hiddenBones = self.GetHideMeshBones and self:GetHideMeshBones() or self.HideMeshBones
+		for _, bone in ipairs(hiddenBones or {}) do self.animBlendHiddenTo[bone] = true end
+	end
     mdl:SetSequence(tAnim[1] or anim)
-    self.animtime = CurTime() + ( time or tAnim[2] or 1)
+    self.animtime = endTime or (CurTime() + (time or tAnim[2] or 1))
     self.animspeed = time or tAnim[2] or 1
 	if cycling ~= nil then
 		self.cycling = cycling
@@ -580,6 +680,7 @@ function SWEP:PlayAnim(anim,time,cycling,callbackFuncName,reverse,sendtoclient,s
 		self.reverseanim = tAnim[4] ~= nil and tAnim[4]
 	end
 	self.animStartCycle = startCycle
+	self.animEndCycle = endCycle
 	if not reverse and (self[callbackFuncName] or tAnim[5]) then
         self.callback = self[callbackFuncName] or tAnim[5]
     end
@@ -614,20 +715,19 @@ function SWEP:GetCurrentAnimCycle(curTime)
 	end
 
 	local timing = 1 - math.Clamp((self.animtime - curTime) / self.animspeed, 0, 1)
-	if isnumber(self.animStartCycle) then
-		return self.reverseanim and self.animStartCycle * (1 - timing) or Lerp(timing, self.animStartCycle, 1)
-	end
-
-	return self.reverseanim and (1 - timing) or timing
+	local startCycle = isnumber(self.animStartCycle) and self.animStartCycle or (self.reverseanim and 1 or 0)
+	local endCycle = isnumber(self.animEndCycle) and self.animEndCycle or (self.reverseanim and 0 or 1)
+	return Lerp(timing, startCycle, endCycle)
 end
 
-function SWEP:ReverseAnimToIdle(anim)
+function SWEP:ReverseAnimToIdle(anim, minimumCycle)
 	self.callback = nil
 	hook.Remove("Think", "AnimCallback" .. self:EntIndex())
 	if not SERVER then return end
 
 	local cycle = self:GetCurrentAnimCycle()
-	if cycle <= 0.001 then
+	minimumCycle = minimumCycle or 0
+	if cycle <= minimumCycle + 0.001 then
 		self._reverseToIdle = nil
 		self:PlayAnim("idle")
 		return
@@ -635,7 +735,7 @@ function SWEP:ReverseAnimToIdle(anim)
 
 	local fullDuration = self.animspeed > 0 and self.animspeed or 1
 	self._reverseToIdle = true
-	self:PlayAnim(anim or self.anim or "use", math.max(cycle * fullDuration, 0.01), false, nil, true, nil, cycle)
+	self:PlayAnim(anim or self.anim or "use", math.max((cycle - minimumCycle) * fullDuration, 0.01), false, nil, true, nil, cycle, minimumCycle)
 end
 
 function SWEP:ThinkReverseAnimToIdle(curTime)
@@ -645,6 +745,7 @@ function SWEP:ThinkReverseAnimToIdle(curTime)
 	self._reverseToIdle = nil
 	self.reverseanim = false
 	self.animStartCycle = nil
+	self.animEndCycle = nil
 	if SERVER then self:PlayAnim("idle") end
 end
 

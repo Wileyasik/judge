@@ -13,6 +13,7 @@ SWEP.ModelScale = 1.1
 SWEP.offsetVec = Vector(3, -4.5, 0)
 SWEP.offsetAng = Angle(90, 90, 0)
 SWEP.Category = "ZCity Medicine"
+SWEP.BandageTPIK = true
 
 if CLIENT then
 	SWEP.WepSelectIcon = Material("vgui/wep_jack_hmcd_bandage")
@@ -39,6 +40,11 @@ end
 local math = math
 local hg_healanims = ConVarExists("hg_healanims") and GetConVar("hg_healanims") or CreateConVar("hg_healanims", 0, FCVAR_REPLICATED + FCVAR_ARCHIVE, "Toggle heal/food animations", 0, 1)
 function SWEP:Think()
+	if self.BandageTPIK then
+		local base = weapons.GetStored("weapon_bandage_sh")
+		if base and base.Think then return base.Think(self) end
+	end
+
 	if not self:GetOwner():KeyDown(IN_ATTACK) and hg_healanims:GetBool() then
 		self:SetHolding(math.max(self:GetHolding() - 12, 0))
 	end
@@ -49,6 +55,11 @@ end
 
 SWEP.isFirstDeploy = true
 function SWEP:Deploy()
+	if self.BandageTPIK then
+		local base = weapons.GetStored("weapon_bandage_sh")
+		if base and base.Deploy then return base.Deploy(self) end
+	end
+
 	if SERVER or CLIENT and self:IsLocal() then
 		self:EmitSound(self.DeploySnd,50,math.random(90,110))
 	end

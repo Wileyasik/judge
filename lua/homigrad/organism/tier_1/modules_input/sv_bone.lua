@@ -1,6 +1,8 @@
 --local Organism = hg.organism
 local player_crush_amputation_threshold = 7
 
+util.AddNetworkString("hg_play_client_sound_file")
+
 local function isCrush(dmgInfo)
 	return (not dmgInfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT + DMG_BLAST)) or dmgInfo:GetInflictor().RubberBullets
 end

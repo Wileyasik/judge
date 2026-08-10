@@ -1,5 +1,6 @@
 if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_bandage_sh"
+SWEP.BandageTPIK = false
 SWEP.PrintName = "Big consumable"
 SWEP.Instructions = "A snack is always useful, regardless of the situation. Having a snack and waiting and regaining your well-being."
 SWEP.Category = "ZCity Other"

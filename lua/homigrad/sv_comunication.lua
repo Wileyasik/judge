@@ -18,8 +18,15 @@ local function ChatLogic(output, input, isChat, teamonly, text)
 
 	local chat_dist = chat_dist_normal
 
-	if(IsValid(output) and output.ChatWhisper)then
+	if IsValid(output) and output.ChatWhisper then
 		chat_dist = chat_dist_whisper
+	end
+
+	if IsValid(output) and output.GetNW2Float then
+		local muffle = output:GetNW2Float("fw_voicemuffle", 1)
+		if muffle < 1 then
+			chat_dist = math.max(chat_dist * muffle, 25)
+		end
 	end
 
 	if output:Alive() and input:Alive() and not output.organism.otrub and not input.organism.otrub and output.organism.o2[1] >= 15 and not output.organism.holdingbreath and input:TestPVS( output ) then

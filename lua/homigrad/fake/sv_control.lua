@@ -659,6 +659,17 @@ hook.Add("Think", "Fake", function()
 		power = power * org.consciousness
 		ragdoll.power = power
 
+		-- Fiber Wire "powerdown": жертва, которую душат (StrangleLocked), может
+		-- всё ещё брыкаться в фейк-рагдолле, но с ~40-50% дебаффом efficiency.
+		-- Множитель деградирует вместе с O2: при полном O2 = 0.6 (40% debuff),
+		-- при удушении до O2≈0 ≈ 0.1 (90% debuff, почти не может сопротивляться).
+		if ragdoll.StrangleLocked and org.o2 and org.o2.range and org.o2.range > 0 then
+			local o2frac = math.Clamp((org.o2[1] or 0) / org.o2.range, 0, 1)
+			local fwMul = 0.1 + (0.6 - 0.1) * o2frac
+			power = power * fwMul
+			ragdoll.power = power
+		end
+
 		local inmove = false
 		
 		local ragdollcombat = hg.RagdollCombatInUse(ply)

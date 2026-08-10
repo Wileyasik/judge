@@ -1,6 +1,5 @@
 if not CLIENT then return end
 
--- config. maybe i'll make more of these customizable soon?
 local CLICK_SOUND         = "player/dfujiclick.wav"
 local STAGE_1_DURATION    = 0
 local STAGE_1_MIN_DIST    = 60
@@ -17,7 +16,7 @@ local DOUBLE_CLICK_WINDOW = 0.5
 
 local DEATH_MESSAGES = {
     { title = "Deceased.", desc = "You are no longer a witness to the world." },
-    { title = "No Responce.", desc = "Your body remains. You do not." },
+    { title = "No Response.", desc = "Your body remains. You do not." },
     { title = "Gone.", desc = "The world continues without your testimony." },
     { title = "Expired.", desc = "All signs of breath has left you." },
     { title = "Terminated.", desc = "Your perspective has been permanently interrupted." },
@@ -107,8 +106,6 @@ end
 local m_pitch = GetConVar("m_pitch")
 local m_yaw   = GetConVar("m_yaw")
 
--- состояние кинематографичной смерти собрано в одну таблицу,
--- чтобы функции не превышали лимит upvalues (60) LuaJIT
 local CDeath = {}
 
 CDeath.hasSpawned    = false
