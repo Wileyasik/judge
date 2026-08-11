@@ -814,7 +814,7 @@ function SWEP:SpawnGarbage(mdl_custom, skin_custom, snd_custom, clr_custom, bgs_
 	local boneid
 	if owner:IsPlayer() then
 		local chr = hg.GetCurrentCharacter(owner)
-		boneid = chr:LookupBone(((owner.organism and owner.organism.rarmamputated) or (owner.zmanipstart ~= nil and owner.zmanipseq == "interact" and not owner.organism.larmamputated)) and "ValveBiped.Bip01_L_Hand" or "ValveBiped.Bip01_R_Hand")
+		boneid = chr:LookupBone(((owner.organism and owner.organism.rarmamputated) or (owner.zmanipstart ~= nil and owner.zmanipseq == "interact" and not ( owner.organism and owner.organism.larmamputated ))) and "ValveBiped.Bip01_L_Hand" or "ValveBiped.Bip01_R_Hand")
 	else
 		boneid = owner:LookupBone("ValveBiped.Bip01_R_Hand") or 1
 	end

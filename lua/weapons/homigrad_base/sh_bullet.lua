@@ -508,6 +508,13 @@ function SWEP:GetTrace(bCacheTrace, desiredPos, desiredAng, NoTrace, closeanim)
 	end
 	
 	local pos, ang = LocalToWorld(self.LocalMuzzlePos, self.LocalMuzzleAng, gunpos, gunang)
+
+	if CLIENT and !closeanim then
+		local muzz = self:GetMuzzleAtt(gun, true)
+		if muzz and muzz.Pos then
+			pos = muzz.Pos
+		end
+	end
 	
 	if NoTrace then self.cache_trace = self.cache_trace or {} self.cache_trace[2] = pos self.cache_trace[3] = ang
 		if !bCacheTrace then

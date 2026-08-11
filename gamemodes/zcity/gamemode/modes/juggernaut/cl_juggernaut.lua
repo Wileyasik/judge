@@ -6,9 +6,11 @@ local juggernauts = {}
 local juggernaut = nil
 local surviveUntil = 0
 local isJug = false
-local RevealTime = 0
+local DataReady = false
 local InJugg = false
-local JUG_ScreenDuration = 9
+local MusicPlayedFor = nil
+local JUG_ScreenDuration = 3
+local JUG_TeaserExitDur = 0.8
 local JUG_RevealDuration = 2.5
 
 local sf_font = "Lora"
@@ -49,8 +51,8 @@ net.Receive("juggernaut_state", function()
 	surviveUntil = survive
 	juggernauts = list
 	juggernaut = list[1]
-	RevealTime = CurTime()
 	InJugg = true
+	DataReady = true
 
 	isJug = false
 	for _, ent in ipairs(list) do
@@ -66,19 +68,44 @@ net.Receive("juggernaut_variant", function()
 end)
 
 hook.Add("RoundInfoCalled", "juggernaut_cleanup", function(nextMode)
-	MODE_VARIANT = 0
-	juggernauts = {}
-	juggernaut = nil
-	surviveUntil = 0
-	isJug = false
-	RevealTime = 0
+	if nextMode ~= "juggernaut" then
+		MODE_VARIANT = 0
+		juggernauts = {}
+		juggernaut = nil
+		surviveUntil = 0
+		isJug = false
+		DataReady = false
+		InJugg = false
+		return
+	end
 
-	InJugg = nextMode == "juggernaut"
+	InJugg = true
+end)
+
+hook.Add("Think", "juggernaut_music", function()
+	if not InJugg then return end
+
+	local rs = zb.ROUND_START or 0
+	if MusicPlayedFor == rs then return end
+
+	local t = CurTime() - rs
+	if t >= 0 and t <= 20 then
+		MusicPlayedFor = rs
+		surface.PlaySound("brawlstart.mp3")
+	end
 end)
 
 local function FormatTime(seconds)
 	seconds = math.max(0, math.ceil(seconds))
 	return string.format("%02d:%02d", math.floor(seconds / 60), seconds % 60)
+end
+
+local function IntroFadeEnd()
+	local revealEnd = JUG_ScreenDuration + JUG_TeaserExitDur + JUG_RevealDuration
+	local roundStart = zb.ROUND_START or 0
+	local roundBegin = (zb.ROUND_BEGIN or roundStart) - roundStart
+	local holdEnd = math.max(revealEnd, roundBegin)
+	return holdEnd + 1.5
 end
 
 local colJug = Color(190, 20, 20)
@@ -111,21 +138,13 @@ function MODE:RenderScreenspaceEffects()
 	local lply = LocalPlayer()
 	if not IsValid(lply) then return end
 
-	local fade = 0
-
 	local t = CurTime() - (zb.ROUND_START or 0)
-	if t > 0 and t <= JUG_ScreenDuration and RevealTime == 0 then
-		fade = math.min((JUG_ScreenDuration - t) / 2.5, 1)
-	end
+	local fadeEnd = IntroFadeEnd()
 
-	if RevealTime > 0 then
-		local rt = CurTime() - RevealTime
-		if rt > 0 and rt <= JUG_RevealDuration then
-			fade = math.max(fade, math.min((JUG_RevealDuration - rt) / 1.2, 1) * 0.8)
-		end
-	end
+	if t <= 0 or t > fadeEnd then return end
 
-	if fade <= 0 then return end
+	local fade = math.Clamp((fadeEnd - t) / 1.5, 0, 1)
+	if fade <= 0.01 then return end
 
 	zb.RemoveFade()
 
@@ -133,10 +152,15 @@ function MODE:RenderScreenspaceEffects()
 	surface.DrawRect(-1, -1, ScrW() + 1, ScrH() + 1)
 end
 
-local function DrawTeaser(t)
+local function DrawIntro(t)
 	local w, h = ScrW(), ScrH()
 
-	local out_fade = math.Clamp((JUG_ScreenDuration - t) / 1.5, 0, 1)
+	local teaserEnd = JUG_ScreenDuration + JUG_TeaserExitDur
+	local revealStart = teaserEnd
+	local revealEnd = revealStart + JUG_RevealDuration
+	local fadeEnd = IntroFadeEnd()
+
+	local out_fade = math.Clamp((fadeEnd - t) / 1.5, 0, 1)
 
 	local cox = Lerp(FrameTime() * 6, 0, (gui.MouseX() - w * 0.5) / (w * 0.5))
 	local coy = Lerp(FrameTime() * 6, 0, (gui.MouseY() - h * 0.5) / (h * 0.5))
@@ -147,39 +171,74 @@ local function DrawTeaser(t)
 	local variantName = VARIANT_NAMES[MODE_VARIANT] or ""
 
 	local elements = {}
-	local function add(text, fontname, col, x, y, dir, delay, plx, notilt)
+	local function add(text, fontname, col, x, y, dir, delay, plx, notilt, outAt, outDur, fromReveal)
 		elements[#elements + 1] = {
 			text = text,
 			font = fontname,
 			r = col.r, g = col.g, b = col.b,
 			x = x, y = y,
 			dir = dir, delay = delay, plx = plx or 1,
-			notilt = notilt,
+			notilt = notilt, outAt = outAt, outDur = outDur,
+			fromReveal = fromReveal,
 		}
 	end
 
-	add("JUGGERNAUT", "ZB_JuggernautHeader", colWhite, w * 0.5, h * 0.12, "left", 0, 0.9)
+	-- teaser block: exits fully before the reveal starts (revealStart == teaserEnd)
+	add("JUGGERNAUT", "ZB_JuggernautHeader", colWhite, w * 0.5, h * 0.12, "left", 0, 0.9, false, JUG_ScreenDuration, JUG_TeaserExitDur)
 	if variantName ~= "" then
-		add(variantName, "ZB_JuggernautMediumLarge", colWhite, w * 0.5, h * 0.30, "right", 0.4, 1.1)
+		add(variantName, "ZB_JuggernautMediumLarge", colWhite, w * 0.5, h * 0.30, "right", 0.4, 1.1, false, JUG_ScreenDuration, JUG_TeaserExitDur)
 	end
-	add("Who will be the Juggernaut?", "ZB_JuggernautMediumLarge", colWhite, w * 0.5, h * 0.45, "right", 0.7, 1.1)
-	add("The round begins in a moment!", "ZB_JuggernautMedium", colWhite, w * 0.5, h * 0.87, "bottom", 1.3, 1.3, true)
+	add("Who will be the Juggernaut?", "ZB_JuggernautMediumLarge", colWhite, w * 0.5, h * 0.45, "right", 0.7, 1.1, false, JUG_ScreenDuration, JUG_TeaserExitDur)
+	add("The round begins in a moment!", "ZB_JuggernautMedium", colWhite, w * 0.5, h * 0.87, "bottom", 1.3, 1.3, true, JUG_ScreenDuration, JUG_TeaserExitDur)
+
+	-- reveal block: rises from below the moment the teaser ends
+	if DataReady and t >= revealStart then
+		local rollColor = isJug and colJug or colHunt
+		local roleName = isJug and "YOU ARE THE JUGGERNAUT" or "YOU ARE A GRUNT"
+
+		add(roleName, "ZB_JuggernautHeader", rollColor, w * 0.5, h * 0.5, "up", 0, 0.9, false, nil, nil, true)
+		if variantName ~= "" then
+			add(variantName, "ZB_JuggernautMediumLarge", colWhite, w * 0.5, h * 0.5 + ScreenScale(40), "up", 0.15, 1.1, false, nil, nil, true)
+		end
+		if not isJug then
+			local names = {}
+			for _, ent in ipairs(juggernauts) do
+				if IsValid(ent) then names[#names + 1] = ent:Nick() end
+			end
+			local nameStr = #names > 0 and table.concat(names, ", ") or "?"
+			add("Juggernaut: " .. nameStr, "ZB_JuggernautMedium", colWhite, w * 0.5, h * 0.5 + ScreenScale(64), "up", 0.3, 1.3, false, nil, nil, true)
+		end
+	end
 
 	for i, el in ipairs(elements) do
-		local appear = ease_out(math.Clamp((t - el.delay) / 1.6, 0, 1))
-		local a = 255 * appear * out_fade
+		local appear
+		if el.fromReveal then
+			appear = ease_out(math.Clamp((t - revealStart - el.delay) / 0.6, 0, 1))
+		else
+			appear = ease_out(math.Clamp((t - el.delay) / 1.6, 0, 1))
+		end
+
+		local exit_fade = 1
+		if el.outAt then
+			exit_fade = ease_out(math.Clamp((el.outAt + el.outDur - t) / el.outDur, 0, 1))
+		end
+
+		local a = 255 * appear * exit_fade * out_fade
 
 		if a > 1 then
 			local slide = 1 - appear
+			local exitSlide = el.outAt and (1 - exit_fade) or 0
 			local x, y = el.x, el.y
 
 			if el.dir == "left" then
 				x = x - slide * ScreenScale(220)
 			elseif el.dir == "right" then
 				x = x + slide * ScreenScale(220)
-			elseif el.dir == "bottom" then
+			elseif el.dir == "bottom" or el.dir == "up" then
 				y = y + slide * ScreenScale(120)
 			end
+
+			y = y - exitSlide * ScreenScale(90)
 
 			x = x + cox * el.plx
 			y = y + coy * el.plx
@@ -188,45 +247,6 @@ local function DrawTeaser(t)
 
 			draw_text(el.text, el.font, x, y, el.r, el.g, el.b, a, tilt, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 		end
-	end
-end
-
-local function DrawReveal(rt)
-	local lply = LocalPlayer()
-	if not IsValid(lply) then return end
-
-	local w, h = ScrW(), ScrH()
-
-	local appear = ease_out(math.Clamp(rt / 0.6, 0, 1))
-	local out_fade = math.Clamp((JUG_RevealDuration - rt) / 0.8, 0, 1)
-	local a = 255 * appear * out_fade
-	if a <= 1 then return end
-
-	local variantName = VARIANT_NAMES[MODE_VARIANT] or ""
-	local rollColor = isJug and colJug or colHunt
-	local roleName = isJug and "YOU ARE THE JUGGERNAUT" or "YOU ARE A GRUNT"
-
-	local cox = Lerp(FrameTime() * 6, 0, (gui.MouseX() - w * 0.5) / (w * 0.5))
-	local coy = Lerp(FrameTime() * 6, 0, (gui.MouseY() - h * 0.5) / (h * 0.5))
-	local cursor_reach = ScreenScale(7)
-	cox = math.Clamp(cox, -1, 1) * cursor_reach
-	coy = math.Clamp(coy, -1, 1) * cursor_reach
-
-	local y = h * 0.5
-
-	draw_text(roleName, "ZB_JuggernautHeader", w * 0.5 + cox * 0.9, y + coy * 0.9, rollColor.r, rollColor.g, rollColor.b, a, 0, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-
-	if variantName ~= "" then
-		draw_text(variantName, "ZB_JuggernautMediumLarge", w * 0.5 + cox * 1.1, y + ScreenScale(40) + coy * 1.1, colWhite.r, colWhite.g, colWhite.b, a, 0, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-	end
-
-	if not isJug then
-		local names = {}
-		for _, ent in ipairs(juggernauts) do
-			if IsValid(ent) then names[#names + 1] = ent:Nick() end
-		end
-		local nameStr = #names > 0 and table.concat(names, ", ") or "?"
-		draw_text("Juggernaut: " .. nameStr, "ZB_JuggernautMedium", w * 0.5 + cox * 1.3, y + ScreenScale(64) + coy * 1.3, colWhite.r, colWhite.g, colWhite.b, a, 0, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 	end
 end
 
@@ -241,18 +261,11 @@ function MODE:HUDPaint()
 	if not round or round.name ~= "juggernaut" then return end
 
 	local t = CurTime() - (zb.ROUND_START or 0)
+	local fadeEnd = IntroFadeEnd()
 
-	if t > 0 and t <= JUG_ScreenDuration and RevealTime == 0 then
-		DrawTeaser(t)
+	if t > 0 and t <= fadeEnd then
+		DrawIntro(t)
 		return
-	end
-
-	if RevealTime > 0 then
-		local rt = CurTime() - RevealTime
-		if rt > 0 and rt <= JUG_RevealDuration then
-			DrawReveal(rt)
-			return
-		end
 	end
 
 	if not IsValid(juggernaut) and #juggernauts == 0 then return end
@@ -266,19 +279,13 @@ function MODE:HUDPaint()
 	end
 	local nameStr = #names > 0 and table.concat(names, ", ") or "?"
 
-	local title = isJug and "YOU ARE THE JUGGERNAUT" or ("Juggernaut: " .. nameStr)
-	draw.SimpleText(title, "ZB_InterfaceLarge", w * 0.5, h * 0.08, isJug and colJug or colHunt, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	local timeColor = isJug and colJug or colHunt
+	local roleStr = isJug and "JUGGERNAUT" or ("Juggernaut: " .. nameStr)
 
-	local variantName = VARIANT_NAMES[MODE_VARIANT] or ""
-	if variantName ~= "" then
-		draw.SimpleText(variantName, "ZB_InterfaceSmall", w * 0.5, h * 0.08 + 18, Color(200, 200, 200), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-	end
+	draw.SimpleText(roleStr, "ZB_InterfaceSmall", w * 0.5, h * 0.90, timeColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	draw.SimpleText(FormatTime(remaining), "ZB_HomicideMedium", w * 0.5, h * 0.95, timeColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+end
 
-	draw.SimpleText("Survive: " .. FormatTime(remaining), "ZB_InterfaceMedium", w * 0.5, h * 0.08 + 32, Color(240, 240, 240), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-
-	if isJug then
-		draw.SimpleText("Survive and don't let them bring you down!", "ZB_InterfaceMedium", w * 0.5, h * 0.08 + 60, colHunt, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-	else
-		draw.SimpleText("Bring the Juggernaut down before the timer ends!", "ZB_InterfaceMedium", w * 0.5, h * 0.08 + 60, colHunt, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-	end
+function MODE:EndRound()
+	surface.PlaySound("brawlwin.mp3")
 end

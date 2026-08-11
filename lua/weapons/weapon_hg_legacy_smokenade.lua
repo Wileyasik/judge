@@ -34,7 +34,7 @@ SWEP.NoTrap = true
 
 function SWEP:Animation()
 	local owner = self:GetOwner()
-	self:SetHold((owner.zmanipstart ~= nil and owner.zmanipseq == "interact" and not owner.organism.larmamputated) and "normal" or self.HoldType)
+	self:SetHold((owner.zmanipstart ~= nil and owner.zmanipseq == "interact" and not ( owner.organism and owner.organism.larmamputated )) and "normal" or self.HoldType)
 
 	if not (CLIENT and LocalPlayer() == self:GetOwner() and LocalPlayer() == GetViewEntity()) then return end
 	if (self:GetOwner().zmanipstart ~= nil and not self:GetOwner().organism.larmamputated) then return end

@@ -236,7 +236,7 @@ hook.Add("RenderScreenspaceEffects", "berserkEffect", function()
 		hg.berserkIntensity = 0
 		return
 	end
-	local berserk = (organism.berserk or 0)
+	local berserk = organism.silentBerserk and 0 or (organism.berserk or 0)
 	local berserkClamped = math.Clamp(berserk, 0, 3) * (organism.consciousness or 1)
 	if berserk > 0.0001 and (!hg.underberserk and !hg.underberserk2) then
 		hg.underberserk = true

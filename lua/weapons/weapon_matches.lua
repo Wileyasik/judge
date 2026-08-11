@@ -63,7 +63,7 @@ local lang1, lang2 = Angle(0, -10, 0), Angle(0, 10, 0)
 local rang1, rang2 = Angle(15, -20, 10), Angle(0, 0, 40)
 function SWEP:Animation()
 	local owner = self:GetOwner()
-    if (owner.zmanipstart ~= nil and not owner.organism.larmamputated) then return end
+    if (owner.zmanipstart ~= nil and not ( owner.organism and owner.organism.larmamputated )) then return end
     local hold = self:GetHolding()
 
     if self:Clip1() <= 0 and hold <= 5 then

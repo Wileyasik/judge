@@ -50,7 +50,7 @@ function SWEP:DrawWorldModel()
 	if IsValid(owner) then
 		local offsetVec = self.offsetVec
 		local offsetAng = self.offsetAng
-		local boneid = owner:LookupBone(((owner.organism and owner.organism.rarmamputated) or (owner.zmanipstart ~= nil and owner.zmanipseq == "interact" and not owner.organism.larmamputated)) and "ValveBiped.Bip01_L_Hand" or "ValveBiped.Bip01_R_Hand")
+		local boneid = owner:LookupBone(((owner.organism and owner.organism.rarmamputated) or (owner.zmanipstart ~= nil and owner.zmanipseq == "interact" and not ( owner.organism and owner.organism.larmamputated ))) and "ValveBiped.Bip01_L_Hand" or "ValveBiped.Bip01_R_Hand")
 		if not boneid then return end
 		local matrix = owner:GetBoneMatrix(boneid)
 		if not matrix then return end

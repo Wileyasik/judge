@@ -59,9 +59,7 @@ function MODE:SetupChances()
 	for name, tbl in pairs(MODE.Types) do
 		local savedChance = tonumber(zb.ModesChances[name])
 
-		if name == "suicidelunatic" and (savedChance == 0.2 or savedChance == 0.062 or savedChance == 0.02 or savedChance == 0.005) then
-			savedChance = tbl.Chance
-		elseif name == "standard" and savedChance == 0.2 then
+		if name == "standard" and savedChance == 0.2 then
 			savedChance = tbl.Chance
 		end
 
@@ -719,7 +717,7 @@ MODE.Types.soe = {
 MODE.Types.suicidelunatic = {
 	PrintName = "Suicide Lunatic",
 	Description = "One executioner carries a hidden suicide bomb. Everyone wears the Allah accessory.",
-	Chance = 0.009,
+	Chance = 0.2,
 	ChanceFunction = function() return zb.ModesChances["suicidelunatic"] or zb.modes["hmcd"].Types.suicidelunatic.Chance end,
 	LootTable = MODE.LootTableStandard,
 	Messages = {

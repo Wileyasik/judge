@@ -22,7 +22,8 @@ local ZB_FORCED_MODE_POOL = {
 	["active_shooter"] = true,
 	["dm"] = true,
 	["tdm"] = true,
-	["riot"] = true
+	["riot"] = true,
+	["juggernaut"] = true
 }
 local ZB_NO_BACK_TO_BACK_MODES = {
 	["dm"] = true,
@@ -950,7 +951,7 @@ if SERVER then
 		local modeKey = net.ReadString()
 		local addToQueue = net.ReadBool() or false
 		if command ~= "setmode" and command ~= "setforcemode" then return end
-		if not isstring(modeKey) or not zb.modes[modeKey] then ply:ChatPrint("Invalid game mode") return end
+		if not isstring(modeKey) or not zb:GetMode(modeKey) then ply:ChatPrint("Invalid game mode") return end
 
 		if !(ply:IsSuperAdmin() or ply:IsAdmin()) and not zb.modes[modeKey]:CanLaunch() then
 			ply:ChatPrint("This mode can't launch (No points or Is blocked): " .. modeKey)
@@ -998,7 +999,7 @@ if SERVER then
 		for _, modeKey in ipairs(modeQueue) do
 			modeKey = ZB_NormalizeModeKey(modeKey)
 			if #cleanQueue >= 12 then break end
-			if isstring(modeKey) and zb.modes[modeKey] then cleanQueue[#cleanQueue + 1] = modeKey end
+			if isstring(modeKey) and zb:GetMode(modeKey) then cleanQueue[#cleanQueue + 1] = modeKey end
 		end
 		modeQueue = cleanQueue
 		zb.QueuedModes = modeQueue

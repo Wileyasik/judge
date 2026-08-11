@@ -4,6 +4,7 @@ if SERVER then
 	util.AddNetworkString("ZCity_ActivatorConfirm")
 	util.AddNetworkString("ZCity_ActivatorDenied")
 	util.AddNetworkString("ZCity_ActivatorPoints")
+	util.AddNetworkString("ZCity_ActivatorTraps")
 	resource.AddSingleFile("resource/fonts/courierprime-regular.ttf")
 end
 
@@ -16,6 +17,7 @@ CreateConVar("ttt_activator_traitoronly", "0", FCVAR_ARCHIVE + FCVAR_NOTIFY, "1 
 CreateConVar("ttt_activator_hold_pos", "2.5 0 -3", FCVAR_ARCHIVE + FCVAR_REPLICATED, "Phone model position in hands (x y z)")
 CreateConVar("ttt_activator_hold_ang", "0 0 0", FCVAR_ARCHIVE + FCVAR_REPLICATED, "Phone model angle in hands (p y r)")
 CreateConVar("ttt_activator_debug", "0", FCVAR_ARCHIVE + FCVAR_NOTIFY, "1 = print activation failure reasons to the server console")
+CreateConVar("ttt_activator_mapbuttons", "1", FCVAR_ARCHIVE + FCVAR_NOTIFY, "1 = allow activating raw map func_button traps", 0, 1)
 
 SWEP.Base = "weapon_tpik_base"
 SWEP.PrintName = "Trap Activator"
@@ -91,6 +93,21 @@ function ZCityActivator.HasActivator(ply)
 	return false
 end
 
+function ZCityActivator.IsTrapButton(ent)
+	if not IsValid(ent) then return false end
+	local cls = ent:GetClass()
+	if cls == "ttt_traitor_button" or cls == "gmod_ttt_button" then return true end
+	if cls ~= "func_button" then return false end
+	if not GetConVar("ttt_activator_mapbuttons"):GetBool() then return false end
+
+	local st = ent:GetSaveTable()
+	local out = st and st.OnPressed
+	if type(out) == "table" and next(out) ~= nil then return true end
+
+	local name = ent:GetName() or ""
+	return name:find("ttt") ~= nil or name:find("trap") ~= nil or name:find("traitor") ~= nil
+end
+
 function ZCityActivator.StartPoints()
 	return GetConVar("ttt_activator_start_points"):GetInt()
 end
@@ -110,11 +127,13 @@ end
 
 function ZCityActivator.TryUseTrap(ply, trap)
 	if not IsValid(ply) or not ply:Alive() then return false, "denied" end
-	if not IsValid(trap) or trap:GetClass() ~= "ttt_traitor_button" then return false, "denied" end
+	if not ZCityActivator.IsTrapButton(trap) then return false, "denied" end
 	local wep = ZCityActivator.GetWep(ply)
 	if not IsValid(wep) then return false, "denied" end
 	if GetConVar("ttt_activator_traitoronly"):GetBool() and not ply.isTraitor then return false, "traitoronly" end
-	if not (trap.IsUsable and trap:IsUsable()) then return false, "unusable" end
+	if trap.IsUsable and not trap:IsUsable() then
+		if not (trap.GetLocked and trap:GetLocked()) then return false, "unusable" end
+	end
 	if ply:GetPos():Distance(trap:GetPos()) > (wep.ActivatorUseRange or 4096) then return false, "toofar" end
 
 	local cost = tonumber(trap.GetCost and trap:GetCost() or 0) or 0
@@ -128,13 +147,35 @@ function ZCityActivator.TryUseTrap(ply, trap)
 		ZCityActivator.SetPoints(ply, ZCityActivator.GetPoints(ply) - cost)
 	end
 
-	trap:TriggerOutput("OnPressed", ply)
-	if trap.RemoveOnPress then
-		trap:SetLocked(true)
-		trap:Remove()
+	local cls = trap:GetClass()
+	if cls == "ttt_traitor_button" or cls == "gmod_ttt_button" then
+		if GetConVar("ttt_activator_debug"):GetBool() then
+			local mt = trap.m_tOutputs
+			if type(mt) == "table" and mt["OnPressed"] then
+				local parts = {}
+				for _, o in ipairs(mt["OnPressed"]) do
+					local part = string.format("%q->%q param=%q delay=%s", tostring(o.entities or ""), tostring(o.input or ""), tostring(o.param or ""), tostring(o.delay))
+					if o.entities and o.entities ~= "!activator" and o.entities ~= "!self" and o.entities ~= "!player" and #ents.FindByName(o.entities) == 0 then
+						part = part .. " TARGET-MISSING"
+					end
+					parts[#parts + 1] = part
+				end
+				Msg("[TTT Activator] press OnPressed outputs: " .. table.concat(parts, " | ") .. "\n")
+			else
+				Msg("[TTT Activator] press OnPressed outputs: NONE\n")
+			end
+		end
+		trap:TriggerOutput("OnPressed", ply)
+		if trap.RemoveOnPress then
+			trap:SetLocked(true)
+			trap:Remove()
+		else
+			local delay = tonumber(trap.GetDelay and trap:GetDelay() or 1) or 1
+			trap:SetNextUseTime(CurTime() + math.max(delay, 0))
+		end
 	else
-		local delay = tonumber(trap.GetDelay and trap:GetDelay() or 1) or 1
-		trap:SetNextUseTime(CurTime() + math.max(delay, 0))
+		trap:Fire("Unlock", "", 0, ply)
+		trap:Fire("Press", "", 0, ply)
 	end
 
 	hook.Run("TTTTraitorButtonActivated", trap, ply)
@@ -144,14 +185,28 @@ end
 	if SERVER then
 		local function LogResult(ply, ok, reason, extra)
 			if not GetConVar("ttt_activator_debug"):GetBool() then return end
-			Msg(string.format("[TTT Activator] %s -> %s %s\n", IsValid(ply) and ply:Nick() or "?", ok and "OK" or ("FAIL(" .. (reason or "denied") .. ")"), extra or ""))
+			local msg = string.format("[TTT Activator] %s -> %s %s", IsValid(ply) and ply:Nick() or "?", ok and "OK" or ("FAIL(" .. (reason or "denied") .. ")"), extra or "")
+			Msg(msg .. "\n")
+			if IsValid(ply) then ply:PrintMessage(HUD_PRINTTALK, msg) end
+		end
+
+		local function SafeTryUseTrap(ply, trap)
+			return ZCityActivator.TryUseTrap(ply, trap)
 		end
 
 		net.Receive("ZCity_ActivatorUseTrap", function(_, ply)
 			if not IsValid(ply) or not ply:Alive() then return end
 			local trap = Entity(net.ReadUInt(16))
-			local ok, reason = ZCityActivator.TryUseTrap(ply, trap)
-			LogResult(ply, ok, reason)
+			local tag = string.format("(trap %s %d)", IsValid(trap) and trap:GetClass() or "?", IsValid(trap) and trap:EntIndex() or -1)
+			local success, ok, reason = pcall(SafeTryUseTrap, ply, trap)
+			if not success then
+				LogResult(ply, false, "error", tag .. " " .. tostring(ok))
+				net.Start("ZCity_ActivatorDenied")
+				net.WriteString("denied")
+				net.Send(ply)
+				return
+			end
+			LogResult(ply, ok, reason, tag)
 			if ok then
 				local wep = ZCityActivator.GetWep(ply)
 				if IsValid(wep) and wep.PlayAnim then wep:PlayAnim("use") end
@@ -171,6 +226,113 @@ end
 				ply:SetNWInt("ttt_activator_points", start)
 				ply:SetNWInt("ttt_activator_max_points", max)
 			end
+		end)
+
+		local function CollectTrapIndices()
+			local list = {}
+			for _, ent in ipairs(ents.GetAll()) do
+				if ZCityActivator.IsTrapButton(ent) then list[#list + 1] = ent:EntIndex() end
+			end
+			return list
+		end
+
+		local function SendTraps(ply)
+			local list = CollectTrapIndices()
+			net.Start("ZCity_ActivatorTraps")
+			net.WriteUInt(#list, 16)
+			for _, idx in ipairs(list) do net.WriteUInt(idx, 16) end
+			if ply then net.Send(ply) else net.Broadcast() end
+		end
+
+		hook.Add("PostCleanupMap", "TTT_Activator_SyncTraps", function() SendTraps() end)
+		hook.Add("PlayerInitialSpawn", "TTT_Activator_SyncTraps", function(ply) timer.Simple(1, function() if IsValid(ply) then SendTraps(ply) end end) end)
+		timer.Create("TTT_Activator_SyncTraps", 15, 0, function() SendTraps() end)
+
+		local dumpLines = {}
+		local function DL(...)
+			local line = string.format(...)
+			Msg(line .. "\n")
+			dumpLines[#dumpLines + 1] = line
+		end
+
+		local function WriteDump()
+			local ok = file.Write("ttt_activator_dump.txt", table.concat(dumpLines, "\n"))
+			dumpLines = {}
+			Msg("[TTT Activator] dump written to data/ttt_activator_dump.txt ok=" .. tostring(ok) .. "\n")
+		end
+
+		local function DumpOutputs(ent)
+			local mt = ent.m_tOutputs
+			if type(mt) == "table" then
+				for oname, list in pairs(mt) do
+					for i, o in ipairs(list) do
+						local miss = ""
+						if o.entities and o.entities ~= "!activator" and o.entities ~= "!self" and o.entities ~= "!player" and not o.entities:find("%*", 1, true) and #ents.FindByName(o.entities) == 0 then
+							miss = " [MISSING]"
+						end
+						DL("    m_tOutputs[%q][%d] = %q -> %q param=%q delay=%s times=%s%s", tostring(oname), i, tostring(o.entities or ""), tostring(o.input or ""), tostring(o.param or ""), tostring(o.delay), tostring(o.times), miss)
+					end
+				end
+			else
+				DL("    m_tOutputs = nil")
+			end
+		end
+
+		local function DebugDump()
+			local n = 0
+			for _, ent in ipairs(ents.GetAll()) do
+				local cls = ent:GetClass()
+				if cls == "func_button" or cls == "ttt_traitor_button" or cls == "gmod_ttt_button" then
+					if ZCityActivator.IsTrapButton(ent) then
+						n = n + 1
+						local mt = ent.m_tOutputs
+						local outInfo = "none"
+						if type(mt) == "table" and mt["OnPressed"] then
+							outInfo = "m_tOutputs[" .. tostring(#mt["OnPressed"]) .. "]"
+						end
+						DL("[TTT Activator] trap %3d: %-22s name=%q spawnflags=%d onpressed=%s", ent:EntIndex(), cls, ent:GetName(), ent:GetSpawnFlags(), outInfo)
+						DumpOutputs(ent)
+					end
+				end
+			end
+			DL("[TTT Activator] found %d trap buttons", n)
+
+			local nc = 0
+			for _, ent in ipairs(ents.GetAll()) do
+				if ent:GetClass() == "ttt_credit_adjust" then
+					nc = nc + 1
+					DL("[TTT Activator] credit %3d: name=%q credits=%s", ent:EntIndex(), ent:GetName(), tostring(ent.Credits or 0))
+					DumpOutputs(ent)
+				end
+			end
+			DL("[TTT Activator] found %d credit adjusters", nc)
+
+			local patterns = { "tnt", "water", "flood", "death", "axe", "superaxe", "round", "manlift", "elevator", "gate", "glass", "sprite" }
+			for _, ent in ipairs(ents.GetAll()) do
+				local name = ent:GetName()
+				if name and name ~= "" then
+					local low = name:lower()
+					for _, p in ipairs(patterns) do
+						if low:find(p, 1, true) then
+							DL("[TTT Activator] ent %5d: %-22s name=%q spawnflags=%d", ent:EntIndex(), ent:GetClass(), name, ent:GetSpawnFlags())
+							break
+						end
+					end
+				end
+			end
+		end
+
+		hook.Add("PostCleanupMap", "TTT_Activator_DebugDump", function()
+			if GetConVar("ttt_activator_debug"):GetBool() then
+				DebugDump()
+				WriteDump()
+			end
+		end)
+
+		concommand.Add("ttt_activator_dump", function()
+			DL("[TTT Activator] manual dump")
+			DebugDump()
+			WriteDump()
 		end)
 
 		hook.Add("Player_Death", "TTT_Activator_KillPoints", function(victim)
@@ -289,13 +451,24 @@ if CLIENT then
 
 	TTTAct.markers = {}
 	TTTAct.markersNext = 0
+	TTTAct.trapIndices = {}
 
 	function TTTAct.CacheMarkers()
 		TTTAct.markers = {}
-		for _, ent in ipairs(ents.FindByClass("ttt_traitor_button")) do
+		for idx in pairs(TTTAct.trapIndices) do
+			local ent = Entity(idx)
 			if IsValid(ent) then TTTAct.markers[#TTTAct.markers + 1] = ent end
 		end
 	end
+
+	net.Receive("ZCity_ActivatorTraps", function()
+		local n = net.ReadUInt(16)
+		local tbl = {}
+		for _ = 1, n do tbl[net.ReadUInt(16)] = true end
+		TTTAct.trapIndices = tbl
+		TTTAct.CacheMarkers()
+		TTTAct.markersNext = 0
+	end)
 
 	function TTTAct.OwnsActivator()
 		local ply = LocalPlayer()
@@ -332,6 +505,10 @@ if CLIENT then
 		if not IsValid(wep) then return end
 		local ply = LocalPlayer()
 		if ply:GetPos():Distance(trap:GetPos()) > (wep.ActivatorUseRange or 4096) then return end
+
+		if GetConVar("ttt_activator_debug"):GetBool() then
+			print("[TTT Activator] client trying trap", trap:EntIndex(), trap:GetClass())
+		end
 
 		net.Start("ZCity_ActivatorUseTrap")
 		net.WriteUInt(trap:EntIndex(), 16)

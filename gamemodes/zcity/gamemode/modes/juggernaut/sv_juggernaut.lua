@@ -2,7 +2,7 @@ local MODE = MODE
 
 MODE.name = "juggernaut"
 MODE.PrintName = "Juggernaut"
-MODE.start_time = 9
+MODE.start_time = 6.3
 MODE.end_time = 7
 MODE.grace_time = 0
 MODE.ROUND_TIME = 420
@@ -168,7 +168,6 @@ local function ApplyJuggernautBuffs(ply)
 	org.recoilmul = 0.6
 	org.legstrength = 1.1
 	org.meleespeed = 1.15
-	org.NoKnockdown = true
 
 	if IsFury(ply) then
 		org.berserk = MODE.BerserkStrength
@@ -181,13 +180,16 @@ local function ApplyJuggernautBuffs(ply)
 		org.armorMul = 6
 		org.painToleranceMul = 4
 		org.blood = 7500
+		org.NoKnockdown = true
 	elseif MODE.variant == 3 then
 		org.armorMul = 3
 		org.painToleranceMul = 2
 		org.blood = 6000
+		org.NoKnockdown = nil
 	else
 		org.armorMul = nil
 		org.painToleranceMul = nil
+		org.NoKnockdown = nil
 	end
 
 	ApplyHealthBuff(ply)
@@ -276,36 +278,7 @@ function MODE:CanLaunch()
 	return self:GetPlayerCount() >= 2
 end
 
-function MODE:Intermission()
-	MODE.Juggernauts = {}
-	MODE.Juggernaut = nil
-	MODE._huntersWon = nil
-	MODE._juggernautSurvived = nil
-	MODE._juggNames = nil
-	game.CleanUpMap()
-
-	self.ROUND_TIME = math.max(60, roundTime:GetInt())
-	if hg.UpdateRoundTime then hg.UpdateRoundTime(self.ROUND_TIME) end
-
-	self.variant = self:PickVariant()
-
-	net.Start("juggernaut_variant")
-		net.WriteInt(self.variant or 1, 8)
-	net.Broadcast()
-
-	for _, ply in player.Iterator() do
-		if ply:Team() == TEAM_SPECTATOR then continue end
-		ply.IsJuggernaut = nil
-		ply.juggClass = nil
-		ply.juggLoadout = nil
-		ClearJuggBuffs(ply)
-		ApplyAppearance(ply)
-		ply:SetupTeam(0)
-		if ply:Alive() then ply:Freeze(true) end
-	end
-end
-
-function MODE:RoundStart()
+function MODE:PreselectJuggernauts()
 	local variant = self.variant or 1
 	local cfg = self.Variants[variant]
 	if not cfg then return end
@@ -349,15 +322,69 @@ function MODE:RoundStart()
 		ply.juggLoadout = juggClass.loadout
 		juggs[#juggs + 1] = ply
 		names[#names + 1] = ply:Nick()
-
-		ApplyJuggernautBuffs(ply)
-		self:GiveJuggLoadout(ply, juggClass.loadout)
-		self:ApplyJuggPersona(ply)
 	end
 
 	MODE.Juggernauts = juggs
 	MODE.Juggernaut = juggs[1]
 	MODE._juggNames = table.concat(names, ", ")
+
+	net.Start("juggernaut_state")
+		net.WriteInt(variant, 8)
+		net.WriteFloat(0)
+		net.WriteUInt(#juggs, 4)
+		for _, jugg in ipairs(juggs) do
+			net.WriteEntity(jugg)
+		end
+	net.Broadcast()
+end
+
+function MODE:Intermission()
+	MODE.Juggernauts = {}
+	MODE.Juggernaut = nil
+	MODE._huntersWon = nil
+	MODE._juggernautSurvived = nil
+	MODE._juggNames = nil
+	game.CleanUpMap()
+
+	self.ROUND_TIME = math.max(60, roundTime:GetInt())
+	if hg.UpdateRoundTime then hg.UpdateRoundTime(self.ROUND_TIME) end
+
+	self.variant = self:PickVariant()
+
+	net.Start("juggernaut_variant")
+		net.WriteInt(self.variant or 1, 8)
+	net.Broadcast()
+
+	self:PreselectJuggernauts()
+
+	for _, ply in player.Iterator() do
+		if ply:Team() == TEAM_SPECTATOR then continue end
+		if not ply.IsJuggernaut then
+			ply.juggClass = nil
+			ply.juggLoadout = nil
+		end
+		ClearJuggBuffs(ply)
+		ApplyAppearance(ply)
+		ply:SetupTeam(0)
+		if ply:Alive() then ply:Freeze(true) end
+	end
+end
+
+function MODE:GiveJuggernautLoadouts()
+	local variant = self.variant or 1
+	local cfg = self.Variants[variant]
+	if not cfg then return end
+
+	local juggs = MODE.Juggernauts or {}
+	if #juggs == 0 then return end
+
+	for _, ply in ipairs(juggs) do
+		if not IsValid(ply) then continue end
+		ply.IsJuggernaut = true
+		ApplyJuggernautBuffs(ply)
+		self:GiveJuggLoadout(ply, ply.juggLoadout or cfg.juggernauts[1].loadout)
+		self:ApplyJuggPersona(ply)
+	end
 
 	local grunt = cfg.grunt
 	for _, ply in player.Iterator() do
@@ -379,8 +406,25 @@ function MODE:RoundStart()
 		end
 	net.Broadcast()
 
-	PrintMessage(HUD_PRINTTALK, "JUGGERNAUT (" .. cfg.name .. "): " .. MODE._juggNames .. " must survive for " .. math.ceil(self.ROUND_TIME) .. " seconds!")
+	PrintMessage(HUD_PRINTTALK, "JUGGERNAUT (" .. (cfg.name or "") .. "): " .. (MODE._juggNames or "") .. " must survive for " .. math.ceil(self.ROUND_TIME) .. " seconds!")
 	PrintMessage(HUD_PRINTTALK, "Everyone else: hunt the Juggernaut down!")
+end
+
+function MODE:RoundStart()
+	local variant = self.variant or 1
+	local cfg = self.Variants[variant]
+	if not cfg then return end
+
+	local juggs = MODE.Juggernauts or {}
+
+	if #juggs == 0 then
+		MODE.Juggernaut = nil
+		return
+	end
+
+	MODE.Juggernaut = juggs[1]
+
+	self:GiveJuggernautLoadouts()
 end
 
 function MODE:GiveEquipment()
@@ -499,7 +543,10 @@ hook.Add("PreTraceOrganBulletDamage", "juggernaut_resist", function(org, bone, d
 	local owner = org and org.owner
 	if not IsValid(owner) or not MODE:IsJuggernaut(owner) then return end
 
-	hook_info.dmg = (hook_info.dmg or dmg) * math.max(0.05, damageReduction:GetFloat())
+	local mul = math.max(0.05, damageReduction:GetFloat())
+	if MODE.variant == 2 then mul = mul * 0.5 end
+
+	hook_info.dmg = (hook_info.dmg or dmg) * mul
 end)
 
 local function JuggernautThink(owner, org, timeValue)
