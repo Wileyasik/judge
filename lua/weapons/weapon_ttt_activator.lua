@@ -19,7 +19,7 @@ CreateConVar("ttt_activator_debug", "0", FCVAR_ARCHIVE + FCVAR_NOTIFY, "1 = prin
 
 SWEP.Base = "weapon_tpik_base"
 SWEP.PrintName = "Trap Activator"
-SWEP.Author = "Judge"
+SWEP.Author = "Executioner"
 SWEP.Category = "ZCity Other"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -48,16 +48,25 @@ SWEP.setlh = false
 SWEP.setrh = true
 SWEP.Slot = 4
 SWEP.SlotPos = 1
+SWEP.WepSelectIcon2 = Material("vgui/weapon_cof_mobile.png")
+SWEP.WepSelectIcon = "vgui/weapon_cof_mobile.png"
+SWEP.IconOverride = "vgui/weapon_cof_mobile.png"
+SWEP.BounceWeaponIcon = false
 
 SWEP.ActivatorUseRange = 1096
 SWEP.HoldPos = Vector(4, 1, -2)
 SWEP.HoldAng = Angle(0, 0, 0)
 
+SWEP.ScreenBone = "phone"
+SWEP.ScreenPos = Vector(-0.1, 0.3, 0.7)
+SWEP.ScreenAng = Angle(178,-6, -90)
+SWEP.ScreenScale = 0.03
+
 SWEP.weaponPos = Vector(0.25, 1, -6)
 SWEP.weaponAng = Angle(0, -0, 0)
 
 SWEP.AnimList = {
-	deploy = { "idle_flash", 1.0, false, nil, function(self) self:PlayAnim("idle") end },
+	deploy = { "draw_flash", 1.0, false, nil, function(self) self:PlayAnim("idle") end },
 	idle = { "idle_flash", 2.0, true },
 	use = { "flashtosms", 0.9, false, nil, function(self) self:ReverseAnimToIdle("use") end },
 }
@@ -167,8 +176,10 @@ end
 		hook.Add("Player_Death", "TTT_Activator_KillPoints", function(victim)
 			timer.Simple(0.1, function()
 				if not IsValid(victim) then return end
+				local harmDone = zb and zb.HarmDone
+				if not harmDone then return end
 				local best, bestHarm = nil, 0
-				for attacker, harm in pairs(zb.HarmDone[victim] or {}) do
+				for attacker, harm in pairs(harmDone[victim] or {}) do
 					if IsValid(attacker) and attacker:IsPlayer() and attacker ~= victim and harm > bestHarm then
 						best, bestHarm = attacker, harm
 					end
@@ -245,7 +256,6 @@ end
 
 if CLIENT then
 	local confirmSnd = Sound("buttons/button24.wav")
-	local deniedSnd = Sound("buttons/button3.wav")
 
 	surface.CreateFont("TTT_Act_Title", {
 		font = "Courier Prime",
@@ -272,7 +282,6 @@ if CLIENT then
 		antialias = true,
 	})
 
-	local colBg = Color(15, 15, 15, 225)
 	local colBorder = Color(255, 255, 255, 90)
 	local colTitle = Color(255, 255, 255, 255)
 	local colWords = Color(230, 230, 230, 255)
@@ -330,56 +339,44 @@ if CLIENT then
 		ClearFocus()
 	end
 
-	local deniedMsg, deniedUntil = "", 0
-	local gainedMsg, gainedUntil = "", 0
-
-	local deniedText = {
-		nopoints = "Not enough points",
-		toofar = "Too far",
-		unusable = "Trap unavailable",
-		traitoronly = "Traitors only",
-		denied = "Unavailable",
-	}
+	local flashUntil = 0
 
 	net.Receive("ZCity_ActivatorConfirm", function()
 		surface.PlaySound(confirmSnd)
+		flashUntil = CurTime() + 0.6
 		TTTAct.CacheMarkers()
 	end)
 
-	net.Receive("ZCity_ActivatorDenied", function()
-		local reason = net.ReadString()
-		deniedMsg = deniedText[reason] or reason
-		deniedUntil = CurTime() + 2.5
-		surface.PlaySound(deniedSnd)
-	end)
+	function SWEP:DrawPostWorldModel()
+		if not self:IsLocal() then return end
+		local wm = self.worldModel
+		if not IsValid(wm) then return end
 
-	net.Receive("ZCity_ActivatorPoints", function()
-		gainedMsg = "+" .. net.ReadInt(16) .. " points"
-		gainedUntil = CurTime() + 2
-	end)
+		wm:SetupBones()
 
-	local function DrawPointsPanel()
-		local w, h = 150, 54
-		local x = ScrW() - w - 20
-		local y = ScrH() * 0.18
-
-		local pts = GetPoints()
-
-		draw.RoundedBox(2, x, y, w, h, colBg)
-		surface.SetDrawColor(colBorder)
-		surface.DrawOutlinedRect(x, y, w, h, 1)
-
-		draw.SimpleText("POINTS", "TTT_Act_Small", x + w / 2, y + 13, colDim, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-		draw.SimpleText(tostring(pts), "TTT_Act_Words", x + w / 2, y + 33, colWords, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-
-		local msgY = y + h + 8
-		if gainedUntil >= CurTime() then
-			draw.SimpleText(gainedMsg, "TTT_Act_Small", x + w, msgY, colWords, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
-			msgY = msgY + 18
+		local basePos, baseAng = wm:GetRenderOrigin() or wm:GetPos(), wm:GetRenderAngles() or wm:GetAngles()
+		if self.ScreenBone and self.ScreenBone ~= "" then
+			local boneID = wm:LookupBone(self.ScreenBone)
+			if boneID and boneID >= 0 then
+				local mat = wm:GetBoneMatrix(boneID)
+				if mat then
+					basePos = mat:GetTranslation()
+					baseAng = mat:GetAngles()
+				end
+			end
 		end
-		if deniedUntil >= CurTime() then
-			draw.SimpleText(deniedMsg, "TTT_Act_Small", x + w, msgY, colDim, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
-		end
+		if not basePos or not baseAng then return end
+
+		local pos, ang = LocalToWorld(self.ScreenPos or vector_origin, self.ScreenAng or angle_zero, basePos, baseAng)
+		local scale = self.ScreenScale or 0.06
+
+		local flash = flashUntil >= CurTime()
+		local numCol = flash and Color(255, 255, 255, 255) or colWords
+
+		cam.Start3D2D(pos, ang, scale)
+			draw.SimpleText("POINTS", "TTT_Act_Small", 0, -34, Color(200, 200, 200, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+			draw.SimpleText(tostring(GetPoints()), "TTT_Act_Words", 0, 0, numCol, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		cam.End3D2D()
 	end
 
 	local function DrawMarkers()
@@ -479,7 +476,6 @@ if CLIENT then
 			TTTAct.markersNext = CurTime() + 3
 		end
 
-		DrawPointsPanel()
 		DrawMarkers()
 	end, HOOK_HIGH)
 end
