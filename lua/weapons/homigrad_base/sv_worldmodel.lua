@@ -63,6 +63,8 @@ function SWEP:WorldModel_Transform(bNoApply, bNoAdditional)
 		desiredAng[3] = desiredAng[3] + (owner:EyeAngles()[3])
 		desiredAng:RotateAroundAxis(desiredAng:Forward(), ent:IsNPC() and 0 or 180)
 		local desiredPos = matrixR:GetTranslation()
+		local aimdir = aimvec:Forward()
+		desiredPos = owner:EyePos() + aimdir * math_max(0, (desiredPos - owner:EyePos()):Dot(aimdir))
 		
 		--local oldPos = -(-desiredPos)
 		--local oldAng = -(-desiredAng)

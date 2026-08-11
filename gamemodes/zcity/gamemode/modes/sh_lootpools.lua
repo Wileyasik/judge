@@ -31,6 +31,7 @@ for _, class in ipairs({
 	"weapon_alien3",
 	"weapon_oicw",
 	"weapon_osipr",
+	"weapon_ttt_activator",
 
 	"weapon_p22",
 	"weapon_zoraki",
