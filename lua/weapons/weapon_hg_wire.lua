@@ -437,7 +437,6 @@ local function StopStrangle(self)
                 ragPly._fiberwire_old_o2regen = nil
             end
 
-            -- === POWERDOWN: снимаем маску голоса eightbit и сбрасываем множитель глушения ===
             if self.FiberwireVictimEffectApplied and eightbit and eightbit.EnableEffect and ragPly.UserID then
                 local effToRestore = self.FiberwireVictimOldEffect
                 if effToRestore == nil then
