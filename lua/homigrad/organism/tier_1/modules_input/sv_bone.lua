@@ -484,7 +484,7 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
 	if isStab and functionalHelmet and helmetApplied then
 		org.skull = oldDmg
 	end
-	if isMelee(dmgInfo) and oldDmg < 1 and org.skull < 1 and dmg < 1.35 then result = 1 end
+	if isMelee(dmgInfo) and oldDmg < 1 and org.skull < 1 and dmg > 0.3 and dmg < 1.35 then result = 1 end
 
 	hg.AddHarmToAttacker(dmgInfo, (org.skull - oldDmg) * 4, "Skull bone damage harm")
 

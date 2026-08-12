@@ -1988,8 +1988,10 @@ local function velocityDamage(ent, data)
 			local head_otrub_chance = math.Clamp((dmg - head_otrub_min_damage) * head_otrub_chance_mul, 0, head_otrub_max_chance)
 			local headDamageMul = hadhelmet and 0.2 or 1
 			local oldSkull = org.skull
+			local isMeleeHit = dmgInfo:IsDamageType(DMG_CLUB) or dmgInfo:IsDamageType(DMG_SLASH)
+			local skullDmgMul = isMeleeHit and 0.08 or 6
 			
-			hg.organism.input_list.skull(org, bone, dmg * 6 * headDamageMul * ragdoll_fall_skull_damage_mul, dmgInfo)
+			hg.organism.input_list.skull(org, bone, dmg * skullDmgMul * headDamageMul * ragdoll_fall_skull_damage_mul, dmgInfo)
 			hg.organism.input_list.jaw(org, bone, dmg * headDamageMul * ragdoll_fall_jaw_damage_mul, dmgInfo)
 			
 			org.consciousness = math.Approach(org.consciousness, 0, dmg * head_consciousness_mul * headDamageMul)

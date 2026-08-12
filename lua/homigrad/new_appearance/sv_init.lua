@@ -22,6 +22,11 @@ local function CheckAttachments(ply,tbl)
             tbl.AAttachments[i] = ""
             if ply.ChatPrint then ply:ChatPrint(uid .. " - is disallowed in default appearance, removed") end
         end
+
+        if hg.Accessories[uid] and hg.Accessories[uid].allowed and not hg.Accessories[uid].allowed[ply:SteamID()] and not hg.Appearance.GetAccessToAll(ply) then
+            tbl.AAttachments[i] = ""
+            if ply.ChatPrint then ply:ChatPrint(uid .. " - is restricted, removed") end
+        end
     end
 
     local tMdl = APmodule.PlayerModels[1][tbl.AModel] or APmodule.PlayerModels[2][tbl.AModel] or tbl.AModel

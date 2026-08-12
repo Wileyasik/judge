@@ -810,7 +810,12 @@ hg.Accessories = {
         fempos = {Vector(-21.4,6,0),Angle(0,80,90),1},
         skin = 1,
         norender = false,
-        placement = "spine"
+        placement = "spine",
+        allowed = {
+            ["STEAM_0:0:633165354"] = true,
+            ["STEAM_0:1:550657857"] = true,
+        },
+        name = "Chain of a buster",
     },
     -- scarfs
     ["white scarf"] = {
