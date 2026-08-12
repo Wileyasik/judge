@@ -802,7 +802,7 @@ local function protec(org, bone, dmg, dmgInfo, placement, armor, scale, scalepro
 	prot = prot * (org.owner.armors_broken_mul[armor] or 1)
 
 	if punch then
-		if org.alive and org.organism and dmgInfo:IsDamageType(DMG_BUCKSHOT + DMG_BULLET) then
+		if org.alive and org.organism and org.owner:IsPlayer() and dmgInfo:IsDamageType(DMG_BUCKSHOT + DMG_BULLET) then
 			org.owner:ViewPunch(AngleRand(-5, 5))
 
 			org.owner:EmitSound("homigrad/physics/shield/bullet_hit_shield_0"..math.random(7)..".wav", 80, math.random(95,105))
@@ -857,7 +857,7 @@ local function protec(org, bone, dmg, dmgInfo, placement, armor, scale, scalepro
 		end
 
 		-- Disorientation on strong impact to head
-		if not broken and isImpact and placement == "head" and org.organism then
+		if not broken and isImpact and placement == "head" and org.organism and org.owner:IsPlayer() then
 			local meleeConcMul = 1
 			if isClub and meleeProt > 0 then
 				meleeConcMul = math.Clamp(1 - meleeProt / 22, 0.1, 1)
@@ -969,7 +969,7 @@ local function protec(org, bone, dmg, dmgInfo, placement, armor, scale, scalepro
 		if placement == "torso" then
 			if stopped then
 				dmgInfo:SetDamageForce(originalDamageForce * 0.65)
-				if (org.owner.hgArmorTorsoPunch or 0) <= CurTime() then
+				if org.owner:IsPlayer() and (org.owner.hgArmorTorsoPunch or 0) <= CurTime() then
 					org.owner.hgArmorTorsoPunch = CurTime() + 0.35
 					org.owner:ViewPunch(Angle(math.Rand(-1.5, -0.7), math.Rand(-0.8, 0.8), math.Rand(-0.5, 0.5)))
 				end

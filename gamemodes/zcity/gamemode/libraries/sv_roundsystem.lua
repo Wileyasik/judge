@@ -114,6 +114,23 @@ function zb:GetMode(round)
 
 	if zb.modes[round] then return round end
 
+	-- Сначала ищем в базовых режимах (без base)
+	for name, mode in pairs(zb.modes) do
+		if not mode.base and mode.Types and mode.Types[round] then
+			return name
+		end
+	end
+
+	-- Потом в производных режимах (с base), но только если они могут запускаться
+	for name, mode in pairs(zb.modes) do
+		if mode.base and mode.Types and mode.Types[round] then
+			if not mode.CanLaunch or mode:CanLaunch() then
+				return name
+			end
+		end
+	end
+	
+	-- Fallback: возвращаем любой режим с этим подтипом
 	for name, mode in pairs(zb.modes) do
 		if mode.Types and mode.Types[round] then
 			return name
@@ -722,7 +739,7 @@ function zb:RoundStart()
 		net.WriteInt(zb.ROUND_STATE, 4)
 	net.Broadcast()
 
-	if forcemodeconvar:GetString() != "" then
+	if forcemodeconvar:GetString() != "" and forcemodeconvar:GetString() != "random" then
 		forcemode = forcemodeconvar:GetString()
 	end
 
@@ -960,6 +977,12 @@ if SERVER then
 
 		if command == "setmode" then
                         NextRound(modeKey, true)
+			if zb.ROUND_STATE == 0 then
+				zb.CROUND = modeKey
+				zb.CROUND_MAIN = nil
+				zb.LASTCROUND = nil
+				CurrentRound():Intermission()
+			end
 			ply:ChatPrint("Game mode set to: " .. modeKey)
 
 			if addToQueue and #zb.QueuedModes < 12 then
@@ -971,6 +994,12 @@ if SERVER then
 		elseif command == "setforcemode" then
 			forcemode = modeKey
                         NextRound(forcemode, true)
+			if zb.ROUND_STATE == 0 then
+				zb.CROUND = modeKey
+				zb.CROUND_MAIN = nil
+				zb.LASTCROUND = nil
+				CurrentRound():Intermission()
+			end
 			ply:ChatPrint("Force mode set to: " .. modeKey)
 
 			if addToQueue and #zb.QueuedModes < 12 then

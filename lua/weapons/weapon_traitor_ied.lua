@@ -719,12 +719,14 @@ function SWEP:FinishIEDPlant()
 			filter = {owner, bomb},
 			mask = MASK_SOLID
 		})
-		bomb:SetPos(placement.HitPos + placement.HitNormal * 0.5)
+bomb:SetPos(placement.HitPos + placement.HitNormal * 0.5)
 
 		local phys = bomb:GetPhysicsObject()
 		if IsValid(phys) then
 			phys:SetMass(20)
-			phys:EnableMotion(false)
+			phys:EnableMotion(true)
+			phys:SetBuoyancyRatio(0.05)
+			phys:Wake()
 		end
 	end
 

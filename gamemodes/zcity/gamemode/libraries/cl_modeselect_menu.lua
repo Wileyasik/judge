@@ -86,14 +86,14 @@ if CLIENT then
             upBtn:SetText("▲")
             upBtn.DoClick = function()
                 if index > 1 then
-                    local item = table.remove(zb.RoundList, index)
-                    table.insert(zb.RoundList, index - 1, item)
-                    queue:QueueUpdate()
-                    
-                    /*net.Start("ZB_UpdateRoundList")
-                        net.WriteTable(zb.RoundList)
-                        net.WriteBool(false) 
-                    net.SendToServer()*/
+					local item = table.remove(zb.RoundList, index)
+					table.insert(zb.RoundList, index - 1, item)
+					queue:QueueUpdate()
+					
+					net.Start("ZB_UpdateRoundList")
+						net.WriteTable(zb.RoundList)
+						net.WriteBool(false) 
+					net.SendToServer()
                 end
             end
             
@@ -104,14 +104,14 @@ if CLIENT then
             downBtn:SetText("▼")
             downBtn.DoClick = function()
                 if index < #zb.RoundList then
-                    local item = table.remove(zb.RoundList, index)
-                    table.insert(zb.RoundList, index + 1, item)
-                    queue:QueueUpdate()
-                    
-                    /*net.Start("ZB_UpdateRoundList")
-                        net.WriteTable(zb.RoundList)
-                        net.WriteBool(false)
-                    net.SendToServer()*/
+					local item = table.remove(zb.RoundList, index)
+					table.insert(zb.RoundList, index + 1, item)
+					queue:QueueUpdate()
+					
+					net.Start("ZB_UpdateRoundList")
+						net.WriteTable(zb.RoundList)
+						net.WriteBool(false)
+					net.SendToServer()
                 end
             end
             
@@ -120,15 +120,15 @@ if CLIENT then
             removeBtn:Dock(RIGHT)
             removeBtn:DockMargin(2, 8, 2, 8)
             removeBtn:SetText("✕")
-            removeBtn.DoClick = function()
-                table.remove(zb.RoundList, index)
-                queue:QueueUpdate()
+			removeBtn.DoClick = function()
+				table.remove(zb.RoundList, index)
+				queue:QueueUpdate()
 
-                /*net.Start("ZB_UpdateRoundList")
-                    net.WriteTable(zb.RoundList)
-                    net.WriteBool(false)
-                net.SendToServer()*/
-            end
+				net.Start("ZB_UpdateRoundList")
+					net.WriteTable(zb.RoundList)
+					net.WriteBool(false)
+				net.SendToServer()
+			end
         else
 
             modePanel.OnMousePressed = function()
@@ -192,17 +192,17 @@ if CLIENT then
         clearBtn:Dock(BOTTOM)
         clearBtn:DockMargin(5, 5, 5, 5)
         clearBtn:SetTall(30)
-        clearBtn.DoClick = function()
-            zb.RoundList = {}
-            queuePanel:QueueUpdate()
-            
-            /*net.Start("ZB_UpdateRoundList")
-                net.WriteTable({})
-                net.WriteBool(false)
-            net.SendToServer()*/
-            
-            chat.AddText(Color(255, 165, 0), "Game mode queue cleared!")
-        end
+		clearBtn.DoClick = function()
+			zb.RoundList = {}
+			queuePanel:QueueUpdate()
+			
+			net.Start("ZB_UpdateRoundList")
+				net.WriteTable({})
+				net.WriteBool(false)
+			net.SendToServer()
+			
+			chat.AddText(Color(255, 165, 0), "Game mode queue cleared!")
+		end
         
         function queuePanel:QueueUpdate()
             queueScroll:Clear()
@@ -395,15 +395,15 @@ if CLIENT then
                 table.insert(zb.RoundList, 1, selectedKeys[i])
             end
             
-            if selectedCount > 0 then
-                queuePanel:QueueUpdate()
-                
-                /*net.Start("ZB_UpdateRoundList")
-                    net.WriteTable(zb.RoundList)
-                    net.WriteBool(false)
-                net.SendToServer()*/
-                
-                chat.AddText(Color(0, 255, 0), "Added " .. selectedCount .. " modes to beginning of queue!")
+			if selectedCount > 0 then
+				queuePanel:QueueUpdate()
+				
+				net.Start("ZB_UpdateRoundList")
+					net.WriteTable(zb.RoundList)
+					net.WriteBool(false)
+				net.SendToServer()
+				
+				chat.AddText(Color(0, 255, 0), "Added " .. selectedCount .. " modes to beginning of queue!")
                 
                 selectedModes = {}
                 for _, item in ipairs(modeItems) do
@@ -429,15 +429,15 @@ if CLIENT then
                 end
             end
             
-            if selectedCount > 0 then
-                queuePanel:QueueUpdate()
-                
-                /*net.Start("ZB_UpdateRoundList")
-                    net.WriteTable(zb.RoundList)
-                    net.WriteBool(false)
-                net.SendToServer()*/
-                
-                chat.AddText(Color(0, 255, 0), "Added " .. selectedCount .. " modes to end of queue!")
+			if selectedCount > 0 then
+				queuePanel:QueueUpdate()
+				
+				net.Start("ZB_UpdateRoundList")
+					net.WriteTable(zb.RoundList)
+					net.WriteBool(false)
+				net.SendToServer()
+				
+				chat.AddText(Color(0, 255, 0), "Added " .. selectedCount .. " modes to end of queue!")
                 
 
                 selectedModes = {}

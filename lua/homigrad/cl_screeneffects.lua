@@ -642,22 +642,9 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	end
 
 	if (org.consciousness < 0.7) then
-		lerpblood = LerpFT(0.01, lerpblood or 0, math.Clamp((0.7 - org.consciousness) * 5, 0, 1) * 255)
-		local lowblood = (3600 - (org.blood or 5000)) / 600
-
-		addtime = addtime + FrameTime() / 6
-		local amt = (math.cos(addtime) + math.sin(addtime * 3) + math.sin(addtime * 2)) / 90
-		local amt2 = (math.sin(addtime) + math.cos(addtime * 5) + math.sin(addtime * 6)) / 90
-		local mat = Matrix({
-			{1 - amt, amt, 0, -amt2 / 2},
-			{amt2, 1 - amt2, 0, -amt / 2},
-			{0, 0, 1, 0},
-			{0, 0, 0, 1},
-		})
-		hurtoverlay:SetMatrix("$basetexturetransform", mat)
-		surface.SetMaterial(hurtoverlay)
+		lerpblood = LerpFT(0.01, lerpblood or 0, math.Clamp((0.7 - org.consciousness) * 5, 0, 1) * 45)
 		surface.SetDrawColor(0, 0, 0, lerpblood)
-		surface.DrawTexturedRect(-ScrW() * 2.0, -ScrH() * 2.0, ScrW() * 5, ScrH() * 5)
+		surface.DrawRect(0, 0, ScrW(), ScrH())
 		//ViewPunch(Angle(-amt * 1, amt2 * 1,0))
 		//ViewPunch2(Angle(-amt * 1, amt2 * 1,0))
 	end
@@ -788,10 +775,10 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		
 		grainMat:SetFloat("$c0_x", CurTime()) -- time
 		grainMat:SetFloat("$c0_y", 0.5) -- gate
-		grainMat:SetFloat("$c0_z", consciousness * 3) -- Pixelize
-		grainMat:SetFloat("$c1_x", consciousness) -- lerp
-		grainMat:SetFloat("$c1_y", 10) -- vignette intensity
-		grainMat:SetFloat("$c1_z", consciousness) -- BlurIntensity
+		grainMat:SetFloat("$c0_z", consciousness * 0.4) -- Pixelize
+		grainMat:SetFloat("$c1_x", consciousness * 0.3) -- lerp
+		grainMat:SetFloat("$c1_y", consciousness * 2) -- vignette intensity
+		grainMat:SetFloat("$c1_z", consciousness * 0.3) -- BlurIntensity
 		grainMat:SetFloat("$c2_x", 0) -- r
 		grainMat:SetFloat("$c2_y", 0) -- g
 		grainMat:SetFloat("$c2_z", 0) -- b

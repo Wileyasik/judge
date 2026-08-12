@@ -202,7 +202,9 @@ local function ApplyBlastDamage(data, enta, tracePos, len)
 	end
 
 	if behindwall then
-		return
+		local wallDiv = hg.GetBlastWallAttenuation(tr)
+		forceadd = forceadd / wallDiv
+		damageFrac = damageFrac / wallDiv
 	elseif blocked then
 		forceadd = forceadd / 3
 		damageFrac = damageFrac / 3

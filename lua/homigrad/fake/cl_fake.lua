@@ -790,6 +790,18 @@ hook.Add("EntityRemoved", "ragdollmodelsnatchinstance", function(ent)
 	end
 end)
 
+hook.Add("EntityRemoved", "ClearFollowedRagdoll", function(ent)
+	if follow ~= ent then return end
+
+	follow = nil
+
+	if IsValid(lply) then
+		if lply.OldRagdoll == ent then lply.OldRagdoll = nil end
+		if lply.FakeRagdollOld == ent then lply.FakeRagdollOld = nil end
+		lply.getUpCamAngles = nil
+	end
+end)
+
 hook.Add("ServerRagdollTransferDecals","raghuy", function(ent, rag)
     if IsValid(ent) && IsValid(rag) && !rag.DecalTransferDone then
         rag:SnatchModelInstance( ent )

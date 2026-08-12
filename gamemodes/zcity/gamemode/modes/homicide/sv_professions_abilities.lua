@@ -7,7 +7,7 @@ util.AddNetworkString("HMCD_Professions_Abilities_DisplayOrganismInfo")
 
 function MODE.DisplayOrganismInfo(organism, ply)
 	local text_info = ""
-	text_info = text_info .. " Saturation" .. organism.o2 .. "\n"
+	text_info = text_info .. " Saturation: " .. (organism.o2 and organism.o2[1] or 0) .. "\n"
 	
 	net.Start("HMCD_Professions_Abilities_DisplayOrganismInfo")
 		net.WriteString(text_info)

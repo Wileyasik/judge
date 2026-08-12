@@ -31,7 +31,7 @@ MODE.LootTable = {
 		{1, "ent_armor_vest1"},
 		{1, "ent_armor_helmet3"},
 	}},
-	{5, {
+	{0.3, {
 		{5, "weapon_pm"},
 		{4, "weapon_glock17"},
 		{3, "weapon_cz75"},

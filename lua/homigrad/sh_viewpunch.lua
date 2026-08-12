@@ -44,7 +44,7 @@ local IsValid = IsValid
 				//consciousness = consciousness * math.min(1, org.stamina[1] / (org.stamina.max * 0.3))
 			end
 
-			return math_Clamp(((consciousness - 1) * 3 + 1), 0.4, 1)
+			return math_Clamp(((consciousness - 1) * 3 + 1), 0.9, 1)
 		end
 
 		function hg.InGame()

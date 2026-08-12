@@ -105,7 +105,7 @@ local function IntroFadeEnd()
 	local roundStart = zb.ROUND_START or 0
 	local roundBegin = (zb.ROUND_BEGIN or roundStart) - roundStart
 	local holdEnd = math.max(revealEnd, roundBegin)
-	return holdEnd + 1.5
+	return holdEnd
 end
 
 local colJug = Color(190, 20, 20)
@@ -183,7 +183,6 @@ local function DrawIntro(t)
 		}
 	end
 
-	-- teaser block: exits fully before the reveal starts (revealStart == teaserEnd)
 	add("JUGGERNAUT", "ZB_JuggernautHeader", colWhite, w * 0.5, h * 0.12, "left", 0, 0.9, false, JUG_ScreenDuration, JUG_TeaserExitDur)
 	if variantName ~= "" then
 		add(variantName, "ZB_JuggernautMediumLarge", colWhite, w * 0.5, h * 0.30, "right", 0.4, 1.1, false, JUG_ScreenDuration, JUG_TeaserExitDur)
@@ -191,7 +190,6 @@ local function DrawIntro(t)
 	add("Who will be the Juggernaut?", "ZB_JuggernautMediumLarge", colWhite, w * 0.5, h * 0.45, "right", 0.7, 1.1, false, JUG_ScreenDuration, JUG_TeaserExitDur)
 	add("The round begins in a moment!", "ZB_JuggernautMedium", colWhite, w * 0.5, h * 0.87, "bottom", 1.3, 1.3, true, JUG_ScreenDuration, JUG_TeaserExitDur)
 
-	-- reveal block: rises from below the moment the teaser ends
 	if DataReady and t >= revealStart then
 		local rollColor = isJug and colJug or colHunt
 		local roleName = isJug and "YOU ARE THE JUGGERNAUT" or "YOU ARE A GRUNT"

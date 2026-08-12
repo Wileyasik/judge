@@ -2,27 +2,27 @@ local MODE = MODE
 
 MODE.name = "juggernaut"
 MODE.PrintName = "Juggernaut"
-MODE.start_time = 6.3
+MODE.start_time = 6.0
 MODE.end_time = 7
 MODE.grace_time = 0
 MODE.ROUND_TIME = 420
 MODE.randomSpawns = true
-MODE.shouldfreeze = true
+MODE.shouldfreeze = false
 MODE.GuiltDisabled = true
 MODE.LootSpawn = false
 
 MODE.VariantMinPlayers = 10
-MODE.HealthMul = 3.5
-MODE.Variant2HealthMul = 7.5
-MODE.Variant3HealthMul = 5
+MODE.HealthMul = 2.0
+MODE.Variant2HealthMul = 5.0
+MODE.Variant3HealthMul = 3.5
 MODE.StaminaMul = 3.5
-MODE.BerserkStrength = 2 / 1.5
+MODE.BerserkStrength = 0
 
 util.AddNetworkString("juggernaut_state")
 util.AddNetworkString("juggernaut_variant")
 
-local damageReduction = CreateConVar("zb_jugg_damage_reduction", "0.5", FCVAR_LUA_SERVER, "Juggernaut damage taken multiplier (1 = normal)")
-local bleedMul = CreateConVar("zb_jugg_bleed_mul", "0.35", FCVAR_LUA_SERVER, "Juggernaut bleeding multiplier (lower = less blood loss)")
+local damageReduction = CreateConVar("zb_jugg_damage_reduction", "1.0", FCVAR_LUA_SERVER, "Juggernaut damage taken multiplier (1 = normal)")
+local bleedMul = CreateConVar("zb_jugg_bleed_mul", "0.7", FCVAR_LUA_SERVER, "Juggernaut bleeding multiplier (lower = less blood loss)")
 local roundTime = CreateConVar("zb_jugg_round_time", "420", FCVAR_LUA_SERVER, "Juggernaut survival time (seconds)")
 local hunterRespawn = CreateConVar("zb_jugg_hunter_respawn", "5", FCVAR_LUA_SERVER, "Hunter respawn delay (seconds)")
 
@@ -57,11 +57,22 @@ MODE.GruntMelee = {
 	"weapon_hammer",
 	"weapon_hg_woodaxe",
 	"weapon_hg_mpl40",
-	"weapon_buck200knife",
 	"weapon_brick",
 	"weapon_hg_bottle",
 	"weapon_leadpipe",
 	"weapon_pan",
+	"weapon_bat",
+	"weapon_hatchet",
+	"weapon_hg_axe",
+	"weapon_hg_bottlebroken",
+	"weapon_hg_crowbar",
+	"weapon_hg_machete",
+	"weapon_hg_shovel",
+	"weapon_hg_sledgehammer",
+	"weapon_metalbat",
+	"weapon_pocketknife",
+	"weapon_sogknife",
+	"weapon_wirebat",
 }
 
 MODE.GruntUsecSMGs = {
@@ -182,14 +193,15 @@ local function ApplyJuggernautBuffs(ply)
 		org.blood = 7500
 		org.NoKnockdown = true
 	elseif MODE.variant == 3 then
-		org.armorMul = 3
-		org.painToleranceMul = 2
+		org.armorMul = 5
+		org.painToleranceMul = 5
 		org.blood = 6000
-		org.NoKnockdown = nil
+		org.NoKnockdown = true
+		org.boneStrengthMul = 4
 	else
 		org.armorMul = nil
 		org.painToleranceMul = nil
-		org.NoKnockdown = nil
+		org.NoKnockdown = true
 	end
 
 	ApplyHealthBuff(ply)
@@ -249,11 +261,20 @@ function MODE:ApplyJuggPersona(ply)
 	if MODE.variant ~= 3 then return end
 
 	local mdl = "models/distac/player/ghostface.mdl"
-	if not util.IsValidModel(mdl) then return end
 
-	ply:SetModel(mdl)
-	if istable(ply.CurAppearance) then ply.CurAppearance.AModel = mdl end
-	if istable(ply.CachedAppearance) then ply.CachedAppearance.AModel = mdl end
+	local identity = {
+		AName = "Ghostface",
+		AClothes = {},
+		AModel = mdl,
+		AColor = Color(255, 255, 255),
+		AAttachments = {}
+	}
+
+	if hg.Appearance and hg.Appearance.ForceApplyAppearance then
+		hg.Appearance.ForceApplyAppearance(ply, identity)
+	else
+		ply:SetModel(mdl)
+	end
 end
 
 function MODE:GiveGruntLoadout(ply, grunt)
@@ -265,7 +286,11 @@ function MODE:GiveGruntLoadout(ply, grunt)
 
 	if grunt == "runningnail" then
 		local melee = self.GruntMelee[math.random(#self.GruntMelee)]
-		GiveWeapon(ply, melee)
+		local wep = GiveWeapon(ply, melee)
+		if IsValid(wep) then
+			wep.NoDrop = true
+			wep.MaxOneHandedWeapons = 99
+		end
 		ply:SelectWeapon(melee)
 	elseif grunt == "usec" then
 		hg.AddArmor(ply, "vest7")
@@ -344,6 +369,7 @@ function MODE:Intermission()
 	MODE._huntersWon = nil
 	MODE._juggernautSurvived = nil
 	MODE._juggNames = nil
+	MODE._loadoutsGiven = nil
 	game.CleanUpMap()
 
 	self.ROUND_TIME = math.max(60, roundTime:GetInt())
@@ -366,7 +392,6 @@ function MODE:Intermission()
 		ClearJuggBuffs(ply)
 		ApplyAppearance(ply)
 		ply:SetupTeam(0)
-		if ply:Alive() then ply:Freeze(true) end
 	end
 end
 
@@ -376,14 +401,17 @@ function MODE:GiveJuggernautLoadouts()
 	if not cfg then return end
 
 	local juggs = MODE.Juggernauts or {}
-	if #juggs == 0 then return end
 
-	for _, ply in ipairs(juggs) do
-		if not IsValid(ply) then continue end
-		ply.IsJuggernaut = true
-		ApplyJuggernautBuffs(ply)
-		self:GiveJuggLoadout(ply, ply.juggLoadout or cfg.juggernauts[1].loadout)
-		self:ApplyJuggPersona(ply)
+	MODE._loadoutsGiven = true
+
+	if #juggs > 0 then
+		for _, ply in ipairs(juggs) do
+			if not IsValid(ply) then continue end
+			ply.IsJuggernaut = true
+			ApplyJuggernautBuffs(ply)
+			self:GiveJuggLoadout(ply, ply.juggLoadout or cfg.juggernauts[1].loadout)
+			self:ApplyJuggPersona(ply)
+		end
 	end
 
 	local grunt = cfg.grunt
@@ -406,8 +434,6 @@ function MODE:GiveJuggernautLoadouts()
 		end
 	net.Broadcast()
 
-	PrintMessage(HUD_PRINTTALK, "JUGGERNAUT (" .. (cfg.name or "") .. "): " .. (MODE._juggNames or "") .. " must survive for " .. math.ceil(self.ROUND_TIME) .. " seconds!")
-	PrintMessage(HUD_PRINTTALK, "Everyone else: hunt the Juggernaut down!")
 end
 
 function MODE:RoundStart()
@@ -443,7 +469,11 @@ function MODE:PlayerSpawn(ply)
 			ply:SetModel("")
 		end
 	else
-		self:GiveGruntLoadout(ply, self:GetActiveGruntType())
+		timer.Simple(0, function()
+			if not IsValid(ply) or not ply:Alive() then return end
+			if zb.ROUND_STATE ~= 1 then return end
+			self:GiveGruntLoadout(ply, self:GetActiveGruntType())
+		end)
 	end
 end
 
@@ -462,6 +492,8 @@ function MODE:PlayerDeath(victim, inflictor, attacker)
 		if #newJuggs == 0 then self._huntersWon = true end
 		return
 	end
+
+	if MODE.variant == 3 then return end
 
 	local respawnIn = math.max(1, hunterRespawn:GetFloat())
 	timer.Simple(respawnIn, function()
@@ -497,6 +529,23 @@ function MODE:ShouldRoundEnd()
 		self._huntersWon = true
 		return true
 	end
+
+	if MODE.variant == 3 then
+		local gruntsAlive = false
+		for _, ply in player.Iterator() do
+			if ply:Team() == TEAM_SPECTATOR then continue end
+			if self:IsJuggernaut(ply) then continue end
+			if ply:Alive() then
+				gruntsAlive = true
+				break
+			end
+		end
+		if not gruntsAlive then
+			self._juggernautSurvived = true
+			return true
+		end
+	end
+
 	return nil
 end
 
@@ -517,7 +566,11 @@ function MODE:EndRound()
 	local jName = #names > 0 and table.concat(names, ", ") or (self._juggNames or "The Juggernaut")
 
 	if self._juggernautSurvived then
-		PrintMessage(HUD_PRINTTALK, "The Juggernaut " .. jName .. " SURVIVED! Juggernaut wins!")
+		if self.variant == 3 then
+			PrintMessage(HUD_PRINTTALK, "The Ghostface " .. jName .. " eliminated everyone!")
+		else
+			PrintMessage(HUD_PRINTTALK, "The Juggernaut " .. jName .. " SURVIVED! Juggernaut wins!")
+		end
 		for _, jugg in ipairs(self.Juggernauts or {}) do
 			if IsValid(jugg) then
 				jugg:GiveExp(math.random(40, 70))
@@ -525,7 +578,11 @@ function MODE:EndRound()
 			end
 		end
 	else
-		PrintMessage(HUD_PRINTTALK, "The Juggernaut " .. jName .. " has been eliminated! Hunters win!")
+		if self.variant == 3 then
+			PrintMessage(HUD_PRINTTALK, "The Ghostface " .. jName .. " has been eliminated!")
+		else
+			PrintMessage(HUD_PRINTTALK, "The Juggernaut " .. jName .. " has been eliminated! Hunters win!")
+		end
 	end
 
 	self.Juggernauts = {}
@@ -551,33 +608,74 @@ end)
 
 local function JuggernautThink(owner, org, timeValue)
 	if not MODE:IsJuggernaut(owner) or not IsJugRound() then return end
+	if not MODE._loadoutsGiven then return end
 
 	if IsFury(owner) then org.berserk = MODE.BerserkStrength end
 	ApplyStaminaBuff(org)
 
-	org.blood = math.Approach(org.blood, (MODE.variant == 2 and 7500 or MODE.variant == 3 and 6000) or 5000, timeValue * 40)
+	local healMul = MODE.variant == 3 and 0.3 or 1.0
+	local tv = timeValue * healMul
+
+	org.blood = math.Approach(org.blood, 5000, tv * 5)
 
 	for i, wound in pairs(org.wounds or {}) do
-		wound[1] = math.max(wound[1] - timeValue * 4, 0)
+		wound[1] = math.max(wound[1] - tv * 0.5, 0)
 	end
 	for i, wound in pairs(org.arterialwounds or {}) do
-		wound[1] = math.max(wound[1] - timeValue * 4, 0)
+		wound[1] = math.max(wound[1] - tv * 0.5, 0)
 	end
-	org.internalBleed = math.max((org.internalBleed or 0) - timeValue * 4, 0)
+	org.internalBleed = math.max((org.internalBleed or 0) - tv * 0.5, 0)
 
-	local heal = timeValue * 4
-	org.pain = math.Approach(org.pain or 0, 0, heal)
-	org.painadd = math.Approach(org.painadd or 0, 0, heal)
-	org.avgpain = math.Approach(org.avgpain or 0, 0, heal)
-	org.shock = math.Approach(org.shock or 0, 0, heal)
-	org.immobilization = math.Approach(org.immobilization or 0, 0, heal)
-	org.fear = math.Approach(org.fear or 0, 0, heal)
-	org.heartStrain = math.max((org.heartStrain or 0) - timeValue, 0)
+	org.pain = math.Approach(org.pain or 0, 0, tv * 0.5)
+	org.painadd = math.Approach(org.painadd or 0, 0, tv * 0.5)
+	org.avgpain = math.Approach(org.avgpain or 0, 0, tv * 0.5)
+	org.shock = math.Approach(org.shock or 0, 0, tv * 0.5)
+	org.immobilization = math.Approach(org.immobilization or 0, 0, tv * 0.5)
+	org.fear = math.Approach(org.fear or 0, 0, tv * 0.5)
+	org.heartStrain = math.max((org.heartStrain or 0) - tv * 0.1, 0)
 end
 
 hook.Add("Org Think", "juggernaut_regen", function(owner, org, timeValue)
 	if not IsValid(owner) or not owner:IsPlayer() or not owner:Alive() then return end
 	JuggernautThink(owner, org, timeValue)
+end)
+
+hook.Add("PlayerDeath", "juggernaut_kill_heal", function(victim, inflictor, attacker)
+	if not IsJugRound() or zb.ROUND_STATE ~= 1 then return end
+	if not IsValid(attacker) or attacker == victim then return end
+	if not MODE:IsJuggernaut(attacker) then return end
+	if not attacker:Alive() then return end
+
+	local org = attacker.organism
+	if not org then return end
+
+	attacker:SetHealth(math.min(attacker:Health() + 30, attacker:GetMaxHealth()))
+	org.blood = math.min(org.blood + 500, 5000)
+	org.pain = math.max((org.pain or 0) - 15, 0)
+	org.shock = math.max((org.shock or 0) - 15, 0)
+	org.heartStrain = math.max((org.heartStrain or 0) - 2, 0)
+
+	org.bleed = 0
+	org.internalBleed = 0
+	if org.arterialwounds then
+		for i = #org.arterialwounds, 1, -1 do
+			table.remove(org.arterialwounds, i)
+		end
+		attacker:SetNetVar("arterialwounds", org.arterialwounds)
+	end
+	if org.wounds then
+		for _, wound in pairs(org.wounds) do
+			if wound then wound[1] = 0 end
+		end
+	end
+
+	if org.stamina then
+		org.stamina[1] = math.min((org.stamina[1] or 0) + 50, org.stamina.range or org.stamina[1] + 50)
+	end
+
+	if org.o2 then
+		org.o2[1] = math.min((org.o2[1] or 0) + 10, org.o2.range or 30)
+	end
 end)
 
 MsgC(Color(0, 255, 0), "[JUGG] sv_juggernaut.lua loaded. CanLaunch=" .. tostring(MODE.CanLaunch) .. ", RoundStart=" .. tostring(MODE.RoundStart) .. "\n")
