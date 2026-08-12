@@ -637,9 +637,10 @@ local IsValid = IsValid
 		if IsValid(RENDERING_SCOPE) and self == RENDERING_SCOPE:GetOwner() then return end
 		--if self == lply and !selfdraw then return end
 		--debug.Trace()
-		if !self.shouldTransmit then return end
-
 		ent = IsValid(ent) and ent or self
+		-- NotifyShouldTransmit may not have run yet for an entity that is already drawable.
+		if ent.shouldTransmit == false then return end
+
 		if ent:GetMaterial() == "NULL" then ent:DrawShadow( false ) return end
 		if not IsValid(ent) then return end
 

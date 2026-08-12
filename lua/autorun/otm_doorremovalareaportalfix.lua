@@ -8,21 +8,25 @@ local otm_ismapbeingcleanedup_for_areaportaldooraddon = false;
 
 
 local meta = FindMetaTable("Entity");
-meta.otmsetnodraworiginalcopyjank = meta.SetNoDraw;
+meta.otmsetnodraworiginalcopyjank = meta.otmsetnodraworiginalcopyjank or meta.SetNoDraw;
 
 function meta:DefaultSetNoDraw(b)
 	self:otmsetnodraworiginalcopyjank(b)
 end
 
-function meta:SetNoDraw(b)
-	if !b and (self:GetClass() == "prop_door_rotating") then
-		for _, otm_i in ipairs(ents.FindByClass("func_areaportal")) do
-			if (otm_i:GetInternalVariable("target") == self:GetName()) then
-				otm_i:Fire("Open");
-				break;
-			end
+function meta:SetPairedAreaPortalOpen(open)
+	if self:GetClass() != "prop_door_rotating" then return end
+
+	for _, otm_i in ipairs(ents.FindByClass("func_areaportal")) do
+		if otm_i:GetInternalVariable("target") == self:GetName() then
+			otm_i:Fire(open and "Open" or "Close")
+			break
 		end
 	end
+end
+
+function meta:SetNoDraw(b)
+	self:SetPairedAreaPortalOpen(true)
 	self:otmsetnodraworiginalcopyjank(b);
 end
 

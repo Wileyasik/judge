@@ -37,28 +37,30 @@ local function DrawMap(origin, scale, x, y, w, h)
     render.PushFilterMin( 3 )
     render.PushFilterMag( 3 )
 
-    render.RenderView( {
-        origin = LocalPlayer():GetPos() + Vector( 0, 0, offset),
-        angles = Angle( 90, 0, 0 ),
-        x = x,
-        y = y,
-        w = w,
-        h = h,
-        znear = offset * 0.993,
-        zfar = 3000 - -3000 + offset,
-        drawhud = false,
-        drawmonitors = false,
-        drawviewmodel = false,
-        dopostprocess = false,
-        viewid = 2, -- VIEW_MONITOR
+	local succeeded, err = xpcall(function()
+        render.RenderView( {
+            origin = LocalPlayer():GetPos() + Vector( 0, 0, offset),
+            angles = Angle( 90, 0, 0 ),
+            x = x,
+            y = y,
+            w = w,
+            h = h,
+            znear = offset * 0.993,
+            zfar = 3000 - -3000 + offset,
+            drawhud = false,
+            drawmonitors = false,
+            drawviewmodel = false,
+            dopostprocess = false,
+            viewid = 2, -- VIEW_MONITOR
 
-        ortho = {
-            top = -5000 / scale,
-            left = -5000 / scale,
-            right = 5000 / scale,
-            bottom = 5000 / scale
-        }
-    } )
+            ortho = {
+                top = -5000 / scale,
+                left = -5000 / scale,
+                right = 5000 / scale,
+                bottom = 5000 / scale
+            }
+        } )
+    end, debug.traceback)
 
 	render.SetLightingMode( 0 )
 
@@ -68,6 +70,8 @@ local function DrawMap(origin, scale, x, y, w, h)
 	hook.Remove( "PreDrawSkyBox", hookId )
     hook.Remove( "PrePlayerDraw", hookId )
     hook.Remove( "PreDrawViewModel", hookId )
+
+	if not succeeded then ErrorNoHalt(err .. "\n") end
 end
 
 function PANEL:Paint(w, h)

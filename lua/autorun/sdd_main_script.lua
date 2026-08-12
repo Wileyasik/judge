@@ -198,6 +198,7 @@ if SERVER then
 
 		ent:SetNoDraw(false)
 		ent:SetNotSolid(false)
+		ent:SetPairedAreaPortalOpen(false)
 
 		timer.Simple(0.1, function()
 			if not IsValid(ent) then return end
@@ -270,6 +271,7 @@ if SERVER then
 		ent:Fire("AddOutput", "soundcloseoverride DoorsMove.Null")
 
 		ent:Fire("Close")
+		ent:SetPairedAreaPortalOpen(true)
 
 		timer.Simple(0.5, function()
 			if IsValid(ent) then

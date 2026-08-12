@@ -667,7 +667,7 @@ players : 1 humans, 0 bots (20 max)
 			local vSize = (point - vPos):GetNormalized() * len
 			local diff = (vPos + vSize - origin):GetNormalized()
 
-			if !v.shouldTransmit or forward:Dot(diff) <= fovCos then
+			if v.shouldTransmit == false or forward:Dot(diff) <= fovCos then
 				if not nochange then v.NotSeen = true end
 				if v == lply then LocalPlayerSeen = false end
 			else
