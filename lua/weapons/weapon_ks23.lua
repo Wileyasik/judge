@@ -171,11 +171,6 @@ SWEP.AnimsEvents = {
 			self:EmitSound("weapons/arccw_ud/870/rack_2.ogg")
 			--
 			--self:GetWM():ManipulateBoneScale(47, vector_full)
-		end,
-		[0.23] = function(self)
-			--self:EmitSound("weapons/arccw_ud/870/eject.ogg")
-			self:RejectShell(self.ShellEject)
-			--self:GetWM():ManipulateBoneScale(47, vector_full)
 		end
 	}
 }

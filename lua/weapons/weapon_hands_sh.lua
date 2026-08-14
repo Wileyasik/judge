@@ -1422,6 +1422,9 @@ function SWEP:BlockingLogic(ent, mul, attacktype, trace)
 	local ent = hg.RagdollOwner(ent) or ent
     local owner = self:GetOwner()
 
+	local shieldBlock = hook.Run("hg_MeleeShieldBlock", self, ent, attacktype, trace)
+	if shieldBlock then return 0 end
+
 	if ent:IsPlayer() then
         local wep = ent:GetActiveWeapon()
 
@@ -1740,6 +1743,11 @@ function SWEP:ShoveFront()
 	local AimVec = owner:GetAimVector()
 	local Ent, HitPos, _, physbone, trace = WhomILookinAt(owner, .35, SHOVE_RANGE)
 	if IsValid(Ent) then
+		if Ent:IsPlayer() and hook.Run("hg_ShieldKickBlock", Ent, owner, self, owner:EyePos(), HitPos or Ent:WorldSpaceCenter()) then
+			owner:LagCompensation(false)
+			return
+		end
+
 		local Phys = Ent:IsPlayer() and Ent:GetPhysicsObject() or Ent:GetPhysicsObjectNum(physbone or 0)
 		local forceMul = 1
 		local backHit = false

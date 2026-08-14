@@ -175,13 +175,13 @@
 --    },
 --    ["MEDICAL_Small"] = { 
 --        EntTable = {
---            "weapon_bandage_sh", "weapon_betablock", "weapon_painkillers", "weapon_tourniquet", "weapon_naloxone"
+--            "weapon_bandage_sh", "weapon_betablock_tpik", "weapon_painkillers_tpik", "weapon_tourniquet", "weapon_naloxone"
 --        }, 
 --        Models = {"models/props_wasteland/controlroom_filecabinet001a.mdl"}
 --    },
 --    ["MEDICAL_Big"] = { 
 --        EntTable = {
---            "weapon_bandage_sh", "weapon_betablock", "weapon_painkillers", "weapon_tourniquet", "weapon_naloxone",
+--            "weapon_bandage_sh", "weapon_betablock_tpik", "weapon_painkillers_tpik", "weapon_tourniquet", "weapon_naloxone",
 --            "weapon_medkit_sh", "weapon_adrenaline", "weapon_needle", "weapon_morphine", "weapon_naloxone",
 --            "weapon_traitor_poison1"
 --        }, 

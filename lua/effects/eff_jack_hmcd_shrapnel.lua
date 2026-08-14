@@ -3,6 +3,26 @@
 ---------------------------------------------------------*/
 local parts = {}
 
+local function CleanupTrackedParticles(removeActive)
+	local now = CurTime()
+	local i = #parts
+	while i > 0 do
+		local entry = parts[i]
+		if removeActive or entry.DieTime <= now then
+			if removeActive and entry.Particle and entry.Particle.SetDieTime then
+				entry.Particle:SetDieTime(0.1)
+			end
+			parts[i] = parts[#parts]
+			parts[#parts] = nil
+		end
+		i = i - 1
+	end
+end
+
+timer.Create("HG_CleanupTrackedShrapnelParticles", 5, 0, function()
+	CleanupTrackedParticles(false)
+end)
+
 function EFFECT:Init(data)
 	local vOffset = data:GetOrigin()
 	
@@ -21,6 +41,7 @@ function EFFECT:Init(data)
 	if(self:WaterLevel()==3)then return end
 	
 	local Emitter=ParticleEmitter(vOffset)
+	if not Emitter then return end
 	for i=0,400*Scayul do
 		local sprite="sprites/mat_jack_nsmokethick"
 		local particle = Emitter:Add(sprite,vOffset)
@@ -56,27 +77,19 @@ function EFFECT:Init(data)
 				if math.random(1,3) == 3 then 
 					part:SetDieTime(0.1)
 				else
-					parts[#parts + 1] = part
+					parts[#parts + 1] = {
+						Particle = part,
+						DieTime = CurTime() + 67
+					}
 				end
 			end)
 		end
 	end
-	timer.Create("RemoveSHIT_shrapnel",100,1,function()
-		for i = 0, #parts do
-			if parts[i] and parts[i].SetDieTime then
-				parts[i]:SetDieTime(0.1)
-			end
-		end
-	end)
 	Emitter:Finish()
 end
 
 hook.Add("PostCleanupMap","RemoveParticlesShrapnel",function()
-	for i = 0, #parts do
-		if parts[i] and parts[i].SetDieTime then
-			parts[i]:SetDieTime(0.1)
-		end
-	end
+	CleanupTrackedParticles(true)
 end)
 /*---------------------------------------------------------
 	EFFECT:Think()

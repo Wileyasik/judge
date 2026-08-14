@@ -76,6 +76,14 @@ end
 
 SWEP.modelscale = 1
 SWEP.modelscale2 = 1
+
+function hg.GetTPIKCharacter(owner)
+	if not IsValid(owner) then return end
+
+	local ragdoll = owner:GetNWEntity("FakeRagdoll")
+	return IsValid(ragdoll) and ragdoll or owner
+end
+
 if CLIENT then
 
     local vecPochtiZero = Vector(0.0001, 0.0001, 0.0001)
@@ -87,7 +95,8 @@ if CLIENT then
     end
 
 	function SWEP:GetWM()
-        self.worldModel = IsValid(self.worldModel) and self.worldModel or ClientsideModel(self.WorldModel)
+		if not IsValid(self.worldModel) then self.worldModel = ClientsideModel(self.WorldModel) end
+		if not IsValid(self.worldModel) then return end
         self.worldModel:SetNoDraw(true)
 		return self.worldModel
 	end
@@ -103,6 +112,7 @@ if CLIENT then
 
         if not IsValid(self.worldModel) then
             self.worldModel = ClientsideModel(self.WorldModel)
+			if not IsValid(self.worldModel) then return end
             local model = self.worldModel
             self.worldModel:SetSkin(self.WMSkin or 0)
             self:CallOnRemove("remove_worldmodel1",function()
@@ -118,10 +128,14 @@ if CLIENT then
         if not IsValid(owner) and (not self.shouldTransmit or self.NotSeen) then return end
 
 		local WorldModel = self.worldModel
+		local desiredSkin = IsValid(owner) and (self.WMSkinV or self.WMSkin or 0) or (self.WMSkin or 0)
+		if WorldModel:GetSkin() ~= desiredSkin then
+			WorldModel:SetSkin(desiredSkin)
+		end
 
 		self.worldModel:SetModelScale(self.modelscale2)
 
-        local ent = IsValid(owner.FakeRagdoll) and owner.FakeRagdoll or owner
+		local ent = hg.GetTPIKCharacter(owner)
 
         if (IsValid(owner)) and (ent == owner or hg.KeyDown(owner,IN_USE) or (owner:GetNetVar("lastFake",0) > CurTime())) then
             local timing = 0
@@ -148,7 +162,7 @@ if CLIENT then
 
             self.sprintanim = qerp(0.02 * FrameTime() / engine.TickInterval(),self.sprintanim or 0,(owner.IsSprinting and owner:IsSprinting()) and 1 or 0)
             
-			local tr = hg.eyeTrace(owner,60)
+			local tr = hg.eyeTrace(owner,60,ent)
 			local ang = owner:EyeAngles()
             if not tr then return end
 
@@ -251,6 +265,7 @@ if CLIENT then
         if IsValid(self.worldModel) and self.WorldModelExchange then
             if not IsValid(self.worldModel2) then
                 self.worldModel2 = ClientsideModel(self.WorldModelExchange)
+				if not IsValid(self.worldModel2) then return end
                 local model = self.worldModel2
                 self:CallOnRemove("remove_worldmodel2",function()
                     if IsValid(model) then
@@ -260,12 +275,15 @@ if CLIENT then
                 end)
             end
 
-            local pos,ang = self.worldModel:GetPos(),self.worldModel:GetAngles()
-            local huy = self.worldModel:GetModel() == self.WorldModelReal
+			local pos,ang = self.worldModel:GetPos(),self.worldModel:GetAngles()
+			local huy = self.worldModel:GetModel() == self.WorldModelReal
             
-            if IsValid(self:GetOwner()) or self.DontChangeDropped then
-                pos,ang = LocalToWorld(self.weaponPos,self.weaponAng,huy and self.worldModel:GetBoneMatrix(self.basebone or 1):GetTranslation() or self.worldModel:GetPos(),huy and self.worldModel:GetBoneMatrix(self.basebone or 1):GetAngles() or self.worldModel:GetAngles())
-            end
+			if IsValid(self:GetOwner()) or self.DontChangeDropped then
+				local baseMatrix = huy and self.worldModel:GetBoneMatrix(self.basebone or 1)
+				local basePos = baseMatrix and baseMatrix:GetTranslation() or self.worldModel:GetPos()
+				local baseAng = baseMatrix and baseMatrix:GetAngles() or self.worldModel:GetAngles()
+				pos,ang = LocalToWorld(self.weaponPos,self.weaponAng,basePos,baseAng)
+			end
             self.worldModel2:SetModelScale(self.modelscale)
             self.worldModel2:SetRenderOrigin(pos)
             self.worldModel2:SetRenderAngles(ang)
@@ -321,13 +339,16 @@ function SWEP:Camera(eyePos, eyeAng, view, vellen)
     self:DrawWorldModel2()
 
     local owner = self:GetOwner()
+	local isPlayer = IsValid(owner) and owner:IsPlayer()
+	local character = IsValid(owner) and hg.GetCurrentCharacter(owner) or nil
+	local speedSqr = IsValid(character) and character:GetVelocity():LengthSqr() or 0
 
-	self.walkinglerp = Lerp(hg.lerpFrameTime2(0.1),self.walkinglerp or 0,((self.DisableWalkBob or owner:InVehicle()) and 0) or hg.GetCurrentCharacter(owner):GetVelocity():LengthSqr())
+	self.walkinglerp = Lerp(hg.lerpFrameTime2(0.1), self.walkinglerp or 0, ((self.DisableWalkBob or (isPlayer and owner:InVehicle())) and 0) or speedSqr)
 	self.huytime = self.huytime or 0
 	local walk = math.Clamp(self.walkinglerp / 10000,0,1)
 	
 	self.huytime = self.huytime + walk * FrameTime() * 8 * host_timescale()
-	if owner:IsSprinting() then
+	if isPlayer and owner:IsSprinting() then
 		--walk = walk * 2
 	end
 
@@ -338,7 +359,7 @@ function SWEP:Camera(eyePos, eyeAng, view, vellen)
 	eyePos = eyePos - eyeAng:Up() * x * 0.5
 	eyePos = eyePos - eyeAng:Right() * y * 0.5
 
-    view.origin = (eyePos - (angle_difference_localvec * 150) - (position_difference * 0.5))
+	view.origin = (eyePos - (angle_difference_localvec * 150) - (position_difference * 0.5))
     
     return view
 end
@@ -356,9 +377,10 @@ function SWEP:SetHandPos(noset)
     if not IsValid(ply) or not IsValid(self.worldModel) then return end
     if not ply.shouldTransmit or ply.NotSeen then return end
 
-    local ent = hg.GetCurrentCharacter(ply)
+	local ent = hg.GetTPIKCharacter(ply)
+	if not IsValid(ent) then return end
 
-	local bones = hg.TPIKBonesLH
+	local bones = hg.TPIKBonesLH or {}
 
     local ply_spine_index = ent:LookupBone("ValveBiped.Bip01_Spine4")
     if !ply_spine_index then return end
@@ -377,9 +399,12 @@ function SWEP:SetHandPos(noset)
 	-- ent:SetupBones()
 
 	self.rhandik = self.setrh
-	self.lhandik = self.setlh and (ply:GetTable().ChatGestureWeight < 0.1)
+	self.lhandik = self.setlh and ((ply:GetTable().ChatGestureWeight or 0) < 0.1)
 
-    local rhmat, lhmat = ent:GetBoneMatrix(ent:LookupBone("ValveBiped.Bip01_R_Hand")), ent:GetBoneMatrix(ent:LookupBone("ValveBiped.Bip01_L_Hand"))
+	local rhIndex = ent:LookupBone("ValveBiped.Bip01_R_Hand")
+	local lhIndex = ent:LookupBone("ValveBiped.Bip01_L_Hand")
+	local rhmat = rhIndex and ent:GetBoneMatrix(rhIndex)
+	local lhmat = lhIndex and ent:GetBoneMatrix(lhIndex)
 
 	ply.rhold = rhmat
 	ply.lhold = lhmat
@@ -417,7 +442,7 @@ function SWEP:SetHandPos(noset)
 		end
 	end
 
-	local bones = hg.TPIKBonesRH
+	local bones = hg.TPIKBonesRH or {}
 
 	if self.rhandik and (ent == ply or hg.KeyDown(ply,IN_USE) or (ply:GetNetVar("lastFake",0) > CurTime())) then
 		for _, bone in ipairs(bones) do
@@ -474,20 +499,22 @@ function SWEP:OwnerChanged()
     if IsValid(self:GetOwner()) and self:GetOwner():IsPlayer() then
         self:PlayAnim("deploy")
         self:SetHold(self.HoldType)
-        timer.Simple(0,function() self.picked = true end)
+		timer.Simple(0,function() if IsValid(self) then self.picked = true end end)
     else
-        timer.Simple(0,function() self.picked = nil end)
+		timer.Simple(0,function() if IsValid(self) then self.picked = nil end end)
     end
 end
 
 function SWEP:OnRemove()
+	hook.Remove("Think", "AnimCallback" .. self:EntIndex())
     if IsValid(self.worldModel) then
         self.worldModel:Remove()
     end
 end
 SWEP.Initialzed = false
 function SWEP:Deploy()
-    if SERVER and self.Initialzed and not self:GetOwner().noSound then self:GetOwner():EmitSound(self.DeploySnd,65) end
+	local owner = self:GetOwner()
+	if SERVER and self.Initialzed and IsValid(owner) and not owner.noSound then owner:EmitSound(self.DeploySnd,65) end
     self.Initialzed = true
     self:PlayAnim("deploy")
     self:SetHold(self.HoldType)
@@ -537,6 +564,9 @@ function SWEP:Initialize()
         self:SetModelScale(self.modelscale)
         self:Activate()
     end
+	if SERVER then
+		self:SetSkin(self.WMSkin or 0)
+	end
     self:SetHold(self.HoldType)
 
     self:InitAdd()
@@ -551,18 +581,26 @@ SWEP.tries = 10
 if SERVER then
     util.AddNetworkString("melee_attack2")
 elseif CLIENT then
+	local function PlayNetworkedAnim(owner, class, tbl)
+		if not IsValid(owner) or CurTime() >= (tbl.endTime or 0) then return end
+
+		local ent = owner:GetActiveWeapon()
+		if not IsValid(ent) or ent:GetClass() ~= class then
+			timer.Simple(0.05, function()
+				PlayNetworkedAnim(owner, class, tbl)
+			end)
+			return
+		end
+
+		local remaining = tbl.endTime and math.max(tbl.endTime - CurTime(), 0.001) or tbl.time
+		ent:PlayAnim(tbl.anim,remaining,tbl.cycling,tbl.callback,tbl.reverse,nil,tbl.startCycle,tbl.endCycle,tbl.endTime)
+	end
+
     net.Receive("melee_attack2",function()
         local tbl = net.ReadTable()
-        local ent = net.ReadEntity()
-        local sendtoclient = net.ReadBool()
-        if IsValid(ent) and ent.PlayAnim and ( sendtoclient and sendtoclient or !ent:IsLocal()) then
-            if tbl.anim == "Shove" and ent:IsLocal() and ent.anim == "Shove" and (ent.animtime or 0) > CurTime() then return end
-			local remaining = tbl.endTime and math.max(tbl.endTime - CurTime(), 0.001) or tbl.time
-            ent:PlayAnim(tbl.anim,remaining,tbl.cycling,tbl.callback,tbl.reverse,nil,tbl.startCycle,tbl.endCycle,tbl.endTime)
-            --if tbl.anim == "attack" or tbl.anim == "attack2" and ent:GetOwner().AnimRestartGesture then
-            --    ent:GetOwner():AnimRestartGesture(GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_HL2MP_GESTURE_RANGE_ATTACK_SLAM, true)
-            --end
-        end
+		local owner = net.ReadEntity()
+		local class = net.ReadString()
+		PlayNetworkedAnim(owner, class, tbl)
     end)
 end
 
@@ -582,9 +620,10 @@ function SWEP:PlayAnim(anim,time,cycling,callbackFuncName,reverse,sendtoclient,s
 				endTime = endTime
             }
             net.WriteTable(netTbl) 
-            net.WriteEntity(self)
-            net.WriteBool(sendtoclient)
-        net.SendPVS(self:GetPos())
+		local owner = self:GetOwner()
+		net.WriteEntity(owner)
+		net.WriteString(self:GetClass())
+		net.SendPVS(IsValid(owner) and owner:GetPos() or self:GetPos())
 
         local tAnim = self.AnimList[anim] or {}
         --self:GetWM():SetSequence(tAnim[1] or anim)
@@ -610,11 +649,18 @@ function SWEP:PlayAnim(anim,time,cycling,callbackFuncName,reverse,sendtoclient,s
             self.CallbackTime = CurTime() + timerAnim
             self.callback = self[callbackFuncName] or tAnim[5]
             
-            hook.Add("Think","AnimCallback"..self:EntIndex(), function()
-                if IsValid(self) and IsValid(self:GetOwner()) and self.CallbackTime < CurTime() then
-                    hook.Remove("Think","AnimCallback"..self:EntIndex())
-                    self.callback(self)
-                end
+			local callbackHookName = "AnimCallback" .. self:EntIndex()
+			hook.Add("Think", callbackHookName, function()
+				if not IsValid(self) or not IsValid(self:GetOwner()) then
+					hook.Remove("Think", callbackHookName)
+					return
+				end
+				if self.CallbackTime >= CurTime() then return end
+
+				local callback = self.callback
+				hook.Remove("Think", callbackHookName)
+				self.callback = nil
+				if isfunction(callback) then callback(self) end
             end)
         end
 
@@ -770,24 +816,32 @@ function SWEP:RemoveFake()
 end
 
 local function GetPhysBoneNum(ent,string)
-	if not IsValid(ent) then return 7 end
-	return ent:TranslateBoneToPhysBone(ent:LookupBone(string))
+	if not IsValid(ent) then return end
+	local bone = ent:LookupBone(string)
+	if not bone then return end
+	local physBone = ent:TranslateBoneToPhysBone(bone)
+	return physBone and physBone >= 0 and physBone or nil
 end
 
 function SWEP:CreateFake(ragdoll)
 	if IsValid(self:GetNWEntity("fakeGun")) then return end
 	if not IsValid(ragdoll) then return end
-	local ent = ents.Create("prop_physics")
-    ent.notprop = true
 	local physbonerh = GetPhysBoneNum(ragdoll,"ValveBiped.Bip01_R_Hand")
+	if not physbonerh then return end
 	local rh = ragdoll:GetPhysicsObjectNum(physbonerh)
+	if not IsValid(rh) then return end
+
+	local ent = ents.Create("prop_physics")
+	if not IsValid(ent) then return end
+	ent.notprop = true
 
 	ent:SetPos(rh:GetPos())
 	ent:SetModel(self.WorldModel)
 	ent:Spawn()
 	ent:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
 	ent:SetMoveType(MOVETYPE_NONE)
-	ent:GetPhysicsObject():SetMass(0)
+	local phys = ent:GetPhysicsObject()
+	if IsValid(phys) then phys:SetMass(0) end
     ent:SetNoDraw(true)
     ent.dontPickup = true
 	ent.fakeOwner = self
@@ -812,18 +866,21 @@ function SWEP:SpawnGarbage(mdl_custom, skin_custom, snd_custom, clr_custom, bgs_
 	if not IsValid(owner) then return end
 
 	local boneid
+	local character = owner
 	if owner:IsPlayer() then
-		local chr = hg.GetCurrentCharacter(owner)
-		boneid = chr:LookupBone(((owner.organism and owner.organism.rarmamputated) or (owner.zmanipstart ~= nil and owner.zmanipseq == "interact" and not ( owner.organism and owner.organism.larmamputated ))) and "ValveBiped.Bip01_L_Hand" or "ValveBiped.Bip01_R_Hand")
+		character = hg.GetCurrentCharacter(owner)
+		if not IsValid(character) then return end
+		boneid = character:LookupBone(((owner.organism and owner.organism.rarmamputated) or (owner.zmanipstart ~= nil and owner.zmanipseq == "interact" and not ( owner.organism and owner.organism.larmamputated ))) and "ValveBiped.Bip01_L_Hand" or "ValveBiped.Bip01_R_Hand")
 	else
 		boneid = owner:LookupBone("ValveBiped.Bip01_R_Hand") or 1
 	end
 
 	if not boneid then return end
-	local matrix = owner:GetBoneMatrix(boneid)
+	local matrix = character:GetBoneMatrix(boneid)
 	if not matrix then return end
 
 	local ent = ents.Create("prop_physics")
+	if not IsValid(ent) then return end
 	ent:SetModel(Model((mdl_custom and mdl_custom ~= "" and mdl_custom ~= nil and isstring(mdl_custom)) and mdl_custom or self.WorldModel))
 
 	if skin_custom and skin_custom ~= nil and isnumber(skin_custom) then

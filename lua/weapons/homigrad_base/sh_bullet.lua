@@ -904,7 +904,7 @@ end
 if CLIENT then
 	net.Receive("reject shell",function()
 		local ent = net.ReadEntity()
-		if ent and ent.RejectShell then
+		if IsValid(ent) and ent.RejectShell then
 			ent:RejectShell(net.ReadString())
 		end
 	end)
@@ -933,13 +933,15 @@ if CLIENT then
 		end
 		if self.EjectAng then _,ang = LocalToWorld(vecZero,self.EjectAng,vecZero,ang) end
 
-		local ammotype = hg.ammotypeshuy[self.Primary.Ammo].BulletSettings
-		local ejectAng = attmuzle.Ang
+		local ammoData = hg.ammotypeshuy and hg.ammotypeshuy[self.Primary and self.Primary.Ammo]
+		local ammotype = ammoData and ammoData.BulletSettings or {}
+		local ejectAng = attmuzle and attmuzle.Ang or ang
 		if self.EjectAddAng then
-			_,ejectAng = LocalToWorld(vecZero,self.EjectAddAng,vecZero,attmuzle.Ang) 
+			_,ejectAng = LocalToWorld(vecZero,self.EjectAddAng,vecZero,ejectAng)
 		end
-		if self.CustomSecShell then self:MakeShell(self.CustomSecShell, pos, ejectAng, ang:Forward() * 75) end
-		if ammotype.Shell or self.CustomShell then self:MakeShell(ammotype.Shell or self.CustomShell, pos, ejectAng, ang:Forward() * 105) return end
+		local shellVelocity = self.ShellEjectVelocity or ang:Forward() * 105
+		if self.CustomSecShell then self:MakeShell(self.CustomSecShell, pos, ejectAng, shellVelocity) end
+		if ammotype.Shell or self.CustomShell then self:MakeShell(ammotype.Shell or self.CustomShell, pos, ejectAng, shellVelocity) return end
 		local effectdata = EffectData()
 		effectdata:SetOrigin(pos)
 		effectdata:SetAngles(ang)

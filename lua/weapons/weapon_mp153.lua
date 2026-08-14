@@ -60,7 +60,6 @@ SWEP.weight = 4
 SWEP.ScrappersSlot = "Primary"
 SWEP.weaponInvCategory = 1
 SWEP.ShellEject = "ShotgunShellEject"
-SWEP.AutomaticDraw = false
 SWEP.UseCustomWorldModel = true
 
 SWEP.Primary.ClipSize = 7

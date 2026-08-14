@@ -487,7 +487,10 @@ if SERVER then
 
 	function SWEP:DetonateBomb(bomb, targetPos)
 		local pos = IsValid(bomb) and bomb:GetPos() or targetPos
-		util.BlastDamage(self, IsValid(self:GetOwner()) and self:GetOwner() or self, pos, self.BlastRadius, self.BlastDamage)
+		hg.BlastDamageWithShockwave(self, IsValid(self:GetOwner()) and self:GetOwner() or self, pos, self.BlastRadius, self.BlastDamage, {
+			ExplosionType = "Air",
+			Filter = IsValid(bomb) and {self, bomb} or {self}
+		})
 		util.ScreenShake(pos, 60, 120, 4, self.BlastRadius * 2)
 	end
 end

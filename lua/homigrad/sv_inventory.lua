@@ -19,7 +19,8 @@ function hg.CreateInv(ply)
     inv.Weapons = {}
     for i, wep in ipairs(ply:GetWeapons()) do
         if blackList[wep:GetClass()] then continue end
-        inv.Weapons[wep:GetClass()] = wep--wep.GetInfo and wep:GetInfo() or true
+		local class = hg.CanonicalWeaponClass(wep:GetClass())
+        inv.Weapons[class] = wep--wep.GetInfo and wep:GetInfo() or true
     end
 
     inv.Ammo = ply:GetAmmo()
@@ -42,7 +43,8 @@ function hg.RenewInv(ply, isDead)
     for i, wep in pairs(ply:GetWeapons()) do
         if blackList[wep:GetClass()] then continue end
         if not isDead then
-            inv.Weapons[wep:GetClass()] = wep--wep.GetInfo and wep:GetInfo() or true
+			local class = hg.CanonicalWeaponClass(wep:GetClass())
+            inv.Weapons[class] = wep--wep.GetInfo and wep:GetInfo() or true
         else
             ply.nohook = true
             ply:DropWeapon(wep)
@@ -61,7 +63,8 @@ function hg.RenewInv(ply, isDead)
                 wep:SetParent(ply, 0)
             end
 
-            inv.Weapons[wep:GetClass()] = wep
+			local class = hg.CanonicalWeaponClass(wep:GetClass())
+            inv.Weapons[class] = wep
         end
     end
 
@@ -89,7 +92,8 @@ hook.Add("WeaponEquip", "homigrad-inventory", function(wep, ply)
     wep:SetNoDraw(false)
 
     inv.Weapons = inv.Weapons or {}
-    inv.Weapons[wep:GetClass()] = wep
+	local class = hg.CanonicalWeaponClass(wep:GetClass())
+    inv.Weapons[class] = wep
     
     if wep.sling then
         wep.sling = nil
@@ -271,14 +275,23 @@ end)
 
 local functions = {
     ["Weapons"] = function(ply, ent, wep)
-        if (ent:IsPlayer() and IsValid(ent:GetActiveWeapon()) and ent:GetActiveWeapon():GetClass() == wep) then return end
+		local originalClass = wep
+		local canonicalClass = hg.CanonicalWeaponClass(wep)
+		if canonicalClass ~= wep then
+			local value = ent.inventory.Weapons[wep]
+			if ent.inventory.Weapons[canonicalClass] == nil then ent.inventory.Weapons[canonicalClass] = value end
+			ent.inventory.Weapons[wep] = nil
+			wep = canonicalClass
+		end
+        if (ent:IsPlayer() and IsValid(ent:GetActiveWeapon()) and hg.CanonicalWeaponClass(ent:GetActiveWeapon():GetClass()) == wep) then return end
         if (not ent.inventory.Weapons[wep]) then return end
 
         --local weapon = weapons.Get(wep)
         --if not weapon then return end
         
         local weapon
-        local weaponIsEnt = (not isbool(ent.inventory.Weapons[wep]) )and IsValid(ent.inventory.Weapons[wep]) and ent.inventory.Weapons[wep]:IsWeapon()
+		local storedWeapon = ent.inventory.Weapons[wep]
+        local weaponIsEnt = not isbool(storedWeapon) and IsValid(storedWeapon) and storedWeapon:IsWeapon() and storedWeapon:GetClass() == wep
         --print(weaponIsEnt)
         if not weaponIsEnt then
             weapon = ents.Create(wep)
@@ -292,8 +305,9 @@ local functions = {
             weapon:SetPos(ent:GetPos())
             weapon:SetAngles(ent:GetAngles())
             
-            local tbl = ent.inventory.Weapons[wep]
+			local tbl = IsValid(storedWeapon) and storedWeapon.GetInfo and storedWeapon:GetInfo() or storedWeapon
             if weapon.SetInfo then weapon:SetInfo(tbl) end
+			if IsValid(storedWeapon) and storedWeapon:IsWeapon() then storedWeapon:Remove() end
         else
             weapon = ent.inventory.Weapons[wep]
             weapon.DontEquipInstantly = (not weapon.NoHolster) and (weapon.weaponInvCategory != 1)
@@ -319,7 +333,7 @@ local functions = {
                 ent:DropWeapon(weapon)
                 weapon:SetPos(hg.eyeTrace(ply, 60).HitPos)
             else
-                ent:StripWeapon(wep)
+				ent:StripWeapon(originalClass)
             end
         end
 

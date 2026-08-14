@@ -7,6 +7,7 @@ hg.markup = hg.markup or {}
 -- Temporary information used when building text frames.
 local colour_stack = { {r=255,g=255,b=255,a=255} }
 local font_stack = { "DermaDefault" }
+local url_stack = {}
 local curtag = nil
 local blocks = {}
 
@@ -74,6 +75,8 @@ local function ExtractParams(p1,p2,p3)
 			table.remove(colour_stack)
 		elseif (tag == "font" or tag == "face") then
 			table.remove(font_stack)
+		elseif (tag == "url") then
+			table.remove(url_stack)
 		end
 
 	else
@@ -97,6 +100,8 @@ local function ExtractParams(p1,p2,p3)
 		elseif (p1 == "font" or p1 == "face") then
 
 			table.insert(font_stack, tostring(p2))
+		elseif (p1 == "url" and p2) then
+			table.insert(url_stack, tostring(p2))
 		elseif (p1 == "img" and p2) then
 			local exploded = string.Explode(",", p2)
 			local material = exploded[1] or p2
@@ -143,6 +148,7 @@ local function CheckTextOrTag(p)
 		text_block.text = p
 		text_block.colour = colour_stack[#colour_stack]
 		text_block.font = font_stack[#font_stack]
+		text_block.url = url_stack[#url_stack]
 		table.insert(blocks, text_block)
 
 	end
@@ -268,6 +274,7 @@ function hg.markup.Parse(ml, maxwidth)
 
 	colour_stack = { {r=255,g=255,b=255,a=255} }
 	font_stack = { "DermaDefault" }
+	url_stack = {}
 	blocks = {}
 
 	if (not string.find(ml, "<")) then
@@ -316,6 +323,7 @@ function hg.markup.Parse(ml, maxwidth)
 						new_block.text = curString
 						new_block.font = block.font
 						new_block.colour = block.colour
+						new_block.url = block.url
 						new_block.thisY = thisY
 						new_block.thisX = x1
 						new_block.offset = {}
@@ -407,6 +415,7 @@ function hg.markup.Parse(ml, maxwidth)
 							new_block.text = curString
 							new_block.font = block.font
 							new_block.colour = block.colour
+							new_block.url = block.url
 							new_block.thisY = thisY
 							new_block.thisX = x1
 							new_block.offset = {}
@@ -445,6 +454,7 @@ function hg.markup.Parse(ml, maxwidth)
 				new_block.text = curString
 				new_block.font = block.font
 				new_block.colour = block.colour
+				new_block.url = block.url
 				new_block.thisY = thisY
 				new_block.thisX = x1
 				new_block.offset = {}

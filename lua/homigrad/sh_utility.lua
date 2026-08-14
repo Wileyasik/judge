@@ -108,6 +108,32 @@ hg.ConVars = hg.ConVars or {}
 		end
 		return SERVER and owner:IsPlayer() and owner:KeyDown(key) or CLIENT and localKey
 	end
+
+	local legacyWeaponClasses = {
+		weapon_thiamine = "weapon_thiamine_tpik",
+		weapon_painkillers = "weapon_painkillers_tpik",
+		weapon_betablock = "weapon_betablock_tpik",
+	}
+
+	function hg.CanonicalWeaponClass(class)
+		return legacyWeaponClasses[class] or class
+	end
+
+	function hg.MigrateLegacyWeaponInventory(inventory)
+		local weapons = istable(inventory) and inventory.Weapons
+		if not istable(weapons) then return false end
+
+		local changed = false
+		for oldClass, newClass in pairs(legacyWeaponClasses) do
+			if weapons[oldClass] ~= nil then
+				if weapons[newClass] == nil then weapons[newClass] = weapons[oldClass] end
+				weapons[oldClass] = nil
+				changed = true
+			end
+		end
+
+		return changed
+	end
 --//
 
 --\\ BoneMatrix func
@@ -1567,76 +1593,87 @@ duplicator.Allow( "homigrad_base" )
 	end)
 --//
 
---\\ Fireworks effects? why so many, we use only one lol
+--\\ Fireworks effects (only load pcf that actually exist on the server)
+    local function AddParticlesIfExists(path)
+        if file.Exists(path, "GAME") then
+            game.AddParticles(path)
+        end
+    end
+    local function PrecacheIfExists(path, system)
+        if file.Exists(path, "GAME") then
+            PrecacheParticleSystem(system)
+        end
+    end
+
     --Firework trails
-    game.AddParticles( "particles/gf2_trails_firework_rocket_01.pcf") 
+    AddParticlesIfExists( "particles/gf2_trails_firework_rocket_01.pcf") 
     
-    PrecacheParticleSystem("gf2_firework_trail_main")
+    PrecacheIfExists( "particles/gf2_trails_firework_rocket_01.pcf", "gf2_firework_trail_main" )
     --Firework Large Explosions
-    game.AddParticles( "particles/gf2_large_rocket_01.pcf" )
-    game.AddParticles( "particles/gf2_large_rocket_02.pcf" )
-    game.AddParticles( "particles/gf2_large_rocket_03.pcf" )
-    game.AddParticles( "particles/gf2_large_rocket_04.pcf" )
-    game.AddParticles( "particles/gf2_large_rocket_05.pcf" )
-    game.AddParticles( "particles/gf2_large_rocket_06.pcf" )
+    AddParticlesIfExists( "particles/gf2_large_rocket_01.pcf" )
+    AddParticlesIfExists( "particles/gf2_large_rocket_02.pcf" )
+    AddParticlesIfExists( "particles/gf2_large_rocket_03.pcf" )
+    AddParticlesIfExists( "particles/gf2_large_rocket_04.pcf" )
+    AddParticlesIfExists( "particles/gf2_large_rocket_05.pcf" )
+    AddParticlesIfExists( "particles/gf2_large_rocket_06.pcf" )
     
-    PrecacheParticleSystem( "gf2_rocket_large_explosion_01" )
-    PrecacheParticleSystem( "gf2_rocket_large_explosion_02" )
-    PrecacheParticleSystem( "gf2_rocket_large_explosion_03" )
-    PrecacheParticleSystem( "gf2_rocket_large_explosion_04" )
-    PrecacheParticleSystem( "gf2_rocket_large_explosion_05" )
-    PrecacheParticleSystem( "gf2_rocket_large_explosion_06" )
+    PrecacheIfExists( "particles/gf2_large_rocket_01.pcf", "gf2_rocket_large_explosion_01" )
+    PrecacheIfExists( "particles/gf2_large_rocket_02.pcf", "gf2_rocket_large_explosion_02" )
+    PrecacheIfExists( "particles/gf2_large_rocket_03.pcf", "gf2_rocket_large_explosion_03" )
+    PrecacheIfExists( "particles/gf2_large_rocket_04.pcf", "gf2_rocket_large_explosion_04" )
+    PrecacheIfExists( "particles/gf2_large_rocket_05.pcf", "gf2_rocket_large_explosion_05" )
+    PrecacheIfExists( "particles/gf2_large_rocket_06.pcf", "gf2_rocket_large_explosion_06" )
     
     --Battery stuff
-    game.AddParticles( "particles/gf2_battery_generals.pcf" ) 
-    game.AddParticles( "particles/gf2_battery_01_effects.pcf" )
-    game.AddParticles( "particles/gf2_battery_02_effects.pcf" )
-    game.AddParticles( "particles/gf2_battery_03_effects.pcf" )
-    game.AddParticles( "particles/gf2_battery_mine_01_effects.pcf" )
+    AddParticlesIfExists( "particles/gf2_battery_generals.pcf" ) 
+    AddParticlesIfExists( "particles/gf2_battery_01_effects.pcf" )
+    AddParticlesIfExists( "particles/gf2_battery_02_effects.pcf" )
+    AddParticlesIfExists( "particles/gf2_battery_03_effects.pcf" )
+    AddParticlesIfExists( "particles/gf2_battery_mine_01_effects.pcf" )
     
     --Cakes stuff
-    game.AddParticles( "particles/gf2_cake_01_effects.pcf" )
+    AddParticlesIfExists( "particles/gf2_cake_01_effects.pcf" )
     
     --Firecrackers stuff
-    game.AddParticles( "particles/gf2_firecracker_m80.pcf" )
+    AddParticlesIfExists( "particles/gf2_firecracker_m80.pcf" )
     
     --Misc
-    game.AddParticles( "particles/gf2_misc_neighborhater.pcf" )
-    game.AddParticles( "particles/gf2_matchhead_light.pcf" )
+    AddParticlesIfExists( "particles/gf2_misc_neighborhater.pcf" )
+    AddParticlesIfExists( "particles/gf2_matchhead_light.pcf" )
     
     --Fountains
     
-    game.AddParticles( "particles/gf2_fountain_01_effects.pcf")
-    game.AddParticles( "particles/gf2_fountain_02_effects.pcf")
-    game.AddParticles( "particles/gf2_fountain_03_effects.pcf")
-    game.AddParticles( "particles/gf2_fountain_04_effects.pcf")
-    game.AddParticles( "particles/gf2_fountain_05_effects.pcf")
+    AddParticlesIfExists( "particles/gf2_fountain_01_effects.pcf")
+    AddParticlesIfExists( "particles/gf2_fountain_02_effects.pcf")
+    AddParticlesIfExists( "particles/gf2_fountain_03_effects.pcf")
+    AddParticlesIfExists( "particles/gf2_fountain_04_effects.pcf")
+    AddParticlesIfExists( "particles/gf2_fountain_05_effects.pcf")
     
     --Mortars
-    game.AddParticles( "particles/gf2_mortar_shells_effects.pcf")
-    game.AddParticles( "particles/gf2_mortar_shells_big_01.pcf")
-    game.AddParticles( "particles/gf2_mortar_shells_big_02.pcf")
-    game.AddParticles( "particles/gf2_mortar_shells_big_03.pcf")
+    AddParticlesIfExists( "particles/gf2_mortar_shells_effects.pcf")
+    AddParticlesIfExists( "particles/gf2_mortar_shells_big_01.pcf")
+    AddParticlesIfExists( "particles/gf2_mortar_shells_big_02.pcf")
+    AddParticlesIfExists( "particles/gf2_mortar_shells_big_03.pcf")
     
     --Wheels
     
-    game.AddParticles( "particles/gf2_wheel_01.pcf")
+    AddParticlesIfExists( "particles/gf2_wheel_01.pcf")
     
     -- Flares
-    game.AddParticles( "particles/gf2_flare_multicoloured_effects.pcf")
+    AddParticlesIfExists( "particles/gf2_flare_multicoloured_effects.pcf")
     
     -- Giga rockets
     
-    game.AddParticles( "particles/gf2_gigantic_rocket_01.pcf" )
-    game.AddParticles( "particles/gf2_gigantic_rocket_02.pcf" )
+    AddParticlesIfExists( "particles/gf2_gigantic_rocket_01.pcf" )
+    AddParticlesIfExists( "particles/gf2_gigantic_rocket_02.pcf" )
     
     -- Roman Candles
-    game.AddParticles( "particles/gf2_romancandle_01_effect.pcf" )
-    game.AddParticles( "particles/gf2_romancandle_02_effect.pcf" )
-    game.AddParticles( "particles/gf2_romancandle_03_effect.pcf" )
+    AddParticlesIfExists( "particles/gf2_romancandle_01_effect.pcf" )
+    AddParticlesIfExists( "particles/gf2_romancandle_02_effect.pcf" )
+    AddParticlesIfExists( "particles/gf2_romancandle_03_effect.pcf" )
     
     --Small Fireworks
-    game.AddParticles( "particles/gf2_firework_small_01.pcf" )
+    AddParticlesIfExists( "particles/gf2_firework_small_01.pcf" )
 --//
 
 --\\ Explosion Trace
@@ -1710,34 +1747,69 @@ end
 
 hg.OldScreenShake = hg.OldScreenShake or util.ScreenShake
 
-local ScreenShakers = {} -- Shake your a... don't :3
---[[
-	ScreenShakers[#ScreenShakers + 1] = {
-		vPos = vPos,
-		nAmplitude = nAmplitude,
-		nFrequency = nFrequency,
-		nDuration = nDuration or 1,
-		nRadius = nRadius,
-		bAirshake = bAirshake,
-		tCreated = CurTime()
-	}
---]]
-function util.ScreenShake(vPos, nAmplitude, nFrequency, nDuration, nRadius, bAirshake, crfFilter)
+local hgExplosionGlares = {}
+local hgExplosionFlash = 0
+local hgExplosionFlashSmooth = 0
+
+if CLIENT then
+	local flareMat = Material("sprites/orangeflare1_gmod")
+	local flareGlowMat = Material("sprites/glow04_noz")
+	hook.Add("Post Post Pre Post Processing", "hg_ExplosionFlash", function()
+		local now = CurTime()
+
+		if hgExplosionFlash > 0.001 then
+			hgExplosionFlash = math.max(0, hgExplosionFlash - FrameTime() * 5)
+		end
+		if hgExplosionFlashSmooth > 0.001 or hgExplosionFlash > 0.001 then
+			hgExplosionFlashSmooth = LerpFT(hgExplosionFlash > hgExplosionFlashSmooth and 18 or 8, hgExplosionFlashSmooth, hgExplosionFlash)
+			if hgExplosionFlashSmooth <= 0.001 then hgExplosionFlashSmooth = 0 end
+			local s = hgExplosionFlashSmooth
+			s = s * s * (3 - 2 * s)
+			local alpha = math.floor(s * 150 + 0.5)
+			if alpha > 0 then
+				surface.SetDrawColor(255, 255, 255, alpha)
+				surface.DrawRect(0, 0, ScrW(), ScrH())
+			end
+		end
+
+		for i = #hgExplosionGlares, 1, -1 do
+			local g = hgExplosionGlares[i]
+			local anim = (now - g.born) / g.dur
+			if anim >= 1 then
+				table.remove(hgExplosionGlares, i)
+				continue
+			end
+			local scr = g.pos:ToScreen()
+			if not scr.visible then continue end
+			local fade = (1 - anim) * (1 - anim)
+			local size = g.size * (1 - anim * 0.5)
+			local alpha = math.floor(g.alpha * fade + math.Rand(-12, 12) * fade + 0.5)
+			if alpha > 0 then
+				surface.SetMaterial(flareMat)
+				surface.SetDrawColor(255, 255, 255, alpha)
+				surface.DrawTexturedRect(scr.x - size / 2, scr.y - size / 2, size, size)
+				surface.SetMaterial(flareGlowMat)
+				surface.DrawTexturedRect(scr.x - size / 2, scr.y - size / 2, size, size)
+			end
+		end
+	end)
+end
+
+local ScreenShakers = {}
+
+function util.ScreenShake(vPos, nAmplitude, nFrequency, nDuration, nRadius, bAirshake, crfFilter, rotBoost)
 	if SERVER then -- SERVER SIDE
 		vPos = vPos or Vector(0,0,0)
 		nRadius = nRadius or (nAmplitude * 100)
-		local tEnts = ents.FindInSphere(vPos, nRadius * nRadius)
-		--PrintTable(tEnts)
-		local crf = RecipientFilter()
-		--print(#tEnts)
-		for i = 1, #tEnts do
-			local eEnt = tEnts[i]
-			if !IsValid(eEnt) then continue end
-			if !eEnt:IsPlayer() then continue end
-			crf:AddPlayer(eEnt)
+		local crf = crfFilter or RecipientFilter()
+		if not crfFilter then
+			local tEnts = ents.FindInSphere(vPos, nRadius)
+			for i = 1, #tEnts do
+				local ent = tEnts[i]
+				if IsValid(ent) and ent:IsPlayer() then crf:AddPlayer(ent) end
+			end
 		end
-		crf = crf or crfFilter
-		--print(crf)
+
 		net.Start("util.ScreenShake")
 			net.WriteVector(vPos)
 			net.WriteFloat(nAmplitude)
@@ -1745,18 +1817,47 @@ function util.ScreenShake(vPos, nAmplitude, nFrequency, nDuration, nRadius, bAir
 			net.WriteFloat(nDuration or 1)
 			net.WriteFloat(nRadius)
 			net.WriteBool(bAirshake)
+			net.WriteFloat(rotBoost or 1)
 		net.Send(crf)
 	elseif CLIENT then -- CLIENT SIDE
 		nRadius = nRadius or (nAmplitude * 100)
 		ScreenShakers[#ScreenShakers + 1] = {
-			vPos = vPos,
-			nAmplitude = nAmplitude,
-			nFrequency = nFrequency,
-			nDuration = nDuration or 1,
-			nRadius = nRadius,
-			bAirshake = bAirshake,
-			tCreated = CurTime()
+			pos = vPos,
+			amplitude = nAmplitude,
+			frequency = math.max(nFrequency, 1),
+			duration = nDuration or 1,
+			radius = nRadius,
+			airshake = bAirshake,
+			created = CurTime(),
+			nextSample = 0,
+			target = vector_origin,
+			offset = Vector(0,0,0),
+			angTarget = Angle(0,0,0),
+			angOffset = Angle(0,0,0),
+			rotBoost = math.Clamp(rotBoost or 1, 0.1, 4)
 		}
+		if hgExplosionGlares and not bAirshake and (nAmplitude or 0) >= 20 and (nRadius or 0) >= 300 then
+			local ply = LocalPlayer()
+			if IsValid(ply) and ply:Alive() and isvector(vPos) then
+				local eyePos = ply:EyePos()
+				local dir = vPos - eyePos
+				local dist = dir:Length()
+				if dist > 1 and dist < 5000 then
+					local dot = ply:EyeAngles():Forward():Dot(dir:GetNormalized())
+					if dot > 0.1 then
+						local tr = util.TraceLine({ start = eyePos, endpos = vPos, filter = ply })
+						if tr.HitPos:Distance(vPos) < 64 then
+							hgExplosionFlash = math.max(hgExplosionFlash, math.Clamp((nAmplitude or 0) / 50 * (1 - math.min(dist, 5000) / 5000), 0.2, 1))
+							if #hgExplosionGlares < 8 then
+								local size = math.Clamp((nAmplitude * 3) / math.max(dist / 120, 1), 36, 300)
+								local alpha = math.Clamp(nAmplitude * 1.8, 120, 220)
+								hgExplosionGlares[#hgExplosionGlares + 1] = { pos = vPos, born = CurTime(), dur = 0.3, size = size, alpha = alpha }
+							end
+						end
+					end
+				end
+			end
+		end
 		hg.OldScreenShake(vPos, nAmplitude, nFrequency, nDuration, nRadius, bAirshake, crfFilter)
 	end
 end
@@ -1773,6 +1874,197 @@ function plyMeta:ScreenShake(vPos, nAmplitude, nFrequency, nDuration, nRadius, b
 end
 
 if CLIENT then
+	local explosionMotionBlur = 0
+
+	function hg.GetExplosionMotionBlur()
+		local ply = LocalPlayer()
+		if not IsValid(ply) then return 0 end
+		if #ScreenShakers == 0 and explosionMotionBlur == 0 then return 0 end
+
+		local lastView = hg.LastMainRenderView
+		local viewPos = lastView and lastView.origin or ply:EyePos()
+		local now = CurTime()
+		local target = 0
+		for i = #ScreenShakers, 1, -1 do
+			local shake = ScreenShakers[i]
+			local elapsed = now - shake.created
+			if elapsed >= shake.duration then
+				table.remove(ScreenShakers, i)
+				continue
+			end
+
+			local distanceMul = 1 - math.Clamp(viewPos:Distance(shake.pos) / math.max(shake.radius, 1), 0, 1)
+			local timeMul = 1 - elapsed / shake.duration
+			local amplitudeMul = math.Clamp(shake.amplitude / 40, 0, 1)
+			target = math.max(target, distanceMul * timeMul * amplitudeMul * 0.03)
+		end
+
+		explosionMotionBlur = LerpFT(0.06, explosionMotionBlur, target)
+		if explosionMotionBlur < 0.0001 then explosionMotionBlur = 0 end
+		return explosionMotionBlur
+	end
+
+	local explosionVignette = 0
+
+	function hg.GetExplosionVignette()
+		local ply = LocalPlayer()
+		if not IsValid(ply) then return 0 end
+		if #ScreenShakers == 0 and explosionVignette == 0 then return 0 end
+
+		local lastView = hg.LastMainRenderView
+		local viewPos = lastView and lastView.origin or ply:EyePos()
+		local now = CurTime()
+		local target = 0
+		for i = #ScreenShakers, 1, -1 do
+			local shake = ScreenShakers[i]
+			if shake.noKick then continue end
+			local elapsed = now - shake.created
+			if elapsed >= shake.duration then
+				table.remove(ScreenShakers, i)
+				continue
+			end
+
+			local distanceMul = 1 - math.Clamp(viewPos:Distance(shake.pos) / math.max(shake.radius, 1), 0, 1)
+			local timeMul = 1 - elapsed / shake.duration
+			local amplitudeMul = math.Clamp(shake.amplitude / 40, 0, 1)
+			target = math.max(target, distanceMul * timeMul * amplitudeMul)
+		end
+
+		explosionVignette = LerpFT(0.06, explosionVignette, target)
+		if explosionVignette < 0.001 then explosionVignette = 0 end
+		return explosionVignette
+	end
+
+	local explosionFovKick = 0
+	local ExplosionFovPunchMax = 5
+	local ExplosionFovWaveMax = 3
+
+	function hg.GetExplosionFovKick()
+		local ply = LocalPlayer()
+		if not IsValid(ply) then return 0 end
+		if #ScreenShakers == 0 and explosionFovKick == 0 then return 0 end
+
+		local lastView = hg.LastMainRenderView
+		local viewPos = lastView and lastView.origin or ply:EyePos()
+		local now = CurTime()
+		local narrow = 0
+		local widen = 0
+		for i = #ScreenShakers, 1, -1 do
+			local shake = ScreenShakers[i]
+			local elapsed = now - shake.created
+			if elapsed >= shake.duration then
+				table.remove(ScreenShakers, i)
+				continue
+			end
+
+			local distanceMul = 1 - math.Clamp(viewPos:Distance(shake.pos) / math.max(shake.radius, 1), 0, 1)
+			local timeMul = 1 - elapsed / shake.duration
+			local amplitudeMul = math.Clamp(shake.amplitude / 40, 0, 1)
+			local strength = distanceMul * timeMul * amplitudeMul
+
+			if shake.noKick then
+				widen = math.max(widen, strength)
+			else
+				narrow = math.max(narrow, strength)
+			end
+		end
+
+		local target = widen * ExplosionFovWaveMax - narrow * ExplosionFovPunchMax
+		if math.abs(target) > math.abs(explosionFovKick) then
+			explosionFovKick = LerpFT(0.08, explosionFovKick, target)
+		else
+			explosionFovKick = LerpFT(0.06, explosionFovKick, target)
+		end
+		if math.abs(explosionFovKick) < 0.01 then explosionFovKick = 0 end
+
+		return explosionFovKick
+	end
+
+	hook.Add("HG_CalcView", "hg_explosion_fov_kick", function(ply, origin, angles, fova)
+		if not istable(fova) then return end
+		fova[1] = fova[1] + hg.GetExplosionFovKick()
+	end)
+
+	function hg.ApplyScreenShakes(view, ply, isFake)
+		if not istable(view) or not isvector(view.origin) or not isangle(view.angles) then return view end
+		if #ScreenShakers == 0 then return view end
+
+		local now = CurTime()
+		local rotScale = 1 * 0.1
+		local orgScale = 0
+		local totalOffset = Vector(0,0,0)
+		local totalAng = Angle(0,0,0)
+		for i = #ScreenShakers, 1, -1 do
+			local shake = ScreenShakers[i]
+			local elapsed = now - shake.created
+			if elapsed >= shake.duration then
+				table.remove(ScreenShakers, i)
+				continue
+			end
+
+			if not shake.airshake and not isFake and not ply:IsOnGround() then continue end
+
+			local distanceMul = 1 - math.Clamp(view.origin:Distance(shake.pos) / math.max(shake.radius, 1), 0, 1)
+			if distanceMul <= 0 then continue end
+
+			if now >= shake.nextSample then
+				shake.nextSample = now + 1 / shake.frequency
+				shake.target = VectorRand(-1, 1)
+				shake.angTarget = AngleRand(-1, 1)
+			end
+
+			local sampleLerp = math.Clamp(FrameTime() * shake.frequency, 0, 1)
+			shake.offset = LerpVector(sampleLerp, shake.offset, shake.target)
+			shake.angOffset = LerpAngle(sampleLerp, shake.angOffset, shake.angTarget)
+			local timeMul = 1 - elapsed / shake.duration
+
+			if orgScale > 0 then
+				totalOffset:Add(shake.offset * (shake.amplitude / 5) * distanceMul * timeMul * orgScale)
+			end
+
+			if rotScale > 0 then
+				local shakeRotScale = rotScale * shake.rotBoost
+				totalAng:Add(shake.angOffset * (shake.amplitude / 5) * distanceMul * timeMul * shakeRotScale)
+
+				if not shake.noKick then
+					local toBlast = shake.pos - view.origin
+					local dist = toBlast:Length()
+					if dist > 1 then
+						local dirAng = (toBlast / dist):Angle()
+						local kickMul = (shake.amplitude / 40) * distanceMul * timeMul * shakeRotScale
+						totalAng.p = totalAng.p + math.Clamp(math.AngleDifference(view.angles.p, dirAng.p) * kickMul, -6, 6)
+						totalAng.y = totalAng.y + math.Clamp(math.AngleDifference(view.angles.y, dirAng.y) * kickMul, -8, 8)
+					end
+				end
+			end
+		end
+
+		view.origin:Add(totalOffset)
+		view.angles:Add(totalAng)
+		return view
+	end
+
+	function hg.AddWaveShake(amplitude, duration)
+		local ply = LocalPlayer()
+		if not IsValid(ply) then return end
+		ScreenShakers[#ScreenShakers + 1] = {
+			pos = ply:EyePos(),
+			amplitude = amplitude or 12,
+			frequency = 12,
+			duration = duration or 0.5,
+			radius = 100000,
+			airshake = false,
+			created = CurTime(),
+			nextSample = 0,
+			target = vector_origin,
+			offset = Vector(0,0,0),
+			angTarget = Angle(0,0,0),
+			angOffset = Angle(0,0,0),
+			rotBoost = 1,
+			noKick = true
+		}
+	end
+
 	-- Clientside receive
 	net.Receive("util.ScreenShake",function()
 		local vPos = net.ReadVector()
@@ -1780,55 +2072,10 @@ if CLIENT then
 		local nFrequency = net.ReadFloat()
 		local nDuration = net.ReadFloat()
 		local nRadius = net.ReadFloat()
-		local bAirshake = net.ReadBool(bAirshake)
+		local bAirshake = net.ReadBool()
+		local rotBoost = net.ReadFloat()
 
-		util.ScreenShake(vPos, nAmplitude, nFrequency, nDuration, nRadius, bAirshake)
-	end)
-
-	hook.Add("PostHGCalcView","util.ScreenShake",function(ply, view)
-		for i = 1, #ScreenShakers do
-			local shake = ScreenShakers[i]
-			if shake then
-				if !ply:IsOnGround() and !shake.bAirshake then continue end
-				local distance = shake.vPos:DistToSqr(ply:GetPos())
-				local mul = 1 - (distance / (shake.nRadius * shake.nRadius) / 2)
-				mul = math.max(mul, 0)
-				mul = Lerp(math.ease.InExpo(mul),0,1)
-
-				local timeMul = ((shake.tCreated + shake.nDuration) - CurTime()) / shake.nDuration
-				shake.vNormal = shake.vNormal or VectorRand(-1,1)
-				shake.vShake =  shake.vNormal * (math.Rand(0,2) * timeMul)
-				local vNoise = VectorRand(-0.2,0.2)
-				shake.vShake = shake.vShake + vNoise
-				if !shake.gFrequency or shake.gFrequency < CurTime() then
-					shake.gFrequency = CurTime() + (100 - shake.nFrequency) / 100
-					shake.vNormal = VectorRand(-1,1)
-				end
-
-				shake.finalShake = LerpVectorFT(0.3, shake.finalShake or Vector(0,0,0), shake.vShake)
-				local vShake = shake.finalShake
-				vShake = vShake * shake.nAmplitude / 5
-				vShake = vShake * mul
-				vShake = vShake * timeMul
-				vShake.z = vShake.z * 0.5
-				vShake.x = math.max(vShake.x, 0)
-
-				local angles = view.angles
-				view.origin = view.origin
-					+ angles:Forward() * vShake.x
-					+ angles:Right() * vShake.y
-					+ angles:Up() * vShake.z
-
-				angles[1] = angles[1] + vShake.z
-				--angles[2] = angles[2] + vShake.x
-				angles[3] = angles[3] + vShake.y
-
-				if timeMul <= 0 then
-					table.remove(ScreenShakers, i)
-				end
-			end
-		end
-		return view
+		util.ScreenShake(vPos, nAmplitude, nFrequency, nDuration, nRadius, bAirshake, nil, rotBoost)
 	end)
 end
 --//

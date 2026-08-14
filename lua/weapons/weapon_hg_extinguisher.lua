@@ -143,6 +143,111 @@ SWEP.ExplosionRadius = 140
 SWEP.ExplosionDamage = 2
 SWEP.ExplosionFireOutRadius = 140
 
+SWEP.SprayTickInterval = 0.05
+SWEP.SprayDrainPerSecond = 6
+SWEP.SprayRange = 256
+SWEP.SprayHullSize = 14
+SWEP.SprayForceRampTime = 0.7
+SWEP.SpraySelfForce = 3625
+SWEP.SpraySelfMaxSpeed = 290
+SWEP.SpraySelfStandingPush = 15
+SWEP.SpraySelfRagdollChance = 0.45
+SWEP.SpraySelfRagdollDelay = 4.5
+SWEP.SpraySelfLightStunTime = 0.75
+SWEP.SprayStandingPush = 41
+SWEP.SprayStandingMaxSpeed = 220
+SWEP.SprayKnockdownTime = 2
+SWEP.SprayKnockdownForce = 5500
+SWEP.SprayRagdollForce = 2800
+SWEP.SprayRagdollMaxSpeed = 275
+SWEP.SprayPropForce = 10250
+SWEP.SprayPropMaxSpeed = 320
+SWEP.SprayKnockdownCooldown = 6
+SWEP.SprayContactGrace = 0.15
+SWEP.SprayLightStunTime = 1.25
+
+local function GetSprayPlayer(ent)
+    if not IsValid(ent) then return end
+    if ent:IsPlayer() then return ent end
+    return hg.RagdollOwner and hg.RagdollOwner(ent) or nil
+end
+
+local function ApplySprayForce(ragdoll, direction, force, maxSpeed, dt)
+    if not IsValid(ragdoll) or not isvector(direction) or direction:LengthSqr() <= 0 then return end
+
+    local physics = {}
+    for _, bone in ipairs({0, 1}) do
+        local phys = ragdoll:GetPhysicsObjectNum(bone)
+        if IsValid(phys) then physics[#physics + 1] = phys end
+    end
+    if #physics == 0 then return end
+
+    for _, phys in ipairs(physics) do
+        if not maxSpeed or phys:GetVelocity():Dot(direction) < maxSpeed then
+            phys:Wake()
+            phys:ApplyForceCenter(direction * force * (dt or 0.05) / 0.05 / #physics)
+        end
+    end
+end
+
+local function GetSprayDirection(owner, reverse)
+    local direction = owner:GetAimVector()
+    if direction:LengthSqr() <= 0 then return end
+    direction:Normalize()
+    return reverse and -direction or direction
+end
+
+local function GetHorizontalSprayDirection(owner, reverse)
+    local direction = GetSprayDirection(owner, reverse)
+    if not direction then return end
+    direction.z = 0
+    if direction:LengthSqr() <= 0 then return end
+    return direction:GetNormalized()
+end
+
+local function GetSprayForceScale(exposure, rampTime)
+    local fraction = math.Clamp((exposure or 0) / (rampTime or 0.7), 0, 1)
+    return fraction * fraction * (3 - 2 * fraction)
+end
+
+local function GetExtinguisherSprayTrace(owner, range, hullSize)
+    local startPos, aim, filter = hg.eye(owner, range)
+    if not isvector(startPos) or not isvector(aim) then return end
+
+    local hull = Vector(hullSize, hullSize, hullSize)
+    return util.TraceHull({
+        start = startPos,
+        endpos = startPos + aim,
+        mins = -hull,
+        maxs = hull,
+        filter = filter,
+        mask = MASK_SHOT
+    })
+end
+
+local function PushStandingPlayer(ply, direction, amount, maxSpeed, dt)
+    if not IsValid(ply) or not isvector(direction) or direction:LengthSqr() <= 0 then return end
+    direction = direction:GetNormalized()
+
+    local speedLimit = maxSpeed or amount or 10
+    local speedAlongPush = ply:GetVelocity():Dot(direction)
+    local impulse = math.min((amount or 10) * (dt or 0.05) / 0.05 * 0.35, speedLimit - speedAlongPush)
+    if impulse <= 0 then return end
+
+    -- Player:SetVelocity adds to the current velocity; passing it back here causes exponential acceleration.
+    ply:SetVelocity(direction * impulse)
+end
+
+local function PushPhysicalEntity(ent, direction, force, maxSpeed, hitPos, dt)
+    if not IsValid(ent) or not isvector(direction) then return end
+    local phys = ent:GetPhysicsObject()
+    if not IsValid(phys) or phys:GetVelocity():Dot(direction) >= maxSpeed then return end
+
+    local massScale = math.Clamp(phys:GetMass() / 50, 0.5, 2)
+    phys:Wake()
+    phys:ApplyForceOffset(direction * force * massScale * (dt or 0.05) / 0.05, hitPos or phys:GetPos())
+end
+
 local function GetExtinguisherImpactPos(ent, dmginfo)
     local pos = dmginfo.GetDamagePosition and dmginfo:GetDamagePosition() or vector_origin
 
@@ -259,7 +364,10 @@ local function ExplodeExtinguisher(wep, attacker, pos)
     util.ScreenShake(explodePos, 18, 80, 0.6, 360)
     SendExtinguisherExplosionFx(explodePos)
     ExtinguishNearbyFires(explodePos, fireRadius)
-    util.BlastDamage(wep, IsValid(attacker) and attacker or IsValid(owner) and owner or wep, explodePos, blastRadius, blastDamage)
+    hg.BlastDamageWithShockwave(wep, IsValid(attacker) and attacker or IsValid(owner) and owner or wep, explodePos, blastRadius, blastDamage, {
+        Force = 12000,
+        RagdollThreshold = 1.1
+    })
 
     if IsValid(wep) then
         wep:Remove()
@@ -409,10 +517,12 @@ end
 
 function SWEP:Reload()
     if SERVER then
-        if self:GetOwner():KeyPressed(IN_RELOAD) then
-            self:SetNetVar("extinguishermode", not self:GetNetVar("extinguishermode"))
+        local owner = self:GetOwner()
+        if IsValid(owner) and owner:KeyPressed(IN_RELOAD) then
+            local sprayMode = not self:GetNetVar("extinguishermode")
+            self:SetNetVar("extinguishermode", sprayMode)
             --self:GetOwner():ChatPrint("Changed extinguishermode to "..(self:GetNetVar("extinguishermode") and "spray." or "attack."))
-            self:PlayAnim(self:GetNetVar("extinguishermode") and "equip" or "unequip",1,false,nil,false,true)
+            self:PlayAnim(sprayMode and "equip" or "unequip", 1, false, nil, false, true)
         end--anim,time,cycling,callback,reverse,sendtoclient
     end
 end
@@ -421,13 +531,16 @@ hook.Add("OnNetVarSet", "AsdGuilt",function(index, key, var)
     if key == "extinguishermode" then
         local self = Entity(index)
         if not IsValid(self) or not self.AnimList then return end
-        self.AnimList["deploy"] = self:GetNetVar("extinguishermode") and "HoseEquip" or "Draw"
+        self.AnimList["deploy"] = var and "HoseEquip" or "Draw"
+        if CLIENT and self:GetOwner() == LocalPlayer() then
+            self:PlayAnim(var and "equip" or "unequip", 1, false, nil, false)
+        end
     end
 end)
 
 function SWEP:ModelAnimAdd(model, pos, ang)
     self.CustomLerpMode = LerpFT(0.1,self.CustomLerpMode or 0, self:GetNetVar("extinguishermode") and 1 or 0)
-    pos = pos + ((ang:Up() * -14 + ang:Forward() * -5 + ang:Right() * 3) * self.CustomLerpMode)
+    pos = pos + ((ang:Up() * -11 + ang:Forward() * -5 + ang:Right() * 3) * self.CustomLerpMode)
     ang:RotateAroundAxis(ang:Forward(), -5 * self.CustomLerpMode)
     ang:RotateAroundAxis(ang:Up(), 3 * self.CustomLerpMode)
     ang:RotateAroundAxis(ang:Right(), 10 * self.CustomLerpMode)
@@ -498,26 +611,139 @@ function SWEP:CanSecondaryAttack()
         end)
     else
         if (self.lasttimeused or 0) > CurTime() then return false end
-        self.lasttimeused = CurTime() + 0.1
-        local tr = hg.eyeTrace(self:GetOwner(), 256)
+        local now = CurTime()
+        local owner = self:GetOwner()
+        if not IsValid(owner) or owner:GetActiveWeapon() ~= self then return false end
+
+        local tickInterval = self.SprayTickInterval or 0.05
+        local elapsed = now - (self.lastSprayTime or now)
+        local sprayInterrupted = elapsed > (self.SprayContactGrace or 0.15)
+        local dt = sprayInterrupted and tickInterval or math.min(elapsed, tickInterval * 2)
+        self.lasttimeused = now + tickInterval
+        self.lastSprayTime = now
+
+        local tr = GetExtinguisherSprayTrace(owner, self.SprayRange or 256, self.SprayHullSize or 14)
+        if not tr then return false end
         self.sprayamt = self.sprayamt or 100
-        self.sprayamt = self.sprayamt - FrameTime() * 40
+        self.sprayamt = math.max(0, self.sprayamt - (self.SprayDrainPerSecond or 7) * dt)
         self:SetNWFloat("amountspray", self.sprayamt)
-        		
+
+        local selfRagdoll = hg.GetCurrentCharacter and hg.GetCurrentCharacter(owner)
+        if IsValid(selfRagdoll) and selfRagdoll ~= owner then
+            self.SpraySelfExposure = sprayInterrupted and dt or (self.SpraySelfExposure or 0) + dt
+            local backward = GetSprayDirection(owner, true)
+            if backward then
+                local forceScale = GetSprayForceScale(self.SpraySelfExposure, self.SprayForceRampTime)
+                ApplySprayForce(selfRagdoll, backward, (self.SpraySelfForce or 3625) * forceScale, self.SpraySelfMaxSpeed or 290, dt)
+            end
+        else
+            self.SpraySelfExposure = sprayInterrupted and dt or (self.SpraySelfExposure or 0) + dt
+            local backward = GetHorizontalSprayDirection(owner, true)
+            if backward then
+                local forceScale = GetSprayForceScale(self.SpraySelfExposure, self.SprayForceRampTime)
+                PushStandingPlayer(owner, backward, (self.SpraySelfStandingPush or 15) * forceScale, 90, dt)
+            end
+
+            if not self.SpraySelfRagdollRolled and self.SpraySelfExposure >= (self.SpraySelfRagdollDelay or 0.35) then
+                self.SpraySelfRagdollRolled = true
+                if math.Rand(0, 1) < (self.SpraySelfRagdollChance or 0.6) then
+                    hg.LightStunPlayer(owner, self.SpraySelfLightStunTime or 0.75)
+                    self.SpraySelfExposure = 0
+                end
+            end
+        end
+        if sprayInterrupted then
+            self.SpraySelfRagdollRolled = nil
+        end
+
+        self.SprayContacts = self.SprayContacts or {}
+        self.SprayKnockdownCooldowns = self.SprayKnockdownCooldowns or {}
+        local target = GetSprayPlayer(tr.Entity)
+        if target == owner or not IsValid(target) or not target:Alive() then target = nil end
+
+        for ply, contact in pairs(self.SprayContacts) do
+            if not IsValid(ply) or not ply:Alive() or ply ~= target and now - contact.lastHit > (self.SprayContactGrace or 0.15) then
+                self.SprayContacts[ply] = nil
+            end
+        end
+        for ply, cooldown in pairs(self.SprayKnockdownCooldowns) do
+            if not IsValid(ply) or cooldown <= now then self.SprayKnockdownCooldowns[ply] = nil end
+        end
+
+        if target then
+            self.SprayPropContact = nil
+            local contact = self.SprayContacts[target] or {exposure = 0}
+            if contact.lastHit and now - contact.lastHit > (self.SprayContactGrace or 0.15) then
+                contact.exposure = 0
+                contact.knocked = nil
+            end
+            contact.exposure = contact.exposure + dt
+            contact.lastHit = now
+            self.SprayContacts[target] = contact
+
+            local direction = GetSprayDirection(owner)
+            local ragdoll = hg.GetCurrentCharacter and hg.GetCurrentCharacter(target)
+            local targetIsFake = IsValid(ragdoll) and ragdoll ~= target
+            if targetIsFake then
+                contact.wasFake = true
+            elseif contact.wasFake then
+                contact.exposure = dt
+                contact.knocked = nil
+                contact.wasFake = nil
+            end
+            local forceScale = GetSprayForceScale(contact.exposure, self.SprayForceRampTime)
+            if direction and targetIsFake then
+                ApplySprayForce(ragdoll, direction, (self.SprayRagdollForce or 2500) * forceScale, self.SprayRagdollMaxSpeed or 275, dt)
+            elseif direction then
+                PushStandingPlayer(target, direction, (self.SprayStandingPush or 41) * forceScale, self.SprayStandingMaxSpeed or 220, dt)
+            end
+
+            if contact.exposure >= (self.SprayKnockdownTime or 2) and not IsValid(target.FakeRagdoll) and now >= (self.SprayKnockdownCooldowns[target] or 0) then
+                contact.knocked = true
+                self.SprayKnockdownCooldowns[target] = now + (self.SprayKnockdownCooldown or 6)
+                hg.LightStunPlayer(target, self.SprayLightStunTime or 1.25)
+
+                ragdoll = hg.GetCurrentCharacter and hg.GetCurrentCharacter(target)
+                if direction and IsValid(ragdoll) and ragdoll ~= target then
+                    ApplySprayForce(ragdoll, direction, self.SprayKnockdownForce or 5500)
+                end
+            end
+        elseif IsValid(tr.Entity) and tr.Entity:GetMoveType() == MOVETYPE_VPHYSICS then
+            local direction = GetSprayDirection(owner)
+            if direction then
+                local propContact = self.SprayPropContact
+                if not propContact or propContact.entity ~= tr.Entity or now - propContact.lastHit > (self.SprayContactGrace or 0.15) then
+                    propContact = {entity = tr.Entity, exposure = dt}
+                else
+                    propContact.exposure = propContact.exposure + dt
+                end
+                propContact.lastHit = now
+                self.SprayPropContact = propContact
+
+                local forceScale = GetSprayForceScale(propContact.exposure, self.SprayForceRampTime)
+                PushPhysicalEntity(tr.Entity, direction, (self.SprayPropForce or 10250) * forceScale, self.SprayPropMaxSpeed or 320, tr.HitPos, dt)
+            end
+        else
+            self.SprayPropContact = nil
+        end
+
+        local sprayedPlayers = {}
         for k, ent in ipairs(ents.FindInSphere(tr.HitPos,32)) do
-            if ent:IsPlayer() and ent:Alive() and ent != self:GetOwner() then
-                local org = ent.organism
-                if org and not org.holdingbreath then
-                    org.o2[1] = math.max(0,org.o2[1] - 0.5 * (0.1 / 0.25))
+            local sprayedPlayer = GetSprayPlayer(ent)
+            if IsValid(sprayedPlayer) and sprayedPlayer:Alive() and sprayedPlayer != owner and not sprayedPlayers[sprayedPlayer] then
+                sprayedPlayers[sprayedPlayer] = true
+                local org = sprayedPlayer.organism
+                if org and org.o2 and not org.holdingbreath then
+                    org.o2[1] = math.max(0, (org.o2[1] or 0) - 0.5 * (dt / 0.25))
                     org.is_sprayed_at = true
-                    if not org.otrub and math.random(1, 8) == 1 then
-                        ent:Notify("", 5, "coughing", nil, function() hg.organism.module.random_events.TriggerRandomEvent(ent,"Cough") end, color_white)
+                    if not org.otrub and math.Rand(0, 1) < 1.25 * dt then
+                        sprayedPlayer:Notify("", 5, "coughing", nil, function() hg.organism.module.random_events.TriggerRandomEvent(sprayedPlayer,"Cough") end, color_white)
                     end
                 end
             end
 
             if ent:GetClass() == "vfire" then
-                ent.life = (ent.life or 0 ) - 40 * (0.1 / 0.25)
+                ent.life = (ent.life or 0 ) - 40 * (dt / 0.25)
                 if ent.life < 2 then
                     ent:Remove()
                 end

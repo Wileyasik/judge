@@ -17,9 +17,15 @@ ENT.Fragmentation = 0
 ENT.BlastDamage = 20
 ENT.BlastDis = 5
 
-game.AddParticles("particles/pcfs_jack_muzzleflashes.pcf")
-game.AddParticles("particles/pcfs_jack_explosions_small3.pcf")
-game.AddParticles("particles/pcfs_jack_explosions_incendiary2.pcf")
+local function AddParticlesIfExists(path)
+	if file.Exists(path, "GAME") then
+		game.AddParticles(path)
+	end
+end
+
+AddParticlesIfExists("particles/pcfs_jack_muzzleflashes.pcf")
+AddParticlesIfExists("particles/pcfs_jack_explosions_small3.pcf")
+AddParticlesIfExists("particles/pcfs_jack_explosions_incendiary2.pcf")
 
 ENT.RocketTrail =  "gf2_firework_trail_main"
 

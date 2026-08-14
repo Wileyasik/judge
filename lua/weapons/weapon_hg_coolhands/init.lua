@@ -616,6 +616,8 @@ end
 
 function SWEP:BlockingLogic(ent, mul, attacktype, trace)
 	local ent = hg.RagdollOwner(ent) or ent
+	local shieldBlock = hook.Run("hg_MeleeShieldBlock", self, ent, attacktype, trace)
+	if shieldBlock then return 0 end
 
 	if ent:IsPlayer() then
 		local wep = ent:GetActiveWeapon()
@@ -917,13 +919,19 @@ function SWEP:ShoveFront(sprintShove)
                 maxs = Vector(10, 10, 10),
         })
 
-        local ent = trace.Entity
-        local pushVel = owner:GetAimVector()
+		local ent = trace.Entity
+		local target = hg.RagdollOwner(ent) or ent
+		local pushVel = owner:GetAimVector()
         pushVel.z = math.max(pushVel.z, 0.08)
         pushVel:Normalize()
 		pushVel = pushVel * shoveForce * (sprintShove and 1.3 or 1)
 
-        if IsValid(ent) and ent:IsRagdoll() then
+		if IsValid(target) and target:IsPlayer() and target ~= owner and hook.Run("hg_ShieldKickBlock", target, owner, self, owner:EyePos(), trace.HitPos or target:WorldSpaceCenter()) then
+				owner:LagCompensation(false)
+				return
+		end
+
+		if IsValid(ent) and ent:IsRagdoll() then
                 sound.Play("physics/body/body_medium_impact_soft" .. math_random(1, 7) .. ".wav", trace.HitPos, 75, 110)
                 PushRagdoll(ent, trace.PhysicsBone or 0, pushVel * 0.45, trace.HitPos)
                 WriteShoveHarm(owner, ent, self, sprintShove and 2 or 1.25)
@@ -931,15 +939,13 @@ function SWEP:ShoveFront(sprintShove)
                 return
         end
 
-        local target = hg.RagdollOwner(ent) or ent
-
-        if IsValid(ent) and IsValid(target) and target:IsPlayer() and target ~= owner then
+		if IsValid(ent) and IsValid(target) and target:IsPlayer() and target ~= owner then
                 sound.Play("physics/body/body_medium_impact_soft" .. math_random(1, 7) .. ".wav", trace.HitPos, 75, 110)
         elseif IsValid(ent) and not ent:IsWorld() then
                 PlayShoveBodyImpact(trace.HitPos, 72)
         end
 
-        if IsValid(target) and target:IsPlayer() and target ~= owner then
+		if IsValid(target) and target:IsPlayer() and target ~= owner then
                 WriteShoveHarm(owner, target, self, sprintShove and 2 or 1.25)
 
                 local ragdolled = false
@@ -1126,10 +1132,11 @@ function SWEP:AttackFront(special_attack, rand)
                 Dam:SetDamageForce(AimVec * Mul ^ 2)
                 Dam:SetDamageType((owner.PlayerClassName == "furry" or (Ent:GetClass() == "func_breakable_surf")) and DMG_SLASH or DMG_CLUB)
                 Dam:SetDamagePosition(HitPos)
+				local isClub = special_attack and Dam:GetDamageType() == DMG_CLUB
 				Ent:TakeDamageInfo(Dam)
 				SendCoolHandsHitStop(self, trace.HitNormal, special_attack)
 
-				if special_attack and Dam:GetDamageType() == DMG_CLUB then
+				if isClub then
 					if Ent:IsPlayer() then
 						hg.ApplyBruiseTo(Ent, Ent, HitPos, trace.HitNormal)
 					elseif Ent:GetClass() == "prop_ragdoll" then
