@@ -208,7 +208,9 @@ local IsValid, math_Clamp = IsValid, math.Clamp
 			and firstPersonCamera
 		local hideSpectatedHead = firstPersonCamera and !lply:Alive()
 			and lply:GetNWEntity("spect") == ply and viewmode == 1
-		local hideHead = hideLocalFirstPersonHead or hideGettingUpHead or hideSpectatedHead
+		local hideFollowedFirstPersonHead = hg.cameraAtHead and (follow == ent or ent == GetViewEntity() or ent == lply)
+			and (firstPersonCamera or hg_gopro:GetBool())
+		local hideHead = hideLocalFirstPersonHead or hideGettingUpHead or hideSpectatedHead or hideFollowedFirstPersonHead
 		local wawanted = hideHead and vector_small or vector_full
 		--print(ent, wawanted, GetViewEntity(), ply, (GetViewEntity() != ply), !fountains[ent], !(!lply:Alive() and lply:GetNWEntity("spect") == ply and viewmode == 1))
 		--if !current:IsEqualTol(wawanted, 0.01) then
@@ -218,7 +220,7 @@ local IsValid, math_Clamp = IsValid, math.Clamp
 			if mat and (ent.headexploded or (org and org.headamputated)) then
 				mat:SetScale(vector_small)
 			elseif mat and !(Glide and Glide.Camera and !Glide.Camera.isInFirstPerson and lply == ply and lply:InVehicle() and hg_no_camera_in_cars:GetBool()) then
-				if hideLocalFirstPersonHead or hideGettingUpHead or hideSpectatedHead or (!hg_thirdperson:GetBool() and !hg_gopro:GetBool() and (ent == ply or (!hg_ragdollcombat:GetBool() or hg_firstperson_ragdoll:GetBool()))) or (hg_firstperson_death:GetBool() and follow == ent) then
+				if hideLocalFirstPersonHead or hideGettingUpHead or hideSpectatedHead or hideFollowedFirstPersonHead or (!hg_thirdperson:GetBool() and !hg_gopro:GetBool() and (ent == ply or (!hg_ragdollcombat:GetBool() or hg_firstperson_ragdoll:GetBool()))) or (hg_firstperson_death:GetBool() and follow == ent) then
 					mat:SetScale(wawanted)
 				end
 			end

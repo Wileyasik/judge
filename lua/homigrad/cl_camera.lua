@@ -287,6 +287,7 @@ end)
 
 function SpecCam(ply, vec, ang, fov, znear, zfar)
 	if !ply:Alive() then return end
+	hg.cameraAtHead = true
 	--local hand = ply:GetAttachment(ply:LookupAttachment("anim_attachment_rh"))
 	local eye = ply:GetAttachment(ply:LookupAttachment("eyes"))
 	--local org = eye.Pos
@@ -307,6 +308,7 @@ end
 local hg_coolcamera = ConVarExists("hg_coolcamera") and GetConVar("hg_coolcamera") or CreateConVar("hg_coolcamera", 0, FCVAR_ARCHIVE + FCVAR_REPLICATED, "Cool camera movement", 0, 5)
 
 CalcView = function(ply, origin, angles, fov, znear, zfar)
+	hg.cameraAtHead = false
 	if g_VR and g_VR.active then return end
 	if GetViewEntity() ~= (ply or LocalPlayer()) then return end
 
@@ -535,6 +537,7 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 	end
 
 	if result == view then
+		hg.cameraAtHead = true
 		traceBuilder.start = origin
 		traceBuilder.endpos = view.origin
 		local trace = hg.hullCheck(ply:EyePos() - vector_up * 10,view.origin,ply)
@@ -548,6 +551,8 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 
 	view.origin = eyePos
 	view.angles = angles
+
+	hg.cameraAtHead = true
 
 	view.angles:Add(-vpang)
 	view.angles[3] = view.angles[3] + GetViewPunchAngles4()[3]

@@ -239,6 +239,7 @@ local deathlerp = 0
 local tblfollow = {}
 local lerpasad = 0
 CalcView = function(ply, origin, angles, fov, znear, zfar)
+	hg.cameraAtHead = false
 	if GetViewEntity() ~= (ply or LocalPlayer()) then return end
 	local oldorigin = -(-origin)
 	local oldangles = -(-angles)
@@ -383,7 +384,9 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 	else
 		view.origin = pos
 	end
-	
+
+	hg.cameraAtHead = isvector(pos) and view.origin:Distance(pos) < 20
+
 	view.angles:Add(ply:GetViewPunchAngles())
 	//view.origin, view.angles = HGAddView(lply, view.origin, view.angles, 0)
 
