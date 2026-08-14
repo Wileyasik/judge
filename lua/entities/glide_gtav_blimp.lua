@@ -120,15 +120,18 @@ if SERVER then
     function ENT:Explode()
         if self.hasExploded then return end
 
-        BaseClass.Explode( self )
-
         local pos = self:GetPos()
         local driver = self:GetDriver()
-
-        util.BlastDamage( self, IsValid( driver ) and driver or self, pos, 800, 500 )
-
         local fw = self:GetForward()
         local up = self:GetUp()
+
+        self.SkipGlideExplosionDamage = true
+        if hg and hg.BlastDamageWithShockwave then
+            hg.BlastDamageWithShockwave( self, IsValid( driver ) and driver or self, pos, 800, 500, { ExplosionType = "Air" } )
+        else
+            util.BlastDamage( self, IsValid( driver ) and driver or self, pos, 800, 500 )
+        end
+        BaseClass.Explode( self )
 
         local eff = EffectData()
         eff:SetScale( 1 )

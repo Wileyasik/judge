@@ -54,12 +54,10 @@ function ENT:Detonate()
 	self.Detonated = true
 	local Pos, Ground, Attacker = self:LocalToWorld(self:OBBCenter()) + Vector(0, 0, 5), self:NearGround(), self:GetOwner()
 
-	if Ground then
-		ParticleEffect("pcf_jack_groundsplode_small3", Pos, vector_up:Angle())
-	else
+	if not Ground then
 		ParticleEffect("pcf_jack_airsplode_small3", Pos, VectorRand():Angle())
 	end
-	util.ScreenShake( selfPos, 35, 200, 3, 1000 )
+	util.ScreenShake( Pos, 35, 200, 3, 1000 )
 	local Foom = EffectData()
 	Foom:SetOrigin(Pos)
 
@@ -124,23 +122,21 @@ function ENT:Detonate()
 		shake2:Activate()
 		shake2:Fire("StartShake", "", 0)
 		SafeRemoveEntityDelayed(shake2, 2) -- don't clutter up the world
-		util.BlastDamage(self, Attacker, Pos, 150, 50)
+		hg.BlastDamageWithShockwave(self, Attacker, Pos, 150, 50, {Shockwave = false})
+		hg.ApplyExplosionShockwave({
+			Origin = Pos,
+			Radius = 600,
+			Damage = 50,
+			RagdollThreshold = 0.45,
+			ExplosionType = "Breach",
+			Filter = {self}
+		})
 	end)
 
 	timer.Simple(.05, function()
 		if not IsValid(self) then return end
-		local Shrap = DamageInfo()
-		Shrap:SetAttacker(Attacker)
-
-		if IsValid(self) then
-			Shrap:SetInflictor(self)
-		else
-			Shrap:SetInflictor(game.GetWorld())
-		end
-
-		Shrap:SetDamageType(DMG_BUCKSHOT)
-		Shrap:SetDamage(55)
-		util.BlastDamageInfo(Shrap, Pos, 600)
+		local Attacker = IsValid(Attacker) and Attacker or self:GetOwner()
+		hg.BlastRadiusDamage(self, Attacker, Pos, 600, 55, DMG_BUCKSHOT)
 		SafeRemoveEntity(self)
 	end)
 

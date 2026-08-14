@@ -2578,6 +2578,9 @@ function SWEP:BlockingLogic(ent, mul, attacktype, trace)
     local ent = hg.RagdollOwner(ent) or ent
 	local owner = self:GetOwner()
 
+	local shieldBlock = hook.Run("hg_MeleeShieldBlock", self, ent, attacktype, trace)
+	if shieldBlock then return 0, "block" end
+
 	if ent:IsPlayer() and ((istable(self.HitEnts) and !table.HasValue(self.HitEnts, ent)) or owner:IsNPC()) then
         local wep = ent:GetActiveWeapon()
 

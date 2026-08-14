@@ -133,9 +133,6 @@ function SWEP:InitAdd()
 	}
 end
 
-function SWEP:Initialize()
-end
-
 function SWEP:Deploy()
 	if self.DeploySounds and #self.DeploySounds > 0 then
 		self.DeploySnd = self.DeploySounds[math.random(#self.DeploySounds)]
@@ -273,7 +270,7 @@ function SWEP:PostSetHandPos()
 	local ply = self:GetOwner()
 	if not IsValid(ply) then return end
 
-	local ent = hg.GetCurrentCharacter(ply)
+	local ent = hg.GetTPIKCharacter(ply)
 	if not IsValid(ent) then return end
 
 	local rhBone = ent:LookupBone("ValveBiped.Bip01_R_Hand")
@@ -337,6 +334,7 @@ if SERVER then
 		if not matrix then return end
 
 		local ent = ents.Create("prop_physics")
+		if not IsValid(ent) then return end
 		ent:SetModel(self.WorldModel)
 		ent:SetPos(matrix:GetTranslation())
 		ent:SetAngles(matrix:GetAngles())
@@ -375,7 +373,7 @@ if SERVER then
 
 		local mode = self.modeValues and self.modeValues[1] or self.modeValuesdef[1]
 
-		org.adrenalineAdd = math.Approach(org.adrenalineAdd, -4, mode * 2)
+	org.adrenalineAdd = math.Approach(org.adrenalineAdd or 0, -4, mode * 2)
 		org.panicattackadd = math.max((org.panicattackadd or 0) - mode * 0.65, 0)
 		org.panicattack = math.max((org.panicattack or 0) - mode * 0.2, 0)
 

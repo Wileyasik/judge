@@ -758,6 +758,8 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	end
 	
 	if ent:GetClass() == "npc_bullseye" then
+		if dmgInfo:IsDamageType(DMG_BLAST) then return true end
+
 		local rag = IsValid(ent.rag) and ent.rag or IsValid(ent.ply) and ent.ply
 	
 		if IsValid(rag) then

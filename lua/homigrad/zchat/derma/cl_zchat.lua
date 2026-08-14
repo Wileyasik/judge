@@ -479,6 +479,7 @@ local PANEL = {}
 
 function PANEL:Init()
 	self.text = ""
+	self.linkButtons = {}
 	self.alpha = 0
 	self.fadeDelay = 15
 	self.fadeDuration = 5
@@ -487,13 +488,73 @@ function PANEL:Init()
 	self.yAnim = 5
 end
 
+function PANEL:BuildLinkButtons()
+	for _, button in ipairs(self.linkButtons) do
+		if IsValid(button) then button:Remove() end
+	end
+	self.linkButtons = {}
+
+	if not self.markup or not self.markup.blocks then return end
+	for _, block in ipairs(self.markup.blocks) do
+		local url = block.url
+		if isstring(url) and url:match("^https?://") then
+			local linkURL = url
+			local linkText = block.text
+			local linkFont = block.font
+			local button = vgui.Create("DButton", self)
+			button:SetText("")
+			button:SetCursor("hand")
+			button:SetPos(block.offset.x, (block.height - block.thisY) + block.offset.y)
+			button:SetSize(block.thisX, block.thisY)
+			button.Paint = function(panel, width, height)
+				if not panel:IsHovered() then return end
+
+				surface.SetFont(linkFont)
+				surface.SetTextColor(255, 255, 255, 255)
+				surface.SetTextPos(0, 0)
+				surface.DrawText(linkText)
+				surface.SetDrawColor(255, 255, 255, 255)
+				surface.DrawRect(0, height - 1, width, 1)
+			end
+			button.DoClick = function()
+				if not Derma_Query then
+					gui.OpenURL(linkURL)
+					return
+				end
+
+				Derma_Query(
+					linkURL,
+					"Link",
+					"Open", function() gui.OpenURL(linkURL) end,
+					"Copy", function() SetClipboardText(linkURL) end,
+					"Cancel", function() end
+				)
+			end
+			self.linkButtons[#self.linkButtons + 1] = button
+		end
+	end
+end
+
+function PANEL:QueueLinkButtonBuild()
+	if self.linkBuildQueued then return end
+	self.linkBuildQueued = true
+
+	timer.Simple(0, function()
+		if not IsValid(self) then return end
+		self.linkBuildQueued = false
+		self:BuildLinkButtons()
+	end)
+end
+
 function PANEL:SetMarkup(text)
 	self.text = text
 
-	self.markup = hg.markup.Parse(self.text, self:GetWide())
+	self.markupWidth = self:GetWide()
+	self.markup = hg.markup.Parse(self.text, self.markupWidth)
 	self.markup.onDrawText = PaintMarkupOverride
 
 	self:SetTall(self.markup:GetHeight())
+	self:QueueLinkButtonBuild()
 
 	timer.Simple(self.fadeDelay, function()
 		if (!IsValid(self)) then
@@ -519,10 +580,14 @@ function PANEL:SetMarkup(text)
 end
 
 function PANEL:PerformLayout(width, height)
+	if self.markup and self.markupWidth == width then return end
+
+	self.markupWidth = width
 	self.markup = hg.markup.Parse(self.text, width)
 	self.markup.onDrawText = PaintMarkupOverride
 
 	self:SetTall(self.markup:GetHeight())
+	self:QueueLinkButtonBuild()
 end
 
 function PANEL:Paint(width, height)
@@ -1025,7 +1090,9 @@ function PANEL:AddLine(elements)
 			buffer[#buffer + 1] = string.format("<color=%d,%d,%d>%s", color.r, color.g, color.b,
 				v:GetName():gsub("<", "&lt;"):gsub(">", "&gt;"))
 		else
-			buffer[#buffer + 1] = tostring(v):gsub("<", "&lt;"):gsub(">", "&gt;")
+			local text = tostring(v):gsub("<", "&lt;"):gsub(">", "&gt;")
+			text = text:gsub("(https?://[%w%-%._~:/%?#%[%]@!$&'%(%)%*%+,;=]+)", "<url=%1><color=88,101,242>%1</color></url>")
+			buffer[#buffer + 1] = text
 		end
 	end
 

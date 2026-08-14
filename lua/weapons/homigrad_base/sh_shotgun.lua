@@ -51,6 +51,7 @@ function SWEP:Initialize_Shotgun()
 	self._ShotgunInserted = 0
 	self._ShotgunReloadInterrupt = false
 	self._ShotgunReloadHeld = false
+	self._ShotgunSpentShell = false
 	self:ShotgunSetState(self:Clip1() > 0 and self.drawBullet and SG_READY or SG_EMPTY)
 end
 
@@ -62,6 +63,7 @@ function SWEP:ShotgunResetForPickup()
 	self._ShotgunInserted = 0
 	self._ShotgunReloadInterrupt = false
 	self._ShotgunReloadHeld = false
+	self._ShotgunSpentShell = false
 
 	local clip = self:Clip1()
 	if clip > 0 then
@@ -114,12 +116,25 @@ end
 function SWEP:ShotgunStartCycle()
 	if not SERVER or not self.ShotgunTubeReload or self:Clip1() <= 0 then return end
 
+	local ejectSpentShell = self._ShotgunSpentShell == true
+	local cycleTime = self.ShotgunCycleTime or 1
 	self:ShotgunSetChambered(false)
-	self:ShotgunPlay(SG_CYCLING, self.ShotgunCycleAnim or "cycle", self.ShotgunCycleTime or 1, function(wep)
+	self:ShotgunPlay(SG_CYCLING, self.ShotgunCycleAnim or "cycle", cycleTime, function(wep)
 		wep:ShotgunSetChambered(true)
 		wep:ShotgunSetState(SG_READY)
 		wep.Primary.Next = CurTime()
 	end)
+
+	if ejectSpentShell and self.ShellEject then
+		local token = self._ShotgunToken
+		local ejectDelay = math.min(self.ShotgunCycleEjectTime or 0.23, cycleTime * 0.5)
+		timer.Simple(ejectDelay, function()
+			if not IsValid(self) or self._ShotgunToken ~= token then return end
+			if self:GetShotgunState() ~= SG_CYCLING then return end
+			self._ShotgunSpentShell = false
+			self:RejectShell(self.ShellEject)
+		end)
+	end
 end
 
 function SWEP:ShotgunStartFinish()
@@ -216,6 +231,7 @@ function SWEP:ShotgunAfterShot()
 	if not self.ShotgunTubeReload or not SERVER then return end
 
 	self:ShotgunInvalidateCallbacks()
+	self._ShotgunSpentShell = self.ShotgunManualCycle == true
 	if self:Clip1() <= 0 then
 		self:ShotgunSetChambered(false)
 		self:ShotgunSetState(SG_EMPTY)

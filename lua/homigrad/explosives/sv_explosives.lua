@@ -118,7 +118,12 @@ local BlastWaveThickness = 120
 local BlastWaveForce = 50000
 local BlastMaxTargets = 96
 local BlastMaxDistance = 1000
+local BlastAbsoluteMaxDistance = 5000
 local BlastMaxDamage = 150
+local BlastPropMassThreshold = 300
+local BlastPropMaxSpeed = 1200
+local BlastShockwaveTimerBudget = 256
+local PendingShockwaveTimers = 0
 
 local function GetExplosionNetType(ent, defaultType)
 	return ent:GetModel() == PropaneModel and PropaneExplosionNetType or defaultType
@@ -135,6 +140,7 @@ function hg.PlayExtraExplosionSound(pos, entIndex, volume)
 	end)
 end
 
+local BlastSoundMaxDistance = 25000
 local function SendExplosionNet(pos, explosionType, radius)
 	net.Start("hg_booom")
 		net.WriteVector(pos)
@@ -142,7 +148,19 @@ local function SendExplosionNet(pos, explosionType, radius)
 		net.WriteFloat(radius)
 		net.WriteFloat(BlastWaveSpeed)
 		net.WriteFloat(BlastWaveThickness)
-	net.SendPVS(pos)
+	local crf = RecipientFilter()
+	for _, ply in ipairs(player.GetAll()) do
+		if ply:GetPos():Distance(pos) <= BlastSoundMaxDistance then crf:AddPlayer(ply) end
+	end
+	net.Send(crf)
+end
+
+function hg.SendNetToPlayersWithin(pos, radius)
+	local crf = RecipientFilter()
+	for _, ply in ipairs(player.GetAll()) do
+		if ply:GetPos():Distance(pos) <= radius then crf:AddPlayer(ply) end
+	end
+	net.Send(crf)
 end
 
 local function EmitDebris(ent, count)
@@ -167,6 +185,245 @@ local function QueueBlastStun(ply)
 	end)
 end
 
+local function TraceShockwavePath(startPos, endPos, filter, target)
+	local traceFilter = {}
+	if istable(filter) then
+		table.Add(traceFilter, filter)
+	elseif IsValid(filter) then
+		traceFilter[1] = filter
+	end
+
+	local traceStart = startPos
+	local direction = (endPos - startPos):GetNormalized()
+	local tr
+	for _ = 1, 6 do
+		tr = hg.ExplosionTrace(traceStart, endPos, traceFilter)
+		if not tr.Hit or tr.Entity == target then return tr, false end
+		if tr.MatType != MAT_GLASS then return tr, true end
+
+		if IsValid(tr.Entity) and not tr.Entity:IsWorld() then
+			traceFilter[#traceFilter + 1] = tr.Entity
+		else
+			traceStart = tr.HitPos + direction * 2
+		end
+	end
+
+	return tr, true
+end
+
+local function SchedulePhysicalShockwave(data, ent, initialDistance, wallDiv)
+	if ent:IsNPC() then return false end
+	if ent:IsPlayer() and not ent:Alive() then return false end
+	local class = ent:GetClass()
+	if class == "prop_door_rotating" or class == "func_door" or class == "func_door_rotating" then return false end
+	if ent:IsRagdoll() and IsValid(hg.RagdollOwner(ent)) then return false end
+
+	local isPlayer = ent:IsPlayer()
+	local phys = ent:GetPhysicsObject()
+	if not isPlayer and (not IsValid(phys) or not phys:IsMoveable()) then return false end
+
+	if PendingShockwaveTimers >= BlastShockwaveTimerBudget then return false end
+	PendingShockwaveTimers = PendingShockwaveTimers + 1
+
+	local delay = initialDistance / math_max(data.WaveSpeed or BlastWaveSpeed, 1)
+	timer.Simple(delay, function()
+		PendingShockwaveTimers = math_max(PendingShockwaveTimers - 1, 0)
+		if not IsValid(ent) then return end
+
+		local ragdoll = isPlayer and IsValid(ent.FakeRagdoll) and ent.FakeRagdoll or nil
+		local target = IsValid(ragdoll) and ragdoll or ent
+		local entPos = target:LocalToWorld(target:OBBCenter())
+		local distance = entPos:Distance(data.Pos)
+		if distance > data.Distance then return end
+
+		local tr, blocked = TraceShockwavePath(data.Pos, entPos, data.Filter, target)
+		if blocked then return end
+
+		local direction = entPos - data.Pos
+		if direction:IsZero() then direction = VectorRand() end
+		direction:Normalize()
+
+		local falloff = math_Clamp(1 - distance / data.Distance, 0, 1)
+		if isPlayer then
+			if ent.organism and ent.organism.godmode then return end
+			local forceFrac = falloff ^ (data.ForceExponent or 1.35)
+			local forceScale = math_Clamp(math_sqrt(math_max(data.ForceMul, 0) / BlastWaveForce), 0.25, 2)
+			local pressureFrac = math_Clamp(forceFrac * forceScale, 0, 1)
+
+			if IsValid(ragdoll) then
+				local force = direction * forceFrac * data.ForceMul
+				local movableBones = 0
+				for physBone = 0, ragdoll:GetPhysicsObjectCount() - 1 do
+					local ragPhys = ragdoll:GetPhysicsObjectNum(physBone)
+					if IsValid(ragPhys) and ragPhys:IsMoveable() then movableBones = movableBones + 1 end
+				end
+				if movableBones <= 0 then return end
+				for physBone = 0, ragdoll:GetPhysicsObjectCount() - 1 do
+					local ragPhys = ragdoll:GetPhysicsObjectNum(physBone)
+					if not IsValid(ragPhys) or not ragPhys:IsMoveable() then continue end
+					ragPhys:Wake()
+					ragPhys:ApplyForceCenter(force / movableBones)
+				end
+			else
+				local ragdollStart = data.RagdollThreshold or 0.35
+				local ragdollFull = math_max(data.RagdollFullThreshold or 0.9, ragdollStart + 0.01)
+				local ragdollChance = math_Clamp((pressureFrac - ragdollStart) / (ragdollFull - ragdollStart), 0, 1) ^ 1.35
+				local shouldRagdoll = ragdollChance > 0 and math.Rand(0, 1) < ragdollChance
+				if shouldRagdoll then
+					local force = direction * forceFrac * data.ForceMul
+					hg.AddForceRag(ent, 0, force * 0.5, 0.5)
+					hg.AddForceRag(ent, 1, force * 0.5, 0.5)
+					QueueBlastStun(ent)
+				else
+					local edgeGate = math_Clamp(pressureFrac / 0.08, 0, 1)
+					local speed = edgeGate * math_Clamp(18 + data.Damage * 2.2 * pressureFrac, 18, data.PlayerMaxSpeed or 220)
+					if pressureFrac > 0 then
+						speed = math_max(speed, 4)
+						ent:SetVelocity(direction * speed + Vector(0, 0, speed * 0.15))
+					end
+				end
+			end
+			return
+		end
+
+		local currentPhys = ent:GetPhysicsObject()
+		if not IsValid(currentPhys) or not currentPhys:IsMoveable() then return end
+		local speed = data.Damage * 350 / math_max(distance, 64) * falloff
+		speed = math_Clamp(speed * (data.PropShockwaveMul or 1), 0, data.PropMaxSpeed or BlastPropMaxSpeed)
+
+		local mass = currentPhys:GetMass()
+		local massThreshold = data.PropMassThreshold or BlastPropMassThreshold
+		if mass > massThreshold then speed = speed * massThreshold / mass end
+		if speed < 5 then return end
+
+		local push = direction * speed
+		push.z = push.z + speed * 0.2
+		if ent:IsRagdoll() then
+			for physBone = 0, ent:GetPhysicsObjectCount() - 1 do
+				local ragPhys = ent:GetPhysicsObjectNum(physBone)
+				if IsValid(ragPhys) and ragPhys:IsMoveable() then
+					ragPhys:Wake()
+					ragPhys:SetVelocity(ragPhys:GetVelocity() + push)
+				end
+			end
+		else
+			currentPhys:Wake()
+			currentPhys:SetVelocity(currentPhys:GetVelocity() + push)
+		end
+	end)
+
+	return true
+end
+
+function hg.ApplyExplosionShockwave(options)
+	if not options or not options.Origin then return end
+	local requestedRadius = options.Radius or 0
+	local maxDistance = math_min(options.MaxDistance or math_max(requestedRadius, BlastMaxDistance), BlastAbsoluteMaxDistance)
+	local radius = math_Clamp(requestedRadius, 1, maxDistance)
+	if radius <= 1 then return end
+
+	local data = {
+		Pos = Vector(options.Origin.x, options.Origin.y, options.Origin.z),
+		Distance = radius,
+		Damage = math_max(options.Damage or 0, 1),
+		ForceMul = options.Force or BlastWaveForce,
+		ForceExponent = options.ForceExponent or 1.35,
+		RagdollThreshold = options.RagdollThreshold or 0.35,
+		RagdollFullThreshold = options.RagdollFullThreshold or 0.9,
+		BehindWallFakeThreshold = options.BehindWallFakeThreshold or 30,
+		PlayerMaxSpeed = options.PlayerMaxSpeed or 220,
+		PropShockwaveMul = options.PropShockwaveMul or 1,
+		PropMassThreshold = options.PropMassThreshold or BlastPropMassThreshold,
+		PropMaxSpeed = options.PropMaxSpeed or BlastPropMaxSpeed,
+		WaveSpeed = math_max(options.WaveSpeed or BlastWaveSpeed, 1),
+		Filter = options.Filter or {}
+	}
+	if options.Visual ~= false then SendExplosionNet(data.Pos, options.ExplosionType or "Shockwave", data.Distance) end
+
+	local targets = ents_FindInSphere(data.Pos, data.Distance)
+	local inSpherePlayers = {}
+	for _, enta in ipairs(targets) do
+		if enta:IsPlayer() then inSpherePlayers[enta] = true end
+	end
+	for _, ply in ipairs(player.GetAll()) do
+		if not inSpherePlayers[ply] then table.insert(targets, ply) end
+	end
+	local maxTargets = options.MaxTargets or BlastMaxTargets
+	local scheduled = 0
+	local function ScheduleTarget(ent)
+		if not IsValid(ent) then return end
+		if ent:IsRagdoll() and IsValid(hg.RagdollOwner(ent)) then return end
+
+		local target = ent:IsPlayer() and IsValid(ent.FakeRagdoll) and ent.FakeRagdoll or ent
+		local pos = target:LocalToWorld(target:OBBCenter())
+		if SchedulePhysicalShockwave(data, ent, pos:Distance(data.Pos)) then
+			scheduled = scheduled + 1
+		end
+	end
+
+	for i = 1, #targets do
+		if targets[i]:IsPlayer() then ScheduleTarget(targets[i]) end
+	end
+	maxTargets = math_max(maxTargets, scheduled)
+	for i = 1, #targets do
+		if scheduled >= maxTargets then break end
+		if not targets[i]:IsPlayer() then ScheduleTarget(targets[i]) end
+	end
+end
+
+function hg.BlastRadiusDamage(inflictor, attacker, origin, radius, damage, damageType)
+	damageType = damageType or DMG_BLAST
+	local world = game.GetWorld()
+	inflictor = IsValid(inflictor) and inflictor or world
+	attacker = IsValid(attacker) and attacker or inflictor
+
+	local function ApplyBlastInfo(ent)
+		local targetPos = ent:LocalToWorld(ent:OBBCenter())
+		local dist = (targetPos - origin):Length()
+		local frac = (radius - dist) / radius
+		if frac <= 0 then return end
+
+		local tr, behindwall = TraceShockwavePath(origin, targetPos, {inflictor, attacker}, ent)
+		if behindwall then return end
+
+		local targetDmg = DamageInfo()
+		targetDmg:SetDamage(damage * frac)
+		targetDmg:SetDamageType(damageType)
+		targetDmg:SetAttacker(attacker)
+		targetDmg:SetInflictor(inflictor)
+		targetDmg:SetDamagePosition(origin)
+		targetDmg:SetDamageForce(vector_origin)
+		ent:TakeDamageInfo(targetDmg)
+	end
+
+	for _, ply in ipairs(player.GetAll()) do
+		if IsValid(ply) and ply:Alive() then
+			ApplyBlastInfo(ply)
+		end
+	end
+
+	for _, ent in ipairs(ents.FindInSphere(origin, radius)) do
+		if IsValid(ent) and ent != inflictor and not ent:IsPlayer() and ent:GetClass() != "npc_bullseye" and not (ent:IsRagdoll() and IsValid(hg.RagdollOwner(ent))) then
+			ApplyBlastInfo(ent)
+		end
+	end
+end
+
+function hg.BlastDamageWithShockwave(inflictor, attacker, origin, radius, damage, options)
+	options = options or {}
+	local world = game.GetWorld()
+	inflictor = IsValid(inflictor) and inflictor or world
+	attacker = IsValid(attacker) and attacker or inflictor
+
+	hg.BlastRadiusDamage(inflictor, attacker, origin, radius, damage, options.DamageType)
+
+	options.Origin = origin
+	options.Radius = radius
+	options.Damage = damage
+	options.Filter = options.Filter or {inflictor}
+	if options.Shockwave ~= false then hg.ApplyExplosionShockwave(options) end
+end
+
 local function ApplyBlastDamage(data, enta, tracePos, len)
 	local force = tracePos - data.Pos
 	local forceLen = force:Length()
@@ -180,35 +437,34 @@ local function ApplyBlastDamage(data, enta, tracePos, len)
 	end
 	force:Div(forceLen)
 
-	local tr = hg.ExplosionTrace(data.Pos, tracePos, data.Filter)
-	local blocked = tr.Entity != enta
-	local behindwall = blocked and tr.MatType != MAT_GLASS
+	local tr, behindwall = TraceShockwavePath(data.Pos, tracePos, data.Filter, enta)
+	local blocked = behindwall or tr.Hit and tr.Entity != enta
 	local frac = math_Clamp((data.Distance - len) / data.Distance, 0, 1)
 	local forceFrac = math_max(frac, data.MinForceFrac)
 	local damageFrac = math_max(frac ^ data.DamageExponent, data.MinDamageFrac)
 	local forceadd = force * forceFrac * data.ForceMul
 
+	local wallDiv = behindwall and hg.GetBlastWallAttenuation(tr) or 1
 	if enta.organism then
 		local owner = enta.organism.owner
 		if IsValid(owner) and owner:IsPlayer() then
 			-- контузия/баротравма возможна даже за стеной (наушники гасят только звук)
-			local div = behindwall and hg.GetBlastWallAttenuation(tr) or 1
-			hg.ExplosionDisorientation(enta, data.DisorientPower * frac / div, data.DisorientTime * frac / div)
+			hg.ExplosionDisorientation(enta, data.DisorientPower * frac / wallDiv, data.DisorientTime * frac / wallDiv)
 			if not enta.organism.otrub then
-				hg.organism.AddPanicAttack(enta.organism, math.Clamp(frac * 0.22 / div + data.Damage * damageFrac / 900, 0.04, 0.28), true)
+				hg.organism.AddPanicAttack(enta.organism, math.Clamp(frac * 0.22 / wallDiv + data.Damage * damageFrac / 900, 0.04, 0.28), true)
 			end
 			hg.RunZManipAnim(owner, "shieldexplosion")
 		end
 	end
 
 	if behindwall then
-		local wallDiv = hg.GetBlastWallAttenuation(tr)
-		forceadd = forceadd / wallDiv
-		damageFrac = damageFrac / wallDiv
+		return
 	elseif blocked then
 		forceadd = forceadd / 3
 		damageFrac = damageFrac / 3
 	end
+
+	local delayedPhysicalForce = SchedulePhysicalShockwave(data, enta, len)
 
 	local dmginfo = DamageInfo()
 	dmginfo:SetDamage(data.Damage * damageFrac)
@@ -216,10 +472,10 @@ local function ApplyBlastDamage(data, enta, tracePos, len)
 	dmginfo:SetAttacker(data.Attacker)
 	dmginfo:SetInflictor(data.Inflictor)
 	dmginfo:SetDamagePosition(tracePos)
-	dmginfo:SetDamageForce(forceadd)
+	dmginfo:SetDamageForce(delayedPhysicalForce and vector_origin or forceadd)
 	enta:TakeDamageInfo(dmginfo)
 
-	if enta:IsPlayer() then
+	if enta:IsPlayer() and not delayedPhysicalForce then
 		hg.AddForceRag(enta, 0, forceadd * 0.5, 0.5)
 		hg.AddForceRag(enta, 1, forceadd * 0.5, 0.5)
 		QueueBlastStun(enta)
@@ -227,7 +483,7 @@ local function ApplyBlastDamage(data, enta, tracePos, len)
 
 	local phys = enta:GetPhysicsObject()
 	if IsValid(phys) then
-		phys:ApplyForceCenter(forceadd)
+		if not delayedPhysicalForce then phys:ApplyForceCenter(forceadd) end
 		data.HitPhysCount = data.HitPhysCount + 1
 	end
 end
@@ -250,23 +506,44 @@ local function ApplyBlastBurst(data)
 	data.DisorientPower = data.DisorientPower or 5
 	data.DisorientTime = data.DisorientTime or 6
 	data.BehindWallDisorientDiv = data.BehindWallDisorientDiv or 1
-	data.Distance = math_min(data.Distance, data.MaxDistance or BlastMaxDistance)
+	data.Distance = math_min(data.Distance, data.MaxDistance or BlastMaxDistance, BlastAbsoluteMaxDistance)
 	data.Damage = math_min(data.Damage, data.MaxDamage or BlastMaxDamage)
 	data.DistanceSqr = data.Distance * data.Distance
 	data.Attacker = IsValid(data.Owner) and data.Owner or game.GetWorld()
 	data.Inflictor = IsValid(data.Ent) and data.Ent or data.Attacker
 	local maxTargets = data.MaxTargets or BlastMaxTargets
 	local hitCount = 0
+	local representedRagdolls = {}
+	for _, ply in ipairs(player.GetAll()) do
+		if IsValid(ply.FakeRagdoll) then representedRagdolls[ply.FakeRagdoll] = true end
+	end
 
-	for _, enta in ipairs(ents_FindInSphere(data.Pos, data.Distance)) do
-		if hitCount >= maxTargets then break end
-		if enta == data.Ent or not IsValid(enta) or data.HitEnts[enta] then continue end
+	local targets = ents_FindInSphere(data.Pos, data.Distance)
+	local inSpherePlayers = {}
+	local function ProcessTarget(enta)
+		if enta == data.Ent or not IsValid(enta) or data.HitEnts[enta] or representedRagdolls[enta] then return end
 		data.HitEnts[enta] = true
-		local tracePos = enta:IsPlayer() and (enta:GetPos() + enta:OBBCenter()) or enta:GetPos()
+		local tracePos = enta:IsPlayer() and enta:LocalToWorld(enta:OBBCenter()) or enta:GetPos()
 		local lenSqr = tracePos:DistToSqr(data.Pos)
-		if lenSqr > data.DistanceSqr then continue end
+		if lenSqr > data.DistanceSqr then return end
 		ApplyBlastDamage(data, enta, tracePos, math_sqrt(lenSqr))
 		hitCount = hitCount + 1
+	end
+
+	for _, enta in ipairs(targets) do
+		if enta:IsPlayer() then inSpherePlayers[enta] = true end
+	end
+	for _, ply in ipairs(player.GetAll()) do
+		if not inSpherePlayers[ply] then table.insert(targets, ply) end
+	end
+
+	for _, enta in ipairs(targets) do
+		if enta:IsPlayer() then ProcessTarget(enta) end
+	end
+	maxTargets = math_max(maxTargets, hitCount)
+	for _, enta in ipairs(targets) do
+		if hitCount >= maxTargets then break end
+		if not enta:IsPlayer() then ProcessTarget(enta) end
 	end
 
 	FinishBlastWave(data)
@@ -308,22 +585,31 @@ local function StartShrapnel(ent, selfPos, owner, force, mass, countMul)
 		ent.ShrapnelDone = true
 	end)
 
-	coroutine.resume(co)
-
 	local index = ent:EntIndex()
-	timer.Create("GrenadeCheck_" .. index, 0, 0, function()
+	local timerName = "GrenadeCheck_" .. index
+	local function resumeShrapnel()
+		local ok, err = coroutine.resume(co)
+		if not ok then
+			ErrorNoHalt("[explosives] Shrapnel coroutine failed: " .. tostring(err) .. "\n")
+		end
+		if not ok or coroutine.status(co) == "dead" or ent.ShrapnelDone then
+			timer.Remove(timerName)
+			timer.Simple(0, function()
+				if IsValid(ent) then SafeRemoveEntity(ent) end
+			end)
+			return false
+		end
+		return true
+	end
+
+	timer.Create(timerName, 0, 0, function()
 		if not IsValid(ent) then
-			timer.Remove("GrenadeCheck_" .. index)
+			timer.Remove(timerName)
 			return
 		end
-		if coroutine.status(co) != "dead" then
-			coroutine.resume(co)
-		end
-		if ent.ShrapnelDone then
-			SafeRemoveEntity(ent)
-			timer.Remove("GrenadeCheck_" .. index)
-		end
+		resumeShrapnel()
 	end)
+	resumeShrapnel()
 end
 
 local ExpTypes = {

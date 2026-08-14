@@ -112,5 +112,16 @@ function ENT:Explode()
         end
     end
 
+	if SERVER then
+		hg.ApplyExplosionShockwave({
+			Origin = SelfPos,
+			Radius = explosionDamageRadius,
+			Damage = 75,
+			RagdollThreshold = 1.1,
+			ExplosionType = "None",
+			Filter = {self}
+		})
+	end
+
     self:Remove()
 end

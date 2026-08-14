@@ -93,6 +93,11 @@ gasparticles_hook[2] = function(mul)
 
 		local pos = part[1]
 		local posSet = part[2]
+		if now > (part[8] or 0) then
+			gasparticles[i] = gasparticles[#gasparticles]
+			gasparticles[#gasparticles] = nil
+			goto cont
+		end
 		tr.start = posSet
 		tr.endpos = tr.start + part[3] * mul
 		util_TraceLine(tr)

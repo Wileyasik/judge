@@ -213,6 +213,22 @@ end)
 local serverIdentifier = string.Trim(string.lower(GetConVar("hostname"):GetString()))
 serverIdentifier = string.gsub(serverIdentifier, "[^%w]", "_")
 
+local function MigrateLegacyMedicineClasses(lootTable)
+    local changed = false
+    local items = lootTable[1] and lootTable[1][2]
+    if not istable(items) then return changed end
+
+    for _, item in ipairs(items) do
+		local replacement = istable(item) and hg.CanonicalWeaponClass(item[2])
+		if replacement and replacement ~= item[2] then
+            item[2] = replacement
+            changed = true
+        end
+    end
+
+    return changed
+end
+
 function MODE:SaveLootTable()
     if not file.Exists("zbattle", "DATA") then
         file.CreateDir("zbattle")
@@ -248,7 +264,9 @@ function MODE:LoadLootTable()
         return
     end
     
+	local migrated = MigrateLegacyMedicineClasses(loadedTable)
     self.CustomLootTable = loadedTable
+	if migrated then self:SaveLootTable() end
     print("[Event Mode] Loot table loaded for server: " .. serverIdentifier .. " with " .. #self.CustomLootTable[1][2] .. " items")
 end
 
@@ -263,9 +281,10 @@ end)
 net.Receive("event_loot_add", function(len, ply)
     if not ply:IsAdmin() and not MODE.EventersList[ply:SteamID()] then return end
     
-    local itemData = net.ReadTable()
+	local itemData = net.ReadTable()
     
-    if not itemData or not itemData.weight or not itemData.class then return end
+	if not itemData or not itemData.weight or not itemData.class then return end
+	itemData.class = hg.CanonicalWeaponClass(itemData.class)
 	if #MODE.CustomLootTable[1][2] >= 128 then return end
 	if not isnumber(itemData.weight) or itemData.weight < 1 or itemData.weight > 1000 then return end
 	if not isstring(itemData.class) or #itemData.class > 96 or (not scripted_ents.GetStored(itemData.class) and not weapons.GetStored(itemData.class)) then return end

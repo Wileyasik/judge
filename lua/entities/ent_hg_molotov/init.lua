@@ -65,11 +65,19 @@ function ENT:Think()
 		self:EmitSound("weapons/molotov/molotov_detonate.wav")
 	elseif self:WaterLevel() > 0 and not self.Exploded then
 		local ent = ents.Create("weapon_hg_molotov_tpik")
+		if not IsValid(ent) then return end
+		local velocity = self:GetVelocity()
+		local phys = self:GetPhysicsObject()
+		if IsValid(phys) then
+			velocity = phys:GetVelocity()
+		end
 		ent:SetPos(self:GetPos())
 		ent:SetAngles(self:GetAngles())
-		ent:SetVelocity(self:GetPhysicsObject():GetVelocity())
 		ent.init = true
 		ent:Spawn()
+		if IsValid(ent) then
+			ent:SetVelocity(velocity)
+		end
 		
 		self.Exploded = true
 		self:Remove()

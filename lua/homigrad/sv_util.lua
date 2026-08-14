@@ -3,6 +3,22 @@ local isBulletDamage = FindMetaTable( "CTakeDamageInfo" ).IsBulletDamage
 
 hg.ConVars = hg.ConVars or {}
 
+local blastWallAttenuation = {
+	[MAT_GLASS] = 1.15,
+	[MAT_WOOD] = 1.8,
+	[MAT_FOLIAGE] = 1.6,
+	[MAT_PLASTIC] = 2.0,
+	[MAT_GRATE] = 2.1,
+	[MAT_VENT] = 2.2,
+	[MAT_TILE] = 2.8,
+	[MAT_DIRT] = 3.0,
+	[MAT_SAND] = 3.2,
+	[MAT_METAL] = 3.6,
+	[MAT_COMPUTER] = 3.4,
+	[MAT_CONCRETE] = 4.0,
+	[MAT_SLOSH] = 4.5
+}
+
 function hg.GetBlastWallAttenuation(tr)
 	if not tr then return 3.5 end
 
@@ -21,7 +37,7 @@ function hg.GetBlastWallAttenuation(tr)
 	if string.find(matName, "plastic") or string.find(matName, "carpet") or string.find(matName, "vent") or string.find(matName, "grate") then return 2.0 end
 	if string.find(matName, "tile") then return 2.5 end
 
-	return 3.5
+	return blastWallAttenuation[tr.MatType] or 3.5
 end
 
 local hg_legacycam = ConVarExists("hg_legacycam") and GetConVar("hg_legacycam") or CreateConVar("hg_legacycam", 0, FCVAR_REPLICATED, "Toggle legacy first-person view camera", 0, 1)
@@ -253,9 +269,11 @@ hook.Add("EntityTakeDamage", "HL2Shit", function(target, dmginfo)
 		if IsValid(explosion) then
 			explosion:SetPos(pos)
 			explosion:SetKeyValue("iMagnitude", "200")
+			explosion:SetKeyValue("spawnflags", "1")
 			explosion:Spawn()
 			explosion:Fire("Explode", "", 0)
 		end
+		hg.BlastDamageWithShockwave(target, IsValid(attacker) and attacker or target, pos, 200, 200)
 		
 		if class == "npc_helicopter" then
 			target:SetHealth(0)
@@ -617,7 +635,11 @@ end
 function hg.ExplosionEffect(pos, dis, dmg)
 	net.Start("add_supression") -- i think this useless for now
 	net.WriteVector(pos)
-	net.Broadcast()
+	local crf = RecipientFilter()
+	for _, ply in ipairs(ents.FindInSphere(pos, 800)) do
+		if ply:IsPlayer() then crf:AddPlayer(ply) end
+	end
+	net.Send(crf)
 
 	local radius = math.Clamp((dis or 0) * 1.5, 300, 4000)
 	for _, ply in ipairs(ents.FindInSphere(pos, radius)) do
@@ -782,8 +804,11 @@ function hgWreckBuildings(blaster, pos, power, range, ignoreVisChecks) -- taken 
 
 		for k, prop in ipairs(allProps) do
 			LastProcess = SysTime()
-			if not (table.HasValue(WreckBlacklist, prop:GetClass()) or hook.Run("hg_CanDestroyProp", prop, blaster, pos, power, range, ignore) == false or prop.ExplProof == true) then
+			if not IsValid(prop) then continue end
+			if not (table.HasValue(WreckBlacklist, prop:GetClass()) or hook.Run("hg_CanDestroyProp", prop, blaster, pos, power, range, ignoreVisChecks) == false or prop.ExplProof == true) then
+				if not IsValid(prop) then continue end
 				local physObj = prop:GetPhysicsObject()
+				if not IsValid(physObj) then continue end
 				local propPos = prop:LocalToWorld(prop:OBBCenter())
 				local DistFrac = 1 - propPos:Distance(pos) / maxRange
 				local myDestroyThreshold = DistFrac * maxMassToDestroy
@@ -794,7 +819,7 @@ function hgWreckBuildings(blaster, pos, power, range, ignoreVisChecks) -- taken 
 					myLoosenThreshold = myLoosenThreshold * 7
 				end
 
-				if (prop ~= blaster) and physObj:IsValid() then
+				if prop ~= blaster then
 					local mass, proceed = physObj:GetMass(), ignoreVisChecks
 
 					if not proceed then
@@ -828,12 +853,17 @@ function hgWreckBuildings(blaster, pos, power, range, ignoreVisChecks) -- taken 
 		end
 	end)
 	local index = blaster:EntIndex()
-	timer.Create("ProcessCheck_" .. index, 0, 0, function()
-		if coroutine.status( co ) == "dead" then
-			timer.Remove("ProcessCheck_" .. index)
+	local timerName = "ProcessCheck_" .. index
+	timer.Create(timerName, 0, 0, function()
+		if coroutine.status(co) == "dead" then
+			timer.Remove(timerName)
+			return
 		end
-		--print("Yes yelid", coroutine.status( co ))
-		coroutine.resume(co)
+		local ok, err = coroutine.resume(co)
+		if not ok then
+			timer.Remove(timerName)
+			ErrorNoHalt("[hgWreckBuildings] Coroutine failed: " .. tostring(err) .. "\n")
+		end
 	end)
 end
 

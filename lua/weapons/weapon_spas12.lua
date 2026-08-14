@@ -76,6 +76,7 @@ SWEP.CustomShell = "12x70"
 SWEP.weight = 4
 SWEP.weaponInvCategory = 1
 SWEP.ShellEject = "ShotgunShellEject"
+SWEP.AutomaticDraw = false
 SWEP.UseCustomWorldModel = false
 SWEP.Primary.ClipSize = 8
 SWEP.Primary.DefaultClip = 8

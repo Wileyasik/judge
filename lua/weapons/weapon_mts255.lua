@@ -44,7 +44,11 @@ SWEP.WeaponEyeAngles = Angle(-0.7, 0.1, 0)
 
 -- ГИЛЬЗЫ
 SWEP.CustomShell = "12x70"
-SWEP.ShellEject = nil -- револьвер, гильзы не вылетают при выстреле
+SWEP.ShellEject = "ShotgunShellEject" -- используется экстрактором при открытии барабана
+SWEP.ShellEjectInterval = 0.08
+SWEP.ShellEjectPartialInterval = 0.55
+SWEP.ShellEjectPartialFirstDelay = 0.9
+SWEP.ShellEjectVelocity = Vector(0, 0, -35)
 
 SWEP.weight = 4
 SWEP.ScrappersSlot = "Primary"
@@ -203,6 +207,7 @@ function SWEP:InitializePost()
     self.AnimStart_Draw = 0
     self.reloadCoolDown = 0
     self.drawBullet = true
+	if SERVER then self._MTS255SpentShells = 0 end
 end
 
 function SWEP:AnimationPost()
@@ -235,11 +240,30 @@ function SWEP:GetAnimPos_Draw(time) return 0 end
 
 function SWEP:PrimaryShootPost()
     self.drawBullet = true
+	if SERVER then
+		self._MTS255SpentShells = math.min((self._MTS255SpentShells or 0) + 1, self.Primary.ClipSize)
+	end
 end
 
 -------------------------------------------------
 -- ПЕРЕЗАРЯДКА: ОБЩИЙ ФИНАЛ
 -------------------------------------------------
+
+local function MTS255_EjectSpentShells(wep, interval, firstDelay)
+	if not SERVER or not IsValid(wep) then return end
+	local owner = wep:GetOwner()
+	if not IsValid(owner) or owner:GetActiveWeapon() ~= wep then return end
+
+	local count = math.min(wep._MTS255SpentShells or 0, wep.Primary.ClipSize)
+	wep._MTS255SpentShells = 0
+	interval = interval or wep.ShellEjectInterval or 0.08
+	firstDelay = firstDelay or 0
+	for i = 1, count do
+		timer.Simple(firstDelay + (i - 1) * interval, function()
+			if IsValid(wep) then wep:RejectShell(wep.ShellEject) end
+		end)
+	end
+end
 
 local function MTS255_FinishReload(wep)
     if not IsValid(wep) or not IsValid(wep:GetOwner()) then return end
@@ -385,6 +409,9 @@ function SWEP:Reload(time)
                 if not IsValid(self) then return end
                 MTS255_PlayFistfulChain(self, 1, targetStep)
             end, false, true)
+			timer.Simple(fistfulDur * 0.25, function()
+				MTS255_EjectSpentShells(self, self.ShellEjectInterval)
+			end)
 
         else
             -- ���������� �����������
@@ -403,6 +430,9 @@ function SWEP:Reload(time)
                 self:EmitSound(path .. "mts255_round_extract1.ogg")
                 MTS255_PlaySgInsertChain(self, firstIndex, lastIndex)
             end, false, true)
+			timer.Simple(0.4, function()
+				MTS255_EjectSpentShells(self, self.ShellEjectPartialInterval, self.ShellEjectPartialFirstDelay)
+			end)
         end
     end
 end

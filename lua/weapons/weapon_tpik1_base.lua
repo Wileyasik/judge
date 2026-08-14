@@ -241,7 +241,7 @@ function SWEP:Camera(eyePos, eyeAng, view, vellen)
 	self:SetHandPos()
 	self:DrawWorldModel()
 
-    view.origin = (eyePos - (angle_difference_localvec * 150) - (position_difference * 0.5))
+	view.origin = (eyePos - (angle_difference_localvec * 150) - (position_difference * 0.5))
 
 	return view
 end

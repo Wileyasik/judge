@@ -261,7 +261,7 @@ function SWEP:PrimaryShootPost()
         local pos = owner:GetShootPos()
         local wepClass = self:GetClass()
 
-        util.BlastDamage(self, owner, pos, 200, 80)
+		hg.BlastDamageWithShockwave(self, owner, pos, 200, 80)
 
         hg.ExplosionEffect(pos, 200, 80)
 

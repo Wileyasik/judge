@@ -72,10 +72,17 @@ hook.Add("MotionBlur", "Weapon", function(x,y,w,z)
 end)
 
 hook.Add("GetMotionBlurValues", "MotionBlurEffect", function( x, y, w, z)
-    local blur = hook_Run("MotionBlur",x,y,w,z)
+	local blur = hook_Run("MotionBlur",x,y,w,z)
 	if blur then
-		return blur[1],blur[2],blur[3],blur[4]
+		x, y, w, z = blur[1], blur[2], blur[3], blur[4]
 	end
+
+	local explosionBlur = hg.GetExplosionMotionBlur and hg.GetExplosionMotionBlur() or 0
+	if explosionBlur > 0 then
+		return x, y, w - explosionBlur, z
+	end
+
+	if blur then return x, y, w, z end
 end)
 
 local TickInterval = engine.TickInterval
@@ -712,6 +719,7 @@ local function renderscene(pos, angle, fov)
 	
 	if not view then return end
 	if not isvector(view.origin) or not isangle(view.angles) then return end
+	hg.ApplyScreenShakes(view, lply, IsValid(follow))
 
 	--hook.Run("HG_RenderScene", pos, angle, fov)
 

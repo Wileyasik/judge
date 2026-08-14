@@ -194,7 +194,7 @@ function SWEP:Shoot(override)
                 ply = hg.RagdollOwner(ent) or ent
             end
 
-			if ply:InVehicle() then
+			if ply:IsPlayer() and ply:InVehicle() then
 				ply:ExitVehicle()
 			end
 
@@ -202,15 +202,17 @@ function SWEP:Shoot(override)
 
             local time = math.random(5,7) * (drugged and 0.2 or 1)
 			
-			hg.StunPlayer(ply, time + 3 * (drugged and 0.2 or 1))
+			if ply:IsPlayer() then
+				hg.StunPlayer(ply, time + 3 * (drugged and 0.2 or 1))
+			end
 
-			if IsValid(ply) and ply:Alive() then
+			if IsValid(ply) and ply:IsPlayer() and ply:Alive() then
                 local org = ply.organism
                 org.tasered = CurTime() + time
             end
 
             ent:EmitSound("tazer.wav")
-            local ragdoll = (IsValid(ply) and ply:Alive()) and ply.FakeRagdoll or ent
+            local ragdoll = (IsValid(ply) and ply:IsPlayer() and ply:Alive()) and ply.FakeRagdoll or ent
             local tasered =  CurTime() + time
 			local cons1, cons2
 			timer.Simple(0.1,function()

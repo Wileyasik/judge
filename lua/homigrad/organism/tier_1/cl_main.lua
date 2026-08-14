@@ -373,6 +373,7 @@ local function remove_imgs()
 end
 
 local disorientationLerp = 0
+local disorientationVignetteMat = Material("effects/shaders/zb_vignette")
 local concLerp = 0
 local nauseaLerp = 0
 local tinnitusConcLerp = 0
@@ -806,6 +807,17 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 	local amount = 1 - math.Clamp(lowpulse + disorientation / 4 + k2 * 2,0,1)
 
 	disorientationLerp = LerpFT(disorientation > disorientationLerp and 1 or 0.15, disorientationLerp, math.max(lply.suiciding and 1.5 or 0, disorientation))
+
+	local disVig = math.Clamp((disorientationLerp - 0.4) / 3.6, 0, 1)
+	if disVig > 0.01 and lply:Alive() then
+		disVig = disVig * disVig * (3 - 2 * disVig)
+		render.UpdateScreenEffectTexture()
+		disorientationVignetteMat:SetFloat("$c2_x", CurTime() + 10000)
+		disorientationVignetteMat:SetFloat("$c0_z", disVig * 0.45)
+		disorientationVignetteMat:SetFloat("$c1_y", disVig * 1.0)
+		render.SetMaterial(disorientationVignetteMat)
+		render.DrawScreenQuad()
+	end
 
 	if (disorientationLerp > 1) and lply:Alive() or brain > 0 then
 		local add2 = disorientationLerp - 1

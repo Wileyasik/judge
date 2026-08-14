@@ -359,17 +359,9 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 			deathlerp = LerpFT(0.05,deathlerp,1)
 			local angdeath = LerpAngle(deathlerp,deathLocalAng,att_Ang)
 
-			if not follow:GetManipulateBoneScale(follow:LookupBone("ValveBiped.Bip01_Head1")):IsEqualTol(vecZero,0.001) then
-				follow:ManipulateBoneScale(follow:LookupBone("ValveBiped.Bip01_Head1"), firstPerson and vecPochtiZero or vecFull )
-			end
-
 			view.origin = pos
 			view.angles = att_Ang
 		else
-			if not follow:GetManipulateBoneScale(follow:LookupBone("ValveBiped.Bip01_Head1")):IsEqualTol(vecZero,0.001) then
-				follow:ManipulateBoneScale(follow:LookupBone("ValveBiped.Bip01_Head1"),lerpasad > 0.9 and vecFull or vecPochtiZero)
-			end
-
 			lerpasad = Lerp(0.1, lerpasad, (IsAimingNoScope(ply) and 0 or 1))
 
 			local ang = ply:EyeAngles()

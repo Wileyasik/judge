@@ -115,9 +115,20 @@ end
 
 SWEP.CanSuicide = true
 
-game.AddParticles("particles/tfa_smoke.pcf")
-PrecacheParticleSystem("smoke_trail_tfa")
-PrecacheParticleSystem("smoke_trail_wild")
+local function AddParticlesIfExists(path)
+	if file.Exists(path, "GAME") then
+		game.AddParticles(path)
+	end
+end
+local function PrecacheIfExists(path, system)
+	if file.Exists(path, "GAME") then
+		PrecacheParticleSystem(system)
+	end
+end
+
+AddParticlesIfExists("particles/tfa_smoke.pcf")
+PrecacheIfExists("particles/tfa_smoke.pcf", "smoke_trail_tfa")
+PrecacheIfExists("particles/tfa_smoke.pcf", "smoke_trail_wild")
 
 local vector_full = Vector(1, 1, 1)
 
@@ -1388,39 +1399,45 @@ function SWEP:CoreStep()
 			//timer.Simple(0.15, function()
 				owner:LagCompensation(true)
 				local tr = hg.eyeTrace(owner)
-				if IsValid(tr.Entity) or tr.Entity:IsWorld() then
-					local ent = tr.Entity
-					local dmgInfo = DamageInfo()
-					dmgInfo:SetDamage(15 * (owner.organism.superfighter and 5 or 1))
-                    dmgInfo:SetDamageType((ent:GetClass() == "func_breakable_surf") and DMG_SLASH or DMG_CLUB)
-					dmgInfo:SetAttacker(owner)
-                                        dmgInfo:SetInflictor(hg.GetHandsWeapon and hg.GetHandsWeapon(owner) or owner:GetWeapon("weapon_hands_sh"))
-					dmgInfo:SetDamagePosition(tr.HitPos - tr.Normal * 5)
-					dmgInfo:SetDamageForce(tr.Normal * 55)
-
-					PenetrationGlobal = 5
-					MaxPenLenGlobal = 5
-					ent:TakeDamageInfo(dmgInfo)
-
-					if ent:IsPlayer() or ent:IsRagdoll() or ent:IsNPC() then
-						owner:EmitSound("weapons/tfa/melee_hit_world"..math.random(1,3)..".wav", 65)
-					else
-						owner:EmitSound("physics/metal/weapon_impact_hard3.wav", 65)
-					end
-
-					if ent:IsPlayer() then
-						ent:ViewPunch(bashvpang)
-					end
-			
-					local phys = ent:GetPhysicsObject()
-					if IsValid(phys) then
-						if ent:IsPlayer() then ent:SetVelocity(tr.Normal * 50 * 1.5 * (owner.organism.superfighter and 5 or 1)) end
-						phys:ApplyForceOffset(tr.Normal * 5000, tr.HitPos)
-						owner:SetVelocity(tr.Normal * 50 * .8 * (owner.organism.superfighter and 2 or 1))
-					end
+				local kickVictim = tr.Entity
+				if IsValid(kickVictim) and kickVictim.IsRagdoll and kickVictim:IsRagdoll() then
+					kickVictim = hg.RagdollOwner and hg.RagdollOwner(kickVictim)
 				end
+				if not (IsValid(kickVictim) and kickVictim:IsPlayer() and hook.Run("hg_ShieldKickBlock", kickVictim, owner, self, owner:EyePos(), tr.HitPos)) then
+					if IsValid(tr.Entity) or tr.Entity:IsWorld() then
+						local ent = tr.Entity
+						local dmgInfo = DamageInfo()
+						dmgInfo:SetDamage(15 * (owner.organism.superfighter and 5 or 1))
+						dmgInfo:SetDamageType((ent:GetClass() == "func_breakable_surf") and DMG_SLASH or DMG_CLUB)
+						dmgInfo:SetAttacker(owner)
+						dmgInfo:SetInflictor(hg.GetHandsWeapon and hg.GetHandsWeapon(owner) or owner:GetWeapon("weapon_hands_sh"))
+						dmgInfo:SetDamagePosition(tr.HitPos - tr.Normal * 5)
+						dmgInfo:SetDamageForce(tr.Normal * 55)
 
-				owner.organism.stamina.subadd = owner.organism.stamina.subadd + 3 * self.weight
+						PenetrationGlobal = 5
+						MaxPenLenGlobal = 5
+						ent:TakeDamageInfo(dmgInfo)
+
+						if ent:IsPlayer() or ent:IsRagdoll() or ent:IsNPC() then
+							owner:EmitSound("weapons/tfa/melee_hit_world"..math.random(1,3)..".wav", 65)
+						else
+							owner:EmitSound("physics/metal/weapon_impact_hard3.wav", 65)
+						end
+
+						if ent:IsPlayer() then
+							ent:ViewPunch(bashvpang)
+						end
+				
+						local phys = ent:GetPhysicsObject()
+						if IsValid(phys) then
+							if ent:IsPlayer() then ent:SetVelocity(tr.Normal * 50 * 1.5 * (owner.organism.superfighter and 5 or 1)) end
+							phys:ApplyForceOffset(tr.Normal * 5000, tr.HitPos)
+							owner:SetVelocity(tr.Normal * 50 * .8 * (owner.organism.superfighter and 2 or 1))
+						end
+					end
+
+					owner.organism.stamina.subadd = owner.organism.stamina.subadd + 3 * self.weight
+				end
 
 				owner:LagCompensation(false)
 			//end)

@@ -261,6 +261,7 @@ function hg.GenerateLoot(ply,ent,func)
 	--print(tab)
 
 	local _, entName = hg.WeightedRandomSelect(tab)
+	entName = hg.CanonicalWeaponClass(entName)
 
 	if entName and hg.LootBlacklist[entName] then return end
 
@@ -348,6 +349,7 @@ end
 
 local functions = {
     ["Weapons"] = function(ent, wep)
+		wep = hg.CanonicalWeaponClass(wep)
 		local weapon = weapons.Get(wep)
 		--if not weapon then return end
 		if ent.inventory.Weapons and ent.inventory.Weapons[wep] then return end
@@ -378,6 +380,7 @@ local functions = {
 
 local functions_break = {
     ["Weapons"] = function(ent, wep)
+		wep = hg.CanonicalWeaponClass(wep)
         local weapon = weapons.Get(wep)
         if not weapon then return end
 
@@ -424,6 +427,7 @@ local functions_break = {
 
 hook.Add("ZB_InventoryChecked", "LootSpawn", function(ply, ent)
 	if not IsValid(ent) or ent:IsPlayer() then return end
+	hg.MigrateLegacyWeaponInventory(ent.inventory)
 	ent:SetNetVar("Inventory", ent.inventory)
 	if ent.was_opened or not string_find(ent:GetClass(),"prop_", 1, true) then return end
 
@@ -469,6 +473,7 @@ hg.loot_amount = {
 hook.Add("PropBreak", "LootSpawn", function(ply,ent)
 	if not IsValid(ent) or ent:GetClass() ~= "prop_physics" then return end
 	ent.inventory = ent.inventory or {}
+	hg.MigrateLegacyWeaponInventory(ent.inventory)
 	ent:SetNetVar("Inventory", ent.inventory)
 
 	local model = ent:GetModel()

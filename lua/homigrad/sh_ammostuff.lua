@@ -259,10 +259,6 @@ local function onstopped_explosive(self, last_unsure_penetration_pos, reason, tr
 			
 			util.ScreenShake(self.Pos, 35, 1, 1, 3000)
 
-			timer.Simple(.01,function()
-				ParticleEffect("pcf_jack_airsplode_small3",pos + vector_up * 1,-vector_up:Angle())
-			end)
-
 			net.Start("projectileFarSound")
 				net.WriteString("m67/m67_detonate_01.wav")
 				net.WriteString("m67/m67_detonate_far_dist_03.wav")
@@ -272,7 +268,7 @@ local function onstopped_explosive(self, last_unsure_penetration_pos, reason, tr
 				net.WriteString("")
 			net.Broadcast()
 			
-			util.BlastDamage(Entity(0), IsValid(attacker) and attacker or Entity(0), self.Pos, 100, 50)
+			hg.BlastDamageWithShockwave(Entity(0), IsValid(attacker) and attacker or Entity(0), self.Pos, 100, 50, { ExplosionType = "Small" })
 			hg.ExplosionEffect(self.Pos, 1500 / 0.01905, 250)
 
 			--local effectdata = EffectData()
