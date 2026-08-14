@@ -2353,6 +2353,7 @@ function SWEP:SetHandPos(noset)
 	self.addvec = self.addvec or veczero
 	self.rhandik = self.setrhik
 	self.lhandik = self.setlhik
+	if CLIENT and hg.TPIKDebug then hg.TPIKDebug(self:GetOwner(), "HG SetHandPos entry, setrhik=", tostring(self.setrhik), "setlhik=", tostring(self.setlhik), "handPos=", tostring(self.handPos ~= nil), "shouldTransmit=", tostring(self:GetOwner() and self:GetOwner().shouldTransmit), "NotSeen=", tostring(self:GetOwner() and self:GetOwner().NotSeen)) end
 	
 	local ply = self:GetOwner()
 

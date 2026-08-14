@@ -175,6 +175,10 @@ if SERVER then
 					end
 				elseif tr.Entity != Entity(0) then
 					tr.Entity.shouldburn = tr.Entity.shouldburn and tr.Entity.shouldburn + 1 or 1
+					local targetPly = tr.Entity:IsPlayer() and tr.Entity or hg.RagdollOwner(tr.Entity)
+					if IsValid(targetPly) and targetPly:Alive() then
+						hg.AddGasolineWet(targetPly, 20)
+					end
 				end
 
 				net.Start("gas particle")

@@ -82,6 +82,32 @@ function SWEP:Think()
 	self:SetHolding(math.max(self:GetHolding() - 4,0))
 end
 
+local GasWetIgniteMin = 15
+function GasWetIgniteFeed(wet)
+	if not wet or wet < GasWetIgniteMin then return 0 end
+	return math.floor(70 + wet * 1.3)
+end
+local function ResolveWetTarget(ent)
+	if not IsValid(ent) then return nil end
+	if ent:IsPlayer() then return ent end
+	return hg.RagdollOwner(ent)
+end
+
+local IgniteFireCount = 4
+local function IgnitePlayer(owner, targetPly)
+	if not IsValid(targetPly) or not targetPly:Alive() then return end
+
+	local feed = GasWetIgniteFeed(hg.GetGasolineWet(targetPly))
+	if feed <= 0 then return end
+
+	local char = hg.GetCurrentCharacter(targetPly)
+	if not IsValid(char) then return end
+
+	for i = 1, IgniteFireCount do
+		CreateVFire(char, char:GetPos(), -vector_up, feed, owner)
+	end
+end
+
 if CLIENT then
     hg_firematch = hg_firematch or {}
     net.Receive("Mathces",function()
@@ -124,12 +150,22 @@ function SWEP:PrimaryAttack()
         return 
     end
 
+    local targetPly = ResolveWetTarget(tr.Entity)
+    if IsValid(targetPly) and targetPly:Alive() and GasWetIgniteFeed(hg.GetGasolineWet(targetPly)) > 0 then
+        if SERVER then
+            IgnitePlayer(self:GetOwner(), targetPly)
+        end
+
+        self:TakePrimaryAmmo(1)
+        return 
+    end
+
     if SERVER then
         local ent = ents.Create("ent_zcity_match")
         if not IsValid(ent) then return end
 		
 		local owner = self:GetOwner() -- салат ты реально furry какой self.Owner -- да
-        
+
         local boneIndex = owner:LookupBone("ValveBiped.Bip01_R_Hand")
         if not boneIndex then return end
         
@@ -145,6 +181,14 @@ function SWEP:PrimaryAttack()
 
         ent.debil = owner
 
+        ent.Touch = function(match, other)
+            if not IsValid(match) or not IsValid(other) then return end
+
+            local targetPly = ResolveWetTarget(other)
+            if not IsValid(targetPly) then return end
+
+            IgnitePlayer(match.debil or targetPly, targetPly)
+        end
         local phys = ent:GetPhysicsObject()
         if not IsValid(phys) then if IsValid(ent) then ent:Remove() end return end
 
@@ -177,9 +221,16 @@ if CLIENT then
 		surface.DrawRect(x - 25 * lerpthing * 0.1, y - 2.5, 50 * lerpthing * 0.1, 5)
 		surface.DrawRect(x - 2.5, y - 25 * lerpthing * 0.1, 5, 50 * lerpthing * 0.1)
 
-		if IsValid(tr.Entity) and (tr.Entity.OnMatches or tr.Entity.shouldburn) then
+		local targetPly = ResolveWetTarget(tr.Entity)
+		if IsValid(tr.Entity) and (tr.Entity.OnMatches or tr.Entity.shouldburn or (IsValid(targetPly) and GasWetIgniteFeed(hg.GetGasolineWet(targetPly)) > 0)) then
 			draw.SimpleText( "Ignite object", "HomigradFont", toScreen.x + 3, toScreen.y + 27, color_black, TEXT_ALIGN_CENTER )
 			draw.SimpleText( "Ignite object", "HomigradFont", toScreen.x, toScreen.y + 25, colred, TEXT_ALIGN_CENTER )
+		end
+
+		local wet = hg.GetGasolineWet(LocalPlayer())
+		if GasWetIgniteFeed(wet) > 0 then
+			draw.SimpleText( "You are covered in gasoline.", "HomigradFont", ScrW() / 2 + 3, ScrH() * 0.74 + 2, color_black, TEXT_ALIGN_CENTER )
+			draw.SimpleText( "You are covered in gasoline.", "HomigradFont", ScrW() / 2, ScrH() * 0.74, Color(255, 255 * (1 - wet / 100), 0), TEXT_ALIGN_CENTER )
 		end
 	end
 end

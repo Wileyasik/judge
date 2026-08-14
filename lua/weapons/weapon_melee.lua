@@ -911,6 +911,7 @@ function SWEP:SetHandPos(noset)
     self.rhandik = false
 	self.lhandik = false
     
+    if CLIENT and hg.TPIKDebug then hg.TPIKDebug(ply, "MELEE SetHandPos entry, shouldTransmit=", tostring(ply and ply.shouldTransmit), "NotSeen=", tostring(ply and ply.NotSeen), "setrh=", tostring(self.setrh), "setlh=", tostring(self.setlh)) end
     if not IsValid(ply) or not IsValid(self.worldModel) then return end
     if not ply.shouldTransmit or ply.NotSeen then return end
 
@@ -930,6 +931,7 @@ function SWEP:SetHandPos(noset)
 
 	self.rhandik = self.setrh and IsValid(owner)//self.setrh
 	self.lhandik = self.setlh and not (self.DisableLHIKWhileBlocking and self:GetBlocking()) and IsValid(owner) and (ply:GetTable().ChatGestureWeight < 0.1) and hg.CanUseLeftHand(ply) and !(owner.suiciding and self.SuicideNoLH)
+    if CLIENT and hg.TPIKDebug then hg.TPIKDebug(ply, "MELEE SetHandPos -> rhandik=", tostring(self.rhandik), "lhandik=", tostring(self.lhandik)) end
 
     local rhmat, lhmat = ent:GetBoneMatrix(ent:LookupBone("ValveBiped.Bip01_R_Hand")), ent:GetBoneMatrix(ent:LookupBone("ValveBiped.Bip01_L_Hand"))
 

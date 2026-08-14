@@ -626,6 +626,17 @@ local durachok = "models/epangelmatikes/e3_elite_suit.mdl"
 
 --hook.Add("PostDrawPlayerRagdoll", "!!!!!!!zcity_PostDrawPlayerRagdollmain", function(ent, ply)
 local ang_head1, ang_head2 = Angle(-90, 0, 220), Angle(-90, 0, -30)
+function hg.TPIKDebug(ply, ...)
+	if CLIENT and IsValid(lply) then
+		local active_shooter = CurrentRound and CurrentRound() and CurrentRound().name == "active_shooter"
+		if lply.Profession == "reporter" or active_shooter then
+			if not hg._tpiKDebugNext or hg._tpiKDebugNext < CurTime() then
+				hg._tpiKDebugNext = CurTime() + 0.25
+				print(ply == lply and "[TPIK:SELF]" or "[TPIK:OTHER]", tostring(ply), ...)
+			end
+		end
+	end
+end
 function hg.MainTPIKFunction(ent, ply, wpn)
     if not IsValid(ply) then return end
     if not ply:IsPlayer() then return end
@@ -633,6 +644,7 @@ function hg.MainTPIKFunction(ent, ply, wpn)
     
     //local systime = SysTime()
     local should = hg.ShouldTPIK(ply)
+    hg.TPIKDebug(ply, "MainTPIK entry, wpn=", tostring(IsValid(wpn) and wpn:GetClass()), "should=", tostring(should))
     //print("shouldtpik func: ", SysTime() - systime)
 
     if should then
@@ -695,6 +707,7 @@ function hg.MainTPIKFunction(ent, ply, wpn)
         hg.DoZManip(ent, ply)
         //local systime = SysTime()
         hg.DoTPIK(ply, ent)
+        hg.TPIKDebug(ply, "DoTPIK done")
         --hg._DeprecatedDoTPIK(ply, ent)
         //print("DoTPIK: ", SysTime() - systime)
     end
@@ -934,6 +947,8 @@ function hg.DoTPIK(ply, ent)
 
     local lhik2 = ((IsValid(self) and self.lhandik) or ply:InVehicle()) and hg.CanUseLeftHand(ply)
     local rhik2 = ((IsValid(self) and self.rhandik) or ply:InVehicle()) and hg.CanUseRightHand(ply)
+    
+    hg.TPIKDebug(ply, "DoTPIK bones ok, self=", tostring(IsValid(self) and self:GetClass()), "lhandik=", tostring(IsValid(self) and self.lhandik), "rhandik=", tostring(IsValid(self) and self.rhandik), "lhik2=", tostring(lhik2), "rhik2=", tostring(rhik2))
     
     local shouldrebuild = false
     if (ply.nextrebuild or 0) < CurTime() then

@@ -500,6 +500,7 @@ hg.ConVars = hg.ConVars or {}
 			local p,a = self:GetBonePosition(1)
 			if not p or p:IsEqualTol(self:GetPos(), 0.01) then return end
 			local ent = self.FakeRagdoll
+			if hg.TPIKDebug and self == lply then hg.TPIKDebug(self, "RenderOverride local, bonepos=", tostring(p), "FakeRagdoll=", tostring(IsValid(ent) and ent)) end
 			if IsValid(ent) then return end
 
 			hg.renderOverride(self, ent, flags)
@@ -659,6 +660,7 @@ local IsValid = IsValid
 --//
 --\\ Render Override
 	hg.renderOverride = function(self, ent, flags)
+		if hg.TPIKDebug and self == lply then hg.TPIKDebug(self, "renderOverride entry") end
 		if bit.band(flags, STUDIO_RENDER) != STUDIO_RENDER then return end
 		if IsValid(RENDERING_SCOPE) and self == RENDERING_SCOPE:GetOwner() then return end
 		--if self == lply and !selfdraw then return end
@@ -680,7 +682,15 @@ local IsValid = IsValid
 
 		if IsValid(self.OldRagdoll) then if DrawAppearance then DrawAppearance(ent, self, true) end end
 		if !hg.converging[self] then
+			local gasWet = self:GetNWFloat("GasolineWet", 0)
+			if gasWet > 0 then
+				local k = math.Clamp(gasWet / 100, 0, 1)
+				render.SetColorModulation(1 - 0.18 * k, 1 - 0.22 * k, 1 - 0.38 * k)
+			end
+
 			ent:DrawModel()
+
+			if gasWet > 0 then render.SetColorModulation(1, 1, 1) end
 		else
 			DrawConversion(ent, self)
 		end

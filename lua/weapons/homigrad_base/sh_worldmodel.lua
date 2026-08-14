@@ -235,7 +235,10 @@ function SWEP:PosAngChanges(ply, desiredPos, desiredAng, bNoAdditional, closeani
 	self.setlhik = !self:IsResting() and (not (ply.posture == 7 or ply.posture == 8 or ( (self:IsPistolHoldType() or self.CanEpicRun) and self:IsSprinting() and !(ply.organism and ply.organism.rarmamputated) ) or (self:IsPistolHoldType() and ply.posture == 9) or (self:IsPistolHoldType() and ply.suiciding) ) or self.reload and self.setlhik or false)
 	self.setlhik = !(self:IsPistolHoldType() and (self:GetButtstockAttack() - CurTime() > -0.5)) and self.setlhik
 	
+	if CLIENT and hg.TPIKDebug then hg.TPIKDebug(ply, "PosAngChanges setrhik=", tostring(self.setrhik), "setlhik=", tostring(self.setlhik)) end
+	
 	local tr = hg.eyeTrace(ply, 60, ent)
+	if CLIENT and hg.TPIKDebug then hg.TPIKDebug(ply, "PosAngChanges eyeTrace=", tostring(tr ~= nil)) end
 	if not tr then return end
 	local pos = tr.StartPos - tr.Normal:Angle():Up() * 1
 	local aimTarget = ply:GetAimVector():Angle()

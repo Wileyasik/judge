@@ -305,9 +305,9 @@ local functions = {
             weapon:SetPos(ent:GetPos())
             weapon:SetAngles(ent:GetAngles())
             
-			local tbl = IsValid(storedWeapon) and storedWeapon.GetInfo and storedWeapon:GetInfo() or storedWeapon
-            if weapon.SetInfo then weapon:SetInfo(tbl) end
-			if IsValid(storedWeapon) and storedWeapon:IsWeapon() then storedWeapon:Remove() end
+			local tbl = isentity(storedWeapon) and IsValid(storedWeapon) and storedWeapon.GetInfo and storedWeapon:GetInfo() or storedWeapon
+            if weapon.SetInfo and istable(tbl) then weapon:SetInfo(tbl) end
+			if isentity(storedWeapon) and IsValid(storedWeapon) and storedWeapon:IsWeapon() then storedWeapon:Remove() end
         else
             weapon = ent.inventory.Weapons[wep]
             weapon.DontEquipInstantly = (not weapon.NoHolster) and (weapon.weaponInvCategory != 1)

@@ -136,6 +136,7 @@ local IsValid, math_Clamp = IsValid, math.Clamp
 	end
 
 	function DrawPlayerRagdoll(ent, ply) --// actually not only ragdoll render but player too
+		if CLIENT and hg.TPIKDebug then hg.TPIKDebug(ply, "DrawPlayerRagdoll entry, ent=", tostring(ent), "ent==ply=", tostring(ent == ply), "FakeRagdoll=", tostring(IsValid(ply.FakeRagdoll) and ply.FakeRagdoll)) end
 		if ply.prevragdoll_index != nil and ply.prevragdoll_index != ply.ragdoll_index and ply.ragdoll_index == 0 then
 			//print(ply.ragdoll_index, ply.prevragdoll_index, Entity(ply.ragdoll_index))
 
