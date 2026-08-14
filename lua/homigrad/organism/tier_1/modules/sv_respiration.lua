@@ -266,8 +266,22 @@ module[2] = function(owner, org, timeValue)
 		org.owner:Notify(drugged[math.random(#drugged)], 30, "drugged", 0, nil, color_white)
 	end
 	if org.analgesia > 1.5 or org.painkiller > 2.4 then
-		if math.Rand(0, 500) < (org.analgesia + org.painkiller) then
+		if org.isPly and org.alive then
+			local overdose = org.analgesia + org.painkiller
+			org.overdoseNausea = (org.overdoseNausea or 0) + timeValue * overdose * 0.08
+			org.overdoseShit = (org.overdoseShit or 0) + timeValue * overdose * 0.05
+			if org.overdoseNausea > 1.1 then
+				org.overdoseNausea = 0
+				hg.organism.Vomit(owner)
+			end
+			if org.overdoseShit > 2 then
+				org.overdoseShit = 0
+				hg.organism.Defecate(owner)
+			end
 		end
+	else
+		org.overdoseNausea = nil
+		org.overdoseShit = nil
 	end
 	if o2[1] == 0 then
 		if math.random(50) == 1 then

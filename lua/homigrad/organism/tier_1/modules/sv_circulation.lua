@@ -648,6 +648,7 @@ module[2] = function(owner, org, mulTime)
 end
 util.AddNetworkString("bloodsquirt2")
 util.AddNetworkString("vomitConcussionMouth")
+util.AddNetworkString("hg_organism_defecate")
 function hg.organism.Vomit(owner, snd)
 	if !hg.IsValidPlayer(owner) then return end
 	local org = owner.organism
@@ -707,6 +708,14 @@ function hg.organism.VomitConcussion(owner)
 			net.WriteVector(mat:GetAngles():Right() * 2 * math.Clamp(org.pulse / 70, 0.4, 1))
 		net.Broadcast()
 	end
+end
+function hg.organism.Defecate(owner)
+	if not hg.IsValidPlayer(owner) then return end
+	owner:EmitSound("snd_jack_hmcd_fart.wav", 75)
+	owner:ViewPunch(AngleRand(-0.3, 0.3))
+	net.Start("hg_organism_defecate")
+		net.WriteEntity(owner)
+	net.SendPVS(owner:GetPos())
 end
 function hg.organism.CoughBlood(org)
 	local ply = org.owner

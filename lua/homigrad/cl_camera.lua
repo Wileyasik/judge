@@ -715,11 +715,9 @@ local function renderscene(pos, angle, fov)
 	local view = CalcView(lply, pos, angle, fov)
 	viewOverride = view
 	
-	local invert = invertCam:GetBool()
-	
 	if not view then return end
 	if not isvector(view.origin) or not isangle(view.angles) then return end
-	hg.ApplyScreenShakes(view, lply, IsValid(follow))
+	if hg.ApplyScreenShakes then hg.ApplyScreenShakes(view, lply, IsValid(follow)) end
 
 	--hook.Run("HG_RenderScene", pos, angle, fov)
 
@@ -738,7 +736,6 @@ local function renderscene(pos, angle, fov)
 			aspectratio = renderView.w / renderView.h,
 			origin = Vector(renderView.origin.x, renderView.origin.y, renderView.origin.z),
 			angles = Angle(renderView.angles.p, renderView.angles.y, renderView.angles.r),
-			inverted = invert
 		}
 	end
 	if mapswithfog[map] then
@@ -746,12 +743,6 @@ local function renderscene(pos, angle, fov)
 	end
 	//local cur = hg.GetCurrentCharacter(lply)
 	//if cur == lply then hg.renderOverride(cur, lply) end
-
-	local oldrt
-	if invert then
-		oldrt = render.GetRenderTarget()
-		render.SetRenderTarget( fliprt )
-	end
 
 	lply.norender = true
 	--if GlobalRenderOverideTickOFF then GlobalRenderOverideTickOFF = nil return end
@@ -764,19 +755,9 @@ local function renderscene(pos, angle, fov)
 	renderingScene = false
 	lply.norender = nil
 	
-	if invert then
-		render.SetRenderTarget( oldrt )
-	end
-
 	if not ok then
 		ErrorNoHaltWithStack(tostring(err))
 		return
-	end
-
-	if invert then
-		fliprtmat:SetTexture( "$basetexture", fliprt )
-		render.SetMaterial( fliprtmat )
-		render.DrawScreenQuad()
 	end
 
 	return true

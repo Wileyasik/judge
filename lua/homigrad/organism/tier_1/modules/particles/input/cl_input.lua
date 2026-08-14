@@ -422,3 +422,33 @@ net.Receive("vomitConcussionMouth", function()
 	end)
 	timer.Adjust(name, 0)
 end)
+
+local shitMat
+local function GetShitMat()
+	if not shitMat then
+		shitMat = CreateMaterial("hg_organism_shit_decal", "DecalModulate", {
+			["$basetexture"] = util.DecalMaterial("Concussion.VomitMedium"),
+			["$decalscale"] = "0.02",
+			["$decalscalevariation"] = "0.02",
+			["$vertexcolor"] = "1",
+			["$vertexalpha"] = "1",
+			["$nocull"] = "1",
+			["$translucent"] = "1",
+		})
+	end
+	return shitMat
+end
+net.Receive("hg_organism_defecate", function()
+	local ent = net.ReadEntity()
+	if not IsValid(ent) then return end
+	local pos = ent:GetPos()
+	local tr = util.TraceLine({
+		start = pos + Vector(0, 0, 30),
+		endpos = pos + Vector(0, 0, -120),
+		mask = MASK_SOLID_BRUSHONLY,
+		filter = ent,
+	})
+	if not tr.Hit or tr.HitSky or not tr.HitWorld then return end
+	local size = math.Rand(5, 9)
+	util.DecalEx(GetShitMat(), tr.Entity, tr.HitPos + tr.HitNormal * 2, tr.HitNormal, Color(math.random(95, 125), math.random(65, 82), math.random(32, 48), 255), size, size)
+end)

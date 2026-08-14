@@ -415,3 +415,63 @@ hook.Add("PostDrawTranslucentRenderables", "berserkSky", function(depth, drawsky
 		cam.End3D()
 	end
 end)
+
+--// Overdose visual effects
+local overdose_smooth = 0
+local overdose_color_tab = {
+	["$pp_colour_addr"] = 0,
+	["$pp_colour_addg"] = 0,
+	["$pp_colour_addb"] = 0,
+	["$pp_colour_brightness"] = 0,
+	["$pp_colour_contrast"] = 1,
+	["$pp_colour_colour"] = 1,
+	["$pp_colour_mulr"] = 0,
+	["$pp_colour_mulg"] = 0,
+	["$pp_colour_mulb"] = 0
+}
+hook.Add("HG_OrganismClientReset", "hg_overdose_reset", function(ply)
+	if ply ~= LocalPlayer() then return end
+	overdose_smooth = 0
+end)
+hook.Add("RenderScreenspaceEffects", "overdoseEffect", function()
+	local ply = LocalPlayer()
+	if not IsValid(ply) or not ply:Alive() then
+		overdose_smooth = 0
+		return
+	end
+	local org = ply.organism
+	if not org or org.otrub then
+		overdose_smooth = 0
+		return
+	end
+
+	local analgesia = org.analgesia or 0
+	local painkiller = org.painkiller or 0
+	local overdosed = analgesia > 1.5 or painkiller > 2.4
+	overdose_smooth = math.Approach(overdose_smooth, overdosed and 1 or 0, FrameTime() * 2.5)
+	if overdose_smooth < 0.01 then return end
+
+	local strength = math.Clamp((math.max(analgesia, painkiller / 1.6) - 1.5) / 1.5, 0, 1)
+	local i = overdose_smooth * (0.55 + strength * 0.45)
+
+	local t = CurTime()
+	ViewPunch(Angle(
+		math.sin(t * 2.3) * i * 0.7,
+		math.cos(t * 1.9) * i * 0.9,
+		math.sin(t * 1.1 + 1) * i * 0.5
+	))
+
+	if i > 0.05 then
+		DrawToyTown(2, i * 0.4 * ScrH())
+	end
+	if strength > 0.4 then
+		DrawMotionBlur(0.08 * i, 0.25 * i, 0.02)
+	end
+
+	overdose_color_tab["$pp_colour_colour"] = 1 - i * 0.3
+	overdose_color_tab["$pp_colour_brightness"] = i * 0.05
+	overdose_color_tab["$pp_colour_contrast"] = 1 + i * 0.12
+	DrawColorModify(overdose_color_tab)
+
+	DrawBloom(0.05 * i, 0.9 * i, 9 * i, 5 * i, 1, 1, 0.55, 0.7, 1)
+end)

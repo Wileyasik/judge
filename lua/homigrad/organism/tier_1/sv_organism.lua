@@ -795,6 +795,9 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 
 		if CurTime() >= org.deathStateEnd and not org.deathStateKilled then
 			org.deathStateKilled = true
+			if org.analgesia > 1.5 or org.painkiller > 2.4 then
+				hg.achievements.AddPlayerAchievement(owner, "drugs", 1)
+			end
 			owner:Kill()
 			return
 		end
@@ -811,6 +814,9 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 
 	if isPly and org.brain and org.brain >= 1 and owner:Alive() and not org.deathStateKilled then
 		org.deathStateKilled = true
+		if org.analgesia > 1.5 or org.painkiller > 2.4 then
+			hg.achievements.AddPlayerAchievement(owner, "drugs", 1)
+		end
 		owner:Kill()
 		return
 	end
@@ -847,7 +853,12 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	if IsValid(rag) and rag:IsRagdoll() and (not owner.lastFake or owner.lastFake == 0) then rag:SetCollisionGroup((rag:GetVelocity():LengthSqr() > (200*200)) and COLLISION_GROUP_NONE or COLLISION_GROUP_WEAPON) end
 	if isPly then
 		if org.otrub or org.fake then hg.Fake(owner,nil,true) end
-		if not org.alive and owner:Alive() then owner:Kill() end
+		if not org.alive and owner:Alive() then
+			if org.analgesia > 1.5 or org.painkiller > 2.4 then
+				hg.achievements.AddPlayerAchievement(owner, "drugs", 1)
+			end
+			owner:Kill()
+		end
 	end
 	if not org.otrub and isPly then
 		local mul = hg.likely_to_phrase(owner)

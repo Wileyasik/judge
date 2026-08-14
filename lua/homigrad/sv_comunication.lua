@@ -125,6 +125,28 @@ local function funca(ply, txt)
 		if bHasMassiveBrainDamage and math.random(2) == 1 then txt = hg.utf8_reverse(utf8.codes(txt), utf8.len(txt)) end
 	end
 
+	if ply.organism.analgesia > 1.5 or ply.organism.painkiller > 2.4 then
+		local iter = utf8.codes(txt)
+		local len = 0
+		local chars = {}
+		local mumble = { "m", "b", "h", "u" }
+		for i, code in iter do
+			len = len + 1
+			local ch = utf8.char(code)
+			if ch ~= " " then
+				local r = math.random(100)
+				if r <= 22 then
+					ch = table.Random(mumble)
+				elseif r <= 30 then
+					ch = ch .. ch
+				end
+			end
+			chars[len] = ch
+		end
+		txt = table.concat(chars)
+		if math.random(3) == 1 then txt = txt .. ".." end
+	end
+
 	if ply.organism.o2[1] < 15 or (ply.organism.brain > 0.15 and math.random(4) == 1) then return "..." end
 
 	return txt
