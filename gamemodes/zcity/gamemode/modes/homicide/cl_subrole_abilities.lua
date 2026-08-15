@@ -29,6 +29,42 @@ net.Receive("HMCD_BreakingOtherNeck", function(len, ply)
 end)
 --//
 
+--\\Choke
+net.Receive("HMCD_BeingVictimOfChoke", function(len, ply)
+	LocalPlayer().BeingVictimOfChoke = net.ReadBool()
+
+	if(LocalPlayer().BeingVictimOfChoke)then
+		BeingVictimOfChokeResetTime = CurTime() + 5
+	else
+		BeingVictimOfChokeResetTime = nil
+	end
+end)
+
+net.Receive("HMCD_ChokingOther", function(len, ply)
+	local status = net.ReadBool()
+	local attacker_ply = net.ReadEntity()
+
+	if(status)then
+		local other_ply = net.ReadEntity()
+
+		if(IsValid(attacker_ply))then
+			MODE.StartChokingOther(LocalPlayer(), other_ply)
+		end
+	else
+		if(IsValid(attacker_ply))then
+			MODE.StopChokingOther(LocalPlayer())
+		end
+	end
+end)
+
+net.Receive("HMCD_ChokeProgress", function(len, ply)
+	local ply = LocalPlayer()
+	if(ply.Ability_Choke)then
+		ply.Ability_Choke.Progress = net.ReadFloat()
+	end
+end)
+--//
+
 --\\
 net.Receive("HMCD_BeingVictimOfDisarmament", function(len, ply)
 	LocalPlayer().BeingVictimOfDisarmament = net.ReadBool()

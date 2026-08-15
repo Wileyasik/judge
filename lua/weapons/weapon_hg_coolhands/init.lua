@@ -61,7 +61,7 @@ local function WriteShoveHarm(owner, target, wep, harm)
 	dmgInfo:SetDamage(harm * 10)
 	dmgInfo:SetDamageType(DMG_CLUB)
 	dmgInfo:SetDamagePosition(target:GetPos())
-	hook.Run("HomigradDamage", target, dmgInfo, HITGROUP_CHEST, target, harm)
+	target:TakeDamageInfo(dmgInfo)
 end
 
 local function PushRagdoll(rag, physbone, pushVel, hitPos)

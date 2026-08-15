@@ -74,7 +74,7 @@ SWEP.AnimList = {
     ["idle"] = "idle01",
     ["deploy"] = "draw",
     ["attack"] = "misscenter1",
-    ["attack2"] = "jab",
+    ["attack2"] = "misscenter2",
     ["attack_loop"] = "misscenter3",
 }
 

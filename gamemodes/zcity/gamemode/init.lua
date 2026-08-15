@@ -1,5 +1,16 @@
 zb = zb or {}
 hg = hg or {}
+
+function hg.BloodAt(ent, boneName)
+	if not IsValid(ent) then return end
+	local bone = ent:LookupBone(boneName)
+	if not bone then return end
+	local pos = ent:GetBonePosition(bone)
+	local ef = EffectData()
+	ef:SetOrigin(pos)
+	util.Effect("BloodImpact", ef)
+end
+
 zb.ROUND_STATE = zb.ROUND_STATE or 0
 --0 = players can join, 1 = round is active, 2 = endround
 

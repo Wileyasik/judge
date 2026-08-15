@@ -80,6 +80,8 @@ local TraitorSkillsetSubRoles = {
 	["infiltrator"] = "traitor_infiltrator",
 	["assassin"] = "traitor_assasin",
 	["chemist"] = "traitor_chemist",
+	["martialartist"] = "traitor_martialartist",
+	["brawler"] = "traitor_brawler",
 }
 
 local function ApplyCodeAttachments(weapon, attachments)
@@ -103,6 +105,7 @@ local function ApplyTraitorLoadout(ply)
 
 	ply.organism.stamina.max = 220
 	ply.organism.recoilmul = 1
+	ply.MeleeDamageMul = nil
 
 	if skillset == "infiltrator" then
 		-- Infiltrator specifics
@@ -111,6 +114,12 @@ local function ApplyTraitorLoadout(ply)
 		ply.organism.stamina.max = 300
 	elseif skillset == "chemist" then
 		if CleanChemicalsOfPlayer then CleanChemicalsOfPlayer(ply) end
+	elseif skillset == "martialartist" then
+		ply.organism.stamina.max = 340
+		ply:Give("weapon_hg_nunchuks")
+	elseif skillset == "brawler" then
+		ply.organism.stamina.max = 300
+		ply.MeleeDamageMul = 1.5
 	end
 
 	local inv = ply:GetNetVar("Inventory", {})
@@ -147,15 +156,22 @@ local function ApplyTraitorLoadout(ply)
 				end
 			end)
 		else
-			local w = ply:Give(wep)
-			if wep == "weapon_zoraki" then
-				timer.Simple(1, function() if IsValid(w) then w:ApplyAmmoChanges(2) end end)
-			elseif wep == "weapon_p22" then
-				hasP22 = true
-			elseif wep == "weapon_pl15" then
-				hasPL15 = true
-			elseif wep == "weapon_taser" then
-				hasTaser = true
+			if(ply.SubRole == "traitor_brawler")then
+				local wstore = weapons.GetStored(wep)
+				if(wstore and wstore.Category == "Weapons - Melee")then
+					ply:Give(wep)
+				end
+			else
+				local w = ply:Give(wep)
+				if wep == "weapon_zoraki" then
+					timer.Simple(1, function() if IsValid(w) then w:ApplyAmmoChanges(2) end end)
+				elseif wep == "weapon_p22" then
+					hasP22 = true
+				elseif wep == "weapon_pl15" then
+					hasPL15 = true
+				elseif wep == "weapon_taser" then
+					hasTaser = true
+				end
 			end
 		end
 	end
@@ -285,6 +301,20 @@ Despite being zombie, still bears appearance of a normal human.]],
 		SpawnFunction = function(ply)
 		end,
 	},
+	["traitor_martialartist"] = {
+		Name = "Martial Artist",
+		Description = "A nimble martial artist with high stamina and nunchucks. Performs WWE-style moves via the radial menu.",
+		Objective = "Use your superior strength and WWE moves to eliminate everyone before the Judge stops you.",
+		SpawnFunction = function(ply)
+		end,
+	},
+	["traitor_brawler"] = {
+		Name = "Brawler",
+		Description = "A bare-knuckle brawler. Devastating 1.5x melee and can choke or execute victims with melee weapons, but no firearms and fragile from behind.",
+		Objective = "Use your fists and grapples to eliminate everyone before the Judge stops you.",
+		SpawnFunction = function(ply)
+		end,
+	},
 }
 --//
 
@@ -357,6 +387,7 @@ MODE.RoleChooseRoundTypes = {
 		TraitorDefaultRole = "traitor_custom",
 		Traitor = {
 			["traitor_custom"] = true,
+			["traitor_martialartist"] = true,
 		},
 		Professions = MODE.ProfessionsPool,
 	},

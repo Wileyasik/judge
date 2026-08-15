@@ -160,6 +160,16 @@ CreateClientConVar("hmcd_traitor_loadout", "", true, true, "Saved traitor loadou
 CreateClientConVar("hmcd_hero_loadout", "", true, true, "Saved hero loadout")
 CreateClientConVar("zcity_arena_loadout", "", true, true, "Saved Arena loadout")
 
+function SkillsetBlocksGun(config, skillset, id)
+	local sk = config.skillsets and config.skillsets[skillset]
+	if not sk or not sk.meleeOnly then return false end
+	local w = weapons.GetStored(id)
+	if w and w.Category and w.Category:StartWith("Weapons -") and w.Category ~= "Weapons - Melee" then
+		return true
+	end
+	return false
+end
+
 local RoleConfigs = {
     traitor = {
         title = "EXECUTIONER",
@@ -173,7 +183,9 @@ local RoleConfigs = {
             ["infiltrator"] = {cost = 15, name = "Infiltrator", desc = "Break necks and disguise as victims."},
             ["assassin"] = {cost = 15, name = "Assassin", desc = "Better gun control and more endurance."},
             ["damned"] = {cost = 30, name = "Damned", desc = "You start with nothing."},
-            ["chemist"] = {cost = 10, name = "Chemist", desc = "Detect chemicals in the air."}
+            ["chemist"] = {cost = 10, name = "Chemist", desc = "Detect chemicals in the air."},
+            ["martialartist"] = {cost = 30, name = "Martial Artist", desc = "High stamina. Armed with nunchucks. Uses WWE-style moves via the radial menu."},
+            ["brawler"] = {cost = 30, name = "Brawler", desc = "Devastating 1.5x melee. Can choke or execute victims with melee weapons, but no firearms and fragile from behind.", meleeOnly = true}
         },
         items = {
             ["weapon_p22"] = {cost = 6, name = "Walther P22"},
@@ -501,7 +513,7 @@ local function SanitizeLoadout(config, rawLoadout)
                 weaponId = k
             end
 
-            if weaponId and not usedWeapons[weaponId] and (config.items[weaponId] or config.addons[weaponId]) then
+            if weaponId and not usedWeapons[weaponId] and (config.items[weaponId] or config.addons[weaponId]) and not SkillsetBlocksGun(config, normalizedLoadout.skillset, weaponId) then
                 usedWeapons[weaponId] = true
                 table.insert(rawWeaponIds, weaponId)
             end
@@ -523,7 +535,7 @@ local function SanitizeLoadout(config, rawLoadout)
 
     for _, weaponId in ipairs(rawWeaponIds) do
         local addonInfo = config.addons[weaponId]
-        if addonInfo and not usedWeapons[weaponId] and usedWeapons[addonInfo.parent] then
+        if addonInfo and not usedWeapons[weaponId] and usedWeapons[addonInfo.parent] and not SkillsetBlocksGun(config, normalizedLoadout.skillset, weaponId) then
             local weaponCost = addonInfo.cost
             if totalPoints + weaponCost <= config.maxPoints then
                 usedWeapons[weaponId] = true
@@ -583,7 +595,7 @@ local function RandomHomicideLoadout(config)
     -- Force one real weapon (cost >= 4) if affordable.
     local weaponPool = {}
     for id, info in pairs(config.items or {}) do
-        if not IsArmorItem(id) and (info.cost or 0) >= 4 then
+        if not IsArmorItem(id) and (info.cost or 0) >= 4 and not SkillsetBlocksGun(config, loadout.skillset, id) then
             weaponPool[#weaponPool + 1] = id
         end
     end
@@ -1225,6 +1237,7 @@ local function OpenRoleEditor(parentPanel, roleId, returnPanel)
         end
 
         local function AddItemButton(id)
+            if SkillsetBlocksGun(config, state.loadout.skillset, id) then return end
             local info = config.items[id]
             local btn = vgui.Create("DButton", loadoutScroll)
             btn:Dock(TOP)

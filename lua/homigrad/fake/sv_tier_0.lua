@@ -1797,6 +1797,11 @@ hook.Add("Ragdoll Collide", "FallSounds", function(rag, data)
 	if not IsValid(rag) then return end
 	if not data.HitEntity:IsWorld() then return end
 	if data.OurOldVelocity:LengthSqr() < 165000 or (rag.NextSND or 0) > data.DeltaTime then return end
+
+	-- удушающий держит жертву: телом об землю/стены не шумим
+	local ragPly = hg and hg.RagdollOwner and hg.RagdollOwner(rag)
+	if IsValid(ragPly) and ragPly:IsPlayer() and ragPly.BeingVictimOfChoke then return end
+
 	rag:EmitSound("player/falling_foley/fall_foley"..mRandom(13)..".wav", 60, mRandom(95, 115), 1, CHAN_AUTO)
 	if mRandom(3) == 2 then
 		rag:EmitSound("physics/flesh/flesh_impact_hard"..mRandom(6)..".wav", 55, mRandom(85, 105), 1, CHAN_AUTO)

@@ -52,7 +52,7 @@ hook.Add("HUDPaint", "HMCD_SubRoles_Abilities", function()
 	if(ply:Alive())then
 		if(ply.isTraitor)then
 			if(ply.SubRole == "traitor_infiltrator" or ply.SubRole == "traitor_infiltrator_soe")then
-				local text = "(HOLD)[ALT + E] Break Neck"
+				local text = "[ALT + E] Break Neck"
 				local tw, th = surface.GetTextSize(text)
 				local cx, cy = trace.HitPos:ToScreen().x, trace.HitPos:ToScreen().y
 				cy = cy + y_offset
@@ -104,7 +104,60 @@ hook.Add("HUDPaint", "HMCD_SubRoles_Abilities", function()
 				end
 			end
 			
-			if(ply.SubRole == "traitor_chemist")then
+			if(ply.SubRole == "traitor_brawler" or ply.SubRole == "traitor_martialartist")then
+			local w = ply:GetActiveWeapon()
+			local cls = IsValid(w) and w:GetClass() or ""
+			local hasHands = (cls == "weapon_hands_sh" or cls == "weapon_hg_coolhands")
+			local wstore = IsValid(w) and weapons.GetStored(cls)
+			local hasMelee = IsValid(w) and not hasHands and (cls == "weapon_hg_fists" or cls == "weapon_hg_nunchaku" or (wstore and wstore.Category == "Weapons - Melee"))
+
+			local aim_ent, other_ply, btrace = MODE.GetPlayerTraceToOther(ply, nil, 160)
+			local text = ""
+			local canShow = false
+
+			if(IsValid(other_ply) and other_ply:IsPlayer() and other_ply:Alive() and not IsValid(other_ply:GetNWEntity("FakeRagdoll")))then
+				local behindVec = ply:GetPos() - other_ply:GetPos()
+				behindVec.z = 0
+				local isBehind = behindVec:LengthSqr() > 1 and behindVec:GetNormalized():Dot(Angle(0, other_ply:EyeAngles().yaw, 0):Forward()) <= -0.4
+
+				if(ply.SubRole == "traitor_martialartist")then
+					if(isBehind)then
+						text = "(HOLD)[ALT + E] Martial Arts"
+						canShow = true
+					end
+				elseif(hasMelee and isBehind)then
+					text = "(HOLD)[ALT + E] Execute"
+					canShow = true
+				elseif(hasHands and isBehind)then
+					text = "(HOLD)[ALT + E] Choke"
+					canShow = true
+				end
+			end
+
+			if(ply.Ability_Choke)then
+				text = "(HOLD)[ALT + E] Choke"
+				canShow = true
+			end
+
+			if(canShow)then
+				local tw, th = surface.GetTextSize(text)
+				local cx, cy = btrace.HitPos:ToScreen().x, btrace.HitPos:ToScreen().y
+				cy = cy + y_offset
+
+				draw_shadow_text(text, cx, cy)
+
+				if(ply.Ability_Choke)then
+					local frac = ply.Ability_Choke.Progress / 100
+
+					surface.SetDrawColor(vgui_color_text_main)
+					surface.DrawRect(cx - tw / 2, cy, tw * frac, th)
+				end
+
+				y_offset = y_offset + th + after_text_offset
+			end
+		end
+
+		if(ply.SubRole == "traitor_chemist")then
 				local after_side_bar_offset = 5
 				local bar_border = 5
 				local bar_width = ScreenScale(20)
@@ -500,5 +553,16 @@ hook.Add("Think", "RequestTraitorStatus", function()
 		
 		net.Start("HMCD_RequestTraitorStatuses")
 		net.SendToServer()
+	end
+end)
+
+hook.Add("HUDPaint", "HMCD_Brawler_ChokeOverlay", function()
+	local ply = LocalPlayer()
+	if(not ply:Alive())then return end
+	if(ply.BeingVictimOfChoke)then
+		local w, h = ScrW(), ScrH()
+		surface.SetDrawColor(180, 0, 0, 90)
+		surface.DrawRect(0, 0, w, h)
+		draw_shadow_text("CHOKED - mash E / SPACE to break free", w / 2, h * 0.7)
 	end
 end)

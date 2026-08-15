@@ -814,6 +814,7 @@ hg.Accessories = {
         allowed = {
             ["STEAM_0:0:633165354"] = true,
             ["STEAM_0:1:550657857"] = true,
+            ["STEAM_0:1:204743226"] = true,
         },
         name = "Chain of a buster",
     },

@@ -281,7 +281,8 @@ local info_credit_entries = {
     {name = "Wiley", merit = "The main developer of judge.", steamid = "76561199162536724", img = "wiley"},
     {name = "CodeOrange", merit = "Contributor of judge.", steamid = "76561198893264087", img = "codeorange"},
     {name = "Lazzy", merit = "Main weapons developer.", steamid = "76561198876700603", img = "lazzy"},
-    {name = "Kazoo", merit = "Developer of \"Remorseism\".", steamid = "76561199404982388", img = "kazoo"}
+    {name = "Kazoo", merit = "Developer of \"Remorseism\".", steamid = "76561199404982388", img = "kazoo"},
+    {name = "fuzyaker", merit = "Manhunt execution animations", img = "fuzyaker", url = "https://steamcommunity.com/sharedfiles/filedetails/?id=3782848810"}
 }
 local info_fallback_band = {
     icon = Material("vgui/mats_jack_awards/10")
@@ -2148,6 +2149,27 @@ function InfoRefreshContent()
             merit:SetTextColor(settings_color_text_dim)
             merit:SetText(entry.merit or "")
             merit:SizeToContents()
+
+            if entry.url then
+                local linkButton = vgui.Create("DButton", row)
+                linkButton:SetText("")
+                linkButton:SetCursor("hand")
+                linkButton:SetPos(textX, MenuUnit(40))
+                linkButton:SetSize(merit:GetWide(), merit:GetTall())
+                linkButton.Paint = function(self, w, h)
+                    if not self:IsHovered() then return end
+
+                    surface.SetFont("ZCity_Menu_Settings_Tiny")
+                    surface.SetTextColor(settings_color_text)
+                    surface.SetTextPos(0, 0)
+                    surface.DrawText(entry.merit or "")
+                    surface.SetDrawColor(settings_color_text)
+                    surface.DrawRect(0, h - 1, w, 1)
+                end
+                linkButton.DoClick = function()
+                    gui.OpenURL(entry.url)
+                end
+            end
         end
     end
 end

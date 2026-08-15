@@ -5,6 +5,42 @@ util.AddNetworkString("HMCD_BreakingOtherNeck")
 util.AddNetworkString("HMCD_BeingVictimOfDisarmament")
 util.AddNetworkString("HMCD_DisarmingOther")
 util.AddNetworkString("HMCD_UpdateChemicalResistance")
+util.AddNetworkString("HMCD_BeingVictimOfChoke")
+util.AddNetworkString("HMCD_ChokingOther")
+util.AddNetworkString("HMCD_ChokeProgress")
+
+--\\Brawler: melee-only enforcement + fragile from behind
+hook.Add("PlayerCanPickupWeapon", "Brawler_MeleeOnly", function(ply, wep)
+	if(ply.SubRole ~= "traitor_brawler")then return end
+	local class = wep:GetClass()
+	if(class == "weapon_hands_sh" or class == "weapon_hg_coolhands")then return end
+
+	local ammo = wep:GetPrimaryAmmoType()
+	if(ammo and ammo ~= 0 and ammo ~= "" and ammo ~= "none")then
+		wep:SetClip1(0)
+		if(wep.SetClip2)then wep:SetClip2(0) end
+		ply:SetAmmo(0, ammo)
+	end
+end)
+
+hook.Add("PlayerSwitchWeapon", "Brawler_MeleeOnly", function(ply, oldw, neww)
+	if(ply.BeingVictimOfChoke)then
+		return true
+	end
+end)
+
+hook.Add("EntityTakeDamage", "Brawler_BackKnockdown", function(ent, dmginfo)
+	if(not IsValid(ent) or not ent:IsPlayer() or not ent:Alive())then return end
+	if(ent.SubRole ~= "traitor_brawler")then return end
+	local att = dmginfo:GetAttacker()
+	if(not IsValid(att) or not att:IsPlayer() or att == ent)then return end
+	local toAtt = (att:GetPos() - ent:GetPos()):GetNormalized()
+	if(ent:GetForward():Dot(toAtt) > 0.2)then return end
+	if((ent.BrawlerKnockCD or 0) > CurTime())then return end
+	ent.BrawlerKnockCD = CurTime() + 2
+	hg.LightStunPlayer(ent, 1.2)
+end)
+--//
 
 --\\Chemical resistance
 	function MODE.NetworkChemicalResistanceOfPlayer(ply)
@@ -65,21 +101,7 @@ hook.Add("PlayerPostThink", "HMCD_SubRoles_Abilities", function(ply)
 					end
 					
 					if(ply:KeyPressed(IN_USE))then
-						local aim_ent, other_ply = MODE.GetPlayerTraceToOther(ply)
-						
-						if(IsValid(aim_ent))then
-							if(other_ply and MODE.CanPlayerBreakOtherNeck(ply, aim_ent))then
-								MODE.StartBreakingOtherNeck(ply, other_ply)
-							end
-						end
-					elseif(ply:KeyDown(IN_USE))then
-						if(ply.Ability_NeckBreak)then
-							MODE.ContinueBreakingOtherNeck(ply)
-						end
-					end
-					
-					if(ply:KeyReleased(IN_USE))then
-						MODE.StopBreakingOtherNeck(ply)
+						if(WWE and WWE.RunMove)then WWE.RunMove(ply, "dl_back") end
 					end
 				else
 					MODE.StopBreakingOtherNeck(ply)
@@ -110,6 +132,99 @@ hook.Add("PlayerPostThink", "HMCD_SubRoles_Abilities", function(ply)
 				end
 			end
 			
+			if(ply.SubRole == "traitor_brawler")then
+				local w = ply:GetActiveWeapon()
+				local cls = IsValid(w) and w:GetClass() or ""
+				local hasHands = (cls == "weapon_hands_sh" or cls == "weapon_hg_coolhands")
+				local wstore = IsValid(w) and weapons.GetStored(cls)
+				local hasMelee = IsValid(w) and not hasHands and (cls == "weapon_hg_fists" or (wstore and wstore.Category == "Weapons - Melee"))
+
+				if(IsValid(w) and cls ~= "weapon_matches")then
+					local ammo = wstore and wstore.Primary and wstore.Primary.Ammo or "none"
+					if(ammo ~= "none")then
+						local clip = w:Clip1()
+						if(ply._brawlerLastWep ~= cls)then
+							ply._brawlerLastClip = clip
+							ply._brawlerLastWep = cls
+						end
+						local reserve = ply:GetAmmoCount(w:GetPrimaryAmmoType())
+						local prev = ply._brawlerLastClip or 0
+						if(prev > 0 and clip == 0 and reserve == 0)then
+							ply:DropWeapon(w)
+							ply._brawlerLastClip = nil
+							ply._brawlerLastWep = nil
+						end
+					else
+						ply._brawlerLastClip = nil
+						ply._brawlerLastWep = nil
+					end
+				else
+					ply._brawlerLastClip = nil
+					ply._brawlerLastWep = nil
+				end
+
+				if(ply:KeyDown(IN_WALK))then
+					if(hasHands)then
+						if(ply:KeyPressed(IN_USE))then
+							local aim_ent, other_ply = MODE.GetPlayerTraceToOther(ply, nil, 100)
+
+							if(IsValid(aim_ent) and other_ply and MODE.CanPlayerChokeOther(ply, aim_ent))then
+								MODE.StartChokingOther(ply, other_ply)
+							end
+						elseif(ply:KeyDown(IN_USE))then
+							if(ply.Ability_Choke)then
+								MODE.ContinueChokingOther(ply)
+							end
+						end
+
+						if(ply:KeyReleased(IN_USE))then
+							MODE.StopChokingOther(ply)
+						end
+					elseif(hasMelee)then
+					if(ply:KeyPressed(IN_USE))then
+						local aim_ent, other_ply = MODE.GetPlayerTraceToOther(ply, nil, 160)
+
+						if(IsValid(other_ply) and other_ply:IsPlayer() and other_ply:Alive()
+							and not (IsValid(other_ply.FakeRagdoll) or IsValid(other_ply:GetNWEntity("FakeRagdoll"))))then
+
+							local behindVec = ply:GetPos() - other_ply:GetPos()
+							behindVec.z = 0
+							local isBehind = behindVec:LengthSqr() > 1 and behindVec:GetNormalized():Dot(Angle(0, other_ply:EyeAngles().yaw, 0):Forward()) <= -0.4
+
+							if(isBehind)then
+								local name = (MH and MH.PickKill) and MH.PickKill(ply) or nil
+
+								if(name)then
+									local ok, err = MH.Play(ply, other_ply, name)
+
+									if(not ok and IsValid(ply))then
+										ply:ChatPrint("[Manhunt] " .. tostring(err or "execution failed"))
+									end
+								end
+							end
+						end
+					end
+					end
+				else
+					MODE.StopChokingOther(ply)
+				end
+			end
+
+			if(ply.SubRole == "traitor_martialartist")then
+				if(ply:KeyDown(IN_WALK) and ply:KeyPressed(IN_USE))then
+					if(ply.Ability_Choke)then return end
+
+					local moves = {}
+					for _, m in ipairs(MODE.MAMoves and MODE.MAMoves or {}) do
+						if(m.dir == "back")then moves[#moves + 1] = m.id end
+					end
+					if(#moves == 0)then return end
+
+					local moveId = moves[math.random(#moves)]
+					if(WWE and WWE.RunMove)then WWE.RunMove(ply, moveId) end
+				end
+			end
+
 			if(ply.SubRole == "traitor_zombie")then
 				if(ply:KeyDown(IN_WALK))then
 					

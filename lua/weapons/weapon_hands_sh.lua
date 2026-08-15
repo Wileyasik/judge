@@ -523,6 +523,20 @@ function SWEP:SetHandPos(noset)
 		hg.DragHandsToPos(ply, ply:GetActiveWeapon(), head, true, 2, ang:Forward(), ang4, ang5)
 	end
 
+	local choke_data = ply.Ability_Choke
+
+	if(choke_data and IsValid(choke_data.Victim))then
+		local victim = choke_data.Victim
+		local poseEnt = (IsValid(victim.FakeRagdoll) and victim.FakeRagdoll) or victim
+		local head, anga = poseEnt:GetBonePosition(poseEnt:LookupBone("ValveBiped.Bip01_Head1"))
+		head = head + anga:Right() * -3 + anga:Forward() * 2 + anga:Up() * (choke_data.Progress / 25)
+		local ang = victim:EyeAngles()
+
+		ang[2] = ang[2] - choke_data.Progress / 8
+
+		hg.DragHandsToPos(ply, ply:GetActiveWeapon(), head, true, 2, ang:Forward(), ang4, ang5)
+	end
+
 	local ang = ply:EyeAngles()
 
 	local rhmat, lhmat = ply:GetBoneMatrix(ply:LookupBone("ValveBiped.Bip01_R_Hand")), ply:GetBoneMatrix(ply:LookupBone("ValveBiped.Bip01_L_Hand"))
