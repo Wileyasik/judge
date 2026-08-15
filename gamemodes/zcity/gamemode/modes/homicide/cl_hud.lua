@@ -121,21 +121,29 @@ hook.Add("HUDPaint", "HMCD_SubRoles_Abilities", function()
 				local isBehind = behindVec:LengthSqr() > 1 and behindVec:GetNormalized():Dot(Angle(0, other_ply:EyeAngles().yaw, 0):Forward()) <= -0.4
 
 				if(ply.SubRole == "traitor_martialartist")then
-					if(isBehind)then
-						text = "(HOLD)[ALT + E] Martial Arts"
-						canShow = true
-					end
-				elseif(hasMelee and isBehind)then
-					text = "(HOLD)[ALT + E] Execute"
+				if(isBehind)then
+					text = "[ALT + E] Martial Arts knockdown"
+					canShow = true
+				else
+					text = "[ALT + E] Martial Arts disarm"
+					canShow = true
+				end
+			elseif(hasMelee and isBehind)then
+					text = "[ALT + E] Execute"
 					canShow = true
 				elseif(hasHands and isBehind)then
-					text = "(HOLD)[ALT + E] Choke"
+					text = "[ALT + E] Choke"
 					canShow = true
 				end
 			end
 
 			if(ply.Ability_Choke)then
 				text = "(HOLD)[ALT + E] Choke"
+				canShow = true
+			end
+
+			if(ply.SubRole == "traitor_martialartist" and IsValid(other_ply) and other_ply:IsPlayer() and other_ply:Alive() and IsValid(other_ply:GetNWEntity("FakeRagdoll")))then
+				text = "[ALT + E] Giantswing"
 				canShow = true
 			end
 

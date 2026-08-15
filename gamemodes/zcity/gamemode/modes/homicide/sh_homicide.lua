@@ -116,6 +116,10 @@ local function ApplyTraitorLoadout(ply)
 		if CleanChemicalsOfPlayer then CleanChemicalsOfPlayer(ply) end
 	elseif skillset == "martialartist" then
 		ply.organism.stamina.max = 340
+		ply.organism.legstrength = 1.5		-- stronger kicks
+		ply.organism.meleespeed = 1.35		-- faster fists
+		ply.organism.painresist = 0.6		-- pain resistance
+		ply.MeleeDamageMul = 1.4			-- stronger fists and nunchaku
 		ply:Give("weapon_hg_nunchuks")
 	elseif skillset == "brawler" then
 		ply.organism.stamina.max = 300

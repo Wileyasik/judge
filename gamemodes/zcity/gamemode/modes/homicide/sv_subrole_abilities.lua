@@ -214,9 +214,24 @@ hook.Add("PlayerPostThink", "HMCD_SubRoles_Abilities", function(ply)
 				if(ply:KeyDown(IN_WALK) and ply:KeyPressed(IN_USE))then
 					if(ply.Ability_Choke)then return end
 
+					-- aimed at a ragdoll lying on the floor? pick it up with a giantswing
+					if(WWE and WWE.moves and WWE.moves.mw_giantswing)then
+						if(WWE.RunMove(ply, "mw_giantswing"))then return end
+					end
+
+					-- pick a move suited to our position relative to the target (front / back)
+					local wantDir = "back"
+					local action_ent, action_ply = MODE.GetPlayerTraceToOther(ply, nil, 160)
+					if(IsValid(action_ply) and action_ply:IsPlayer() and action_ply:Alive())then
+						local behindVec = ply:GetPos() - action_ply:GetPos()
+						behindVec.z = 0
+						local isBehind = behindVec:LengthSqr() > 1 and behindVec:GetNormalized():Dot(Angle(0, action_ply:EyeAngles().yaw, 0):Forward()) <= -0.4
+						wantDir = isBehind and "back" or "front"
+					end
+
 					local moves = {}
 					for _, m in ipairs(MODE.MAMoves and MODE.MAMoves or {}) do
-						if(m.dir == "back")then moves[#moves + 1] = m.id end
+						if(m.dir == wantDir)then moves[#moves + 1] = m.id end
 					end
 					if(#moves == 0)then return end
 

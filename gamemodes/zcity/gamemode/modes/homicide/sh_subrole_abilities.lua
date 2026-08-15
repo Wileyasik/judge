@@ -563,6 +563,8 @@ hook.Add("PlayerSwitchWeapon", "HMCD_SubRole_Abilities", function(ply)
 end)
 
 MODE.MAMoves = {
+    { id = "mw_giantswing", name = "Floor Giantswing", dir = "floor" },
+    { id = "mw_dyli_front", name = "Dying Light Front", dir = "front" },
     { id = "mw_suplex",    name = "Suplex Deluxe", dir = "back" },
     { id = "mw_necktrauma", name = "Neck Trauma",   dir = "back" },
     { id = "mw_cagematch", name = "Cage Match", dir = "back" },
