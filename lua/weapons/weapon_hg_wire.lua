@@ -206,6 +206,45 @@ local function ComputeVoiceEffectForPlayer(ply)
     return effNone
 end
 
+local FIBERWIRE_VICTIM_SOUNDS = {
+    "painSounds/choking1.mp3",
+    "painSounds/choking2.mp3",
+    "painSounds/choking3.mp3",
+    "painSounds/choking4.mp3",
+    "painSounds/choking5.mp3",
+    "painSounds/choking6.mp3",
+    "painSounds/choking7.mp3",
+    "painSounds/choking8.mp3",
+    "painSounds/choking9.mp3",
+    "painSounds/choking10.mp3",
+    "painSounds/choking11.mp3",
+    "painSounds/choking12.mp3",
+    "painSounds/choking13.mp3",
+    "painSounds/choking14.mp3",
+}
+
+local function PlayFiberwireVictimSound(self, rag, victim)
+    if not IsValid(rag) or not IsValid(victim) or not victim:Alive() then return end
+    if victim.organism and victim.organism.otrub then
+        if self.FiberwireVictimSound then rag:StopSound(self.FiberwireVictimSound) end
+        self.FiberwireVictimSound = nil
+        self.nextFiberwireVictimSound = CurTime() + 1
+        return
+    end
+
+    if self.FiberwireVictimSound then rag:StopSound(self.FiberwireVictimSound) end
+    if hg and hg.StopPainScream then hg.StopPainScream(victim, 0.1) end
+
+    local phrase = FIBERWIRE_VICTIM_SOUNDS[math.random(#FIBERWIRE_VICTIM_SOUNDS)]
+    local pitch = math.Clamp(victim.VoicePitch or 100, 85, 115)
+    rag:EmitSound(phrase, 72, pitch, 0.9, CHAN_VOICE)
+
+    self.FiberwireVictimSound = phrase
+    local duration = SoundDuration(phrase)
+    if duration <= 0 then duration = 1.5 end
+    self.nextFiberwireVictimSound = CurTime() + duration + math.Rand(0.5, 1.2)
+end
+
 local function WriteFiberwireKarma(self, rag, hitgroup, harm, dmginfo)
     if CLIENT then return end
     if not zb then return end
@@ -323,6 +362,7 @@ local function StartStrangle(self, victim)
 
     -- === НОВОЕ: инициализация звуков ===
     self.nextBreathSound = CurTime() + math.Rand(3, 5)
+    self.nextFiberwireVictimSound = CurTime() + 0.15
     self.breathStage = 0        -- 0 = вдохи, 1 = агональное дыхание
     self.inhaleCount = 0
     
@@ -467,8 +507,14 @@ local function StopStrangle(self)
 
     -- === НОВОЕ: сброс звуковых переменных ===
     self.nextBreathSound = nil
+    self.nextFiberwireVictimSound = nil
     self.breathStage = nil
     self.inhaleCount = nil
+
+    if IsValid(rag) and self.FiberwireVictimSound then
+        rag:StopSound(self.FiberwireVictimSound)
+    end
+    self.FiberwireVictimSound = nil
 
     if self.suffocationSound then
         self.suffocationSound:Stop()
@@ -850,6 +896,10 @@ function SWEP:CustomThink()
     if IsValid(rag) then
         local ragPly = hg.RagdollOwner and hg.RagdollOwner(rag)
         if IsValid(ragPly) and ragPly:IsPlayer() then
+            if CurTime() >= (self.nextFiberwireVictimSound or 0) then
+                PlayFiberwireVictimSound(self, rag, ragPly)
+            end
+
             if not (ragPly.organism and ragPly.organism.lungsfunction == false) then
                 if CurTime() >= (self.nextBreathSound or 0) then
                     local soundToPlay

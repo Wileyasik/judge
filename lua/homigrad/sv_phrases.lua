@@ -10,11 +10,13 @@ local painPhrases = {
 local bigPainPhrases = {
 	[1] = {
 		{"vo/npc/male01/pain", ".wav", 7, 9},
+		{"painSounds/bigPain", ".mp3", 1, 7, true},
 	},
 	[2] = {
 		{"vo/npc/female01/pain", ".wav", 9, 9},
 		{"vo/npc/female01/pain", ".wav", 6, 6},
 		{"vo/npc/female01/ow", ".wav", 2, 2},
+		{"painSounds/bigFemalePain", ".mp3", 1, 4, true},
 	}
 }
 
@@ -331,7 +333,7 @@ net.Receive("hg_phrase", function(len, ply)
 		random = mRandom(phr[3], phr[4])
 	end
 
-	local huy = random < 10 and "0" or ""
+	local huy = random < 10 and not phr[5] and "0" or ""
 	local phrase = phr[1] .. huy .. random .. phr[2]
 	local ent = hg.GetCurrentCharacter(ply)
 	local muffed = false
@@ -417,9 +419,24 @@ local painScreamFolders = {
 	}
 }
 local painScreamSounds = {
-	"screams/universal1/screamOne.mp3",
-	"screams/universal1/screamTwo.mp3",
-	"screams/universal1/screamThree.mp3",
+	[false] = {
+		"screams/universal1/screamOne.mp3",
+		"screams/universal1/screamTwo.mp3",
+		"screams/universal1/screamThree.mp3",
+		"painSounds/bigPain1.mp3",
+		"painSounds/bigPain2.mp3",
+		"painSounds/bigPain3.mp3",
+		"painSounds/bigPain4.mp3",
+		"painSounds/bigPain5.mp3",
+		"painSounds/bigPain6.mp3",
+		"painSounds/bigPain7.mp3",
+	},
+	[true] = {
+		"painSounds/bigFemalePain1.mp3",
+		"painSounds/bigFemalePain2.mp3",
+		"painSounds/bigFemalePain3.mp3",
+		"painSounds/bigFemalePain4.mp3",
+	},
 }
 local painScreamUniversalChance = 0.5
 local burnScreamSounds = {
@@ -557,7 +574,8 @@ local function playPainScream(ply)
 
 	local phrase
 	if mRandom(1, 100) <= mClamp(painScreamUniversalChance, 0, 1) * 100 then
-		phrase = painScreamSounds[mRandom(#painScreamSounds)]
+		local sounds = painScreamSounds[ThatPlyIsFemale(ply)] or painScreamSounds[false]
+		phrase = sounds[mRandom(#sounds)]
 	else
 		local prefix = string.match(folder, "^(female)") or string.match(folder, "^(male)") or folder
 		phrase = "screams/" .. folder .. "/rem_" .. prefix .. "partial" .. mRandom(1, 4) .. ".mp3"
