@@ -7,6 +7,10 @@ MODE.ROUND_TIME = 480
 
 MODE.Chance = 0.05
 
+function MODE:OverrideBalance()
+	return true
+end
+
 function MODE.GuiltCheck(Attacker, Victim, add, harm, amt)
 	return 1, true--returning true so guilt bans
 end
@@ -20,7 +24,12 @@ function shuffle(tbl)
 end
 
 function MODE:AssignTeams()
-	local players = player.GetAll()
+	local players = {}
+	for _, ply in player.Iterator() do
+		if ply:Team() ~= TEAM_SPECTATOR then
+			players[#players + 1] = ply
+		end
+	end
 	local numPlayers = #players
 	local numSWAT = 1
 
@@ -58,14 +67,26 @@ function MODE:Intermission()
     self:AssignTeams()
 
 	self.submode = math.random(2) == 1 and "sobr" or "us"
+	self.swatDeployed = false
+	self.preparationActive = true
+	self.preparationTime = self.submode == "us" and 60 or 30
 	
 	for k, ply in player.Iterator() do
-		if ply:Team() == TEAM_SPECTATOR or ply:Team() == 0 then ply:KillSilent() continue end
-		ply:SetupTeam(ply:Team())
+		if ply:Team() == TEAM_SPECTATOR then continue end
+		if ply:Team() == 0 then
+			ply:KillSilent()
+			continue
+		end
+
+		ply.crirespDeploying = true
+		ply:Spawn()
+		ply.crirespDeploying = nil
+		ply:SetupTeam(1)
 	end
 
 	net.Start("criresp_start")
 	net.WriteString(self.submode)
+	net.WriteUInt(self.preparationTime, 7)
 	net.Broadcast()
 
 end
@@ -86,7 +107,7 @@ function MODE:CheckAlivePlayers()
 		end
 	end
 
-	return {swatPlayers, banditPlayers}
+	return {[0] = swatPlayers, [1] = banditPlayers}
 end
 
 
@@ -94,7 +115,7 @@ end
 
 
 function MODE:ShouldRoundEnd()
-	if zb.ROUND_START + 91 > CurTime() then return end
+	if not self.swatDeployed then return end
 	local aliveTeams = self:CheckAlivePlayers()
 	local endround, winner = zb:CheckWinner(aliveTeams)
 	return endround
@@ -254,45 +275,57 @@ function MODE:GiveEquipment()
 				swatCount = swatCount + 1
 
 				if !IsValid(ply) or ply:Team() == TEAM_SPECTATOR then continue end
-				ply:Spawn()
-				ply:SetSuppressPickupNotices(true)
-				ply.noSound = true
+				local timerName = "SWATSpawn" .. ply:EntIndex()
+				local preparationTime = self.preparationTime or (submode == "us" and 60 or 30)
+				timer.Create(timerName, preparationTime, 1, function()
+					if not IsValid(ply) or CurrentRound() ~= self or self.submode ~= submode or ply:Team() ~= 0 then return end
 
-				ply:SetupTeam(ply:Team())
+					ply.crirespDeploying = true
+					ply:Spawn()
+					ply.crirespDeploying = nil
+					ply:SetSuppressPickupNotices(true)
+					ply.noSound = true
+					ply:SetupTeam(0)
+					ply:SetPlayerClass("swat")
 
-				ply:SetPlayerClass("swat")
+					local inv = ply:GetNetVar("Inventory", {})
+					inv["Weapons"] = inv["Weapons"] or {}
+					inv["Weapons"]["hg_sling"] = true
+					ply:SetNetVar("Inventory", inv)
 
-				local inv = ply:GetNetVar("Inventory")
-				inv["Weapons"]["hg_sling"] = true
-				ply:SetNetVar("Inventory",inv)
-
-				hg.AddArmor(ply, preset.armor)
-				if not preset.noheadphones then
-					hg.AddArmor(ply, "headphones1")
-				end
-
-				zb.GiveRole(ply, submode == "sobr" and "SOBR" or "US Special Forces", submode == "sobr" and Color(0,0,190) or Color(0,90,190))
-
-				if preset.primary then
-					self:GiveWeaponWithAmmo(ply, preset.primary, 3, preset.atts)
-				end
-
-				if preset.secondary then
-					self:GiveWeaponWithAmmo(ply, preset.secondary, 2)
-				end
-
-				for _, item in ipairs(preset.items) do
-					local w = ply:Give(item)
-					if preset.nodrop and table.HasValue(preset.nodrop, item) and IsValid(w) then
-						w.NoDrop = true
-						w.bigNoDrop = true
+					hg.AddArmor(ply, preset.armor)
+					if not preset.noheadphones then
+						hg.AddArmor(ply, "headphones1")
 					end
-				end
 
-				local hands = ply:Give("weapon_hands_sh")
+					zb.GiveRole(ply, submode == "sobr" and "SOBR" or "US Special Forces", submode == "sobr" and Color(0,0,190) or Color(0,90,190))
 
-				ply:SetSuppressPickupNotices(false)
-				ply.noSound = false
+					if preset.primary then
+						self:GiveWeaponWithAmmo(ply, preset.primary, 3, preset.atts)
+					end
+
+					if preset.secondary then
+						self:GiveWeaponWithAmmo(ply, preset.secondary, 2)
+					end
+
+					for _, item in ipairs(preset.items) do
+						local w = ply:Give(item)
+						if preset.nodrop and table.HasValue(preset.nodrop, item) and IsValid(w) then
+							w.NoDrop = true
+							w.bigNoDrop = true
+						end
+					end
+
+					if submode == "us" and not ply:HasWeapon("weapon_medkit_sh") then
+						ply:Give("weapon_medkit_sh")
+					end
+
+					ply:Give("weapon_hands_sh")
+					ply:SetSuppressPickupNotices(false)
+					ply.noSound = false
+					self.swatDeployed = true
+					self.preparationActive = false
+				end)
 			else
 				local preset = crimPresets[crimIdx[(crimCount % #crimIdx) + 1]]
 				crimCount = crimCount + 1
@@ -362,6 +395,9 @@ end
 
 util.AddNetworkString("cri_roundend")
 function MODE:EndRound()
+	self.preparationActive = false
+	self.swatDeployed = false
+
 	if zb.SKIP_END_PRESENTATION then
 		zb.SKIP_END_PRESENTATION = false
 		zb.SHOULD_FADE = true
@@ -375,10 +411,12 @@ function MODE:EndRound()
 	end
 
 	local endround, winner = zb:CheckWinner(self:CheckAlivePlayers())
+	-- Criminals defend the map, so they win if time expires or both teams are eliminated.
+	if winner ~= 0 and winner ~= 1 then winner = 1 end
 
 	timer.Simple(2,function()
 		net.Start("cri_roundend")
-			net.WriteBool(winner)
+			net.WriteBool(winner == 1)
 		net.Broadcast()
 	end)
 
@@ -393,4 +431,14 @@ function MODE:EndRound()
 end
 
 function MODE:PlayerDeath(ply)
+end
+
+function MODE:PlayerSpawn(ply)
+	if not self.preparationActive or ply:Team() ~= 0 or self.swatDeployed or ply.crirespDeploying then return end
+
+	timer.Simple(0, function()
+		if IsValid(ply) and ply:Alive() and CurrentRound() == self and not self.swatDeployed then
+			ply:KillSilent()
+		end
+	end)
 end

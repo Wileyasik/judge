@@ -104,6 +104,8 @@ local keydownreload
 
 hook.Add("HUDPaint","FUCKINGSAMENAMEUSEDINHOOKFUCKME",function()
     if LocalPlayer():Alive() then return end
+	local round = CurrentRound and CurrentRound()
+	if round and round.name == "criresp" and (zb.ROUND_START or 0) + 10 > CurTime() then return end
 	local spect = LocalPlayer():GetNWEntity("spect")
 	if not IsValid(spect) then return end
 	if viewmode == 3 then return end
