@@ -125,6 +125,15 @@ if CLIENT then
 
 	end	
 
+	local swatTorsoArmorScale = 1.08
+	local swatHelmetOffset = Vector(0, 0, 1)
+	local swatHelmetPlacements = {
+		["helmet"] = true,
+		["visor"] = true,
+		["helmet_jaw"] = true,
+		["helmet_ears"] = true
+	}
+
 	function DrawArmors(ply, armors, ent)
 		if not IsValid(ply) or not armors then return end
 		if blmodels[ply:GetModel()] then return end
@@ -142,6 +151,8 @@ if CLIENT then
 
 			ply.modelArmor = ply.modelArmor or {}
 			local fem = ThatPlyIsFemale(ent)
+			local wearerScale = placement == "torso" and ply.PlayerClassName == "swat" and swatTorsoArmorScale or 1
+			local armorScale = ((fem and armorData.femscale) or armorData.scale or 1) * wearerScale
 
 			if not IsValid(ply.modelArmor[armor]) then
 				local model = ClientsideModel(ply:GetNWString("ArmorModel" .. armor) or armorData["model"])
@@ -149,7 +160,7 @@ if CLIENT then
 				if not IsValid(model) then continue end
 				ply.modelArmor[armor] = model
 				model:SetNoDraw(true)
-				model:SetModelScale((fem and armorData.femscale) or armorData.scale or 1)
+				model:SetModelScale(armorScale)
 				local fallback_mat = istable(armorData.material) and armorData.material[1] or armorData.material
 				if model.materialset != ply:GetNWString("ArmorMaterials" .. armor, fallback_mat) then
 					model.materialset = ply:GetNWString("ArmorMaterials" .. armor, fallback_mat)
@@ -182,7 +193,7 @@ if CLIENT then
 					if not IsValid(omodel) then omodel = ClientsideModel(armorData["model"]) end
 					if IsValid(omodel) then
 						omodel:SetNoDraw(true)
-						omodel:SetModelScale(((fem and armorData.femscale) or armorData.scale or 1) * 1.01)
+						omodel:SetModelScale(armorScale * 1.01)
 						omodel:SetSubMaterial(0, "armor/brokenarmor")
 						omodel:SetRenderMode(RENDERMODE_TRANSALPHA)
 						omodel:SetColor(Color(255, 255, 255, 0))
@@ -205,7 +216,7 @@ if CLIENT then
 					if not IsValid(ply.modelArmorExtra[armor][index]) then
 						local extraModel = ClientsideModel(extraData.model)
 						extraModel:SetNoDraw(true)
-						extraModel:SetModelScale((fem and extraData.femscale) or extraData.scale or 1)
+						extraModel:SetModelScale(((fem and extraData.femscale) or extraData.scale or 1) * wearerScale)
 						if extraData.material then extraModel:SetMaterial(extraData.material) end
 						if extraData.skin ~= nil then extraModel:SetSkin(extraData.skin) end
 						if not extraData.nobonemerge then extraModel:AddEffects(EF_BONEMERGE) end
@@ -227,6 +238,7 @@ if CLIENT then
 			local model = ply.modelArmor[armor]
 			
 			if not IsValid(model) then return end
+			model:SetModelScale(armorScale)
 			if armorData.toggleableVisor then
 				model:SetBodygroup(0, hg.IsVisorLowered(ent, armor, armorData) and 0 or 1)
 			end
@@ -249,6 +261,9 @@ if CLIENT then
 			local femPos = armorData.femPos or vector_origin
 			bonePos:Add(boneAng:Forward() * (fem and femPos[1] or 0) + boneAng:Up() * (fem and femPos[2] or 0) + boneAng:Right() * (fem and femPos[3] or 0))
 			local pos, ang = LocalToWorld(armorData[3], armorAng, bonePos, boneAng)
+			if swatHelmetPlacements[placement] and ply.PlayerClassName == "swat" then
+				pos:Add(swatHelmetOffset)
+			end
 			model:SetRenderOrigin(pos)
 			model:SetRenderAngles(ang)
 			model:SetParent(ent, bone)
@@ -262,6 +277,7 @@ if CLIENT then
 			for index, extraData in ipairs(extraModelsData or {}) do
 				local extraModel = ply.modelArmorExtra and ply.modelArmorExtra[armor] and ply.modelArmorExtra[armor][index]
 				if IsValid(extraModel) and not (islply and (extraData.norender or armorData.norender)) then
+					extraModel:SetModelScale(((fem and extraData.femscale) or extraData.scale or 1) * wearerScale)
 					local extraLocalAng = (fem and extraData.femAng) or extraData.ang or angle_zero
 					local extraBone = ent:LookupBone(extraData.bone or armorData.bone)
 					local extraMatrix = extraBone and ent:GetBoneMatrix(extraBone)
@@ -270,6 +286,9 @@ if CLIENT then
 					local extraFemPos = extraData.femPos or vector_origin
 					extraBonePos:Add(extraBoneAng:Forward() * (fem and extraFemPos[1] or 0) + extraBoneAng:Up() * (fem and extraFemPos[2] or 0) + extraBoneAng:Right() * (fem and extraFemPos[3] or 0))
 					local extraPos, extraAng = LocalToWorld(extraData.pos or vector_origin, extraLocalAng, extraBonePos, extraBoneAng)
+					if swatHelmetPlacements[placement] and ply.PlayerClassName == "swat" then
+						extraPos:Add(swatHelmetOffset)
+					end
 					extraModel:SetRenderOrigin(extraPos)
 					extraModel:SetRenderAngles(extraAng)
 					extraModel:SetParent(ent, extraBone)
@@ -279,6 +298,7 @@ if CLIENT then
 
 			local omodel = ply.modelArmorBroken and ply.modelArmorBroken[armor]
 			if IsValid(omodel) then
+				omodel:SetModelScale(armorScale * 1.01)
 				if armorData.toggleableVisor then
 					omodel:SetBodygroup(0, hg.IsVisorLowered(ent, armor, armorData) and 0 or 1)
 				end
