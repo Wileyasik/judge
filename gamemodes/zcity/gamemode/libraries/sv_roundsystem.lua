@@ -13,7 +13,8 @@ local ZB_FORCED_TEMP_MODE_WEIGHTS = {
         ["hmcd"] = 0.85,
         ["dm"] = 0.1,
         ["tdm"] = 0.05,
-        ["riot"] = 0.05
+        ["riot"] = 0.05,
+        ["criresp"] = 0.05
 }
 local ZB_FORCED_MODE_POOL = {
         ["hmcd"] = true,
@@ -23,7 +24,8 @@ local ZB_FORCED_MODE_POOL = {
 	["dm"] = true,
 	["tdm"] = true,
 	["riot"] = true,
-	["juggernaut"] = true
+	["juggernaut"] = true,
+	["criresp"] = true
 }
 local ZB_NO_BACK_TO_BACK_MODES = {
 	["dm"] = true,

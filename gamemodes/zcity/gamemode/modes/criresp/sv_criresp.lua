@@ -1,5 +1,6 @@
 MODE.name = "criresp"
 MODE.PrintName = "Crisis Response"
+MODE.end_time = 7
 
 MODE.ForBigMaps = false
 MODE.ROUND_TIME = 480
@@ -55,6 +56,8 @@ function MODE:Intermission()
 	game.CleanUpMap()
     
     self:AssignTeams()
+
+	self.submode = math.random(2) == 1 and "sobr" or "us"
 	
 	for k, ply in player.Iterator() do
 		if ply:Team() == TEAM_SPECTATOR or ply:Team() == 0 then ply:KillSilent() continue end
@@ -62,6 +65,7 @@ function MODE:Intermission()
 	end
 
 	net.Start("criresp_start")
+	net.WriteString(self.submode)
 	net.Broadcast()
 
 end
@@ -102,57 +106,126 @@ function MODE:RoundStart()
     
 end
 
-local tblweps = {
-	[0] = { 
-		{"weapon_m4a1", {"grip3","laser4"} },
-		{"weapon_hk416", {"grip3","laser4"} },
-		{"weapon_p90", {} },
-		{"weapon_mp7", {"holo14"} },
-		{"weapon_m4a1", {"optic2","grip3","supressor7"} }
+local SWAT_PRESETS = {
+	sobr = {
+		{ name = "Light Medic",
+			primary = "weapon_pp1901", atts = {"holo2", "supressor1"},
+			secondary = "weapon_pl15",
+			armor = {"ent_armor_vest_sobr3", "ent_armor_helmet_sobr3"},
+			items = {"weapon_medkit_sh", "weapon_morphine", "weapon_adrenaline", "weapon_bigbandage_sh", "weapon_bandage_sh", "weapon_tourniquet"} },
+		{ name = "Breacher",
+			primary = "weapon_sr2", atts = {"holo7", "supressor1"},
+			secondary = "weapon_pl15",
+			armor = {"ent_armor_vest_sobr2", "ent_armor_helmet_sobr2", "ent_armor_visor_sobr2"},
+			items = {"weapon_ram", "weapon_hg_smokenade", "weapon_hg_eft_zarya"},
+			nodrop = {"weapon_ram"} },
+		{ name = "Heavy",
+			primary = "weapon_akz", atts = {"muzzle_545_recoil_2", "holo12", "stock_ak_evo"},
+			secondary = "weapon_pl15",
+			armor = {"ent_armor_vest_sobr1", "ent_armor_helmet_sobr2"},
+			items = {"weapon_hg_eft_zarya", "weapon_hg_eft_rgd5"} },
+		{ name = "Shield",
+			primary = "weapon_ballistic_shield",
+			secondary = "weapon_pl15",
+			armor = {"ent_armor_vest_sobr1", "ent_armor_helmet_sobr1", "ent_armor_visor_sobr1"},
+			items = {} },
 	},
-	[1] = { 
-		"weapon_deagle",
-		"weapon_glock17",
-		"weapon_revolver2",
-		"weapon_p22",
-		"weapon_revolver2",
-		"weapon_hk_usp",
-		"weapon_mac11",
-		"weapon_skorpion",
-	}
+	us = {
+		{ name = "Light Medic",
+			primary = "weapon_mp5sd", atts = {"holo14"},
+			secondary = "weapon_glock17",
+			armor = {"ent_armor_vest8", "ent_armor_helmet10"},
+			items = {"weapon_medkit_sh", "weapon_morphine", "weapon_adrenaline", "weapon_bigbandage_sh", "weapon_bandage_sh", "weapon_tourniquet"} },
+		{ name = "Breacher",
+			primary = "weapon_tx15", atts = {"holo8", "muzzle_556_recoil_1", "grip6"},
+			secondary = "weapon_glock17",
+			armor = {"ent_armor_vest12", "ent_armor_helmet15", "ent_armor_visor_caiman", "ent_armor_mandible_caiman"},
+			items = {"weapon_ram", "weapon_hg_smokenade", "weapon_hg_eft_m67"},
+			nodrop = {"weapon_ram"} },
+		{ name = "Heavy",
+			primary = "weapon_m4a1", atts = {"optic14", "stock_ar15_dd_enhanced", "supressor5"},
+			secondary = "weapon_glock17",
+			armor = {"ent_armor_helmet13", "ent_armor_vest11"},
+			items = {"weapon_hg_eft_m67", "weapon_hg_eft_m7920"} },
+		{ name = "Shield",
+			primary = "weapon_ballistic_shield",
+			secondary = "weapon_glock18c",
+			armor = {"ent_armor_vest17", "ent_armor_helmet13", "ent_armor_visor_exfil_black", "ent_armor_earcovers_exfil_black"},
+			items = {},
+			noheadphones = true },
+	},
 }
 
-local tblotheritems = {
-	[0] = { 
-		"weapon_medkit_sh", 
-		"weapon_tourniquet",
-		"weapon_walkie_talkie",
-        "weapon_combatknife",
-		"weapon_handcuffs",
-		"weapon_hg_flashbang_tpik"
+local CRIM_PRESETS = {
+	sobr = {
+		{ name = "Medic",
+			armor = {"ent_armor_vest5", "ent_armor_mask5"},
+			items = {"weapon_medkit_sh", "weapon_morphine", "weapon_adrenaline", "weapon_bigbandage_sh", "weapon_bandage_sh", "weapon_tourniquet"} },
+		{ name = "Medium",
+			armor = {"ent_armor_vest9"},
+			items = {} },
+		{ name = "Heavy",
+			primary = "weapon_akm", atts = {"mag6"}, nostock = true,
+			armor = {"ent_armor_helmet29", "ent_armor_visor_maska", "ent_armor_vest10"},
+			items = {"weapon_hg_pipebomb_tpik"} },
 	},
-	[1] = { 
-		"weapon_bigconsumable", 
-		"weapon_bandage_sh",
-		"weapon_painkillers_tpik",
-		"weapon_betablock_tpik",
-		"weapon_thiamine_tpik",
-        "weapon_sogknife",
-		"weapon_ducttape",
-		"weapon_hammer"
-
-	}
+	us = {
+		{ name = "Medic",
+			armor = {"ent_armor_vest2", "ent_armor_helmet20", "ent_armor_mask5"},
+			items = {"weapon_medkit_sh", "weapon_morphine", "weapon_adrenaline", "weapon_bigbandage_sh", "weapon_bandage_sh", "weapon_tourniquet"} },
+		{ name = "Standard",
+			armor = {"ent_armor_vest26"},
+			items = {} },
+		{ name = "Heavy",
+			primary = "weapon_m3super",
+			armor = {"ent_armor_mask5", "ent_armor_vest26"},
+			items = {"weapon_hg_type59_tpik"} },
+	},
 }
 
-
-local tblarmors = {
-	[0] = { 
-		{"ent_armor_vest8","ent_armor_helmet6"} 
-	},
-	[1] = { 
-		{"ent_armor_vest8","ent_armor_helmet6"} 
-	}
+local CRIM_RANDOM_PRIMARIES_SOBR = {
+	"weapon_ak74", "weapon_vpo136", "weapon_vpo209", "weapon_svt",
+	"weapon_toz106", "weapon_m590a1", "weapon_mp5", "weapon_mp5k",
+	"weapon_mp9", "weapon_uzi", "weapon_p90", "weapon_skorpion"
 }
+
+local CRIM_RANDOM_SECONDARIES_SOBR = {
+	"weapon_pb", "weapon_zoraki", "weapon_p22", "weapon_px4beretta",
+	"weapon_revolver2", "weapon_revolver357", "weapon_glock17"
+}
+
+local CRIM_RANDOM_PRIMARIES_US = {
+	"weapon_adar215", "weapon_vpo101", "weapon_sks", "weapon_stm9",
+	"weapon_vpo136", "weapon_m590a1", "weapon_870", "weapon_kedr",
+	"weapon_uzi", "weapon_mp5k", "weapon_mp9"
+}
+
+local CRIM_RANDOM_SECONDARIES_US = {
+	"weapon_glock17", "weapon_glock18c", "weapon_glock26",
+	"weapon_m9beretta", "weapon_colt9mm"
+}
+
+local CRIM_SHARED_ITEMS = {
+	"weapon_combatknife", "weapon_bandage_sh", "weapon_painkillers_tpik", "weapon_ducttape"
+}
+
+local function ShuffleIndexes(count)
+	local t = {}
+	for i = 1, count do t[i] = i end
+	shuffle(t)
+	return t
+end
+
+function MODE:GiveWeaponWithAmmo(ply, class, ammoMul, attachments)
+	local gun = ply:Give(class)
+	if IsValid(gun) and gun.GetMaxClip1 then
+		if attachments and #attachments > 0 then
+			hg.AddAttachmentForce(ply, gun, attachments)
+		end
+		ply:GiveAmmo(gun:GetMaxClip1() * ammoMul, gun:GetPrimaryAmmoType(), true)
+	end
+	return gun
+end
 
 function MODE:CanLaunch()
 	local points = zb.GetMapPoints( "HMCD_CRI_CT" )
@@ -163,71 +236,102 @@ end
 
 function MODE:GiveEquipment()
 	timer.Simple(0.5,function()
-		local swatPlayers = {} 
+		local submode = self.submode or "sobr"
+		local swatPresets = SWAT_PRESETS[submode]
+		local swatIdx = ShuffleIndexes(#swatPresets)
+		local swatCount = 0
+		local crimPresets = CRIM_PRESETS[submode]
+		local crimIdx = ShuffleIndexes(#crimPresets)
+		local crimCount = 0
+		local randPrimaries = submode == "us" and CRIM_RANDOM_PRIMARIES_US or CRIM_RANDOM_PRIMARIES_SOBR
+		local randSecondaries = submode == "us" and CRIM_RANDOM_SECONDARIES_US or CRIM_RANDOM_SECONDARIES_SOBR
 
 		for i, ply in player.Iterator() do
 			if ply:Team() == TEAM_SPECTATOR then continue end
 
 			if ply:Team() == 0 then
-				timer.Create("SWATSpawn" .. ply:EntIndex(), 90, 1, function()
-					if !IsValid(ply) or ply:Team() == TEAM_SPECTATOR then return end
-					ply:Spawn()
-					ply:SetSuppressPickupNotices(true)
-					ply.noSound = true
+				local preset = swatPresets[swatIdx[(swatCount % #swatIdx) + 1]]
+				swatCount = swatCount + 1
 
-					ply:SetupTeam(ply:Team())
+				if !IsValid(ply) or ply:Team() == TEAM_SPECTATOR then continue end
+				ply:Spawn()
+				ply:SetSuppressPickupNotices(true)
+				ply.noSound = true
 
-					ply:SetPlayerClass("swat")
+				ply:SetupTeam(ply:Team())
 
-					local inv = ply:GetNetVar("Inventory")
-					inv["Weapons"]["hg_sling"] = true
-					ply:SetNetVar("Inventory",inv)
+				ply:SetPlayerClass("swat")
 
-					hg.AddArmor(ply, tblarmors[ply:Team()][math.random(#tblarmors[ply:Team()])]) 
+				local inv = ply:GetNetVar("Inventory")
+				inv["Weapons"]["hg_sling"] = true
+				ply:SetNetVar("Inventory",inv)
 
-					zb.GiveRole(ply, "SWAT", Color(0,0,190))
+				hg.AddArmor(ply, preset.armor)
+				if not preset.noheadphones then
+					hg.AddArmor(ply, "headphones1")
+				end
 
-					table.insert(swatPlayers, ply) 
+				zb.GiveRole(ply, submode == "sobr" and "SOBR" or "US Special Forces", submode == "sobr" and Color(0,0,190) or Color(0,90,190))
 
-					local wep = tblweps[ply:Team()][math.random(#tblweps[ply:Team()])]
-					local gun = ply:Give(wep[1])
-					if IsValid(gun) and gun.GetMaxClip1 then
-						hg.AddAttachmentForce(ply,gun,wep[2])
-						ply:GiveAmmo(gun:GetMaxClip1() * 3,gun:GetPrimaryAmmoType(),true)
-					else
-						print("WTH???")
+				if preset.primary then
+					self:GiveWeaponWithAmmo(ply, preset.primary, 3, preset.atts)
+				end
+
+				if preset.secondary then
+					self:GiveWeaponWithAmmo(ply, preset.secondary, 2)
+				end
+
+				for _, item in ipairs(preset.items) do
+					local w = ply:Give(item)
+					if preset.nodrop and table.HasValue(preset.nodrop, item) and IsValid(w) then
+						w.NoDrop = true
+						w.bigNoDrop = true
 					end
+				end
 
-					local gun = ply:Give("weapon_glock17")
-					if IsValid(gun) and gun.GetMaxClip1 then
-						ply:GiveAmmo(gun:GetMaxClip1() * 3,gun:GetPrimaryAmmoType(),true)
-					end
+				local hands = ply:Give("weapon_hands_sh")
 
-					for _, item in ipairs(tblotheritems[ply:Team()]) do
-						ply:Give(item)
-					end
-
-					local hands = ply:Give("weapon_hands_sh")
-
-					ply:SetSuppressPickupNotices(false)
-					ply.noSound = false
-				end)
+				ply:SetSuppressPickupNotices(false)
+				ply.noSound = false
 			else
+				local preset = crimPresets[crimIdx[(crimCount % #crimIdx) + 1]]
+				crimCount = crimCount + 1
+
+				local roleName, roleColor = "Chechen Terrorist", Color(190,0,0)
+				if submode == "us" then
+					roleName, roleColor = "Armed Robber", Color(190,80,0)
+				end
+
 				ply:SetSuppressPickupNotices(true)
 				ply.noSound = true
 
 				ply:SetPlayerClass("terrorist")
 
-				zb.GiveRole(ply, "Suspect", Color(190,0,0))
+				zb.GiveRole(ply, roleName, roleColor)
 
-				local gun = ply:Give(tblweps[ply:Team()][math.random(#tblweps[ply:Team()])])
-				if IsValid(gun) and gun.GetMaxClip1 then
-					ply:GiveAmmo(gun:GetMaxClip1() * 3,gun:GetPrimaryAmmoType(),true)
+				if preset.primary then
+					local gun = self:GiveWeaponWithAmmo(ply, preset.primary, 3, preset.atts)
+					if preset.nostock and IsValid(gun) then
+						gun.attachments = gun.attachments or {}
+						gun.attachments.stock = {}
+						if gun.UpdateAttachmentModifiers then
+							gun:UpdateAttachmentModifiers()
+						end
+					end
 				else
-					print("WTH???")
+					self:GiveWeaponWithAmmo(ply, randPrimaries[math.random(#randPrimaries)], 3)
+					self:GiveWeaponWithAmmo(ply, randSecondaries[math.random(#randSecondaries)], 2)
 				end
 
-				for _, item in ipairs(tblotheritems[ply:Team()]) do
+				if preset.armor then
+					hg.AddArmor(ply, preset.armor)
+				end
+
+				for _, item in ipairs(CRIM_SHARED_ITEMS) do
+					ply:Give(item)
+				end
+
+				for _, item in ipairs(preset.items) do
 					ply:Give(item)
 				end
 
@@ -243,14 +347,6 @@ function MODE:GiveEquipment()
 
 			ply:SetSuppressPickupNotices(false)
 		end
-
-		timer.Create("SWATSpawn",91,1,function()
-			if #swatPlayers > 0 then
-				local ramPlayer = swatPlayers[math.random(#swatPlayers)]
-				if !IsValid(ramPlayer) or ramPlayer:Team() == TEAM_SPECTATOR then return end
-				ramPlayer:Give("weapon_ram")
-			end
-		end)
 	end)
 end
 
@@ -266,13 +362,16 @@ end
 
 util.AddNetworkString("cri_roundend")
 function MODE:EndRound()
+	if zb.SKIP_END_PRESENTATION then
+		zb.SKIP_END_PRESENTATION = false
+		zb.SHOULD_FADE = true
+		zb.END_TIME = nil
+	end
+
 	for k,ply in player.Iterator() do
 		if timer.Exists("SWATSpawn"..ply:EntIndex()) then
 			timer.Remove("SWATSpawn"..ply:EntIndex())
 		end
-	end
-	if timer.Exists("SWATSpawn") then
-		timer.Remove("SWATSpawn")
 	end
 
 	local endround, winner = zb:CheckWinner(self:CheckAlivePlayers())

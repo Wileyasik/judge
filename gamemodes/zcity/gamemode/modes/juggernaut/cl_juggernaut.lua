@@ -8,10 +8,17 @@ local surviveUntil = 0
 local isJug = false
 local DataReady = false
 local InJugg = false
+local IntroStart = 0
 local MusicPlayedFor = nil
 local JUG_ScreenDuration = 3
 local JUG_TeaserExitDur = 0.8
 local JUG_RevealDuration = 2.5
+local JUG_EndDuration = 5
+
+local EndStart = 0
+local EndJuggWon = false
+local EndNames = ""
+local EndDataReady = false
 
 local sf_font = "Lora"
 
@@ -54,6 +61,10 @@ net.Receive("juggernaut_state", function()
 	InJugg = true
 	DataReady = true
 
+	if IntroStart == 0 then
+		IntroStart = CurTime()
+	end
+
 	isJug = false
 	for _, ent in ipairs(list) do
 		if ent == LocalPlayer() then
@@ -67,6 +78,14 @@ net.Receive("juggernaut_variant", function()
 	MODE_VARIANT = net.ReadInt(8)
 end)
 
+net.Receive("juggernaut_end", function()
+	MODE_VARIANT = net.ReadInt(8)
+	EndJuggWon = net.ReadBool()
+	EndNames = net.ReadString()
+	EndStart = CurTime()
+	EndDataReady = true
+end)
+
 hook.Add("RoundInfoCalled", "juggernaut_cleanup", function(nextMode)
 	if nextMode ~= "juggernaut" then
 		MODE_VARIANT = 0
@@ -76,6 +95,11 @@ hook.Add("RoundInfoCalled", "juggernaut_cleanup", function(nextMode)
 		isJug = false
 		DataReady = false
 		InJugg = false
+		IntroStart = 0
+		EndStart = 0
+		EndJuggWon = false
+		EndNames = ""
+		EndDataReady = false
 		return
 	end
 
@@ -116,6 +140,7 @@ local VARIANT_NAMES = {
 	[1] = "Tagilla",
 	[2] = "Tagilla & Killa",
 	[3] = "Scream",
+	[4] = "Jacket",
 }
 
 local function ease_out(x)
@@ -138,7 +163,7 @@ function MODE:RenderScreenspaceEffects()
 	local lply = LocalPlayer()
 	if not IsValid(lply) then return end
 
-	local t = CurTime() - (zb.ROUND_START or 0)
+	local t = CurTime() - (IntroStart > 0 and IntroStart or (zb.ROUND_START or 0))
 	local fadeEnd = IntroFadeEnd()
 
 	if t <= 0 or t > fadeEnd then return end
@@ -248,6 +273,27 @@ local function DrawIntro(t)
 	end
 end
 
+local function DrawEndScreen(t)
+	local w, h = ScrW(), ScrH()
+
+	local fadeEnd = JUG_EndDuration
+	local inFade = ease_out(math.Clamp(t / 0.6, 0, 1))
+	local outFade = ease_out(math.Clamp((fadeEnd - t) / 1.5, 0, 1))
+	local a = 255 * inFade * outFade
+
+	local title = EndJuggWon and "JUGGERNAUT WINS" or "HUNTERS WIN"
+	local titleCol = EndJuggWon and colJug or colHunt
+	local variantName = VARIANT_NAMES[MODE_VARIANT] or ""
+
+	draw_text(title, "ZB_JuggernautHeader", w * 0.5, h * 0.40, titleCol.r, titleCol.g, titleCol.b, a, 0, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	if variantName ~= "" then
+		draw_text(variantName, "ZB_JuggernautMediumLarge", w * 0.5, h * 0.40 + ScreenScale(45), colWhite.r, colWhite.g, colWhite.b, a, 0, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	end
+	if EndNames ~= "" then
+		draw_text(EndNames, "ZB_JuggernautMedium", w * 0.5, h * 0.40 + ScreenScale(70), colWhite.r, colWhite.g, colWhite.b, a, 0, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	end
+end
+
 function MODE:HUDPaint()
 	local lply = LocalPlayer()
 	if not IsValid(lply) then return end
@@ -258,12 +304,20 @@ function MODE:HUDPaint()
 	local round = CurrentRound()
 	if not round or round.name ~= "juggernaut" then return end
 
-	local t = CurTime() - (zb.ROUND_START or 0)
+	local t = CurTime() - (IntroStart > 0 and IntroStart or (zb.ROUND_START or 0))
 	local fadeEnd = IntroFadeEnd()
 
 	if t > 0 and t <= fadeEnd then
 		DrawIntro(t)
 		return
+	end
+
+	if EndDataReady then
+		local te = CurTime() - EndStart
+		if te >= 0 and te <= JUG_EndDuration then
+			DrawEndScreen(te)
+			return
+		end
 	end
 
 	if not IsValid(juggernaut) and #juggernauts == 0 then return end
@@ -280,8 +334,8 @@ function MODE:HUDPaint()
 	local timeColor = isJug and colJug or colHunt
 	local roleStr = isJug and "JUGGERNAUT" or ("Juggernaut: " .. nameStr)
 
-	draw.SimpleText(roleStr, "ZB_InterfaceSmall", w * 0.5, h * 0.90, timeColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-	draw.SimpleText(FormatTime(remaining), "ZB_HomicideMedium", w * 0.5, h * 0.95, timeColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	draw.SimpleText(roleStr, "ZB_JuggernautMediumLarge", w * 0.5, h * 0.06, timeColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	draw.SimpleText(FormatTime(remaining), "ZB_JuggernautMedium", w * 0.5, h * 0.06 + ScreenScale(18), timeColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 end
 
 function MODE:EndRound()

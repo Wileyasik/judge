@@ -20,6 +20,7 @@ MODE.BerserkStrength = 0
 
 util.AddNetworkString("juggernaut_state")
 util.AddNetworkString("juggernaut_variant")
+util.AddNetworkString("juggernaut_end")
 
 local damageReduction = CreateConVar("zb_jugg_damage_reduction", "1.0", FCVAR_LUA_SERVER, "Juggernaut damage taken multiplier (1 = normal)")
 local bleedMul = CreateConVar("zb_jugg_bleed_mul", "0.7", FCVAR_LUA_SERVER, "Juggernaut bleeding multiplier (lower = less blood loss)")
@@ -47,6 +48,12 @@ MODE.Variants = {
 		minPlayers = 0,
 		juggernauts = { { class = "scream", loadout = "scream" } },
 		grunt = "victim",
+	},
+	[4] = {
+		name = "Jacket",
+		minPlayers = 0,
+		juggernauts = { { class = "jacket", loadout = "jacket" } },
+		grunt = "runningnail",
 	},
 }
 
@@ -97,6 +104,7 @@ local JUGG_NODROP = {
 	weapon_hultafors = true,
 	weapon_rpk16 = true,
 	weapon_saiga12 = true,
+	weapon_uzi = true,
 }
 
 local function SetMeleeNoDrop(ply)
@@ -124,7 +132,7 @@ end
 
 function MODE:PickVariant()
 	local count = self:GetPlayerCount()
-	local pool = count >= self.VariantMinPlayers and { 1, 2, 3 } or { 1, 3 }
+	local pool = count >= self.VariantMinPlayers and { 1, 2, 3, 4 } or { 1, 3, 4 }
 	return pool[math.random(#pool)]
 end
 
@@ -251,6 +259,9 @@ function MODE:GiveJuggLoadout(ply, loadout)
 		GiveWeapon(ply, "weapon_adrenaline")
 		GiveWeapon(ply, "weapon_midazolam")
 		GiveWeapon(ply, "weapon_taser")
+	elseif loadout == "jacket" then
+		GiveWeapon(ply, "weapon_bat")
+		GiveWeapon(ply, "weapon_uzi", 10)
 	end
 
 	SetMeleeNoDrop(ply)
@@ -492,15 +503,6 @@ function MODE:PlayerDeath(victim, inflictor, attacker)
 		if #newJuggs == 0 then self._huntersWon = true end
 		return
 	end
-
-	if MODE.variant == 3 then return end
-
-	local respawnIn = math.max(1, hunterRespawn:GetFloat())
-	timer.Simple(respawnIn, function()
-		if not IsValid(victim) or victim:Alive() or victim:Team() == TEAM_SPECTATOR then return end
-		if not IsJugRound() or zb.ROUND_STATE ~= 1 then return end
-		victim:Spawn()
-	end)
 end
 
 hook.Add("PlayerDisconnected", "juggernaut_disconnect", function(ply)
@@ -584,6 +586,12 @@ function MODE:EndRound()
 			PrintMessage(HUD_PRINTTALK, "The Juggernaut " .. jName .. " has been eliminated! Hunters win!")
 		end
 	end
+
+	net.Start("juggernaut_end")
+		net.WriteInt(self.variant, 8)
+		net.WriteBool(self._juggernautSurvived or false)
+		net.WriteString(jName)
+	net.Broadcast()
 
 	self.Juggernauts = {}
 	self.Juggernaut = nil
