@@ -216,7 +216,8 @@ function PLAYER:SetupTeam(team_)
 end
 
 function GM:PlayerSpawn(ply)
-    ply:SuppressHint("OpeningMenu")
+	ply.hgLastOrganismSpectTarget = nil
+	ply:SuppressHint("OpeningMenu")
     ply:SuppressHint("Annoy1")
     ply:SuppressHint("Annoy2")
 
@@ -322,7 +323,14 @@ hook.Add("PlayerDeathThink", "spectNetwork", function(ply)
 	if ply:Alive() then return end
 	//ply:Spectate(OBS_MODE_ROAMING)
 
-	local ent = ply.chosenSpectEntity or player.GetAll()[1]
+	local ent = ply.chosenSpectEntity
+	if not IsValid(ent) or not ent:IsPlayer() or not ent:Alive() then
+		local alivePlayers = zb:CheckAlive()
+		ent = alivePlayers[1]
+		ply.chosenSpectEntity = ent
+		ply.chosenspect = IsValid(ent) and 1 or nil
+		ply.hgLastOrganismSpectTarget = nil
+	end
 	if IsValid(ply) then
 		ply:SetNWEntity("spect", ent)
 		ply:SetNWInt("viewmode", ply.viewmode or 1)
@@ -330,9 +338,12 @@ hook.Add("PlayerDeathThink", "spectNetwork", function(ply)
 			if ent.organism and ply.viewmode == 1 then
 				if (ply.netsendtime or 0) < CurTime() then
 					ply.netsendtime = CurTime() + 1
-
-					hg.send_organism(ent.organism, ply)
+					local forceBaseline = ply.hgLastOrganismSpectTarget ~= ent
+					ply.hgLastOrganismSpectTarget = ent
+					hg.send_organism(ent.organism, ply, forceBaseline)
 				end
+			else
+				ply.hgLastOrganismSpectTarget = nil
 			end
 			local entr = hg.GetCurrentCharacter(ent)
 			local pos = ent:GetPos()
@@ -372,6 +383,7 @@ end
 function GM:PlayerDeath(ply)
 	ply.lastSpectTarget = nil
 	ply.chosenSpectEntity = nil
+	ply.hgLastOrganismSpectTarget = nil
 	
 	ply:Spectate(OBS_MODE_ROAMING)
 	ply:SetHull(-hullscale,hullscale)
@@ -396,6 +408,7 @@ hg.addbot = hg.addbot or false
 
 function GM:PlayerInitialSpawn(ply)
 	ply.initialspawn = true
+	ply.hgLastOrganismSpectTarget = nil
 
 	if #player.GetAll() == 1 then
 		RunConsoleCommand("bot")

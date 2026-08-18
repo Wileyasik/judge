@@ -532,7 +532,7 @@ properties.Add( "break_limb", {
 
 		local neck = submenu:AddOption("Neck")
 		neck:SetRadio(true)
-		neck:SetChecked(ent.organism.larm > 0)
+		neck:SetChecked(ent.organism.spine3 >= 1)
 		neck:SetIsCheckable(true)
 		neck.OnChecked = function(s, checked) self:BreakLimb(ent, 0) end
 
@@ -613,35 +613,59 @@ properties.Add( "break_limb", {
 	Receive = function( self, length, ply )
 		local ent = net.ReadEntity()
 		local limb = net.ReadUInt( 8 )
-        
-		if not self:Filter(ent, ply) then return end
+		if limb > 11 or not self:Filter(ent, ply) then return end
 		withBodyDamageRagdoll(ent, function(owner, character, organism)
-			local dmgInfo = DamageInfo()
 			if limb == 0 then
-				hg.BreakNeck(owner)
-			elseif limb == 1 then
-				hg.organism.input_list.larmdown(organism, 0, 1, dmgInfo)
-			elseif limb == 2 then
-				hg.organism.input_list.rarmdown(organism, 0, 1, dmgInfo)
-			elseif limb == 3 then
-				hg.organism.input_list.llegdown(organism, 0, 1, dmgInfo)
-			elseif limb == 4 then
-				hg.organism.input_list.rlegdown(organism, 0, 1, dmgInfo)
-			elseif limb == 5 then
-				hg.organism.input_list.spine1(organism, 0, 1, dmgInfo)
-			elseif limb == 6 then
-				hg.organism.input_list.spine2(organism, 0, 1, dmgInfo)
-			elseif limb == 7 then
-				hg.organism.input_list.spine3(organism, 0, 1, dmgInfo)
-			elseif limb == 8 then
-				hg.organism.input_list.larmup(organism, 0, 1, dmgInfo)
-			elseif limb == 9 then
-				hg.organism.input_list.rarmup(organism, 0, 1, dmgInfo)
-			elseif limb == 10 then
-				hg.organism.input_list.llegup(organism, 0, 1, dmgInfo)
-			elseif limb == 11 then
-				hg.organism.input_list.rlegup(organism, 0, 1, dmgInfo)
+				hg.BreakNeck(owner, ply, character)
+				return
 			end
+
+			local handlers = {
+				[1] = "larmdown",
+				[2] = "rarmdown",
+				[3] = "llegdown",
+				[4] = "rlegdown",
+				[5] = "spine1",
+				[6] = "spine2",
+				[7] = "spine3",
+				[8] = "larmup",
+				[9] = "rarmup",
+				[10] = "llegup",
+				[11] = "rlegup",
+			}
+			local handler = hg.organism.input_list[handlers[limb]]
+			if not handler then return end
+
+			local dmgInfo = DamageInfo()
+			dmgInfo:SetDamageType(DMG_BULLET)
+			dmgInfo:SetAttacker(game.GetWorld())
+			dmgInfo:SetInflictor(character)
+			local limbKeys = {
+				[1] = "larm",
+				[2] = "rarm",
+				[3] = "lleg",
+				[4] = "rleg",
+				[8] = "larm",
+				[9] = "rarm",
+				[10] = "lleg",
+				[11] = "rleg",
+			}
+			local limbKey = limbKeys[limb]
+			if limbKey then
+				organism[limbKey] = math.min(organism[limbKey] or 0, 0.99)
+				organism[limbKey .. "dislocation"] = false
+			end
+
+			local oldRecipient = organism.forcedBoneBreakRecipient
+			local oldSoundEnt = organism.forcedBoneBreakSoundEnt
+			organism.forcedBoneBreakRecipient = ply
+			organism.forcedBoneBreakSoundEnt = character
+			local ok, err = xpcall(function()
+				handler(organism, 0, 3, dmgInfo)
+			end, debug.traceback)
+			organism.forcedBoneBreakRecipient = oldRecipient
+			organism.forcedBoneBreakSoundEnt = oldSoundEnt
+			if not ok then ErrorNoHalt(err .. "\n") end
 		end)
 	end
 } )

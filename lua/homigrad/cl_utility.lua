@@ -607,26 +607,66 @@ players : 1 humans, 0 bots (20 max)
 	LocalPlayerSeen = true
 	hg.seenents = {}
 	hg.seenents2 = {}
+	hg.organism_ents = hg.organism_ents or {}
 	local hg_fov = GetConVar("hg_fov")
 	local math_cos = math.cos
 	local math_rad = math.rad
 	local util_DistanceToLine = util.DistanceToLine
-	local table_Add = table.Add
 	local table_Empty = table.Empty
 	local modelBounds = {}
 	local nextVisibilityCheck = 0
+	local nextRelevantReconcile = 0
+	local relevantEntities = {}
+
+	local function registerRelevantEntity(ent)
+		if not IsValid(ent) then return end
+		relevantEntities[ent] = true
+		if ent.shouldTransmit == nil then ent.shouldTransmit = true end
+	end
+
+	local function unregisterRelevantEntity(ent)
+		relevantEntities[ent] = nil
+	end
+
+	function hg.RegisterRelevantEntity(ent)
+		registerRelevantEntity(ent)
+	end
+
+	local function reconcileRelevantEntities()
+		for _, ent in ipairs(ents_FindByClass("prop_ragdoll")) do
+			registerRelevantEntity(ent)
+		end
+
+		for _, ply in ipairs(player_GetAll()) do
+			registerRelevantEntity(ply)
+		end
+
+		for ent in pairs(hg.organism_ents) do
+			if IsValid(ent) then
+				registerRelevantEntity(ent)
+			else
+				hg.organism_ents[ent] = nil
+				unregisterRelevantEntity(ent)
+			end
+		end
+	end
+
+	hook.Add("NetworkEntityCreated", "HG_RegisterRelevantEntity", function(ent)
+		if not IsValid(ent) then return end
+		if ent:IsPlayer() or ent:GetClass() == "prop_ragdoll" then
+			registerRelevantEntity(ent)
+		end
+	end)
+
+	hook.Add("EntityRemoved", "HG_UnregisterRelevantEntity", unregisterRelevantEntity)
 
 	hook.Add("Think", "CanBeSeenOrNot", function()
 		local curTime = CurTime()
 		if nextVisibilityCheck > curTime then return end
 		nextVisibilityCheck = curTime + 0.1
-		local entities = ents_FindByClass("prop_ragdoll")
-		table_Add(entities, player_GetAll())
-
-		for ent in pairs(hg.organism_ents) do
-			if !IsValid(ent) then hg.organism_ents[ent] = nil continue end
-
-			table.insert(entities, ent)
+		if nextRelevantReconcile <= curTime then
+			nextRelevantReconcile = curTime + 8
+			reconcileRelevantEntities()
 		end
 
 		table_Empty(hg.seenents)
@@ -641,8 +681,12 @@ players : 1 humans, 0 bots (20 max)
 		local viewEnd = origin + forward * 9999
 		local fovCos = math_cos(math_rad(hg_fov:GetInt()))
 
-		for i = 1, #entities do
-			local v = entities[i]
+		for v in pairs(relevantEntities) do
+			if not IsValid(v) then
+				unregisterRelevantEntity(v)
+				hg.organism_ents[v] = nil
+				continue
+			end
 			if v.shouldTransmit then
 				hg.seenents2[#hg.seenents2 + 1] = v
 			end

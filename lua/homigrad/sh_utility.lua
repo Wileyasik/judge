@@ -1498,6 +1498,7 @@ hg.renderOverride = function(self, ent, flags)
 		local class = ent:GetClass()
 
 		if class == "momentary_rot_button" then return end
+		if ent.dontPickup then return false end
 		local ductcount = hgCheckDuctTapeObjects(ent)
 		local nailscount = hgCheckBindObjects(ent)
 		ply.PickUpCooldown = ply.PickUpCooldown or 0
@@ -1821,7 +1822,7 @@ end
 
 local ScreenShakers = {}
 
-function util.ScreenShake(vPos, nAmplitude, nFrequency, nDuration, nRadius, bAirshake, crfFilter, rotBoost)
+function util.ScreenShake(vPos, nAmplitude, nFrequency, nDuration, nRadius, bAirshake, crfFilter, rotBoost, noMotionBlur, noVignette, noFovKick)
 	if SERVER then -- SERVER SIDE
 		vPos = vPos or Vector(0,0,0)
 		nRadius = nRadius or (nAmplitude * 100)
@@ -1842,6 +1843,9 @@ function util.ScreenShake(vPos, nAmplitude, nFrequency, nDuration, nRadius, bAir
 			net.WriteFloat(nRadius)
 			net.WriteBool(bAirshake)
 			net.WriteFloat(rotBoost or 1)
+			net.WriteBool(noMotionBlur or false)
+			net.WriteBool(noVignette or false)
+			net.WriteBool(noFovKick or false)
 		net.Send(crf)
 	elseif CLIENT then -- CLIENT SIDE
 		nRadius = nRadius or (nAmplitude * 100)
@@ -1858,7 +1862,10 @@ function util.ScreenShake(vPos, nAmplitude, nFrequency, nDuration, nRadius, bAir
 			offset = Vector(0,0,0),
 			angTarget = Angle(0,0,0),
 			angOffset = Angle(0,0,0),
-			rotBoost = math.Clamp(rotBoost or 1, 0.1, 4)
+			rotBoost = math.Clamp(rotBoost or 1, 0.1, 4),
+			noMotionBlur = noMotionBlur or false,
+			noVignette = noVignette or false,
+			noFovKick = noFovKick or false
 		}
 		if hgExplosionGlares and not bAirshake and (nAmplitude or 0) >= 20 and (nRadius or 0) >= 300 then
 			local ply = LocalPlayer()
@@ -1911,6 +1918,7 @@ if CLIENT then
 		local target = 0
 		for i = #ScreenShakers, 1, -1 do
 			local shake = ScreenShakers[i]
+			if shake.noMotionBlur then continue end
 			local elapsed = now - shake.created
 			if elapsed >= shake.duration then
 				table.remove(ScreenShakers, i)
@@ -1941,7 +1949,7 @@ if CLIENT then
 		local target = 0
 		for i = #ScreenShakers, 1, -1 do
 			local shake = ScreenShakers[i]
-			if shake.noKick then continue end
+			if shake.noKick or shake.noVignette then continue end
 			local elapsed = now - shake.created
 			if elapsed >= shake.duration then
 				table.remove(ScreenShakers, i)
@@ -1980,6 +1988,7 @@ if CLIENT then
 				table.remove(ScreenShakers, i)
 				continue
 			end
+			if shake.noFovKick then continue end
 
 			local distanceMul = 1 - math.Clamp(viewPos:Distance(shake.pos) / math.max(shake.radius, 1), 0, 1)
 			local timeMul = 1 - elapsed / shake.duration
@@ -2050,7 +2059,7 @@ if CLIENT then
 				local shakeRotScale = rotScale * shake.rotBoost
 				totalAng:Add(shake.angOffset * (shake.amplitude / 5) * distanceMul * timeMul * shakeRotScale)
 
-				if not shake.noKick then
+				if not shake.noKick and not shake.noFovKick then
 					local toBlast = shake.pos - view.origin
 					local dist = toBlast:Length()
 					if dist > 1 then
@@ -2098,8 +2107,11 @@ if CLIENT then
 		local nRadius = net.ReadFloat()
 		local bAirshake = net.ReadBool()
 		local rotBoost = net.ReadFloat()
+		local noMotionBlur = net.ReadBool()
+		local noVignette = net.ReadBool()
+		local noFovKick = net.ReadBool()
 
-		util.ScreenShake(vPos, nAmplitude, nFrequency, nDuration, nRadius, bAirshake, nil, rotBoost)
+		util.ScreenShake(vPos, nAmplitude, nFrequency, nDuration, nRadius, bAirshake, nil, rotBoost, noMotionBlur, noVignette, noFovKick)
 	end)
 end
 --//

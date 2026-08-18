@@ -17,7 +17,11 @@ end)
 
 hook.Add("PlayerInitialSpawn", "PlayerColideCallback", function(ply) ply:AddCallback("PhysicsCollide", function(phys, data) hook.Run("PlayerCollide", ply, data.HitEntity, data) end) end)
 hook.Add("PlayerCollide", "Fake", function(ply, ent, data)
-	if (not ent:IsPlayerHolding()) and data.Speed > math.max(700 - ent:GetPhysicsObject():GetMass(), 200) and ent:GetPhysicsObject():GetMass() > 20 and ent:GetClass() ~= "prop_ragdoll" and ent:GetPhysicsObject():GetVelocity():Length() > 50 then		--[[local d = DamageInfo()
+	if not IsValid(ply) or not IsValid(ent) or not data or not isnumber(data.Speed) then return end
+	local phys = IsValid(data.HitObject) and data.HitObject or ent:GetPhysicsObject()
+	if not IsValid(phys) then return end
+	local mass = phys:GetMass()
+	if (not ent:IsPlayerHolding()) and data.Speed > math.max(700 - mass, 200) and mass > 20 and ent:GetClass() ~= "prop_ragdoll" and phys:GetVelocity():LengthSqr() > 50 * 50 then		--[[local d = DamageInfo()
 		d:SetDamageType(DMG_CRUSH)
 		d:SetAttacker(data.HitEntity)
 		d:SetDamage(data.Speed / 40)

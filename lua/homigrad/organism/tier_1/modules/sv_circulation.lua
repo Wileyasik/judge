@@ -468,8 +468,8 @@ module[2] = function(owner, org, mulTime)
 	if org.vomitInThroat then
 		local ent = hg.GetCurrentCharacter(owner)
 		local bon = "ValveBiped.Bip01_Head1"
-		local bone = ent:LookupBone(bon)
-		local mat = ent:GetBoneMatrix(bone)
+		local bone = IsValid(ent) and ent:LookupBone(bon)
+		local mat = isnumber(bone) and bone >= 0 and ent:GetBoneMatrix(bone)
 		if mat and mat:GetAngles():Right()[3] < 0.25 then
 			org.vomitInThroat = nil
 			net.Start("bloodsquirt2")
@@ -478,7 +478,7 @@ module[2] = function(owner, org, mulTime)
 			net.WriteMatrix(mat)
 			net.WriteVector(mat:GetTranslation() + mat:GetAngles():Right() * 6 + mat:GetAngles():Forward() * 1)
 			net.WriteVector(mat:GetAngles():Right() * 2 * math.Clamp(org.pulse / 70, 0.4, 1))
-			net.Broadcast()
+			net.SendPVS(mat:GetTranslation())
 			ent:EmitSound("vomit/vomit5.mp3")
 		end
 	end
@@ -536,7 +536,8 @@ module[2] = function(owner, org, mulTime)
 	local bleedoutspeed = 0
 	if #org.wounds > 0 then
 		local ent = IsValid(owner.FakeRagdoll) and owner.FakeRagdoll or owner
-		for i, wound in pairs(org.wounds) do
+		for i = #org.wounds, 1, -1 do
+			local wound = org.wounds[i]
 			local rand1 = math.Rand(4, 10) * 1
 			local rand2 = math.Rand(0.5, 1) * 1
 			local bleed = rand1 * wound[1] * mulTime * math.max(org.pulse, 20) / 70 * 2.0 * (1 - math.min(adrenaline / 6, 0.5)) * org.bleedingmul * 0.02
@@ -556,7 +557,7 @@ module[2] = function(owner, org, mulTime)
 				if wound[1] == 0 then
 					if source then org.bleedSources[source.id] = nil end
 					table.remove(org.wounds, i)
-					owner:SetNetVar("wounds",org.wounds)
+					hg.organism.MarkWoundsNetDirty(org, true)
 				end
 		end
 	end
@@ -570,17 +571,22 @@ module[2] = function(owner, org, mulTime)
 	local bleedoutspeed2 = 0
 	local next_arterypump = 1 / math.max(org.pulse, 10)
 	local ent = owner:IsPlayer() and IsValid(owner.FakeRagdoll) and owner.FakeRagdoll or owner
-	for i, wound in pairs(org.arterialwounds) do
+	for i = #org.arterialwounds, 1, -1 do
+		local wound = org.arterialwounds[i]
 		local arterialBleed = wound[1] * mulTime * 0.2 * math.max(org.pulse, 20) / 80
 		arterialBleed = arterialBleed * getHeldWoundBleedMul(org, wound)
 		bleedoutspeed2 = bleedoutspeed2 + arterialBleed
 		if wound[5] + next_arterypump * 2 < time then
-			local pos, ang = ent:GetBonePosition(ent:LookupBone(wound[4]))
+			local boneIdx = ent:LookupBone(wound[4])
+			local _, ang
+			if isnumber(boneIdx) and boneIdx >= 0 then
+				_, ang = ent:GetBonePosition(boneIdx)
+			end
 			wound[5] = time
 			local pumpBleed = wound[1] * mulTime * 4.5 * math.max(org.pulse, 20) / 80
 			pumpBleed = pumpBleed * getHeldWoundBleedMul(org, wound)
 			org.blood = max(org.blood - pumpBleed, 1)
-			if (owner:IsPlayer() and owner:Alive()) or not owner:IsPlayer() then
+			if ang and ((owner:IsPlayer() and owner:Alive()) or not owner:IsPlayer()) then
 				local dir = wound[6]
 				local len = dir:Length()
 				local _, dir = LocalToWorld(vecZero, dir:Angle(), vecZero, ang)
@@ -591,7 +597,7 @@ module[2] = function(owner, org, mulTime)
 				local source = org.bleedSources and org.bleedSources[wound[8]]
 				if source then org.bleedSources[source.id] = nil end
 				table.remove(org.arterialwounds, i)
-				owner:SetNetVar("arterialwounds", org.arterialwounds)
+				hg.organism.MarkArterialWoundsNetDirty(org)
 				org[wound[7]] = 0
 			end
 		end
@@ -655,8 +661,8 @@ function hg.organism.Vomit(owner, snd)
 	org.blood = math.max(org.blood - 200, 0)
 	local ent = hg.GetCurrentCharacter(owner)
 	local bon = "ValveBiped.Bip01_Head1"
-	local bone = ent:LookupBone(bon)
-	local mat = ent:GetBoneMatrix(bone)
+	local bone = IsValid(ent) and ent:LookupBone(bon)
+	local mat = isnumber(bone) and bone >= 0 and ent:GetBoneMatrix(bone)
 	if not mat then return end
 	local on_spine = mat:GetAngles():Right()[3] > 0.25
 	if on_spine then
@@ -675,7 +681,7 @@ function hg.organism.Vomit(owner, snd)
 			net.WriteMatrix(mat)
 			net.WriteVector(mat:GetTranslation() + mat:GetAngles():Right() * 6 + mat:GetAngles():Forward() * 1)
 			net.WriteVector(mat:GetAngles():Right() * 2 * math.Clamp(org.pulse / 70, 0.4, 1))
-			net.Broadcast()
+			net.SendPVS(mat:GetTranslation())
 		end
 	end
 end
@@ -706,7 +712,7 @@ function hg.organism.VomitConcussion(owner)
 			net.WriteMatrix(mat)
 			net.WriteVector(mat:GetTranslation() + mat:GetAngles():Right() * 6 + mat:GetAngles():Forward() * 1)
 			net.WriteVector(mat:GetAngles():Right() * 2 * math.Clamp(org.pulse / 70, 0.4, 1))
-		net.Broadcast()
+		net.SendPVS(mat:GetTranslation())
 	end
 end
 function hg.organism.Defecate(owner)
@@ -725,13 +731,20 @@ function hg.organism.CoughBlood(org)
 	ply.lastPhr = phr
 	if math.random(5) == 1 then
 		org.vomitInThroat = nil
+		local ent = hg.GetCurrentCharacter(ply)
+		if not IsValid(ent) then return end
+		local bon = "ValveBiped.Bip01_Head1"
+		local bone = ent:LookupBone(bon)
+		if not bone then return end
+		local mat = ent:GetBoneMatrix(bone)
+		if not mat then return end
 		net.Start("bloodsquirt2")
 		net.WriteEntity(ent)
 		net.WriteString(bon)
 		net.WriteMatrix(mat)
 		net.WriteVector(mat:GetTranslation() + mat:GetAngles():Right() * 6 + mat:GetAngles():Forward() * 1)
 		net.WriteVector(mat:GetAngles():Right() * 2 * math.Clamp(org.pulse / 70, 0.4, 1))
-		net.Broadcast()
+		net.SendPVS(mat:GetTranslation())
 		ent:EmitSound("vomit/vomit5.mp3")
 	end
 end

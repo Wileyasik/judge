@@ -122,6 +122,11 @@ else
     	end--]]
     end
 
+	local function isScalarNetValue(value)
+		local valueType = type(value)
+		return valueType == "number" or valueType == "string" or valueType == "boolean"
+	end
+
     function GetNetVar(key, default)
     	local value = zb.net.globals[key]
 
@@ -129,8 +134,8 @@ else
     end
 
     function SetNetVar(key, value, receiver, unreliable)
-    	if (CheckBadType(key, value)) then return end
-    	--if (GetNetVar(key) == value) then return end
+		if (CheckBadType(key, value)) then return end
+		if receiver == nil and not unreliable and isScalarNetValue(value) and zb.net.globals[key] == value then return end
 		
     	zb.net.globals[key] = value
 
@@ -186,10 +191,11 @@ else
     end
 
     function playerMeta:SetLocalVar(key, value)
-    	if (CheckBadType(key, value)) then return end
+		if (CheckBadType(key, value)) then return end
 
-    	zb.net.locals[self] = zb.net.locals[self] or {}
-    	zb.net.locals[self][key] = value
+		zb.net.locals[self] = zb.net.locals[self] or {}
+		if isScalarNetValue(value) and zb.net.locals[self][key] == value then return end
+		zb.net.locals[self][key] = value
 
     	net.Start("zbLocalVarSet")
     		net.WriteString(key)
@@ -206,11 +212,10 @@ else
     end
 
     function entityMeta:SetNetVar(key, value, receiver)
-    	if (CheckBadType(key, value)) then return end
+		if (CheckBadType(key, value)) then return end
 
 		zb.net.list[self] = zb.net.list[self] or {}
-
-		--if not hg.IsChanged(value, key, zb.net.list[self]) then return end
+		if receiver == nil and isScalarNetValue(value) and zb.net.list[self][key] == value then return end
 
     	if (zb.net.list[self][key] != value) then
     		zb.net.list[self][key] = value 

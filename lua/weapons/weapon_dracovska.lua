@@ -58,6 +58,12 @@ function SWEP:ModelCreated(model)
 	model:SetBodyGroups(self.FakeBodyGroups)
 end
 
+SWEP.AnimList = {
+	["idle"] = "idle" ,
+	["reload"] = "reload" ,
+    ["reload_empty"] = "reload_empty" ,
+}
+
 SWEP.weaponInvCategory = 1
 SWEP.Primary.ClipSize = 30
 SWEP.Primary.DefaultClip = 30

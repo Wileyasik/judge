@@ -680,12 +680,13 @@ hook.Add("PlayerDeath", "juggernaut_kill_heal", function(victim, inflictor, atta
 		for i = #org.arterialwounds, 1, -1 do
 			table.remove(org.arterialwounds, i)
 		end
-		attacker:SetNetVar("arterialwounds", org.arterialwounds)
+		hg.organism.MarkArterialWoundsNetDirty(org)
 	end
 	if org.wounds then
 		for _, wound in pairs(org.wounds) do
 			if wound then wound[1] = 0 end
 		end
+		hg.organism.MarkWoundsNetDirty(org, true)
 	end
 
 	if org.stamina then

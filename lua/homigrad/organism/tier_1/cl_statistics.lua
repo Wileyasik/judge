@@ -1,19 +1,26 @@
 hg.organism_ents = hg.organism_ents or {}
 
+-- organism_send net message flags (must match sv_organism.lua)
+local ORG_NET_FORCE = 1
+local ORG_NET_SPECTATOR_SKIP = 2
+local ORG_NET_MORE_INFO = 3
+local ORG_NET_MERGE = 4
+
 net.Receive("organism_send", function()
 	local org = net.ReadTable()
 	local force = net.ReadBool()
-	local spectatov_ne_trogaem = net.ReadBool()
-	local moreinfopls = net.ReadBool()
-	local add = net.ReadBool()
+	local spectatorSkip = net.ReadBool()
+	local moreInfo = net.ReadBool()
+	local merge = net.ReadBool()
 	local ply = org.owner
 	if !IsValid(ply) then return end
 	
 	if ply:IsNPC() then
 		hg.organism_ents[ply] = true
+		if hg.RegisterRelevantEntity then hg.RegisterRelevantEntity(ply) end
 	end
 
-	if add and org.owner.organism and org.owner.new_organism then
+	if merge and org.owner.organism and org.owner.new_organism then
 		hook.Run("HG_OrganismChanged", org.owner.organism, org)
 		
 		table.Merge(org.owner.organism, org, true)
@@ -22,12 +29,10 @@ net.Receive("organism_send", function()
 		return 
 	end
 
-	if ply.is_lookedat and not moreinfopls then return end
-	if spectatov_ne_trogaem and (ply == LocalPlayer():GetNWEntity("spect",nil)) and not LocalPlayer():Alive() then return end
+	if ply.is_lookedat and not moreInfo then return end
+	if spectatorSkip and (ply == LocalPlayer():GetNWEntity("spect",nil)) and not LocalPlayer():Alive() then return end
 
 	ply.new_organism = org
-
-	--print(org.owner,org.blood)
 	
 	if not ply.organism or force then
 		ply.organism = org
@@ -42,10 +47,6 @@ net.Receive("organism_send", function()
 		rag.organism = ply.organism
 		rag.new_organism = org
 	end
-
-	--[[jit.on()
-	jit.collectgarbage()--]]
-	--print(collectgarbage("collect"))
 end)
 
 hook.Add("Player_Death","removeorg",function(ply)

@@ -1039,6 +1039,8 @@ hook.Add("OnNetVarSet","wounds_netvar2",function(index, key, var)
 		--local ent = hg.RagdollOwner(ent) or ent
 		
 		if IsValid(ent) then
+			var = istable(var) and var or {}
+			local hadBaseline = ent.arterialwounds != nil
 			if ent.arterialwounds then
 				for i = 1, #ent.arterialwounds do
 					if not var[i] then continue end
@@ -1046,9 +1048,11 @@ hook.Add("OnNetVarSet","wounds_netvar2",function(index, key, var)
 				end
 			end
 
-			for i = 1, #var do
-				if ent.arterialwounds and ent.arterialwounds[i] then continue end
-				hg.queueArterialWoundSound(ent, var[i])
+			if hadBaseline then
+				for i = 1, #var do
+					if ent.arterialwounds[i] then continue end
+					hg.queueArterialWoundSound(ent, var[i])
+				end
 			end
 
 			ent.arterialwounds = var
@@ -1084,11 +1088,11 @@ end)
 function hg.applyFountain(pos, ang, mul, mul2, forward, ent)
 	if bit.band(util.PointContents(pos), CONTENTS_WATER) == CONTENTS_WATER then
 		if math.random(2) == 1 then return end
-		hg.addBloodPart2(pos, ang:Forward() * forward * 0.5 + VectorRand(-25,25) * mul2, nil, nil, nil, nil, true, nil, ent)
-		hg.addBloodPart2(pos + VectorRand(-1,1), ang:Forward() * forward * 0.25 + VectorRand(-10,10) * mul2, nil, nil, nil, nil, true, nil, ent)
+		hg.addBloodPart2(pos, ang:Forward() * forward * 0.5 + VectorRand(-25,25) * mul2, nil, nil, nil, nil, true, ent)
+		hg.addBloodPart2(pos + VectorRand(-1,1), ang:Forward() * forward * 0.25 + VectorRand(-10,10) * mul2, nil, nil, nil, nil, true, ent)
 		//hg.addBloodPart2(pos + VectorRand(-1,1), ang:Forward() * forward * 0.25 + VectorRand(-10,10) * mul2, nil, nil, nil, nil, true, nil, ent)
 	else
-		hg.addBloodPart(pos, ang:Forward() * forward * 2 * math.abs(math.sin(CurTime() * 3) + math.cos(CurTime() * 5) + math.sin(CurTime() * 2) + 4) * 0.1 + ang:Right() * 15 * (math.sin(CurTime()) * 1) + ang:Right() * math.sin(CurTime() * 2) * 15 + VectorRand(-3, 3),nil,nil,nil,true)
+		hg.addBloodPart(pos, ang:Forward() * forward * 2 * math.abs(math.sin(CurTime() * 3) + math.cos(CurTime() * 5) + math.sin(CurTime() * 2) + 4) * 0.1 + ang:Right() * 15 * (math.sin(CurTime()) * 1) + ang:Right() * math.sin(CurTime() * 2) * 15 + VectorRand(-3, 3),nil,nil,nil,true,nil,ent)
 		hg.addBloodPart(pos + VectorRand(-1,1), ang:Forward() * 55 + VectorRand(-25,25) * mul2,nil,nil,nil,nil, nil, ent)
 		//hg.addBloodPart(pos + VectorRand(-1,1), ang:Forward() * 55 + VectorRand(-25,25) * mul2,nil,nil,nil,nil, nil, ent)
 	end
@@ -1102,6 +1106,7 @@ local checkpulsebones = {
 	["ValveBiped.Bip01_L_Hand"] = true,
 }
 local hg_blood_fps = ConVarExists("hg_blood_fps") and GetConVar("hg_blood_fps") or CreateClientConVar("hg_blood_fps", 24, true, nil, "fps to draw blood", 12, 165)
+local hg_blood_draw_distance = ConVarExists("hg_blood_draw_distance") and GetConVar("hg_blood_draw_distance") or CreateClientConVar("hg_blood_draw_distance", 1024, true, nil, "distance to draw blood", 0, 4096)
 local arteryDelayedDripSound = "arteryblooddrip/splat-blood"
 local arteryDelayedDripCount = 10
 local arteryNeckSlitSound = "rem_neckslit.ogg"
@@ -1368,38 +1373,43 @@ hook.Add("Player-Ragdoll think", "organism-think-client-blood", function(ply, en
 		end
 	end
 
-	local fountains = GetNetVar("fountains")
-	if fountains and fountains[ent] then
-		local tbl = fountains[ent]
-		if (tbl.time or 0) < CurTime() and org.pulse then
+	local bloodDrawDistance = hg_blood_draw_distance:GetInt()
+	local entDistSqr = ent:GetPos():DistToSqr(LocalPlayer():EyePos())
+
+	if seen and entDistSqr <= bloodDrawDistance * bloodDrawDistance and ent:GetNW2Bool("hg_fountain", false) then
+		ent.hgFountainNextParticle = ent.hgFountainNextParticle or 0
+		if ent.hgFountainNextParticle < CurTime() and (org.pulse or 0) > 0 then
 			local mul = 1 / math.max(org.pulse / 40 * 25, 2) * 0.75
 			local mul2 = math.max(org.pulse, 1) / 15
 			local forward = mul2 * 150
-			tbl.time = CurTime() + mul * 0.5
+			ent.hgFountainNextParticle = CurTime() + math.max(mul * 0.5, 1 / math.max(hg_blood_fps:GetInt(), 1))
 			
-			if seen then
-				local mat = ent:GetBoneMatrix(tbl.bone)
+			local model = ent:GetModel()
+			if ent.hgFountainBoneModel != model then
+				ent.hgFountainBoneModel = model
+				ent.hgFountainBone = ent:LookupBone("ValveBiped.Bip01_Neck1")
+				ent.hgFountainLocalPos = ThatPlyIsFemale(ent) and Vector(4,0,0) or Vector(5,0,0)
+			end
+			local mat = ent.hgFountainBone and ent:GetBoneMatrix(ent.hgFountainBone)
 
-				if mat then
-					local pos, ang = LocalToWorld(tbl.lpos, tbl.lang, mat:GetTranslation(), mat:GetAngles())
-					
-					hg.applyFountain(pos, ang, mul, mul2, forward, ent)
-				end
-			else
-				local pos, ang = ent:GetPos(), angle_zero
+			if mat then
+				local pos, ang = LocalToWorld(ent.hgFountainLocalPos, angle_zero, mat:GetTranslation(), mat:GetAngles())
 				hg.applyFountain(pos, ang, mul, mul2, forward, ent)
 			end
 		end
 	end
 	
-	if org and org.blood and org.blood > 10 and wounds and #wounds > 0 then
+	local bloodDistSqr = 1.5 * bloodDrawDistance
+	bloodDistSqr = bloodDistSqr * bloodDistSqr
+
+	if seen and org and org.blood and org.blood > 10 and wounds and #wounds > 0 and entDistSqr <= bloodDistSqr then
 		if (owner:IsPlayer() and owner:Alive()) or not owner:IsPlayer() then
 			for i, wound in pairs(wounds) do
 				local size = math.random(0, 1) * math.max(math.min(wound[1], 1), 0.5)
 
 				if wound[5] + beatsPerSecond < time then
 					local boneID = GetValidBone(ent, wound[4])
-					if seen and boneID then
+					if boneID then
 						local bone = wound[4]
 						local should = !(hg.amputatedlimbs2[bone] and org[hg.amputatedlimbs2[bone].."amputated"])
 
@@ -1414,19 +1424,8 @@ hook.Add("Player-Ragdoll think", "organism-think-client-blood", function(ply, en
 						local water = bit.band(util.PointContents(pos), CONTENTS_WATER) == CONTENTS_WATER
 						if water then
 							if wound[5] + 1 < time then
-								hg.addBloodPart2(pos, VectorRand(-5, 5), nil, nil, nil, nil, true, nil, ent)
+								hg.addBloodPart2(pos, VectorRand(-5, 5), nil, nil, nil, nil, true, ent)
 							end
-						else
-							hg.addBloodPart(pos, VectorRand(-15, 15), nil, size, size, false, nil, ent)
-						end
-
-						wound[5] = time + (water and 2 or (math.Rand(0, 1) * (!hg_old_blood:GetBool() and 0.5 or 1) / wound[1] * 15))
-					else
-						local pos = ent:GetPos()
-
-						local water = bit.band(util.PointContents(pos), CONTENTS_WATER) == CONTENTS_WATER
-						if water then
-							hg.addBloodPart2(pos, VectorRand(-5, 5), nil, nil, nil, nil, true, nil, ent)
 						else
 							hg.addBloodPart(pos, VectorRand(-15, 15), nil, size, size, false, nil, ent)
 						end
@@ -1438,16 +1437,14 @@ hook.Add("Player-Ragdoll think", "organism-think-client-blood", function(ply, en
 		end
 	end
 	
-	if org and org.blood and org.blood > 10 and arterialwounds and #arterialwounds > 0 then
+	if seen and org and org.blood and org.blood > 10 and arterialwounds and #arterialwounds > 0 and entDistSqr <= bloodDistSqr then
 		for i, wound in pairs(arterialwounds) do
-			local addtime = seen and 1 / math.Clamp(org.pulse or 70, 1,15) * 0.25 or 0.06
+			local addtime = 1 / math.Clamp(org.pulse or 70, 1,15) * 0.25
 			local boneID = GetValidBone(ent, wound[4])
 			if wound[5] + addtime < time and boneID then
-				local bonePos, ang = ent:GetBonePosition(boneID)
-				if not bonePos or not ang then continue end
 				if (owner:IsPlayer() and owner:Alive()) or not owner:IsPlayer() then
 					local size = math.random(1, 2) * math.max(math.min(wound[1], 1), 0.5) * arterySizeMul
-					if seen and boneID then
+					if boneID then
 						local bone = wound[4]
 
 						local should = !(hg.amputatedlimbs2[bone] and org[hg.amputatedlimbs2[bone].."amputated"])
@@ -1456,23 +1453,23 @@ hook.Add("Player-Ragdoll think", "organism-think-client-blood", function(ply, en
 						
 						local mat = ent:GetBoneMatrix(boneID)
 						if not mat then continue end
-						bonePos, boneAng = mat:GetTranslation(), mat:GetAngles()
+						local bonePos, boneAng = mat:GetTranslation(), mat:GetAngles()
 						if not wound[2] or not wound[3] or not bonePos or not boneAng then continue end
 						local pos = LocalToWorld(wound[2], wound[3], bonePos, boneAng)
 
 						local dir = wound[6]
 						local len = dir:Length() * (org.pulse or 70) / 70
-						local _, dir = LocalToWorld(vector_origin, dir:Angle(), vector_origin, ang)
+						local _, dir = LocalToWorld(vector_origin, dir:Angle(), vector_origin, boneAng)
 						
 						dir = -dir:Forward() * len
 
 						local water = bit.band(util.PointContents(pos), CONTENTS_WATER) == CONTENTS_WATER
 						if water then
 							for _ = 1, arteryBurstCount do
-								hg.addBloodPart2(pos, VectorRand(-5, 5), nil, nil, nil, nil, true, nil, ent)
+								hg.addBloodPart2(pos, VectorRand(-5, 5), nil, nil, nil, nil, true, ent)
 							end
 						else
-							local vel = VectorRand(-1, 1) * (org.pulse or 70) / 70 + dir * 5 * (math.abs(math.sin(CurTime() * 2) + math.cos(CurTime() * (5 + i * 2)) + math.sin(CurTime() * (1 + i))) * 0.6 + math.sin(CurTime() * 2) + 4) * 0.1 + dir:Angle():Right() * 25 * math.sin(CurTime() * 2) * math.cos(CurTime() * 4) + ang:Up() * 25 * math.sin(CurTime() * 3) * math.cos(CurTime() * 1) + VectorRand(-1, 1) * (org.pulse or 70) / 70
+							local vel = VectorRand(-1, 1) * (org.pulse or 70) / 70 + dir * 5 * (math.abs(math.sin(CurTime() * 2) + math.cos(CurTime() * (5 + i * 2)) + math.sin(CurTime() * (1 + i))) * 0.6 + math.sin(CurTime() * 2) + 4) * 0.1 + dir:Angle():Right() * 25 * math.sin(CurTime() * 2) * math.cos(CurTime() * 4) + boneAng:Up() * 25 * math.sin(CurTime() * 3) * math.cos(CurTime() * 1) + VectorRand(-1, 1) * (org.pulse or 70) / 70
 							hg.addBloodPart(pos, vel, nil, size, size, true, nil, ent)
 							for _ = 2, arteryBurstCount do
 								hg.addBloodPart(pos, vel * math.Rand(0.65, 1.05) + VectorRand(-3, 3) * (org.pulse or 70) / 70, nil, size * math.Rand(0.85, 1.15), size * math.Rand(0.85, 1.15), true, nil, ent)
@@ -1480,22 +1477,6 @@ hook.Add("Player-Ragdoll think", "organism-think-client-blood", function(ply, en
 						end
 
 						wound[5] = time + (water and 2 or (0.5 * 1 / hg_blood_fps:GetInt()))
-					else
-						local pos = ent:GetPos()
-						
-						local water = bit.band(util.PointContents(pos), CONTENTS_WATER) == CONTENTS_WATER
-						if water then
-							for _ = 1, arteryBurstCount do
-								hg.addBloodPart2(pos, VectorRand(-5, 5), nil, nil, nil, nil, true, nil, ent)
-							end
-						else
-							hg.addBloodPart(pos, VectorRand(-15, 15), nil, size, size, true, nil, ent)
-							for _ = 2, arteryBurstCount do
-								hg.addBloodPart(pos, VectorRand(-15, 15), nil, size * math.Rand(0.85, 1.15), size * math.Rand(0.85, 1.15), true, nil, ent)
-							end
-						end
-
-						wound[5] = time + (water and 2 or 0)
 					end
 				end
 			end
@@ -1536,28 +1517,28 @@ local vecalmostzero = Vector(0.01, 0.01, 0.01)
 
 local modelPlacements = {
 	[1] = {
-		["ValveBiped.Bip01_L_Calf"] = {Vector(19.7, -0.5, -0.2), Angle(-90, 0, 0)},
-		["ValveBiped.Bip01_R_Calf"] = {Vector(19.7, -0.5, -0.2), Angle(-90, 0, 0)},
-		["ValveBiped.Bip01_R_Forearm"] = {Vector(14, 0.2, 1), Angle(-90, 0, -0.3)},
-		["ValveBiped.Bip01_L_Forearm"] = {Vector(14, 0.2, -1), Angle(-90, 0, -0.3)},
-		["ValveBiped.Bip01_R_Hand"] = {Vector(13, 0.4, 0.1), Angle(-93, 0, 0.3)},
-		["ValveBiped.Bip01_L_Hand"] = {Vector(13, 0.3, -0.1), Angle(-93, 0, 0.3)},
-		["ValveBiped.Bip01_L_UpperArm"] = {Vector(6.6, -8.5, 0), Angle(-90, -70, -10)},
-		["ValveBiped.Bip01_R_UpperArm"] = {Vector(7.6, -8, 0), Angle(90, 120, 10)},
-		["ValveBiped.Bip01_L_Thigh"] = {Vector(2.8, -9, -1), Angle(0, 10, -90)},
-		["ValveBiped.Bip01_R_Thigh"] = {Vector(-3, -8, -3), Angle(0, -10, -90)},
+		["ValveBiped.Bip01_L_Calf"] = {Vector(17.7, -0.5, -0.2), Angle(-90, 0, 0)},
+		["ValveBiped.Bip01_R_Calf"] = {Vector(17.7, -0.5, -0.2), Angle(-90, 0, 0)},
+		["ValveBiped.Bip01_R_Forearm"] = {Vector(12, 0.2, 1), Angle(-90, 0, -0.3)},
+		["ValveBiped.Bip01_L_Forearm"] = {Vector(12, 0.2, -1), Angle(-90, 0, -0.3)},
+		["ValveBiped.Bip01_R_Hand"] = {Vector(11, 0.4, 0.1), Angle(-93, 0, 0.3)},
+		["ValveBiped.Bip01_L_Hand"] = {Vector(11, 0.3, -0.1), Angle(-93, 0, 0.3)},
+		["ValveBiped.Bip01_L_UpperArm"] = {Vector(4.6, -8.5, 0), Angle(-90, -70, -10)},
+		["ValveBiped.Bip01_R_UpperArm"] = {Vector(5.6, -8, 0), Angle(90, 120, 10)},
+		["ValveBiped.Bip01_L_Thigh"] = {Vector(0.8, -9, -1), Angle(0, 10, -90)},
+		["ValveBiped.Bip01_R_Thigh"] = {Vector(-5, -8, -3), Angle(0, -10, -90)},
 	},
 	[0] = {
-		["ValveBiped.Bip01_L_Calf"] = {Vector(22, -0.5, 0.6), Angle(-90, 0, 0)},
-		["ValveBiped.Bip01_R_Calf"] = {Vector(22, -0.5, 0.6), Angle(-90, 0, 0)},
-		["ValveBiped.Bip01_R_Forearm"] = {Vector(15, -0.2, 1), Angle(-90, 0, -0.3)},
-		["ValveBiped.Bip01_L_Forearm"] = {Vector(15, -0.2, -1), Angle(-90, 0, -0.3)},
-		["ValveBiped.Bip01_R_Hand"] = {Vector(15.3, 0, 0.5), Angle(-93, 0, 0.3)},
-		["ValveBiped.Bip01_L_Hand"] = {Vector(15.3, 0, -0.6), Angle(-93, 0, 0.3)},
-		["ValveBiped.Bip01_L_UpperArm"] = {Vector(6.6, -6, 1), Angle(-90, -70, -10)},
-		["ValveBiped.Bip01_R_UpperArm"] = {Vector(7.3, -6, -1), Angle(90, 120, 10)},
-		["ValveBiped.Bip01_L_Thigh"] = {Vector(4, -9, -1), Angle(0, 10, -90)},
-		["ValveBiped.Bip01_R_Thigh"] = {Vector(-3, -9, -1), Angle(0, -10, -90)},
+		["ValveBiped.Bip01_L_Calf"] = {Vector(20, -0.5, 0.6), Angle(-90, 0, 0)},
+		["ValveBiped.Bip01_R_Calf"] = {Vector(20, -0.5, 0.6), Angle(-90, 0, 0)},
+		["ValveBiped.Bip01_R_Forearm"] = {Vector(13, -0.2, 1), Angle(-90, 0, -0.3)},
+		["ValveBiped.Bip01_L_Forearm"] = {Vector(13, -0.2, -1), Angle(-90, 0, -0.3)},
+		["ValveBiped.Bip01_R_Hand"] = {Vector(13.3, 0, 0.5), Angle(-93, 0, 0.3)},
+		["ValveBiped.Bip01_L_Hand"] = {Vector(13.3, 0, -0.6), Angle(-93, 0, 0.3)},
+		["ValveBiped.Bip01_L_UpperArm"] = {Vector(4.6, -6, 1), Angle(-90, -70, -10)},
+		["ValveBiped.Bip01_R_UpperArm"] = {Vector(5.3, -6, -1), Angle(90, 120, 10)},
+		["ValveBiped.Bip01_L_Thigh"] = {Vector(2, -9, -1), Angle(0, 10, -90)},
+		["ValveBiped.Bip01_R_Thigh"] = {Vector(-5, -9, -1), Angle(0, -10, -90)},
 	}
 }
 
@@ -1626,6 +1607,7 @@ function hg.GoreCalc(ent, ply)
 		local mat2 = ent:GetBoneMatrix(parentBon)
 		if not mat or not mat2 then continue end
 		mat:SetScale(vecalmostzero)
+		mat:SetTranslation(mat2:GetTranslation())
 		
 		hg.bone_apply_matrix(ent, bon, mat)
 		

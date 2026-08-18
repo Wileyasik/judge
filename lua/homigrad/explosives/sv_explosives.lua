@@ -199,10 +199,28 @@ local function TraceShockwavePath(startPos, endPos, filter, target)
 	for _ = 1, 6 do
 		tr = hg.ExplosionTrace(traceStart, endPos, traceFilter)
 		if not tr.Hit or tr.Entity == target then return tr, false end
+
+		local ent = tr.Entity
+		if IsValid(ent) and (ent:IsPlayer() or ent:IsNPC() or ent:IsRagdoll() or ent:IsWeapon() or ent:GetClass() == "gmod_hands") then
+			traceFilter[#traceFilter + 1] = ent
+			traceStart = tr.HitPos + direction * 2
+			continue
+		end
+
+		local class = ent and ent:GetClass() or ""
+		if class == "prop_physics" or class == "prop_dynamic" or class == "prop_physics_multiplayer" then
+			local phys = ent:GetPhysicsObject()
+			if IsValid(phys) and phys:IsMoveable() and phys:GetMass() <= 150 then
+				traceFilter[#traceFilter + 1] = ent
+				traceStart = tr.HitPos + direction * 2
+				continue
+			end
+		end
+
 		if tr.MatType != MAT_GLASS then return tr, true end
 
-		if IsValid(tr.Entity) and not tr.Entity:IsWorld() then
-			traceFilter[#traceFilter + 1] = tr.Entity
+		if IsValid(ent) and not ent:IsWorld() then
+			traceFilter[#traceFilter + 1] = ent
 		else
 			traceStart = tr.HitPos + direction * 2
 		end
@@ -381,10 +399,14 @@ function hg.BlastRadiusDamage(inflictor, attacker, origin, radius, damage, damag
 		local targetPos = ent:LocalToWorld(ent:OBBCenter())
 		local dist = (targetPos - origin):Length()
 		local frac = (radius - dist) / radius
-		if frac <= 0 then return end
-
 		local tr, behindwall = TraceShockwavePath(origin, targetPos, {inflictor, attacker}, ent)
-		if behindwall then return end
+		if (frac <= 0 or behindwall) and ent:IsPlayer() then
+			local eyePos = ent:EyePos()
+			dist = (eyePos - origin):Length()
+			frac = (radius - dist) / radius
+			tr, behindwall = TraceShockwavePath(origin, eyePos, {inflictor, attacker}, ent)
+		end
+		if frac <= 0 or behindwall then return end
 
 		local targetDmg = DamageInfo()
 		targetDmg:SetDamage(damage * frac)
@@ -438,8 +460,18 @@ local function ApplyBlastDamage(data, enta, tracePos, len)
 	force:Div(forceLen)
 
 	local tr, behindwall = TraceShockwavePath(data.Pos, tracePos, data.Filter, enta)
-	local blocked = behindwall or tr.Hit and tr.Entity != enta
 	local frac = math_Clamp((data.Distance - len) / data.Distance, 0, 1)
+	if (frac <= 0 or behindwall) and enta:IsPlayer() then
+		tracePos = enta:EyePos()
+		len = (tracePos - data.Pos):Length()
+		force = tracePos - data.Pos
+		forceLen = force:Length()
+		if forceLen <= 0 then force = VectorRand(); forceLen = 1 end
+		force:Div(forceLen)
+		tr, behindwall = TraceShockwavePath(data.Pos, tracePos, data.Filter, enta)
+		frac = math_Clamp((data.Distance - len) / data.Distance, 0, 1)
+	end
+	local blocked = behindwall or tr.Hit and tr.Entity != enta
 	local forceFrac = math_max(frac, data.MinForceFrac)
 	local damageFrac = math_max(frac ^ data.DamageExponent, data.MinDamageFrac)
 	local forceadd = force * forceFrac * data.ForceMul

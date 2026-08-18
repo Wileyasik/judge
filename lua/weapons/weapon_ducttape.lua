@@ -590,20 +590,20 @@ if SERVER then
 		else
 			local bonewounds = {}
 
-		for i, tbl in pairs(org.wounds) do
+		for _, tbl in pairs(org.wounds) do
 			if LimbGroup(tbl[4]) == bone then
-				table.insert(bonewounds, i)
+				table.insert(bonewounds, tbl)
 			end
 		end
 
-			for i = 1, #bonewounds do
+			for _, wound in ipairs(bonewounds) do
 				if tape ~= 0 and #bonewounds > 0 then
-					if org.wounds[bonewounds[1]] then
-						local biggestWound = org.wounds[bonewounds[1]][1]
+					if wound then
+						local biggestWound = wound[1]
 						local healedWound = math.max(biggestWound - tape, 0)
 						local woundHeal = tape - (biggestWound - healedWound)
 						org.bleed = math.max(org.bleed - (biggestWound - healedWound), 0)
-						org.wounds[bonewounds[1]][1] = healedWound
+						wound[1] = healedWound
 						tape = woundHeal
 
 						org.pain = math.max(org.pain - (biggestWound - healedWound) / 4, 0)
@@ -613,20 +613,19 @@ if SERVER then
 						end
 
 						ent.ducttaped_limbs = ent.ducttaped_limbs or {}
-						local bone_name = ent:GetBoneName(ent:LookupBone(org.wounds[bonewounds[1]][4]))
+						local bone_name = ent:GetBoneName(ent:LookupBone(wound[4]))
 
 						if not ent.ducttaped_limbs[bone_name] then
 							ent.ducttaped_limbs[bone_name] = true
 							done = true
 						end
 
-						if org.wounds[bonewounds[1]][1] == 0 then table.remove(org.wounds, bonewounds[1]) end
+						if wound[1] == 0 then table.RemoveByValue(org.wounds, wound) end
 					end
-					table.remove(bonewounds, 1)
 				end
 			end
 		end
-		org.owner:SetNetVar("wounds", org.wounds)
+		hg.organism.MarkWoundsNetDirty(org, true)
 		timer.Create("bandage_limbs" .. ent:EntIndex(), 0.1, 1, function()
  			ent:SetNetVar("ducttaped_limbs", ent.ducttaped_limbs)
 			if ent:IsRagdoll() and hg.RagdollOwner(ent) and hg.RagdollOwner(ent):Alive() then

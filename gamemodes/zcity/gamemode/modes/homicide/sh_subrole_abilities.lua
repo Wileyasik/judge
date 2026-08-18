@@ -125,32 +125,8 @@ end
 
 function MODE.BreakOtherNeck(ply, other_ply, aim_ent)
 	if(other_ply:Alive())then
-		other_ply:Kill()
 		other_ply:ViewPunch(Angle(0, 0, -10))
-		
-		aim_ent.organism.spine3 = 1
-		
-		aim_ent:EmitSound("neck_snap_01.wav", 60, 100, 1, CHAN_AUTO)
-
-		timer.Simple(0.1, function()
-			local ent = other_ply:GetNWEntity("RagdollDeath")
-
-			if IsValid(ent) then
-				ent:RemoveInternalConstraint(ent:TranslateBoneToPhysBone(ent:LookupBone("ValveBiped.Bip01_Head1")))
-
-				local spine = ent:TranslateBoneToPhysBone(ent:LookupBone("ValveBiped.Bip01_Spine2"))
-				local head = ent:TranslateBoneToPhysBone(ent:LookupBone("ValveBiped.Bip01_Head1"))
-
-				local pspine = ent:GetPhysicsObjectNum(spine)
-				local phead = ent:GetPhysicsObjectNum(head)
-
-				local lpos, lang = WorldToLocal(phead:GetPos() + phead:GetAngles():Forward() * -2 + phead:GetAngles():Up() * -1.5, angle_zero, pspine:GetPos(), pspine:GetAngles())
-                
-				phead:SetPos(pspine:GetPos() + pspine:GetAngles():Forward() * 12.9 + pspine:GetAngles():Right() * -1)
-
-				local cons = constraint.AdvBallsocket(ent, ent, spine, head, lpos, nil, 0, 0, -55, -90, -50, 55, 35, 50, 0, 0, 0, 0, 0)
-			end
-		end)
+		hg.BreakNeck(aim_ent, ply, aim_ent)
 	end
 end
 

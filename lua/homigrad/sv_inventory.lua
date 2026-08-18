@@ -56,7 +56,7 @@ function hg.RenewInv(ply, isDead)
             local rag = ply:GetNWEntity("RagdollDeath")
 
             if IsValid(rag) then
-                wep:SetPos(rag:GetPos() + vector_up * - 10000)
+				wep:SetPos(rag:GetPos())
                 wep:SetParent(rag, 0)
             else
                 wep:SetPos(ply:GetPos())

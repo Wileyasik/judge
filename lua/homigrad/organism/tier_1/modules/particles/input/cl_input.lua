@@ -125,7 +125,16 @@ net.Receive("hg_bloodimpact", function()
 	local amt = net.ReadInt(8)
 	amt = math.Clamp(amt,0,32)
 	//debugoverlay.Line(pos, vel, 5, color_white)
-	for i = 1, amt do impact(pos,vel,mul) end
+	local batch = 4
+	local index = 0
+	while amt > 0 do
+		local n = math.min(amt, batch)
+		amt = amt - n
+		timer.Simple(index * 0.04, function()
+			for i = 1, n do impact(pos,vel,mul) end
+		end)
+		index = index + 1
+	end
 end)
 
 net.Receive("hg_fullbody_bloodmist", function()
@@ -145,7 +154,7 @@ end)
 
 local function explode(pos, size, force)
 	size = size or 1
-	local xx, yy = 12, 12
+	local xx, yy = 8, 8
 	local w, h = 360 / xx, 360 / yy
 	for x = 1, xx * size do
 		for y = 1, yy * size do
@@ -217,22 +226,54 @@ net.Receive("hg_gib_bloodspill", function()
 	if trail then addGibTrail(ent) end
 end)
 
+net.Receive("hg_fullbody_gibspill", function()
+	local groupID = net.ReadUInt(32)
+	local count = net.ReadUInt(8)
+	local pending = {}
+	for _ = 1, count do pending[net.ReadUInt(16)] = true end
+
+	local function applyGroup(attempt)
+		for entIndex in pairs(pending) do
+			local ent = Entity(entIndex)
+			if not IsValid(ent) or ent:GetNW2Int("hg_fullbody_gib_group", -1) != groupID then continue end
+			for i = 1, 5 do addGibBloodSpill(ent, false) end
+			addGibTrail(ent)
+			pending[entIndex] = nil
+		end
+
+		if next(pending) and attempt < 20 then
+			timer.Simple(0.05, function() applyGroup(attempt + 1) end)
+		end
+	end
+
+	applyGroup(1)
+end)
+
 hook.Add("Think", "hg_gib_trail", function()
 	for ent, data in pairs(hg.gibTrails) do
 		if not IsValid(ent) then
 			hg.gibTrails[ent] = nil
 			continue
 		end
-		if LocalPlayer():GetNetVar("disappearance", nil) or ent:GetNetVar("disappearance", nil) then continue end
+		if LocalPlayer():GetNetVar("disappearance", nil) or ent:GetNetVar("disappearance", nil) then
+			hg.gibTrails[ent] = nil
+			continue
+		end
 
 		local vel = ent:GetVelocity()
-		local speed = vel:Length()
-		if speed < 22 then continue end
-
 		local now = CurTime()
+		local speedSqr = vel:LengthSqr()
+		if speedSqr < 22 * 22 then
+			data.settleTime = data.settleTime or now
+			if data.settleTime + 1 <= now then hg.gibTrails[ent] = nil end
+			continue
+		end
+		data.settleTime = nil
+
 		if data.lastSpawn > now then continue end
 		data.lastSpawn = now + 0.035
 
+		local speed = math.sqrt(speedSqr)
 		local normVel = vel / speed
 		addBloodPart(ent:GetPos() + VectorRand(-1.5, 1.5), -normVel * Rand(15, 35) + VectorRand(-4, 4), mats[math.random(countmats)], Rand(1.5, 3), Rand(1.5, 3), false, false)
 	end
@@ -245,7 +286,7 @@ net.Receive("addfountain",function()
 
 	local function spawnEffect(attempt)
 		ent = IsValid(ent) and ent or Entity(entIndex)
-		if not IsValid(ent) then
+		if not IsValid(ent) or not ent:GetNW2Bool("hg_fountain", false) then
 			if attempt < 20 then timer.Simple(0.05, function() spawnEffect(attempt + 1) end) end
 			return
 		end
@@ -265,6 +306,7 @@ net.Receive("addfountain",function()
 	spawnEffect(0)
 end)
 
+local bloodSquirtSerial = 0
 net.Receive("bloodsquirt", function()
 	local ent = net.ReadEntity()
 	local entIndex = net.ReadUInt(16)
@@ -287,11 +329,13 @@ net.Receive("bloodsquirt", function()
 	//local mat = ent:GetBoneMatrix(bone)
 		local localPos, localDir = WorldToLocal(pos, dir:Angle(), mat:GetTranslation(), mat:GetAngles())
 
-		local name = "squirtblood"..ent:EntIndex()..dir[1]
-		local i = 250
+		bloodSquirtSerial = bloodSquirtSerial + 1
+		local name = "squirtblood"..ent:EntIndex().."_"..bloodSquirtSerial
+		local i = 125
 		local maxI = i
 		local vechuy = Vector(0,0,0)
-		timer.Create(name, 0.01 * game.GetTimeScale(), i + 10, function()
+		local dsqr = 2000 * 2000
+		timer.Create(name, 0.02, i + 10, function()
 			if not IsValid(ent) then timer.Remove(name) return end
 			local drawEnt = IsValid(ent.FakeRagdoll) and ent.FakeRagdoll or ent
 			local amt = i / maxI
@@ -299,11 +343,11 @@ net.Receive("bloodsquirt", function()
 			if not drawMat then timer.Remove(name) return end
 			local drawPos, drawDir = LocalToWorld(localPos, localDir, drawMat:GetTranslation(), drawMat:GetAngles())
 			drawDir = drawDir:Forward() * len
+			if (drawPos - LocalPlayer():EyePos()):LengthSqr() > dsqr then i = i - 1 return end
 			vechuy = vechuy + VectorRand(-amt * 5,amt * 5)
 			addBloodPart(drawPos, drawDir * amt * 90 + vechuy * amt, mat_huy, math.Rand(3,3), math.Rand(3,3), true, false)
 			i = i - 1
 		end)
-		timer.Adjust(name, 0)
 	end
 
 	spawnEffect(0)
@@ -343,7 +387,8 @@ net.Receive("bloodsquirt2", function()
 	local i = 50
 	local maxI = i
 	local vechuy = Vector(0,0,0)
-	timer.Create(name, 0.01 * game.GetTimeScale(), i + 10, function()
+	local dsqr = 2000 * 2000
+	timer.Create(name, 0.01, i + 10, function()
 		if not IsValid(ent) then timer.Remove(name) return end
 		local ent = IsValid(ent.FakeRagdoll) and ent.FakeRagdoll or ent
 		local amt = math.max(i / maxI, 0.2)
@@ -364,10 +409,10 @@ net.Receive("bloodsquirt2", function()
 		end
 
 		dir = dir:Forward() * len
+		if (pos - LocalPlayer():EyePos()):LengthSqr() > dsqr then i = i - 1 return end
 		addBloodPart(pos + VectorRand(-0.2, 0.2), dir * amt * 90 + VectorRand(-amt * 25,amt * 25), mat_huy, math.Rand(3,3), math.Rand(3,3), false, false)
 		i = i - 1
 	end)
-	timer.Adjust(name, 0)
 end)
 
 net.Receive("vomitConcussionMouth", function()
@@ -420,7 +465,6 @@ net.Receive("vomitConcussionMouth", function()
 		end
 		i = i - 1
 	end)
-	timer.Adjust(name, 0)
 end)
 
 local shitMat

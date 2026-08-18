@@ -355,6 +355,24 @@ local game_GetWorld = game.GetWorld
 local ang, ang2, ang3 = Angle(0, 0, 0), Angle(0, 0, 0),  Angle(0, 0, 0)
 local spine, time, rupper, lupper, rforearm, lforearm, rhand, lhand
 
+local function getRagdollControlCache(ragdoll)
+	local model = ragdoll:GetModel()
+	local cache = ragdoll.hgControlCache
+	if cache and cache.model == model then return cache end
+
+	cache = {
+		model = model,
+		torsoBone = ragdoll:LookupBone("ValveBiped.Bip01_Spine2"),
+		headBone = ragdoll:LookupBone("ValveBiped.Bip01_Head1"),
+		eyesAttachment = ragdoll:LookupAttachment("eyes"),
+		physBones = {},
+		boneNames = {},
+		fixedPhys = {},
+	}
+	ragdoll.hgControlCache = cache
+	return cache
+end
+
 local height = Vector(0, 0, 72) --28 eye level if crouched
 local util_PointContents, bit_band, hook_Run = util.PointContents, bit.band, hook.Run
 local forceArm = 600
@@ -566,6 +584,7 @@ function hg.FakeLegAttack(ply)
 	local ragdoll = ply.FakeRagdoll
 	local org = ply.organism
 	if not ply:Alive() or not IsValid(ragdoll) or not org or not org.canmove then return end
+	if org.rlegamputated or org.rlegupamputated then return end
 	if ply.InLegKick and ply.InLegKick > CurTime() then return end
 	if ply:GetNWFloat("InLegKick", 0) > CurTime() then return end
 	if hook.Run("PlayerCanLegAttack", ply) == false then return end
@@ -608,12 +627,13 @@ hook.Add("Think", "Fake", function()
 			//hg.ragdollFake[ply] = nil
 			continue
 		end
+		local controlCache = getRagdollControlCache(ragdoll)
 
-		local torso = ragdoll:LookupBone("ValveBiped.Bip01_Spine2")
-		if torso then
+		local torso = controlCache.torsoBone
+		if isnumber(torso) and torso >= 0 then
 			local torsopos, ang = ragdoll:GetBonePosition(torso)
 
-			if IsValid(ragdoll.bull) and (ragdoll.bull.lastposset or 0) < CurTime() then
+			if torsopos and IsValid(ragdoll.bull) and (ragdoll.bull.lastposset or 0) < CurTime() then
 				ragdoll.bull.lastposset = CurTime() + 0.5
 				
 				ragdoll.bull:SetPos(torsopos + vector_up * 5)
@@ -631,9 +651,11 @@ hook.Add("Think", "Fake", function()
 		ragdoll.dtime = (SysTime() - (ragdoll.lastCallTime or SysTime())) * game.GetTimeScale()
 		ragdoll.lastCallTime = SysTime()
 
-		local vellen = ragdoll:GetPhysicsObject():GetVelocity():Length()
+		local rootPhys = ragdoll:GetPhysicsObject()
+		local vellen = IsValid(rootPhys) and rootPhys:GetVelocity():Length() or ragdoll:GetVelocity():Length()
 
 		local org = ply.organism
+		if not org then continue end
 		local wep = ply:GetActiveWeapon()
 		local floppyBones = ragdoll.hg_floppy_bones or org.fake_floppy_bones
 		local leftArmFloppy = floppyBones and (floppyBones["ValveBiped.Bip01_L_UpperArm"] or floppyBones["ValveBiped.Bip01_L_Forearm"])
@@ -679,15 +701,28 @@ hook.Add("Think", "Fake", function()
 			
 			local ragbonecount = ragdoll:GetPhysicsObjectCount()
 			for i = 0, ragbonecount - 1 do
-				local bone = ragdoll:TranslatePhysBoneToBone(i)
+				local bone = controlCache.physBones[i]
+				if bone == nil then
+					bone = ragdoll:TranslatePhysBoneToBone(i)
+					controlCache.physBones[i] = bone
+				end
+				if not isnumber(bone) or bone < 0 then continue end
 				local bonepos, boneang = ply:GetBonePosition(bone)
 				if bonepos and boneang then
 					local physobj = ragdoll:GetPhysicsObjectNum(i)
+					if not IsValid(physobj) then continue end
 					local mass = physobj:GetMass() / 5
 					
-					local name = ragdoll:GetBoneName(bone)
+					local name = controlCache.boneNames[bone]
+					if name == nil then
+						name = ragdoll:GetBoneName(bone)
+						controlCache.boneNames[bone] = name or false
+					elseif name == false then
+						name = nil
+					end
+					name = name or "__INVALIDBONE__"
 
-					if IsValid(physobj) then
+					if name then
 						local bone_impulse = ply.HitBones and ply.HitBones[name] or CurTime()
 						local amt_impulse = (2 - math.Clamp(bone_impulse - CurTime(),0,2)) / 2
 						
@@ -720,8 +755,17 @@ hook.Add("Think", "Fake", function()
 			end
 
 			if ply.FakeRagdoll ~= ragdoll then continue end
-		elseif ply:Alive() then			
-			local pos = ragdoll:GetBoneMatrix(ragdoll:LookupBone("ValveBiped.Bip01_Head1")):GetTranslation()		
+		elseif ply:Alive() then
+			local pos
+			local headBone = controlCache.headBone
+			if isnumber(headBone) and headBone >= 0 then
+				local headMatrix = ragdoll:GetBoneMatrix(headBone)
+				if headMatrix then pos = headMatrix:GetTranslation() end
+			end
+			if not pos then
+				local headPhys = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, 10))
+				pos = IsValid(headPhys) and headPhys:GetPos() or ragdoll:WorldSpaceCenter()
+			end
 			
 			if !ply:KeyDown(IN_JUMP) then
 				ply.jumpedfake = nil
@@ -740,23 +784,25 @@ hook.Add("Think", "Fake", function()
 		end
 
 		local angles = ply:EyeAngles()
-		local att = ragdoll:GetAttachment(ragdoll:LookupAttachment("eyes"))
+		local eyesAttachment = controlCache.eyesAttachment
+		local att = isnumber(eyesAttachment) and eyesAttachment > 0 and ragdoll:GetAttachment(eyesAttachment)
 		--ragdoll:SetFlexWeight(9, 0)
-		local vecpos = angles:Forward() * 10000
-		local dist = (angles:Forward() * 10000):Distance(vecpos)
-		local distmod = math.Clamp(1 - (dist / 20000), 0.35, 1)
-		local lookat = LerpVector(distmod, att.Ang:Forward() * 10000, vecpos)
-		local LocalPos, LocalAng = WorldToLocal(lookat, angles, att.Pos, att.Ang)
-		LocalAng[1] = math.Clamp(LocalAng[1], -30, 30)
-		LocalAng[2] = math.Clamp(LocalAng[2], -30, 30)
-		
-		if ragdoll.organism and not ragdoll.organism.otrub then
-			ragdoll.LastAng = LocalAng
-		else
-			LocalAng = ragdoll.LastAng or LocalAng
-		end
+		if att and att.Pos and att.Ang then
+			local vecpos = angles:Forward() * 10000
+			local dist = (angles:Forward() * 10000):Distance(vecpos)
+			local distmod = math.Clamp(1 - (dist / 20000), 0.35, 1)
+			local lookat = LerpVector(distmod, att.Ang:Forward() * 10000, vecpos)
+			local LocalPos, LocalAng = WorldToLocal(lookat, angles, att.Pos, att.Ang)
+			LocalAng[1] = math.Clamp(LocalAng[1], -30, 30)
+			LocalAng[2] = math.Clamp(LocalAng[2], -30, 30)
+			if ragdoll.organism and not ragdoll.organism.otrub then
+				ragdoll.LastAng = LocalAng
+			else
+				LocalAng = ragdoll.LastAng or LocalAng
+			end
 
-		ragdoll:SetEyeTarget(LocalAng:Forward() * 10000)
+			ragdoll:SetEyeTarget(LocalAng:Forward() * 10000)
+		end
 
 		local model = ragdoll:GetModel()
 		ang:Set(angles)
@@ -796,14 +842,22 @@ hook.Add("Think", "Fake", function()
 			end
 		end
 
-		spine = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll,1))
-		rupper = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll,2))
-		lupper = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll,3))
-		lforearm = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll,4))
-		rhand = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll,7))
-		rforearm = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll,6))
-		lhand = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll,5))
-		ang = spine:GetAngles()
+		for physNumber = 1, 7 do
+			if controlCache.fixedPhys[physNumber] == nil then
+				realPhysNum(ragdoll, physNumber)
+				local modelCache = hg.cachedmodels[controlCache.model]
+				local physID = modelCache and modelCache[defaultBones[physNumber]]
+				controlCache.fixedPhys[physNumber] = isnumber(physID) and physID or -1
+			end
+		end
+		spine = ragdoll:GetPhysicsObjectNum(controlCache.fixedPhys[1])
+		rupper = ragdoll:GetPhysicsObjectNum(controlCache.fixedPhys[2])
+		lupper = ragdoll:GetPhysicsObjectNum(controlCache.fixedPhys[3])
+		lforearm = ragdoll:GetPhysicsObjectNum(controlCache.fixedPhys[4])
+		rhand = ragdoll:GetPhysicsObjectNum(controlCache.fixedPhys[7])
+		rforearm = ragdoll:GetPhysicsObjectNum(controlCache.fixedPhys[6])
+		lhand = ragdoll:GetPhysicsObjectNum(controlCache.fixedPhys[5])
+		if IsValid(spine) then ang = spine:GetAngles() end
 		local fallCoverActive = false
 		if org.alive and org.canmove and IsValid(spine) then
 			local vel = ragdoll:GetVelocity()
@@ -1045,12 +1099,12 @@ hook.Add("Think", "Fake", function()
 				end
 			end
 
-			local on_ground = util.TraceLine({
+			local on_ground = IsValid(spine) and util.TraceLine({
 					start = spine:GetPos(),
 					endpos = spine:GetPos() - vector_up * 58,
 					filter = {ply, ragdoll},
 					mask = MASK_SOLID,
-				}).Hit
+				}).Hit or false
 			
 			if not fallCoverActive and forward then
 				if IsValid(ragdoll.ConsRH) then
@@ -1166,7 +1220,7 @@ hook.Add("Think", "Fake", function()
 			local choking = (IsValid(ragdoll.ConsRH) and IsValid(ragdoll.ConsRH.choking) and ragdoll.ConsRH.choking) or (IsValid(ragdoll.ConsLH) and IsValid(ragdoll.ConsLH.choking) and ragdoll.ConsLH.choking)
 			local chokinghead = false
 
-			if not fallCoverActive and ply:KeyDown(IN_SPEED) and ply:KeyDown(IN_WALK) then
+			if not fallCoverActive and IsValid(lhand) and IsValid(rhand) and ply:KeyDown(IN_SPEED) and ply:KeyDown(IN_WALK) then
 				local trace
 				tr.start = lhand:GetPos() + lhand:GetAngles():Forward() * 5
 				tr.endpos = rhand:GetPos() + lhand:GetAngles():Forward() * 5
@@ -1430,14 +1484,15 @@ hook.Add("Think", "Fake", function()
 
 	ply.lean = ply:KeyDown(IN_ALT1) and 1 or ply:KeyDown(IN_ALT2) and -1 or 0
 
-	if keyLeft and not inmove and !ply:InVehicle() and (isNeckSlitRolling or not ply:KeyDown(IN_USE)) then
+	if keyLeft and IsValid(spine) and not inmove and !ply:InVehicle() and (isNeckSlitRolling or not ply:KeyDown(IN_USE)) then
 			if org.canmove then
 				local angle = spine:GetAngles()
 				angle[3] = angle[3] - 20 * (ragdoll:IsOnFire() and 1.5 or 1)
 				shadowControl(ragdoll, 1, 0.001, angle, 490, 90)
-				local head = ragdoll:GetPhysicsObject(ragdoll:TranslateBoneToPhysBone(ragdoll:LookupBone("ValveBiped.Bip01_Head1")))
+				local headPhysID = isnumber(controlCache.headBone) and controlCache.headBone >= 0 and ragdoll:TranslateBoneToPhysBone(controlCache.headBone) or -1
+				local head = headPhysID >= 0 and ragdoll:GetPhysicsObjectNum(headPhysID)
 
-				if math.random(100) == 1 and ragdoll:IsOnFire() then
+				if math.random(100) == 1 and ragdoll:IsOnFire() and IsValid(head) then
 					local key, fire = next(ragdoll.fires)
 
 					if ragdoll:IsOnFire() then
@@ -1456,14 +1511,15 @@ hook.Add("Think", "Fake", function()
 			end
 		end
 
-		if keyRight and not inmove and !ply:InVehicle() and (isNeckSlitRolling or not ply:KeyDown(IN_USE)) then
+		if keyRight and IsValid(spine) and not inmove and !ply:InVehicle() and (isNeckSlitRolling or not ply:KeyDown(IN_USE)) then
 			if org.canmove and not org.otrub then
 				local angle = spine:GetAngles()
 				angle[3] = angle[3] + 20 * (ragdoll:IsOnFire() and 1.5 or 1)
 				shadowControl(ragdoll, 1, 0.001, angle, 490, 90)
-				local head = ragdoll:GetPhysicsObject(ragdoll:TranslateBoneToPhysBone(ragdoll:LookupBone("ValveBiped.Bip01_Head1")))
+				local headPhysID = isnumber(controlCache.headBone) and controlCache.headBone >= 0 and ragdoll:TranslateBoneToPhysBone(controlCache.headBone) or -1
+				local head = headPhysID >= 0 and ragdoll:GetPhysicsObjectNum(headPhysID)
 
-				if ragdoll:IsOnFire() then
+				if ragdoll:IsOnFire() and IsValid(head) then
 					shadowControl(ragdoll, 5, 0.001, angle, 0, 0, head:GetPos() - head:GetAngles():Right() * 10, 5050, 100)
 					shadowControl(ragdoll, 7, 0.001, angle, 0, 0, head:GetPos() - head:GetAngles():Right() * 10, 5050, 100)
 				end
@@ -1485,7 +1541,7 @@ hook.Add("Think", "Fake", function()
 	local rollLeft = ply:KeyDown(IN_MOVELEFT)
 	local rollRight = ply:KeyDown(IN_MOVERIGHT)
 
-	if (rollLeft or rollRight) and not inmove and !ply:InVehicle() and org.canmove then
+	if (rollLeft or rollRight) and IsValid(spine) and not inmove and !ply:InVehicle() and org.canmove then
 		local onground = util.TraceLine({
 			start = spine:GetPos(),
 			endpos = spine:GetPos() - vector_up * 36,
@@ -1514,12 +1570,12 @@ hook.Add("Think", "Fake", function()
 		end
 	end
 
-	if org.canmove and ply.FakeRagdoll == ragdoll then
+	if org.canmove and ply.FakeRagdoll == ragdoll and IsValid(spine) then
 		if ply:KeyDown(IN_DUCK) and !ply:InVehicle() then
 				local lthigh = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, 11))
 				local rthigh = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, 8))
 
-				if lthigh and rthigh then
+				if IsValid(lthigh) and IsValid(rthigh) then
 					local legAng1 = Angle(0, 0, 0)
 					local legAng2 = Angle(0, 0, 0)
 

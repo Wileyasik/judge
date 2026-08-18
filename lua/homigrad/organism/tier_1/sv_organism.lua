@@ -145,6 +145,14 @@ hook.Add("Org Clear", "Main", function(org)
 	org.deathStateKilled = nil
 	org.lastWoundsSig = nil
 	org.lastArterialWoundsSig = nil
+	org.lastObserverSig = nil
+	org.lastObserverCriticalSig = nil
+	org.nextObserverHeartbeat = nil
+	org.woundNetGeneration = (org.woundNetGeneration or 0) + 1
+	org.woundNetFlushPending = nil
+	org.woundsNetDirty = nil
+	org.arterialWoundsNetDirty = nil
+	org.mirrorWoundsToDeathRagdoll = nil
 
 
 	org.blindness = nil
@@ -153,6 +161,8 @@ hook.Add("Org Clear", "Main", function(org)
 			org.owner:SetHealth(100)
 			org.owner:SetNetVar("wounds",{})
 			org.owner:SetNetVar("arterialwounds",{})
+			org.lastWoundsSig = "0"
+			org.lastArterialWoundsSig = "0"
 		end
 		org.owner:SetNetVar("zableval_masku", false)
 	end
@@ -177,6 +187,13 @@ util.AddNetworkString("rem_deathstate_sound")
 local CurTime = CurTime
 local nullTbl = {}
 local hg_developer = ConVarExists("hg_developer") and GetConVar("hg_developer") or CreateConVar("hg_developer", 0, FCVAR_SERVER_CAN_EXECUTE, "Toggle developer mode (enables damage traces)", 0, 1)
+
+-- organism_send net message flags (must match cl_statistics.lua)
+local ORG_NET_FORCE = 1        -- force full send (org.owner.fullsend)
+local ORG_NET_SPECTATOR_SKIP = 2  -- skip spectator view update
+local ORG_NET_MORE_INFO = 3     -- send more info for spectator
+local ORG_NET_MERGE = 4         -- merge with existing organism
+
 local function wounds_signature(wounds)
 	if not wounds or #wounds == 0 then return "0" end
 	local sig = tostring(#wounds)
@@ -188,7 +205,76 @@ local function wounds_signature(wounds)
 	end
 	return sig
 end
-local function send_organism(org, ply)
+hg.organism.WoundsSignature = wounds_signature
+function hg.organism.SyncWoundsNet(org)
+	return hg.organism.FlushWoundsNet(org)
+end
+
+function hg.organism.SyncArterialWoundsNet(org)
+	return hg.organism.FlushArterialWoundsNet(org)
+end
+
+local function mirrorWoundsToDeathRagdoll(org)
+	local owner = org and org.owner
+	if not IsValid(owner) or not owner:IsPlayer() then return end
+	local rag = IsValid(owner.RagdollDeath) and owner.RagdollDeath or owner:GetNWEntity("RagdollDeath")
+	if IsValid(rag) then rag:SetNetVar("wounds", org.wounds or {}) end
+end
+
+function hg.organism.FlushWoundsNet(org, force, mirrorDeathRagdoll)
+	if not org or not IsValid(org.owner) then return end
+	local signature = wounds_signature(org.wounds)
+	if not force and org.lastWoundsSig == signature then
+		if mirrorDeathRagdoll then mirrorWoundsToDeathRagdoll(org) end
+		return false
+	end
+	org.lastWoundsSig = signature
+	org.owner:SetNetVar("wounds", org.wounds or {})
+	if mirrorDeathRagdoll then mirrorWoundsToDeathRagdoll(org) end
+	return true
+end
+
+
+function hg.organism.FlushArterialWoundsNet(org, force)
+	if not org or not IsValid(org.owner) then return end
+	local signature = wounds_signature(org.arterialwounds)
+	if not force and org.lastArterialWoundsSig == signature then return false end
+	org.lastArterialWoundsSig = signature
+	org.owner:SetNetVar("arterialwounds", org.arterialwounds or {})
+	return true
+end
+
+local function scheduleWoundNetFlush(org)
+	if not org or org.woundNetFlushPending then return end
+	org.woundNetFlushPending = true
+	local generation = org.woundNetGeneration or 0
+	timer.Simple(0, function()
+		if (org.woundNetGeneration or 0) != generation then return end
+		org.woundNetFlushPending = nil
+		local normalDirty = org.woundsNetDirty
+		local arterialDirty = org.arterialWoundsNetDirty
+		local mirrorDeathRagdoll = org.mirrorWoundsToDeathRagdoll
+		org.woundsNetDirty = nil
+		org.arterialWoundsNetDirty = nil
+		org.mirrorWoundsToDeathRagdoll = nil
+		if normalDirty then hg.organism.FlushWoundsNet(org, false, mirrorDeathRagdoll) end
+		if arterialDirty then hg.organism.FlushArterialWoundsNet(org) end
+	end)
+end
+
+function hg.organism.MarkWoundsNetDirty(org, mirrorDeathRagdoll)
+	if not org then return end
+	org.woundsNetDirty = true
+	org.mirrorWoundsToDeathRagdoll = org.mirrorWoundsToDeathRagdoll or mirrorDeathRagdoll
+	scheduleWoundNetFlush(org)
+end
+
+function hg.organism.MarkArterialWoundsNetDirty(org)
+	if not org then return end
+	org.arterialWoundsNetDirty = true
+	scheduleWoundNetFlush(org)
+end
+local function send_organism(org, ply, recipientForce, reliable)
 	if not IsValid(org.owner) then return end
 	local sendtable = {}
 	sendtable.alive = org.alive
@@ -222,6 +308,7 @@ local function send_organism(org, ply)
 	sendtable.shock = org.shock
 	sendtable.pulse = org.pulse
 	sendtable.heartbeat = org.heartbeat
+	sendtable.heartstop = org.heartstop
 	sendtable.fibrillation = org.fibrillation
 	sendtable.arrhythmia = org.arrhythmia
 	sendtable.bloodPressure = org.bloodPressure
@@ -283,23 +370,107 @@ local function send_organism(org, ply)
 	sendtable.concussion = org.concussion
 	sendtable.nausea = org.nausea
 	sendtable.concussion_tinnitus = org.concussion_tinnitus
-	net.Start("organism_send", hg_unreliable_nets:GetBool())
+	net.Start("organism_send", not reliable and hg_unreliable_nets:GetBool())
 	net.WriteTable(not hg_developer:GetBool() and sendtable or org)
-	net.WriteBool(org.owner.fullsend)
-	net.WriteBool(false)
-	net.WriteBool(true)
-	net.WriteBool(false)
+	net.WriteBool(recipientForce or org.owner.fullsend or false)  -- ORG_NET_FORCE
+	net.WriteBool(false)  -- ORG_NET_SPECTATOR_SKIP
+	net.WriteBool(true)  -- ORG_NET_MORE_INFO
+	net.WriteBool(false)  -- ORG_NET_MERGE
 	if IsValid(ply) and ply:IsPlayer() then
 		net.Send(ply)
+	elseif IsValid(org.owner) then
+		local rf = RecipientFilter()
+		rf:AddPVS(org.owner:GetPos())
+		net.Send(rf)
 	else
 		net.Broadcast()
 	end
-	if org.owner == ply or not IsValid(ply) or not ply:IsPlayer() then
+	if not recipientForce and (org.owner == ply or not IsValid(ply) or not ply:IsPlayer()) then
 		org.owner.fullsend = nil
 	end
 end
-local function send_bareinfo(org)
+local function observerValue(value, precision)
+	if isnumber(value) then return math.Round(value / (precision or 1)) end
+	if isbool(value) then return value and 1 or 0 end
+	if IsValid(value) then return value:EntIndex() end
+	return tostring(value)
+end
+
+local function lodged_signature(lodged)
+	local signature = tostring(#lodged)
+	for i = 1, #lodged do
+		local entry = lodged[i]
+		if entry then
+			signature = signature .. ":" .. table.concat({
+				observerValue(entry.PhysBoneID), observerValue(entry.BoneName),
+				observerValue(entry.model), observerValue(entry.takeent),
+				observerValue(entry.modelscale, 0.01),
+				observerValue(entry.CrossbowBolt), observerValue(entry.OffsetPos),
+				observerValue(entry.OffsetAng)
+			}, ",")
+		end
+	end
+	return signature
+end
+
+local function observer_signature(org)
+	local o2 = org.o2 or {}
+	local lodged = org.LodgedEntities or {}
+	return table.concat({
+		observerValue(org.alive), observerValue(org.otrub), observerValue(org.bloodtype),
+		observerValue(org.blood, 5), observerValue(org.bleed, 0.01), observerValue(org.pulse, 1),
+		observerValue(org.heartbeat, 1), observerValue(org.heartstop), observerValue(org.fibrillation),
+		observerValue(org.timeValue, 0.1),
+		observerValue(org.arrhythmia, 0.01), observerValue(org.bloodPressure, 1),
+		observerValue(org.systolic, 1), observerValue(org.diastolic, 1),
+		observerValue(org.cardiacOutput, 0.01), observerValue(org.myocardialOxygen, 0.01),
+		observerValue(org.heartStrain, 0.01), observerValue(org.hypertension),
+		observerValue(org.hypotension), observerValue(org.analgesia, 0.01),
+		observerValue(o2[1], 0.1), observerValue(o2[2], 0.1),
+		observerValue(o2.regen, 0.01), observerValue(o2.curregen, 0.01), observerValue(org.superfighter),
+		observerValue(org.lungsfunction), observerValue(org.eyeL, 0.01), observerValue(org.eyeR, 0.01),
+		observerValue(org.lleg, 0.01), observerValue(org.rleg, 0.01),
+		observerValue(org.rarm, 0.01), observerValue(org.larm, 0.01),
+		observerValue(org.llegdislocation), observerValue(org.rlegdislocation),
+		observerValue(org.rarmdislocation), observerValue(org.larmdislocation),
+		observerValue(org.jawdislocation), observerValue(org.llegamputated),
+		observerValue(org.rlegamputated), observerValue(org.rarmamputated),
+		observerValue(org.larmamputated), observerValue(org.lhandamputated),
+		observerValue(org.rhandamputated), observerValue(org.larmupamputated),
+		observerValue(org.rarmupamputated), observerValue(org.llegupamputated),
+		observerValue(org.rlegupamputated), observerValue(org.headamputated),
+		observerValue(org.silentBerserk and false or org.berserkActive2), observerValue(org.CantCheckPulse),
+		observerValue(org.noradrenalineActive), observerValue(org.panicattackadd, 0.01),
+		observerValue(org.panicattack, 0.01), observerValue(org.seizure, 0.01),
+		observerValue(org.seizureStart, 0.1), observerValue(org.seizureEnd, 0.1),
+		observerValue(org.seizureActive), observerValue(org.brainFrontal, 0.01),
+		observerValue(org.brainParietal, 0.01), observerValue(org.brainTemporal, 0.01),
+		observerValue(org.brainOccipital, 0.01), observerValue(org.brainHemorrhage, 0.01),
+		observerValue(org.brainBleedRate, 0.01), lodged_signature(lodged),
+		observerValue(org.deathStateEnd, 0.1), observerValue(org.critical),
+		observerValue(org.incapacitated)
+	}, ":")
+end
+
+local function observer_critical_signature(org)
+	return table.concat({
+		observerValue(org.alive), observerValue(org.otrub), observerValue(org.heartstop),
+		observerValue(org.fibrillation), observerValue(org.seizureActive),
+		observerValue(org.critical), observerValue(org.incapacitated),
+		observerValue(org.headamputated), observerValue(org.llegamputated),
+		observerValue(org.rlegamputated), observerValue(org.larmamputated),
+		observerValue(org.rarmamputated), observerValue(org.llegupamputated),
+		observerValue(org.rlegupamputated), observerValue(org.larmupamputated),
+		observerValue(org.rarmupamputated)
+	}, ":")
+end
+
+local function send_bareinfo(org, force, reliable)
 	if not IsValid(org.owner) then return end
+	if force == nil then force = true end
+	local time = CurTime()
+	local signature = observer_signature(org)
+	if not force and org.lastObserverSig == signature and (org.nextObserverHeartbeat or 0) > time then return false end
 	local sendtable = {}
 	sendtable.alive = org.alive
 	sendtable.otrub = org.otrub
@@ -309,6 +480,7 @@ local function send_bareinfo(org)
 	sendtable.bleed = org.bleed
 	sendtable.pulse = org.pulse
 	sendtable.heartbeat = org.heartbeat
+	sendtable.heartstop = org.heartstop
 	sendtable.fibrillation = org.fibrillation
 	sendtable.arrhythmia = org.arrhythmia
 	sendtable.bloodPressure = org.bloodPressure
@@ -364,17 +536,24 @@ local function send_bareinfo(org)
 	sendtable.brainOccipital = org.brainOccipital
 	sendtable.brainHemorrhage = org.brainHemorrhage
 	sendtable.brainBleedRate = org.brainBleedRate
+	sendtable.critical = org.critical
+	sendtable.incapacitated = org.incapacitated
+	sendtable.deathStateEnd = org.deathStateEnd or 0
 
 	local rf = RecipientFilter()
 	rf:AddPVS(org.owner:GetPos())
 	if org.owner:IsPlayer() then rf:RemovePlayer(org.owner) end
-	net.Start("organism_send", hg_unreliable_nets:GetBool())
+	net.Start("organism_send", not reliable and hg_unreliable_nets:GetBool())
 	net.WriteTable(not hg_developer:GetBool() and sendtable or org)
-	net.WriteBool(org.owner.fullsend)
-	net.WriteBool(true)
-	net.WriteBool(false)
-	net.WriteBool(false)
+	net.WriteBool(force or org.owner.fullsend or false)  -- ORG_NET_FORCE
+	net.WriteBool(true)  -- ORG_NET_SPECTATOR_SKIP
+	net.WriteBool(false)  -- ORG_NET_MORE_INFO
+	net.WriteBool(false)  -- ORG_NET_MERGE
 	net.Send(rf)
+	org.lastObserverSig = signature
+	org.lastObserverCriticalSig = observer_critical_signature(org)
+	org.nextObserverHeartbeat = time + 4
+	return true
 end
 hg.send_organism = send_organism
 hg.send_bareinfo = send_bareinfo
@@ -911,24 +1090,35 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		org.lungsfunction = false
 		org.heartstop = true
 	end
-	time = CurTime()
+	local now = CurTime()
 	if IsValid(owner) then
+		local criticalSignature = observer_critical_signature(org)
+		if org.lastObserverCriticalSig != criticalSignature then
+			send_bareinfo(org, true, true)
+			if isPly and owner:Alive() then send_organism(org, owner, true, true) end
+			for _, spectator in player.Iterator() do
+				local spectTarget = IsValid(spectator.chosenSpectEntity) and spectator.chosenSpectEntity or spectator:GetNWEntity("spect")
+				if not spectator:Alive() and spectator.viewmode == 1 and spectTarget == owner then
+					send_organism(org, spectator, true, true)
+				end
+			end
+		end
 		org.sendPlyTime = org.sendPlyTime or CurTime()
-		if (org.sendPlyTime > time) and !just_went_uncon then return end
+		if (org.sendPlyTime > now) and !just_went_uncon then return end
 		org.sendPlyTime = CurTime() + 1 + (not isPly and 2 or 0)
-		send_bareinfo(org)
+		send_bareinfo(org, false)
 		local woundsSig = wounds_signature(org.wounds)
 		if org.lastWoundsSig != woundsSig or org.owner.fullsend then
-			org.lastWoundsSig = woundsSig
-			org.owner:SetNetVar("wounds", org.wounds)
+			hg.organism.FlushWoundsNet(org, org.owner.fullsend)
 		end
 		local arterialWoundsSig = wounds_signature(org.arterialwounds)
 		if org.lastArterialWoundsSig != arterialWoundsSig or org.owner.fullsend then
-			org.lastArterialWoundsSig = arterialWoundsSig
-			org.owner:SetNetVar("arterialwounds", org.arterialwounds)
+			hg.organism.FlushArterialWoundsNet(org, org.owner.fullsend)
 		end
 		if isPly and owner:Alive() then
 			send_organism(org, owner)
+		else
+			owner.fullsend = nil
 		end
 	end
 end)
@@ -1120,7 +1310,7 @@ local finally_fixed = {
 local function fixlimb(org, key, fixer)
 	if math.random(100) > (97 + (fixer != org.owner and (fixer.organism and fixer.organism.pain or 0) or 0) - (org.analgesia * 50 + org.painkiller * 15) - (fixer != org.owner and 30 or 0) - (fixer.tries or 0) * 10 - (fixer.Profession == "doctor" and 100 or 0) - (org.owner == fixer and (IsValid(org.owner.FakeRagdoll) or (org.owner.Crouching and org.owner:Crouching())) and 10 or 0)) then
 		org[key.."dislocation"] = false
-		if hg.fakeBoneFlop and hg.fakeBoneFlop.ClearStoredLimb(org, key) then
+		if (org[key] or 0) < 1 and hg.fakeBoneFlop and hg.fakeBoneFlop.ClearStoredLimb(org, key) then
 			hg.fakeBoneFlop.ScheduleRebuild(org.owner)
 		end
 		org.painadd = org.painadd + 5 * math.random(1, 3)
@@ -1239,7 +1429,7 @@ net.Receive("hg_dislocation_minigame_success", function(len, ply)
 
 	if key then
 		org[key.."dislocation"] = false
-		if hg.fakeBoneFlop and hg.fakeBoneFlop.ClearStoredLimb(org, key) then
+		if (org[key] or 0) < 1 and hg.fakeBoneFlop and hg.fakeBoneFlop.ClearStoredLimb(org, key) then
 			hg.fakeBoneFlop.ScheduleRebuild(org.owner)
 		end
 

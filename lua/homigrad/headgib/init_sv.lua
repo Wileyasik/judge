@@ -3,6 +3,16 @@ local net, hg, pairs, Vector, ents, IsValid, util = net, hg, pairs, Vector, ents
 local vecZero = Vector(0,0,0)
 local vecInf = Vector(0,0,0) / 0
 
+local GIB_MAX_SPEED = 3000
+local GIB_MAX_SPEED_SQR = GIB_MAX_SPEED * GIB_MAX_SPEED
+
+local function ClampGibVelocity(vel)
+	if vel:LengthSqr() > GIB_MAX_SPEED_SQR then
+		return vel:GetNormalized() * GIB_MAX_SPEED
+	end
+	return vel
+end
+
 local function removeBone(rag, bone, phys_bone, nohuys)
 	if not bone or not phys_bone or phys_bone < 0 then return end
 	if !nohuys then rag:ManipulateBoneScale(bone, vecZero) end
@@ -14,7 +24,8 @@ local function removeBone(rag, bone, phys_bone, nohuys)
 	if not IsValid(phys_obj) then return end
 	phys_obj:EnableCollisions(false)
 	phys_obj:SetMass(0.1)
-	--rag:RemoveInternalConstraint(phys_bone)
+	phys_obj:SetVelocity(vecZero)
+	phys_obj:SetAngleVelocity(vecZero)
 
 	constraint.RemoveAll(phys_obj)
 	rag.gibRemove[phys_bone] = phys_obj
@@ -45,11 +56,27 @@ end
 gib_ragdols = gib_ragdols or {}
 local gib_ragdols = gib_ragdols
 
+local activeGibCount = 0
+local MAX_ACTIVE_GIBS = CreateConVar("hg_max_active_gibs", "512", FCVAR_ARCHIVE, "Maximum number of active gib physics entities at once", 8, 2048)
+
 local VectorRand, ents_Create = VectorRand, ents.Create
 local vector_up = Vector(0,0,1)
-local function PhysCallback( ent, data )
+local networkOriginLimit = 16000
+local function isSafeNetworkPos(pos)
+	if not isvector(pos) then return false end
+	return pos.x == pos.x and pos.y == pos.y and pos.z == pos.z
+		and math.abs(pos.x) < networkOriginLimit
+		and math.abs(pos.y) < networkOriginLimit
+		and math.abs(pos.z) < networkOriginLimit
+end
+
+local function PhysCallback(ent, data)
 	--data.HitPos -- data.HitNormal
-	if data.DeltaTime < 0.2 then return end
+	if not IsValid(ent) or not data or not isnumber(data.Speed) or data.Speed < 80 then return end
+	local now = CurTime()
+	if (ent.hgGoreNextImpact or 0) > now then return end
+	ent.hgGoreNextImpact = now + 0.4
+	ent.hgGoreImpactSounds = (ent.hgGoreImpactSounds or 0) + 1
 	ent:EmitSound("physics/flesh/flesh_squishy_impact_hard"..math.random(4)..".wav")
 	-- if !data.HitEntity:IsPlayer() and !data.HitEntity:IsRagdoll() and math.abs(data.HitNormal.z) < 0.75 then
 	-- 	ent:SetMoveType(MOVETYPE_NONE)
@@ -77,7 +104,19 @@ local function PhysCallback( ent, data )
 	-- 	end)
 	-- end
 
-	util.Decal("Normal.Blood24", data.HitPos - data.HitNormal * 1, data.HitPos + data.HitNormal * 1, ent)
+	if not ent.hgGoreImpactDecal and isvector(data.HitPos) and isvector(data.HitNormal) then
+		ent.hgGoreImpactDecal = true
+		util.Decal("Normal.Blood24", data.HitPos - data.HitNormal, data.HitPos + data.HitNormal, ent)
+	end
+
+	if ent.hgGoreImpactSounds >= 2 and ent.hgGoreCallbackID then
+		ent:RemoveCallback("PhysicsCollide", ent.hgGoreCallbackID)
+		ent.hgGoreCallbackID = nil
+	end
+end
+
+local function AddGorePhysicsCallback(ent)
+	ent.hgGoreCallbackID = ent:AddCallback("PhysicsCollide", PhysCallback)
 end
 
 local grub, mat, gamemod = Model("models/grub_nugget_small.mdl"), "models/flesh", engine.ActiveGamemode()
@@ -95,6 +134,7 @@ for _, mdl in ipairs(meatModels) do util.PrecacheModel(mdl) end
 for _, mdl in ipairs(eyeModels) do util.PrecacheModel(mdl) end
 local gibRemoveTime = 60 --120
 function SpawnMeatGore(mainent, pos, count, force, scale, spawnEyes, models)
+	if activeGibCount >= MAX_ACTIVE_GIBS:GetInt() then return end
 	if istable(spawnEyes) then
 		models = spawnEyes
 		spawnEyes = false
@@ -113,20 +153,26 @@ function SpawnMeatGore(mainent, pos, count, force, scale, spawnEyes, models)
 		ent:SetAngles(AngleRand(-180,180))
 		ent:Activate()
 		ent:Spawn()
+		ent.dontPickup = true
+
+		activeGibCount = activeGibCount + 1
+		ent:CallOnRemove("hg_gib_counter", function()
+			activeGibCount = math.max(activeGibCount - 1, 0)
+		end)
 
 		local phys = ent:GetPhysicsObject()
 		if IsValid(phys) then
-			phys:SetVelocity((IsValid(mainent) and mainent:GetVelocity() or vector_origin) + VectorRand(-65,65) + force / 10)
+			phys:SetVelocity(ClampGibVelocity((IsValid(mainent) and mainent:GetVelocity() or vector_origin) + VectorRand(-65,65) + force / 10))
 			phys:AddAngleVelocity(VectorRand(-65,65))
 		end
 
 		if zb.CROUND and zb.CROUND ~= "hmcd" or gamemod == "sandbox" then
 			ent:DrawShadow(false)
 			ent:SetModelScale(0, gibRemoveTime)
-			SafeRemoveEntityDelayed(ent, gibRemoveTime)
 		end
+		SafeRemoveEntityDelayed(ent, gibRemoveTime)
 
-		ent:AddCallback( "PhysicsCollide", PhysCallback )
+		AddGorePhysicsCallback(ent)
 
 		local entIndex = ent:EntIndex()
 		timer.Simple(0.2, function()
@@ -152,31 +198,49 @@ function SpawnMeatGore(mainent, pos, count, force, scale, spawnEyes, models)
 			ent:SetAngles(AngleRand(-180,180))
 			ent:Activate()
 			ent:Spawn()
+			ent.dontPickup = true
+
+			activeGibCount = activeGibCount + 1
+			ent:CallOnRemove("hg_gib_counter", function()
+				activeGibCount = math.max(activeGibCount - 1, 0)
+			end)
 
 			local phys = ent:GetPhysicsObject()
 			if IsValid(phys) then
-				phys:SetVelocity((IsValid(mainent) and mainent:GetVelocity() or vector_origin) + VectorRand(-65,65) + force / 10)
+				phys:SetVelocity(ClampGibVelocity((IsValid(mainent) and mainent:GetVelocity() or vector_origin) + VectorRand(-65,65) + force / 10))
 				phys:AddAngleVelocity(VectorRand(-65,65))
 			end
 
 			if zb.CROUND and zb.CROUND ~= "hmcd" or gamemod == "sandbox" then
 				ent:DrawShadow(false)
 				ent:SetModelScale(0, gibRemoveTime)
-				SafeRemoveEntityDelayed(ent, gibRemoveTime)
 			end
+			SafeRemoveEntityDelayed(ent, gibRemoveTime)
 
-			ent:AddCallback( "PhysicsCollide", PhysCallback )
+			AddGorePhysicsCallback(ent)
 		end
 	end
 end
 
-local headpos_male, headpos_female, headang = Vector(0,0,7), Vector(-2,0,6), Angle(0,0,0)
+local headpos_male, headpos_female, headang = Vector(0,0,5), Vector(-2,0,4), Angle(0,0,0)
 
 util.AddNetworkString("addfountain")
 util.AddNetworkString("hg_gib_bloodspill")
+util.AddNetworkString("hg_fullbody_gibspill")
 util.AddNetworkString("hg_fullbody_bloodmist")
 
-hg.fountains = hg.fountains or {}
+-- Remove the obsolete whole-table fountain snapshot after a hot reload.
+timer.Simple(0, function()
+	for ent in pairs(hg.fountains or {}) do
+		if IsValid(ent) then
+			ent:SetNW2Bool("hg_fountain", true)
+			if ent.RemoveCallOnRemove then ent:RemoveCallOnRemove("removefountain") end
+		end
+	end
+	if zb and zb.net and zb.net.globals then zb.net.globals.fountains = nil end
+	hg.fountains = nil
+end)
+
 local headModels = {
 	Model("models/headpartial/headpartial1.mdl"),
 	Model("models/headpartial/headpartial2.mdl"),
@@ -307,8 +371,13 @@ function Gib_Input(rag, bone, force, damage)
 	if not gibRemove then
 		rag.gibRemove = {}
 		gibRemove = rag.gibRemove
+	end
 
+	if not gib_ragdols[rag] then
 		gib_ragdols[rag] = true
+		rag:CallOnRemove("cleanup_gib_ragdols", function(ent)
+			gib_ragdols[ent] = nil
+		end)
 	end
 	
 	local phys_bone = rag:TranslateBoneToPhysBone(bone)
@@ -358,20 +427,14 @@ function Gib_Input(rag, bone, force, damage)
 		rag.noHead = true
 		rag:SetNWString("PlayerName", "Beheaded body")
 
+		rag:SetNW2Bool("hg_fountain", true)
+
 		net.Start("addfountain")
 		net.WriteEntity(rag)
 		net.WriteUInt(rag:EntIndex(), 16)
 		net.WriteVector(force or vector_origin)
 		net.SendPVS(rag:GetPos())
 
-		hg.fountains[rag] = {bone = rag:LookupBone("ValveBiped.Bip01_Neck1"), lpos = ThatPlyIsFemale(rag) and Vector(4,0,0) or Vector(5,0,0),lang = Angle(0,0,0)}
-
-		rag:CallOnRemove("removefountain", function()
-			hg.fountains[rag] = nil
-			SetNetVar("fountains", hg.fountains)
-		end)
-
-		SetNetVar("fountains", hg.fountains)
 	end
 end
 
@@ -456,7 +519,99 @@ function hg.CanFullBodyGib(target, org, owner, removed)
 	return true
 end
 
-local function spawnFullBodyGib(mainent, pos, force, model, scale, bloodSpill)
+hg.fullBodyGibGroups = hg.fullBodyGibGroups or {}
+local fullBodyGibGroups = hg.fullBodyGibGroups
+hg.fullBodyGibGroupSerial = hg.fullBodyGibGroupSerial or 0
+local fullBodyGibMaxGroups = CreateConVar("hg_fullbody_gib_max_groups", "8", FCVAR_ARCHIVE, "Maximum full-body gib groups before old distant groups are removed", 1, 64)
+local fullBodyGibCleanupAge = CreateConVar("hg_fullbody_gib_cleanup_age", "12", FCVAR_ARCHIVE, "Minimum age of a distant full-body gib group eligible for pressure cleanup", 0, 60)
+local fullBodyGibSafeDistance = CreateConVar("hg_fullbody_gib_safe_distance", "2500", FCVAR_ARCHIVE, "Player protection radius for full-body gib pressure cleanup", 0, 16000)
+
+local function createFullBodyGibGroup(pos)
+	repeat
+		hg.fullBodyGibGroupSerial = hg.fullBodyGibGroupSerial % 2147483647 + 1
+	until not fullBodyGibGroups[hg.fullBodyGibGroupSerial]
+	local group = {
+		id = hg.fullBodyGibGroupSerial,
+		created = CurTime(),
+		pos = pos,
+		gibs = {},
+		spillGibs = {},
+		liveCount = 0
+	}
+	fullBodyGibGroups[group.id] = group
+	return group
+end
+
+local function registerFullBodyGib(group, gib, bloodSpill)
+	if not group or not IsValid(gib) then return end
+	group.gibs[#group.gibs + 1] = gib
+	group.liveCount = group.liveCount + 1
+	if bloodSpill then group.spillGibs[#group.spillGibs + 1] = gib end
+	gib:SetNW2Int("hg_fullbody_gib_group", group.id)
+
+	gib:CallOnRemove("hg_fullbody_gib_group_"..group.id, function()
+		group.liveCount = math.max(group.liveCount - 1, 0)
+		if group.liveCount == 0 then fullBodyGibGroups[group.id] = nil end
+	end)
+end
+
+local function removeFullBodyGibGroup(group)
+	if not group or group.removing then return end
+	group.removing = true
+	for _, gib in ipairs(group.gibs) do
+		if IsValid(gib) then gib:Remove() end
+	end
+	if group.liveCount == 0 then fullBodyGibGroups[group.id] = nil end
+end
+
+local function cleanupFullBodyGibGroups()
+	local count = table.Count(fullBodyGibGroups)
+	local maxGroups = fullBodyGibMaxGroups:GetInt()
+	if count <= maxGroups then return end
+
+	local now = CurTime()
+	local safeDistanceSqr = fullBodyGibSafeDistance:GetFloat() ^ 2
+	while count > maxGroups do
+		local candidate
+		for _, group in pairs(fullBodyGibGroups) do
+			if group.removing or now - group.created < fullBodyGibCleanupAge:GetFloat() then continue end
+
+			local protected = false
+			for _, ply in player.Iterator() do
+				if IsValid(ply) and group.pos:DistToSqr(ply:GetPos()) <= safeDistanceSqr then
+					protected = true
+					break
+				end
+			end
+			if protected then continue end
+			if not candidate or group.created < candidate.created then candidate = group end
+		end
+
+		if not candidate then return end
+		removeFullBodyGibGroup(candidate)
+		count = count - 1
+	end
+end
+
+local function sendFullBodyGibSpills(group)
+	if not group or group.removing then return end
+	local valid = {}
+	for _, gib in ipairs(group.spillGibs) do
+		if IsValid(gib) then valid[#valid + 1] = gib end
+	end
+	if #valid == 0 then return end
+
+	net.Start("hg_fullbody_gibspill")
+	net.WriteUInt(group.id, 32)
+	net.WriteUInt(#valid, 8)
+	for _, gib in ipairs(valid) do net.WriteUInt(gib:EntIndex(), 16) end
+	local recipients = RecipientFilter()
+	for _, gib in ipairs(valid) do recipients:AddPVS(gib:GetPos()) end
+	net.Send(recipients)
+end
+
+local function spawnFullBodyGib(mainent, pos, force, model, scale, bloodSpill, group)
+	if activeGibCount >= MAX_ACTIVE_GIBS:GetInt() then return end
 	local ent = ents_Create("prop_physics")
 	if not IsValid(ent) then return end
 	ent:SetModel(model)
@@ -466,21 +621,23 @@ local function spawnFullBodyGib(mainent, pos, force, model, scale, bloodSpill)
 	ent:SetAngles(AngleRand(-180, 180))
 	ent:Activate()
 	ent:Spawn()
+	ent.dontPickup = true
+
+	activeGibCount = activeGibCount + 1
+	ent:CallOnRemove("hg_gib_counter", function()
+		activeGibCount = math.max(activeGibCount - 1, 0)
+	end)
 
 	local phys = ent:GetPhysicsObject()
 	if IsValid(phys) then
 		local baseVel = IsValid(mainent) and mainent:GetVelocity() or isvector(mainent) and mainent or vector_origin
-		phys:SetVelocity(baseVel + VectorRand(-260, 260) + (force or vector_origin) / 7)
+		phys:SetVelocity(ClampGibVelocity(baseVel + VectorRand(-260, 260) + (force or vector_origin) / 7))
 		phys:AddAngleVelocity(VectorRand(-320, 320))
 	end
 
-	ent:AddCallback("PhysicsCollide", PhysCallback)
+	AddGorePhysicsCallback(ent)
 	SafeRemoveEntityDelayed(ent, gibRemoveTime)
-	if bloodSpill then
-		timer.Simple(0.2, function()
-			if IsValid(ent) then sendGibBloodSpill(ent, false, true) end
-		end)
-	end
+	registerFullBodyGib(group, ent, bloodSpill)
 	return ent
 end
 
@@ -492,16 +649,16 @@ local function fullBodyBloodMist(pos, force)
 	net.SendPVS(pos)
 end
 
-local function spawnFullBodyGroup(ent, pos, force, models)
+local function spawnFullBodyGroup(ent, pos, force, models, group)
 	for _, model in ipairs(models) do
-		spawnFullBodyGib(ent, pos, force, model, nil, true)
+		spawnFullBodyGib(ent, pos, force, model, nil, true, group)
 	end
 end
 
-local function spawnFullBodyMeat(ent, pos, count, force, scale, models)
+local function spawnFullBodyMeat(ent, pos, count, force, scale, models, group)
 	models = models or meatModels
 	for _ = 1, count do
-		local gib = spawnFullBodyGib(ent, pos, force, models[math.random(#models)], scale)
+		local gib = spawnFullBodyGib(ent, pos, force, models[math.random(#models)], scale, false, group)
 		if models == meatModels and IsValid(gib) then gib:SetSubMaterial(0, mat) end
 	end
 end
@@ -519,20 +676,29 @@ local function fullBodyExplodeAt(pos, force, velocity, org, soundEnt, owner, dmg
 	end
 
 	fullBodyBloodMist(pos, force)
+	util.ScreenShake(pos, 19.8, 10, 1.5, 500, false, nil, 1.5, true, true, true)
+	local gibGroup = createFullBodyGibGroup(pos)
 	if not (org and org.stomachgibbed) then
-		spawnFullBodyGroup(velocity, pos, force, fullBodyGibModels.stomach)
-		spawnFullBodyMeat(velocity, pos, 6, force, 0.55, intestineChunkModels)
+		spawnFullBodyGroup(velocity, pos, force, fullBodyGibModels.stomach, gibGroup)
+		spawnFullBodyMeat(velocity, pos, 6, force, 0.55, intestineChunkModels, gibGroup)
 	end
 
 	for _, limb in ipairs({"lleg", "rleg", "larm"}) do
 		if not (org and org[limb.."amputated"]) then
-			spawnFullBodyGroup(velocity, pos, force, fullBodyGibModels[limb])
-			spawnFullBodyMeat(velocity, pos, 4, force, 0.65)
+			spawnFullBodyGroup(velocity, pos, force, fullBodyGibModels[limb], gibGroup)
+			spawnFullBodyMeat(velocity, pos, 4, force, 0.65, nil, gibGroup)
 		end
 	end
 
-	if not (org and org.rarmamputated) then spawnFullBodyMeat(velocity, pos, 5, force, 0.65) end
-	if not (org and org.headamputated) then spawnFullBodyMeat(velocity, pos, 8, force, 0.8, headGibModels) end
+	if not (org and org.rarmamputated) then spawnFullBodyMeat(velocity, pos, 5, force, 0.65, nil, gibGroup) end
+	if not (org and org.headamputated) then spawnFullBodyMeat(velocity, pos, 8, force, 0.8, headGibModels, gibGroup) end
+
+	if gibGroup.liveCount > 0 then
+		timer.Simple(0.2, function() sendFullBodyGibSpills(gibGroup) end)
+	else
+		fullBodyGibGroups[gibGroup.id] = nil
+	end
+	cleanupFullBodyGibGroups()
 
 	if IsValid(owner) then
 		owner.fullbodyexploded = true
@@ -552,6 +718,8 @@ local function fullBodyExplodeAt(pos, force, velocity, org, soundEnt, owner, dmg
 	if org then org.fullbodyexploded = true end
 	hook.Run("OnFullBodyExplode", soundEnt, org, owner, dmgInfo)
 end
+
+timer.Create("HG_FullBodyGibPressureCleanup", 5, 0, cleanupFullBodyGibGroups)
 
 function hg.FullBodyExplode(target, force, dmgInfo)
 	if not IsValid(target) or target.fullbodyexploded then return end
@@ -614,7 +782,26 @@ function hg.FullBodyExplode(target, force, dmgInfo)
 	ent.fullbodyexploded = true
 	if org then org.fullbodyexploded = true end
 	force = force or vector_origin
-	fullBodyExplodeAt(getFullBodyPos(ent), force, ent:GetVelocity(), org, ent, owner, dmgInfo)
+	local explodePos = getFullBodyPos(ent)
+	if isSafeNetworkPos(explodePos) then
+		fullBodyExplodeAt(explodePos, force, ent:GetVelocity(), org, ent, owner, dmgInfo)
+	else
+		if IsValid(owner) then
+			owner.fullbodyexploded = true
+			owner:SetNWEntity("FakeRagdoll", NULL)
+			owner:SetNWEntity("RagdollDeath", NULL)
+			owner.FakeRagdoll = nil
+			if owner:Alive() then
+				local wasRemoved = owner.Removed
+				owner.Removed = true
+				owner:Kill()
+				timer.Simple(0, function()
+					if IsValid(owner) then owner.Removed = wasRemoved end
+				end)
+			end
+		end
+		hook.Run("OnFullBodyExplode", ent, org, owner, dmgInfo)
+	end
 
 	if IsValid(ent.headGore) then ent.headGore:Remove() end
 	if IsValid(ent.zippyHeadGore) then ent.zippyHeadGore:Remove() end

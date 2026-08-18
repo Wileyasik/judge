@@ -28,21 +28,40 @@ hook.Add("PostCleanupMap","removeblooddroplets",function()
 	hg.bloodcount = 0
 end)
 
+hook.Add("Player Spawn", "removeownblooddroplets", function(ply)
+	if ply ~= LocalPlayer() then return end
+
+	local parts1, parts2 = hg.bloodparticles1, hg.bloodparticles2
+	for i = #parts1, 1, -1 do
+		local part = parts1[i]
+		if part and part.owner == ply then
+			parts1[i] = parts1[#parts1]
+			table_remove(parts1)
+		end
+	end
+	for i = #parts2, 1, -1 do
+		local part = parts2[i]
+		if part and part.owner == ply then
+			parts2[i] = parts2[#parts2]
+			table_remove(parts2)
+		end
+	end
+end)
+
 local mat_huy = Material("effects/blood_core")
 local lightcolor = Color(0, 0, 0, 255)
 bloodparticles_hook[1] = function(anim_pos, mul)
 	 
 	local int = hg_blood_draw_distance:GetInt()
-	local pos = lply:EyePos()
 	--render.OverrideBlend( true, BLEND_SRC_ALPHA, BLEND_ONE, BLENDFUNC_ADD )
 	local dstsqr = int * int
-	local lplypos = LocalPlayer():EyePos()
-	local lplyang = LocalPlayer():EyeAngles():Forward()
+	local lplypos = EyePos()
+	local lplyang = EyeAngles():Forward()
 	for i = 1, #hg.bloodparticles1 do
 		local part = hg.bloodparticles1[i]
 		if not part then continue end
-		if (pos - lplypos):Dot(lplyang) < 0 then continue end
-		if (part[2] - pos):LengthSqr() > dstsqr then continue end
+		if (part[2] - lplypos):Dot(lplyang) < 0 then continue end
+		if (part[2] - lplypos):LengthSqr() > dstsqr then continue end
 		--if !hg.isVisible(part[1],LocalPlayer():GetShootPos(),LocalPlayer(),MASK_VISIBLE) then continue end
 		--render_SetMaterial(part[4])
 		local pos = LerpVector(anim_pos, part[2], part[1])
@@ -181,7 +200,11 @@ bloodparticles_hook[2] = function(mul)
 	dsqr = dsqr * dsqr
 	for i = #hg.bloodparticles1, 1, -1 do
 		local part = hg.bloodparticles1[i]
-		if not part then table_remove(hg.bloodparticles1, i) continue end
+		if not part then hg.bloodparticles1[i] = hg.bloodparticles1[#hg.bloodparticles1]; table_remove(hg.bloodparticles1) continue end
+		if time - part[7] >= 30 then
+			hg.bloodparticles1[i] = hg.bloodparticles1[#hg.bloodparticles1]; table_remove(hg.bloodparticles1)
+			continue
+		end
 
 		if (part[1] - lplypos):LengthSqr() > dsqr then continue end
 		
@@ -192,26 +215,21 @@ bloodparticles_hook[2] = function(mul)
 		tr.endpos = tr.start + part[3] * mul
 		tr.collisiongroup = part.kishki and COLLISION_GROUP_WORLD or COLLISION_GROUP_NONE
 
-		result = util_TraceLine(tr)
+		local result = util_TraceLine(tr)
 		local hitPos = result.HitPos
 		
-		if radiusSqr < hitPos:LengthSqr() then table_remove(hg.bloodparticles1, i) continue end
-		
-        if bit.band(util.PointContents(hitPos), CONTENTS_WATER) == CONTENTS_WATER then
-			hg.addBloodPart2(hitPos, part[3] / 20 + VectorRand(-1, 1), nil, nil, nil, nil, true)
+		if radiusSqr < hitPos:LengthSqr() then hg.bloodparticles1[i] = hg.bloodparticles1[#hg.bloodparticles1]; table_remove(hg.bloodparticles1) continue end
 
-			table_remove(hg.bloodparticles1, i)
+        local checkWater = time >= (part.nextwater or 0)
+        if checkWater then part.nextwater = time + 0.08 end
+        if checkWater and bit.band(util.PointContents(hitPos), CONTENTS_WATER) == CONTENTS_WATER then
+			hg.addBloodPart2(hitPos, part[3] / 20 + VectorRand(-1, 1), nil, nil, nil, nil, true, part.owner)
+
+			hg.bloodparticles1[i] = hg.bloodparticles1[#hg.bloodparticles1]; table_remove(hg.bloodparticles1)
 			continue
 		end
-		
-		if time - part[7] >= 30 then
-			table_remove(hg.bloodparticles1, i)
-
-			continue
-		end
-
 		if result.Hit and result.Entity:IsWorld() then
-			table_remove(hg.bloodparticles1, i)
+			hg.bloodparticles1[i] = hg.bloodparticles1[#hg.bloodparticles1]; table_remove(hg.bloodparticles1)
 			local dir = result.HitNormal
 			decalBlood(result.HitPos, dir, result, part.artery, part.owner)
 			
@@ -234,20 +252,20 @@ bloodparticles_hook[2] = function(mul)
 			result.Hit = result.Hit and shouldhit
 
 			if result.Hit then
+				local insolid = result.StartSolid and IsValid(result.Entity)
 				--local down = vecDown * mul * (math.max(0, grav))
 				local down = result.HitNormal
 				local nextpos = (result.Normal + down):GetNormalized() * 5
 				
-				if !insolid and (part.nextput or 0) < CurTime() then
-					part.nextput = CurTime() + 1
+				if !insolid and (part.nextput or 0) < time then
+					part.nextput = time + 1
 
 					decalBlood(result.HitPos, result.HitNormal, result, part.artery, part.owner)
 				end
 
-				local insolid = result.StartSolid and IsValid(result.Entity)
 				if insolid then
 					if result.Entity:IsVehicle() then
-						table_remove(hg.bloodparticles1, i)
+						hg.bloodparticles1[i] = hg.bloodparticles1[#hg.bloodparticles1]; table_remove(hg.bloodparticles1)
 					
 						continue
 					end
@@ -268,7 +286,7 @@ bloodparticles_hook[2] = function(mul)
 				if part.lerpedmove:LengthSqr() < 0.1 * mul then
 					decalBlood(result.HitPos, result.HitNormal, result, part.artery, part.owner)
 					
-					table_remove(hg.bloodparticles1, i)
+					hg.bloodparticles1[i] = hg.bloodparticles1[#hg.bloodparticles1]; table_remove(hg.bloodparticles1)
 					
 					continue
 				end

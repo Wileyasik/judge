@@ -4,7 +4,7 @@ local IsValid, math_Clamp = IsValid, math.Clamp
 --\\ Smooth UnRagdoll
 	local vecSmall = Vector(0.01, 0.01, 0.01)
 	function hg.SmoothUnfake(ent, ply)
-		if ply.gettingup and (ply.gettingup + 1 - CurTime()) > 0 and IsValid(ply) then
+		if IsValid(ent) and IsValid(ply) and ply.gettingup and (ply.gettingup + 1 - CurTime()) > 0 then
 			for i = 0, ent:GetBoneCount() - 1 do
 				local m1 = ent:GetBoneMatrix(i)
 				local m2 = ply:GetBoneMatrix(i)
@@ -88,6 +88,10 @@ local IsValid, math_Clamp = IsValid, math.Clamp
 			if IsValid(ent.bandageGlovesModel) then ent.bandageGlovesModel:Remove() end
 			ent.bandageGlovesModel = ClientsideModel(mdl, RENDERGROUP_BOTH)
 			local model = ent.bandageGlovesModel
+			if not IsValid(model) then
+				ent.bandageGlovesModel = nil
+				return
+			end
 			ent:CallOnRemove("removebandagegloves", function()
 				if IsValid(model) then
 					model:Remove()
@@ -150,13 +154,20 @@ local IsValid, math_Clamp = IsValid, math.Clamp
 		local lkp = ent.LookupBone and ent:LookupBone("ValveBiped.Bip01_Head1")
 		if !ent.GetManipulateBoneScale or !lkp then return end
 
-		if IsValid(ply.OldRagdoll) then
+		local gettingUp = ply:GetNWBool("FakeGettingUp", false) and IsValid(ply.OldRagdoll)
+		local playerBonesSetUp = false
+		if gettingUp then
+			local idleSequence = ply:SelectWeightedSequence(ACT_HL2MP_IDLE)
+			if idleSequence and idleSequence >= 0 then
+				ply:SetSequence(idleSequence)
+				ply:SetCycle(0)
+			end
 			ply:SetupBones()
+			playerBonesSetUp = ent == ply
 		end
-
 		hg.RenderWeapons(ent, ply)
 
-		ent:SetupBones()
+		if not playerBonesSetUp then ent:SetupBones() end
 
 		if IsValid(wep) and (wep.ismelee or wep.isTPIKBase) and wep.DrawWorldModel2 then
 			wep:DrawWorldModel2(true)
@@ -193,8 +204,8 @@ local IsValid, math_Clamp = IsValid, math.Clamp
 		hg.GoreCalc(ent, ply)
 
 --local current = ent:GetManipulateBoneScale(lkp)
-		local fountains = GetNetVar("fountains") or {}
-		local wawanted = (GetViewEntity() != ply) and !fountains[ent] and (!(!lply:Alive() and lply:GetNWEntity("spect") == ply and viewmode == 1) and !(hg_firstperson_death:GetBool() and follow == ent)) and vector_full or vector_small
+		local isFountain = ent:GetNW2Bool("hg_fountain", false)
+		local wawanted = (GetViewEntity() != ply) and !isFountain and (!(!lply:Alive() and lply:GetNWEntity("spect") == ply and viewmode == 1) and !(hg_firstperson_death:GetBool() and follow == ent)) and vector_full or vector_small
 		local org = ent.new_organism or ent.organism
 		local hideHead = (ent.headexploded or (org and org.headamputated)) or ((!hg_thirdperson:GetBool() and !hg_gopro:GetBool() and (ent == ply or (!hg_ragdollcombat:GetBool() or hg_firstperson_ragdoll:GetBool()))) or (hg_firstperson_death:GetBool() and follow == ent)) and wawanted == vector_small
 		local headScale = hideHead and vector_small or vector_full

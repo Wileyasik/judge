@@ -40,15 +40,13 @@ function math.BadNumber(v)
 	return not v or v==inf or v==ninf or not (v>=0 or v<=0) or tostring(v) == "nan"
 end
 
-local max_reasonable_pos 		= 25000
-local min_reasonable_pos 		= -25000
+local max_reasonable_pos 		= 16000
+local min_reasonable_pos 		= -16000
 
 function IsReasonable( pos )
-	local posY, posZ = pos.y, pos.z
-
-	if (pos.x > max_reasonable_pos or posY < min_reasonable_pos or
-		posY > max_reasonable_pos or posZ < min_reasonable_pos or
-		posZ > max_reasonable_pos) then
+	if pos.x < min_reasonable_pos or pos.x > max_reasonable_pos
+		or pos.y < min_reasonable_pos or pos.y > max_reasonable_pos
+		or pos.z < min_reasonable_pos or pos.z > max_reasonable_pos then
 		return false
 	end
 	return true
@@ -101,6 +99,35 @@ hook.Add("OnCrazyPhysics","crazy_physics",function(ent, physobj)--function(a,msg
 				v.__removed__ = true
 				v:Remove()
 			end
+		end
+	end
+end)
+
+local POS_NETWORK_LIMIT = 14000
+
+hook.Add("Think", "hg_PositionGuard", function()
+	if not SERVER then return end
+
+	local allProps = ents.FindByClass("prop_physics")
+	local count = #allProps
+	if count == 0 then return end
+
+	local tick = math.floor(CurTime() * 5)
+	local batchSize = math.max(1, math.ceil(count / 5))
+	local startIdx = (tick % 5) * batchSize + 1
+	local endIdx = math.min(startIdx + batchSize - 1, count)
+
+	local abs = math.abs
+
+	for i = startIdx, endIdx do
+		local ent = allProps[i]
+		if not IsValid(ent) then continue end
+
+		local pos = ent:GetPos()
+		local px, py, pz = pos.x, pos.y, pos.z
+
+		if abs(px) > POS_NETWORK_LIMIT or abs(py) > POS_NETWORK_LIMIT or abs(pz) > POS_NETWORK_LIMIT then
+			SafeRemoveEntity(ent)
 		end
 	end
 end)

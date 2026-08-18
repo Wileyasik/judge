@@ -33,6 +33,7 @@ function ClearDecalToEnt(ent)
 end
 
 local matRepl = Material("decals/decalsplash")
+local createdMats = {}
 local curmat
 local curmat2
 function AddDecalToEnt(ent, id, --[[optional]] entIndex, tex, clear, x, y, rot, size, alpha)
@@ -53,7 +54,12 @@ function AddDecalToEnt(ent, id, --[[optional]] entIndex, tex, clear, x, y, rot, 
 	local tabla = mata:GetKeyValues()
 	
 	-- you should set up entIndex for CSModels since their entIndex is -1
-	local mat = CreateMaterial(mata:GetName()..(entIndex or ent:EntIndex()).."228", mata:GetShader(), {})
+	local matname = mata:GetName()..(entIndex or ent:EntIndex()).."228"
+	local mat = createdMats[matname]
+	if !mat then
+		mat = CreateMaterial(matname, mata:GetShader(), {})
+		createdMats[matname] = mat
+	end
 	
 	--[[for i, val in pairs(tabla) do
 		if type(val) == "ITexture" then
@@ -72,12 +78,13 @@ function AddDecalToEnt(ent, id, --[[optional]] entIndex, tex, clear, x, y, rot, 
 	local olddetail = mata:GetTexture("$detail")
 	local sizew = basetexture:Width()
 	local sizeh = basetexture:Height()
-	local size = size or 512
+	local rtSize = 256
+	local size = math.min(size or rtSize, rtSize)
 	local scale = 1
 
 	local tex = tex or matRepl
 	
-	local rt = GetRenderTargetEx("vms_rt_"..util.CRC(name), size, size, RT_SIZE_OFFSCREEN, MATERIAL_RT_DEPTH_SHARED, 0, CREATERENDERTARGETFLAGS_HDR, IMAGE_FORMAT_ARGB8888)
+	local rt = GetRenderTargetEx("vms_rt_"..util.CRC(name), rtSize, rtSize, RT_SIZE_OFFSCREEN, MATERIAL_RT_DEPTH_SHARED, 0, CREATERENDERTARGETFLAGS_HDR, IMAGE_FORMAT_ARGB8888)
 
 	render.PushRenderTarget(rt)
 

@@ -347,20 +347,20 @@ if SERVER then
 		else
 			local bonewounds = {}
 			
-			for i, tbl in pairs(org.wounds) do
+			for _, tbl in pairs(org.wounds) do
 				if ent:GetBoneName(ent:LookupBone(tbl[4])) == bone then
-					table.insert(bonewounds,i)
+					table.insert(bonewounds, tbl)
 				end
 			end
 			
-			for i = 1, #bonewounds do
+			for _, wound in ipairs(bonewounds) do
 				if self.modeValues[1] ~= 0 and #bonewounds > 0 then
-					if org.wounds[bonewounds[1]] then
-						local biggestWound = org.wounds[bonewounds[1]][1]
+					if wound then
+						local biggestWound = wound[1]
 						local healedWound = math.max(biggestWound - self.modeValues[1], 0)
 						local woundHeal = self.modeValues[1] - (biggestWound - healedWound)
 						org.bleed = math.max(org.bleed - (biggestWound - healedWound), 0)
-						org.wounds[bonewounds[1]][1] = healedWound
+						wound[1] = healedWound
 						self.modeValues[1] = woundHeal
 
 						org.pain = math.max(org.pain - (biggestWound - healedWound) / 4, 0)
@@ -370,20 +370,19 @@ if SERVER then
 						end
 
 						ent.bandaged_limbs = ent.bandaged_limbs or {}
-						local bone_name = ent:GetBoneName(ent:LookupBone(org.wounds[bonewounds[1]][4]))
+						local bone_name = ent:GetBoneName(ent:LookupBone(wound[4]))
 						
 						if not ent.bandaged_limbs[bone_name] then
 							ent.bandaged_limbs[bone_name] = true
 							done = true
 						end
 
-						if org.wounds[bonewounds[1]][1] == 0 then table.remove(org.wounds, bonewounds[1]) end
+						if wound[1] == 0 then table.RemoveByValue(org.wounds, wound) end
 					end
-					table.remove(bonewounds, 1)
 				end
 			end
 		end
-		org.owner:SetNetVar("wounds",org.wounds)
+		hg.organism.MarkWoundsNetDirty(org, true)
 		timer.Create("bandage_limbs"..ent:EntIndex(),0.1,1,function()
 			ent:SetNetVar("bandaged_limbs",ent.bandaged_limbs)
 			if ent:IsRagdoll() and hg.RagdollOwner(ent) and hg.RagdollOwner(ent):Alive() then
@@ -688,21 +687,14 @@ if SERVER then
 
 			if wound[7] == "arteria" then org.o2.regen = 0 end
 
-			org.owner:SetNetVar("arterialwounds",org.arterialwounds)
+			hg.organism.MarkArterialWoundsNetDirty(org)
 
-			for i = 1, #bonewounds do
-				if org.wounds[bonewounds[i]] then
-					--print(org.wounds[bonewounds[i]], bonewounds[i])
-					org.wounds[bonewounds[i]][1] = 0
-				end
-			end
-			for i = 1, #bonewounds do
-				if org.wounds[bonewounds[i]] then
-					table.remove(org.wounds, bonewounds[i])
-				end
+			table.sort(bonewounds, function(a, b) return a > b end)
+			for _, woundIndex in ipairs(bonewounds) do
+				if org.wounds[woundIndex] then table.remove(org.wounds, woundIndex) end
 			end
 
-			org.owner:SetNetVar("wounds",org.wounds)
+			hg.organism.MarkWoundsNetDirty(org, true)
 
 			ent:SetNetVar("Tourniquets",ent.tourniquets)
 			if IsValid(ent.FakeRagdoll) then

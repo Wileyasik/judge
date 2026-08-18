@@ -312,7 +312,7 @@ local function hitArtery(artery, org, dmg, dmgInfo, boneindex, dir, hit)
 	local wound = {arterySize[artery], localPos, localAng, boneindex, CurTime(), dir2 * 100, artery}
 	table.insert(org.arterialwounds, wound)
 	if hg.organism.AddBleedSource then hg.organism.AddBleedSource(org, "arterial", arterySize[artery], artery, boneindex, wound) end
-	owner:SetNetVar("arterialwounds", org.arterialwounds)
+	hg.organism.MarkArterialWoundsNetDirty(org)
 	--if IsValid(owner:GetNWEntity("RagdollDeath")) then owner:GetNWEntity("RagdollDeath"):SetNetVar("wounds",org.arterialwounds) end
 	return 0
 end

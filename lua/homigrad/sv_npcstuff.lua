@@ -97,6 +97,11 @@ local math_random, math_Rand = math.random, math.Rand
 			if ent.organism then
 				local newOrg = hg.organism.Add(rag)
 				table.Merge(newOrg, ent.organism)
+				newOrg.woundNetGeneration = (newOrg.woundNetGeneration or 0) + 1
+				newOrg.woundNetFlushPending = nil
+				newOrg.woundsNetDirty = nil
+				newOrg.arterialWoundsNetDirty = nil
+				newOrg.mirrorWoundsToDeathRagdoll = nil
 		
 				hook.Run("RagdollDeath", ent, rag)
 		
@@ -106,7 +111,9 @@ local math_random, math_Rand = math.random, math.Rand
 				newOrg.owner = rag
 				rag:CallOnRemove("organism", hg.organism.Remove, rag)
 				newOrg.owner.fullsend = true
-				hg.send_bareinfo(newOrg)
+				hg.organism.FlushWoundsNet(newOrg, true, true)
+				hg.organism.FlushArterialWoundsNet(newOrg, true)
+				hg.send_bareinfo(newOrg, true, true)
 			
 				ent.organism = nil
 			end

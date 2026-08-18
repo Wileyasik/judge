@@ -842,8 +842,8 @@ elseif SERVER then
                             wound[1] = 0
                         end
 
-                        ply:SetNetVar("arterialwounds", ply.organism.arterialwounds)
-                        ply:SetNetVar("wounds", ply.organism.wounds)
+                        hg.organism.MarkArterialWoundsNetDirty(ply.organism)
+                        hg.organism.MarkWoundsNetDirty(ply.organism, true)
                         if ply.organism.bleed > 0.025 then
                             net.Start("HEV_DAMAGE")
                                 net.WriteString(snd)

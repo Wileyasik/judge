@@ -477,7 +477,8 @@ hook.Add("NetworkEntityCreated", "HG_GiveRenderOverride", function(ragdoll)
 		if !IsValid(ragdoll:GetNWEntity("ply")) then
 			ragdoll.RenderOverride = function(self, flags)
 				if not IsValid(self) or self:IsDormant() then return end
-				if not self:GetBonePosition(1) or self:GetBonePosition(1):IsEqualTol(self:GetPos(), 0.01) then return end
+				local bonePos = self:GetBonePosition(1)
+				if not bonePos or bonePos:IsEqualTol(self:GetPos(), 0.01) then return end
 				if not self:GetNWString("PlayerName") then return end
 				local ply = self:GetNWEntity("ply")
 				local ply = (IsValid(ply) and ply:IsPlayer() and ply:Alive() and ply.FakeRagdoll == self) and ply or self
@@ -512,7 +513,8 @@ hook.Add("RagdollEntityCreated", "RagdollFinder", function(ply, ent, key)
 		ent.hgGettingUpView = nil
 		ent.RenderOverride = function(self, flags)
 			if not IsValid(self) or self:IsDormant() then return end
-			if not self:GetBonePosition(1) or self:GetBonePosition(1):IsEqualTol(self:GetPos(), 0.01) then return end
+			local bonePos = self:GetBonePosition(1)
+			if not bonePos or bonePos:IsEqualTol(self:GetPos(), 0.01) then return end
 			local validPly = IsValid(ragdollOwner) and ragdollOwner:IsPlayer()
 			local isGettingUp = validPly and self.hgGettingUp and ragdollOwner.OldRagdoll == self
 			local renderOwner = (validPly and ragdollOwner:Alive() and (ragdollOwner.FakeRagdoll == self or isGettingUp)) and ragdollOwner or self

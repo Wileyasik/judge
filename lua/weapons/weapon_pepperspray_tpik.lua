@@ -151,8 +151,6 @@ function SWEP:PrimaryAttack()
                             ent:SetNWFloat("PS_LingeringTint", math.min(curTint + eyeSeverity * 22 + airwaySeverity * 8 + (faceHit and 8 or 0), 100))
                         end
                     end
-
-                    hg.send_bareinfo(org)
                 end
             end
         end

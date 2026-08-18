@@ -532,6 +532,7 @@ function ENTITY:FireLuaBullets(tInfo)
 	local vDir = tInfo.Dir and tInfo.Dir:GetNormal() or owner:GetAimVector()
 	local flDistance = tInfo.Distance or MAX_TRACE_LENGTH
 	local Filter = tInfo.Filter or owner
+	if not istable(Filter) then Filter = {Filter} end
 	
 	//table.Add(Filter, hg.vehicles)
 
@@ -719,7 +720,7 @@ function ENTITY:FireLuaBullets(tInfo)
 			while (IsValid(tr.Entity) and tr.Entity.organism) do
 				local ent = tr.Entity
 
-				--table.insert(Filter, ent)
+				table.insert(Filter, ent)
 
 				local bonename = ent:GetBoneName(ent:TranslatePhysBoneToBone(tr.PhysicsBone))
 				local hitgroup = hg.bonetohitgroup[bonename]--( ent:IsPlayer() and tr.HitGroup or hg.bonetohitgroup[bonename])

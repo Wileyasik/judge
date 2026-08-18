@@ -36,6 +36,11 @@ hook.Add("PostPlayerDeath", "homigrad-organism", function(ply)
 	if IsValid(ragdoll) then
 		local newOrg = hg.organism.Add(ragdoll)
 		table.Merge(newOrg, ply.organism)
+		newOrg.woundNetGeneration = (newOrg.woundNetGeneration or 0) + 1
+		newOrg.woundNetFlushPending = nil
+		newOrg.woundsNetDirty = nil
+		newOrg.arterialWoundsNetDirty = nil
+		newOrg.mirrorWoundsToDeathRagdoll = nil
 
 		hook.Run("RagdollDeath", ply, ragdoll)
 
@@ -45,7 +50,9 @@ hook.Add("PostPlayerDeath", "homigrad-organism", function(ply)
 		newOrg.owner = ragdoll
 		ragdoll:CallOnRemove("organism", hg.organism.Remove, ragdoll)
 		newOrg.owner.fullsend = true
-		hg.send_bareinfo(newOrg)
+		hg.organism.FlushWoundsNet(newOrg, true, true)
+		hg.organism.FlushArterialWoundsNet(newOrg, true)
+		hg.send_bareinfo(newOrg, true, true)
 	end
 
 	hg.organism.Clear(ply.organism)
@@ -74,7 +81,7 @@ hook.Add("Think", "homigrad-organism", function()
 	mulTime = (SysTime() - start) * game.GetTimeScale()
 
 	start = SysTime()
-	for owner, org in pairs(hg.organism.list) do -- теперь ясно почему от трупов лагает...
+	for owner, org in pairs(hg.organism.list) do
 		if not IsValid(owner) or not org or org.owner ~= owner then
 			hg.organism.list[owner] = nil
 			continue

@@ -56,7 +56,16 @@ local skullfracture_sounds = {
 
 local function playBoneFractureSound(ent)
 	if not IsValid(ent) then return end
-	ent:EmitSound(bonefracture_sounds[math.random(#bonefracture_sounds)], 75, math.random(135, 155), 1, CHAN_AUTO)
+	local org = ent.organism
+	local soundEnt = org and IsValid(org.forcedBoneBreakSoundEnt) and org.forcedBoneBreakSoundEnt or ent
+	local recipient = org and org.forcedBoneBreakRecipient
+	local filter
+	if IsValid(recipient) and recipient:IsPlayer() then
+		filter = RecipientFilter()
+		filter:AddPAS(soundEnt:GetPos())
+		filter:AddPlayer(recipient)
+	end
+	soundEnt:EmitSound(bonefracture_sounds[math.random(#bonefracture_sounds)], 75, math.random(135, 155), 1, CHAN_AUTO, 0, 0, filter)
 end
 
 local function playSkullFractureSound(ent)
@@ -342,7 +351,6 @@ end
 
 local function manageTinnitusSound(org, targetPlayer)
 	if not IsValid(targetPlayer) or not targetPlayer:IsPlayer() then return end
-	local hasHelmet = org.owner.armors and org.owner.armors["head"] != nil
 	if org.skull >= 0.6 then
 		if not org.tinnitusLongPlaying then
 			org.tinnitusLongPlaying = true
@@ -357,27 +365,24 @@ local function manageTinnitusSound(org, targetPlayer)
 				end
 				targetPlayer:PlayCustomTinnitus("tinnituslong.wav")
 			end)
-			local disorientTimerName = "TinnitusDisorient_" .. targetPlayer:SteamID64()
-			timer.Create(disorientTimerName, 0.1, 0, function()
-				if not IsValid(targetPlayer) or not targetPlayer:Alive() or org.skull < 0.6 then
-					timer.Remove(disorientTimerName)
-					return
-				end
-				local rate = hasHelmet and 0.02 or 0.06
-				org.disorientation = math.min(org.disorientation + rate, 1.5)
-			end)
 		end
 	else
 		if org.tinnitusLongPlaying then
 			org.tinnitusLongPlaying = false
 			local timerName = "TinnitusCheck_" .. targetPlayer:SteamID64()
 			timer.Remove(timerName)
-			local disorientTimerName = "TinnitusDisorient_" .. targetPlayer:SteamID64()
-			timer.Remove(disorientTimerName)
 			targetPlayer:StopCustomTinnitus()
 		end
 	end
 end
+
+hook.Add("Org Think", "TinnitusDisorientation", function(owner, org, timeValue)
+	if not org or not org.tinnitusLongPlaying then return end
+	if not owner:IsPlayer() or not owner:Alive() or org.skull < 0.6 then return end
+	local hasHelmet = owner.armors and owner.armors["head"] != nil
+	local rate = (hasHelmet and 0.02 or 0.06) * timeValue * 10
+	org.disorientation = math.min(org.disorientation + rate, 1.5)
+end)
 
 local input_list = hg.organism.input_list
 local toothModel = Model("models/phobias/general/tooth/tooth.mdl")
@@ -950,9 +955,7 @@ end)
 hook.Add("PlayerDisconnected", "CleanupTinnitusSounds", function(ply)
 	if IsValid(ply) then
 		local timerName = "TinnitusCheck_" .. ply:SteamID64()
-		local disorientTimerName = "TinnitusDisorient_" .. ply:SteamID64()
 		timer.Remove(timerName)
-		timer.Remove(disorientTimerName)
 		if ply.organism then
 			ply.organism.tinnitusLongPlaying = false
 		end
@@ -962,9 +965,8 @@ end)
 hook.Add("PlayerDeath", "CleanupTinnitusOnDeath", function(ply)
 	if IsValid(ply) then
 		local timerName = "TinnitusCheck_" .. ply:SteamID64()
-		local disorientTimerName = "TinnitusDisorient_" .. ply:SteamID64()
 		timer.Remove(timerName)
-		timer.Remove(disorientTimerName)
+		ply:StopCustomTinnitus()
 		if ply.organism then
 			ply.organism.tinnitusLongPlaying = false
 		end
