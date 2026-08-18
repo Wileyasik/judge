@@ -219,8 +219,10 @@ local FIBERWIRE_VICTIM_SOUNDS = {
     "painSounds/choking10.mp3",
     "painSounds/choking11.mp3",
     "painSounds/choking12.mp3",
-    "painSounds/choking13.mp3",
+"painSounds/choking13.mp3",
     "painSounds/choking14.mp3",
+    "painSounds/fiberWire1.mp3",
+    "painSounds/fiberWire2.mp3",
 }
 
 local function PlayFiberwireVictimSound(self, rag, victim)

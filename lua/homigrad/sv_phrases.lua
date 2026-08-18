@@ -420,9 +420,6 @@ local painScreamFolders = {
 }
 local painScreamSounds = {
 	[false] = {
-		"screams/universal1/screamOne.mp3",
-		"screams/universal1/screamTwo.mp3",
-		"screams/universal1/screamThree.mp3",
 		"painSounds/bigPain1.mp3",
 		"painSounds/bigPain2.mp3",
 		"painSounds/bigPain3.mp3",
@@ -438,7 +435,7 @@ local painScreamSounds = {
 		"painSounds/bigFemalePain4.mp3",
 	},
 }
-local painScreamUniversalChance = 0.05
+local painScreamUniversalChance = 1
 local burnScreamSounds = {
 	"screams/universal1/burnOne.mp3",
 	"screams/universal1/burnTwo.mp3",

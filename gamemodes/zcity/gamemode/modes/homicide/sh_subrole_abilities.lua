@@ -1,6 +1,11 @@
 local MODE = MODE
 MODE.NetSize_ChemicalResistanceBits = 8
 
+local ChokeVictimSounds = {
+	"painSounds/fiberWire1.mp3",
+	"painSounds/fiberWire2.mp3",
+}
+
 if(SERVER)then
 	-- во время удушения жертва не может встать сама (только выбраться борьбой)
 	hook.Add("Should Fake Up", "HMCD_ChokeBlockGetUp", function(ply)
@@ -378,7 +383,11 @@ function MODE.ContinueChokingOther(ply)
 						rHand:SetPos(headPhys:GetPos() + ply:GetRight() * 3 + Vector(0, 0, -6) + Vector(-sway, sway, 0))
 						lHand:SetVelocity(vector_origin)
 						rHand:SetVelocity(vector_origin)
-					end
+				end
+
+				if(not rag._hmcd_choke_sound or rag._hmcd_choke_sound < CurTime())then
+					rag:EmitSound(ChokeVictimSounds[math.random(#ChokeVictimSounds)], 72, math.Clamp(victim.VoicePitch or 100, 85, 115), 0.9, CHAN_VOICE)
+					rag._hmcd_choke_sound = CurTime() + 1.5
 				end
 			end
 
