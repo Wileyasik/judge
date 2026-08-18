@@ -26,6 +26,8 @@ SWEP.HoldType = "knife"
 SWEP.weight = 0.4
 
 function SWEP:CanPrimaryAttack()
+	local owner = self:GetOwner()
+	if IsValid(owner) and owner:GetNetVar("ducttaped_hands", false) then return false end
 	return true
 end
 
@@ -37,6 +39,8 @@ function SWEP:IsSprinting()
 end
 
 function SWEP:CanSecondaryAttack()
+	local owner = self:GetOwner()
+	if IsValid(owner) and owner:GetNetVar("ducttaped_hands", false) then return false end
     if self:GetClass() == "weapon_melee" then return false end
 	return true
 end
@@ -3668,6 +3672,8 @@ function SWEP:PrimaryAttack()
     if self.cutthroat and self.cutthroat + 1 > CurTime() then return end
     if self.CanSuicide and ply.suiciding then return end
     if self.Charging then return end
+
+    if ply:GetNetVar("ducttaped_hands", false) then return end
 
     if ply.organism and ply.organism.larmamputated and self.TwoHanded then return end
     

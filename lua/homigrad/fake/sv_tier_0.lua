@@ -1276,6 +1276,19 @@ function hg.FakeUp(ply, forced, instant)
 	if not forced and (not IsValid(ply.FakeRagdoll) or not ply:Alive() or hook_Run("Should Fake Up", ply) ~= nil) then return false end
 	ply.fakecd = CurTime() + 2
 
+	if not forced and not instant and ply.organism and ply.organism.pain and ply.organism.pain > 60 then
+		local delay = math.Clamp((ply.organism.pain - 60) * 0.05, 0.3, 4)
+		ply.fakecd = CurTime() + delay
+		ply._slowGetup = true
+		timer.Simple(delay, function()
+			if not IsValid(ply) or not ply:Alive() then return end
+			if not IsValid(ply.FakeRagdoll) then return end
+			if hook_Run("Should Fake Up", ply) ~= nil then return end
+			hg.FakeUp(ply, forced, instant)
+		end)
+		return false
+	end
+
 	if ply:InVehicle() then
 		return
 	end
@@ -1417,6 +1430,13 @@ function hg.FakeUp(ply, forced, instant)
 				--ply:SetSolidFlags(bit.band(ply:GetSolidFlags(), bit.bnot(FSOLID_NOT_SOLID), bit.bnot(FSOLID_TRIGGER), bit.bnot(FSOLID_USE_TRIGGER_BOUNDS)))
 				hg.ragdollFake[ply] = nil
 				ply:SetMoveType(MOVETYPE_WALK)
+
+				if ply._slowGetup then
+					ply._slowGetup = nil
+					if ply:LookupSequence("getup") and ply:LookupSequence("getup") >= 0 then
+						ply:PlayCustomAnims("getup", true, 1.5)
+					end
+				end
 
 				if pos then
 					--ply:SetPos(pos)

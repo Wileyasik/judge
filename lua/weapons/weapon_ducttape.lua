@@ -1129,6 +1129,21 @@ if SERVER then
 		end
 	end)
 
+	hook.Add("PlayerSwitchWeapon", "DuctTapeHandsForceFists", function(ply, oldWeapon, newWeapon)
+		if not ply:GetNetVar("ducttaped_hands", false) or not IsValid(newWeapon) then return end
+
+		local handsClass = hg.GetHandsWeaponClass and hg.GetHandsWeaponClass(ply) or "weapon_hg_coolhands"
+		if newWeapon:GetClass() == "weapon_hands_sh" or newWeapon:GetClass() == handsClass then return end
+
+		local hands = ply:GetWeapon(handsClass)
+		if not IsValid(hands) then hands = ply:GetWeapon("weapon_hands_sh") end
+		if IsValid(hands) then
+			ply:SetActiveWeapon(hands)
+		end
+
+		return true
+	end)
+
 	util.AddNetworkString("hg_ducttape_struggle")
 	util.AddNetworkString("hg_ducttape_cut")
 

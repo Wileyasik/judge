@@ -142,7 +142,17 @@ function PANEL:Logic()
                 self:Win()
             end
         else
-            if self.holdProgress > 0 and self.failCooldown <= 0 then
+            if self.failCooldown <= 0 then
+                net.Start("hg_dislocation_minigame_pain")
+                if IsValid(self.targetPly) then
+                    net.WriteEntity(self.targetPly)
+                else
+                    net.WriteEntity(LocalPlayer())
+                end
+                net.SendToServer()
+                self.failCooldown = 0.6
+            end
+            if self.holdProgress > 0 then
                 self:Fail()
                 return
             end

@@ -29,7 +29,7 @@ local function ChatLogic(output, input, isChat, teamonly, text)
 		end
 	end
 
-	if output:Alive() and input:Alive() and not output.organism.otrub and not input.organism.otrub and output.organism.o2[1] >= 15 and not output.organism.holdingbreath and input:TestPVS( output ) then
+	if output:Alive() and input:Alive() and not output.organism.otrub and not input.organism.otrub and output.organism.o2[1] >= 15 and not output.organism.holdingbreath and not output.organism.neckslit and input:TestPVS( output ) then
 		if input:GetPos():Distance(output:GetPos()) < chat_dist and not teamonly then
 			return true, true
 		else
@@ -68,6 +68,8 @@ end)
 local function funca(ply, txt)
 	if !ply:Alive() or !ply.organism then return txt end
 	local starttxt = txt
+
+	if ply.organism.neckslit then return "..." end
 
 	if ply.organism.pain > 80 then
 		txt = table.Random(hg.sharp_pain)
@@ -188,7 +190,7 @@ hook.Add("HG_PlayerSay", "furrifyPhraseOwO", function(ply, txt)
 end)
 
 hook.Add("HG_PlayerCanHearPlayersVoice","BrainDamage", function(listener, speaker)
-	if speaker.organism.brain > 0.05 or speaker.organism.seizureActive then return false, false end
+	if speaker.organism.brain > 0.05 or speaker.organism.seizureActive or speaker.organism.neckslit then return false, false end
 end)
 
 local braindeadphrase_male = {

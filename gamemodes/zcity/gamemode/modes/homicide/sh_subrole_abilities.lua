@@ -596,6 +596,9 @@ if SERVER then
 		org.consciousness = 0
 		org.needotrub = true
 		org.needfake = true
+		org.disorientation = math.min((org.disorientation or 0) + 10, 10)
+		org.immobilization = math.min((org.immobilization or 0) + 40, 90)
+		org.painadd = math.min((org.painadd or 0) + 30, 150)
 		if not IsValid(target.FakeRagdoll) then hg.Fake(target, nil, true) end
 		timer.Simple(duration or 6, function()
 			if not IsValid(target) or not target:Alive() or not target.organism then return end
@@ -603,6 +606,8 @@ if SERVER then
 			org.consciousness = 1
 			org.needotrub = false
 			org.needfake = false
+			org.disorientation = math.min((org.disorientation or 0) + 8, 10)
+			org.immobilization = math.min((org.immobilization or 0) + 30, 90)
 		end)
 	end
 
@@ -658,10 +663,20 @@ if SERVER then
 		end
 
 		if IsValid(target) then
-			MODE.MAForceUncon(target, 8)
+			if moveId == "mw_giantswing" then
+				local org = target.organism
+				if org then
+					org.disorientation = math.min((org.disorientation or 0) + 8, 10)
+					org.immobilization = math.min((org.immobilization or 0) + 25, 90)
+					org.painadd = math.min((org.painadd or 0) + 20, 150)
+					if not IsValid(target.FakeRagdoll) then hg.Fake(target, nil, true) end
+				end
+			else
+				MODE.MAForceUncon(target, 8)
+			end
 		end
 
-		if category == "knockdown" and IsValid(target) and math.Rand(0, 1) < 0.35 then
+		if category == "knockdown" and IsValid(target) and math.Rand(0, 1) < 0.6 then
 			timer.Simple(0.8, function()
 				dislocateMALimb(target)
 			end)

@@ -60,6 +60,26 @@ hook.Add("OnPlayerHitGround","fallStun",function(ply,inwater,onfloater,speed)
 
 	if speed > 600 then
 		hg.LightStunPlayer(ply,2)
+
+		if speed > 650 and ply:Alive() then
+			local org = ply.organism
+			if org and not org.superfighter then
+				local dmgInfo = DamageInfo()
+				dmgInfo:SetDamageType(DMG_FALL)
+				dmgInfo:SetInflictor(game.GetWorld())
+				dmgInfo:SetAttacker(game.GetWorld())
+				local fallDmg = math.Clamp((speed - 650) / 800, 0.1, 3)
+				hg.organism.input_list.llegup(org, 0, fallDmg, dmgInfo)
+				hg.organism.input_list.rlegup(org, 0, fallDmg, dmgInfo)
+				if speed > 1100 then
+					hg.organism.input_list.spine1(org, 0, fallDmg * 0.5, dmgInfo)
+					hg.organism.input_list.spine2(org, 0, fallDmg * 0.6, dmgInfo)
+					if hg.organism.module.concussion then
+						hg.organism.module.concussion.AddConcussion(org, math.Clamp((speed - 1000) * 0.0008, 0.2, 1.5), math.Clamp((speed - 1000) * 0.05, 10, 40))
+					end
+				end
+			end
+		end
 	end
 end)
 

@@ -915,7 +915,7 @@ function SWEP:SecondaryAttack()
 	--[[if self:GetFists() and owner.PlayerClassName == "headcrabzombie" then
 		self:SetFists(false)
 	end--]]
-	if owner:GetNetVar("handcuffed",false) then return end
+	if owner:GetNetVar("handcuffed",false) or owner:GetNetVar("ducttaped_hands",false) then return end
 	local org = owner.organism
 	if org and (org.rarmamputated or org.rhandamputated) and (org.larmamputated or org.lhandamputated) then
 		if SERVER then
@@ -1852,7 +1852,7 @@ function SWEP:PrimaryAttack(forcespecial)
 	end
 
 	if owner:KeyDown(IN_ATTACK2) and owner.PlayerClassName ~= "sc_infiltrator" and not IsZombieHandsClass(owner.PlayerClassName) then return end
-	if owner:GetNetVar("handcuffed",false) then return end
+	if owner:GetNetVar("handcuffed",false) or owner:GetNetVar("ducttaped_hands",false) then return end
 	local olddown = self:GetNextDown()
 	self:SetNextDown(CurTime() + 7)
 	if not self:GetFists() then

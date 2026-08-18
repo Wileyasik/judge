@@ -36,8 +36,8 @@ SWEP.SlotPos = 1
 
 SWEP.WorkWithFake = true
 SWEP.BandageTPIK = true
-SWEP.BandageUseTime = 4.6
-SWEP.BandageMinUseTime = 2
+SWEP.BandageUseTime = 3.2
+SWEP.BandageMinUseTime = 1.2
 SWEP.BandageSequenceTime = 139 / 30
 SWEP.BandageAnimStart = 0.5
 SWEP.BandageAnimEndTrim = 0.7
@@ -51,7 +51,7 @@ SWEP.BandageTPIKWorldModel = "models/weapons/nmrih/items/bandage/w_bandages.mdl"
 SWEP.BandageTPIKViewModel = "models/weapons/nmrih/items/bandage/v_item_bandages.mdl"
 SWEP.BandageTPIKAnimList = {
 	["deploy"] = {"draw", 1, false},
-	["use"] = {"bandage", 4.6, false},
+	["use"] = {"bandage", 3.2, false},
 	["idle"] = {"idle", 10, true},
 }
 SWEP.BandageTPIKHiddenBonesIdle = {}
@@ -1402,7 +1402,7 @@ function SWEP:GetBandageTPIKUseTime(target)
 	if org.rarm == 1 and not org.rarmamputated then required = required + treatmentCost end
 
 	local used = math.min(required, self.modeValues and self.modeValues[1] or 0)
-	return math.Clamp(2 + used / 40 * 3.1, 2, 10)
+	return math.Clamp(1.2 + used / 40 * 2.2, 1.2, 6)
 end
 
 function SWEP:CanBandageTPIK(target)

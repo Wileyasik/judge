@@ -641,6 +641,17 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		org.neckslitDeadline = nil
 		org.neckslitWarned = nil
 	end
+
+	if isPly and (org.lleg == 1 or org.rleg == 1) and not org.NoKnockdown then
+		if (org.legBreakFallNext or 0) < CurTime() then
+			org.legBreakFallNext = CurTime() + 0.5
+			local spd = owner:GetVelocity():Length()
+			if not IsValid(owner.FakeRagdoll) and spd > 200 and math.random(100) < math.Clamp((spd - 200) / 4, 2, 30) then
+				org.needfake = true
+			end
+		end
+	end
+
 	module.pain[2](owner, org, timeValue)
 	if isPly then
 		module.metabolism[2](owner, org, timeValue)

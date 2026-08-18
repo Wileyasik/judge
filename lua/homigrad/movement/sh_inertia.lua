@@ -727,6 +727,10 @@ local Angle, Vector, AngleRand, VectorRand, math, hook, util, game = Angle, Vect
 		if CLIENT and ply:Ping() >= 45 and ply.hg_LastLandingTime and ply.hg_LastLandingTime + 0.35 > CurTime() then
 			inertia_len = math.min(inertia_len, ply:GetRunSpeed() * 1.1)
 		end
+
+		if org.lleg == 1 or org.rleg == 1 or org.llegdislocation or org.rlegdislocation then
+			inertia_len = math.min(inertia_len, (ply:GetSlowWalkSpeed() or 100) * 0.78)
+		end
 		
 		mv:SetMaxSpeed(inertia_len)
 		mv:SetMaxClientSpeed(inertia_len)

@@ -25,7 +25,7 @@ local function damageBone(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ric
 	
 	if crush then
 		crush = halfValue2(1 - org[key], 1, 0.5)
-		dmg = dmg / math.max(10 * crush * (bone or 1), 1)
+		dmg = dmg / math.max(6.5 * crush * (bone or 1), 1)
 		if dmgInfo:GetInflictor().RubberBullets then dmg = dmg * dmgInfo:GetInflictor().Penetration end
 	end
 
@@ -118,6 +118,30 @@ local function sendThought(org, msg, key, delay, clr)
 	end
 end
 
+local function doDislocate(org, key, dmg, segment)
+	org[key.."dislocation"] = true
+	if hg.fakeBoneFlop then
+		hg.fakeBoneFlop.SetLimbSegmentState(org, key, segment, not org[key.."stabilized"])
+	end
+
+	local stabilized = org[key.."stabilized"]
+	if not stabilized then
+		org.painadd = org.painadd + 35
+		org.immobilization = org.immobilization + dmg * 10
+	else
+		org.painadd = org.painadd + 10
+		org.immobilization = org.immobilization + dmg * 3
+	end
+	org.owner:AddNaturalAdrenaline(0.5)
+	org.fearadd = org.fearadd + 0.5
+
+	sendThought(org, "Your " .. limbName[key] .. " is dislocated.", "thought_dislocated" .. key, 1, Color(255, 220, 220))
+
+	timer.Simple(0, function() hg.LightStunPlayer(org.owner,2) end)
+	playBoneFractureSound(org.owner)
+	if org.isPly and hg.QueuePainScream then hg.QueuePainScream(org.owner, 1) end
+end
+
 local function hasNewThoughts(org)
 	return org.isPly and IsValid(org.owner) and org.owner:GetInfoNum("hg_newthoughts", 0) > 0
 end
@@ -141,8 +165,13 @@ local function legs(org, bone, dmg, dmgInfo, key, segment, boneindex, dir, hit, 
 
 	org[key] = org[key] * 0.5
 
-	if dmg < 0.7 then return 0 end
-	if dmg < 1 and !dmgInfo:IsDamageType(DMG_CLUB+DMG_CRUSH+DMG_FALL) then return 0 end
+	if dmg < 0.5 then return 0 end
+	if dmg < 1 and !dmgInfo:IsDamageType(DMG_CLUB+DMG_CRUSH+DMG_FALL) then
+		if math.Rand(0, 1) >= 0.5 then return 0 end
+		doDislocate(org, key, dmg, segment)
+		hg.AddHarmToAttacker(dmgInfo, (org[key] - oldDmg) * 2, "Legs bone damage harm")
+		return result, vecrand
+	end
 
 	if org.isPly and !org[key.."amputated"] then org.just_damaged_bone = CurTime() end
 
@@ -164,37 +193,13 @@ local function legs(org, bone, dmg, dmgInfo, key, segment, boneindex, dir, hit, 
 		org.owner:AddNaturalAdrenaline(1)
 		org.fearadd = org.fearadd + 0.5
 
-		--if org.isPly and !org[key.."amputated"] then org.owner:Notify(broke_leg[math.random(#broke_leg)], 1, "broke"..key, 1, nil, nil) end
 		sendThought(org, "Your " .. limbName[key] .. " is broken.", "thought_broke" .. key, 1, Color(255, 210, 210))
 
 		timer.Simple(0, function() hg.LightStunPlayer(org.owner,2) end)
 		playBoneFractureSound(org.owner)
 		if org.isPly and hg.QueuePainScream then hg.QueuePainScream(org.owner, 1.35) end
-		//broken
 	else
-		//org[key] = 0.5
-		org[key.."dislocation"] = true
-		if hg.fakeBoneFlop then
-			hg.fakeBoneFlop.SetLimbSegmentState(org, key, segment, not stabilized)
-		end
-
-		if not stabilized then
-			org.painadd = org.painadd + 35
-			org.immobilization = org.immobilization + dmg * 10
-		else
-			org.painadd = org.painadd + 10
-			org.immobilization = org.immobilization + dmg * 3
-		end
-		org.owner:AddNaturalAdrenaline(0.5)
-		org.fearadd = org.fearadd + 0.5
-
-		--if org.isPly and !org[key.."amputated"] then org.owner:Notify(dislocated_leg[math.random(#dislocated_leg)], 1, "dislocated"..key, 1, nil, nil) end
-		sendThought(org, "Your " .. limbName[key] .. " is dislocated.", "thought_dislocated" .. key, 1, Color(255, 220, 220))
-
-		timer.Simple(0, function() hg.LightStunPlayer(org.owner,2) end)
-		playBoneFractureSound(org.owner)
-		if org.isPly and hg.QueuePainScream then hg.QueuePainScream(org.owner, 1) end
-		//dislocated
+		doDislocate(org, key, dmg, segment)
 	end
 
 	hg.AddHarmToAttacker(dmgInfo, (org[key] - oldDmg) * 2, "Legs bone damage harm")
@@ -221,8 +226,13 @@ local function arms(org, bone, dmg, dmgInfo, key, segment, boneindex, dir, hit, 
 	
 	org[key] = org[key] * 0.5
 
-	if dmg < 0.6 then return 0 end
-	if dmg < 1 and !dmgInfo:IsDamageType(DMG_CLUB+DMG_CRUSH+DMG_FALL) then return 0 end
+	if dmg < 0.5 then return 0 end
+	if dmg < 1 and !dmgInfo:IsDamageType(DMG_CLUB+DMG_CRUSH+DMG_FALL) then
+		if math.Rand(0, 1) >= 0.5 then return 0 end
+		doDislocate(org, key, dmg, segment)
+		hg.AddHarmToAttacker(dmgInfo, (org[key] - oldDmg) * 1.5, "Arms bone damage harm")
+		return result, vecrand
+	end
 
 	if org.isPly and !org[key.."amputated"] then org.just_damaged_bone = CurTime() end
 
@@ -244,37 +254,12 @@ local function arms(org, bone, dmg, dmgInfo, key, segment, boneindex, dir, hit, 
 		org.owner:AddNaturalAdrenaline(1)
 		org.fearadd = org.fearadd + 0.5
 
-		--if org.isPly and !org[key.."amputated"] then org.owner:Notify(broke_arm[math.random(#broke_arm)], 1, "broke"..key, 1, nil, nil) end
 		sendThought(org, "Your " .. limbName[key] .. " is broken.", "thought_broke" .. key, 1, Color(255, 210, 210))
 
-		--timer.Simple(0, function() hg.LightStunPlayer(org.owner,1) end)
 		playBoneFractureSound(org.owner)
 		if org.isPly and hg.QueuePainScream then hg.QueuePainScream(org.owner, 1.35) end
-		//broken
 	else
-		org[key.."dislocation"] = true
-		if hg.fakeBoneFlop then
-			hg.fakeBoneFlop.SetLimbSegmentState(org, key, segment, not stabilized)
-		end
-		//org[key] = 0.5
-
-		if not stabilized then
-			org.painadd = org.painadd + 35
-			org.immobilization = org.immobilization + dmg * 10
-		else
-			org.painadd = org.painadd + 10
-			org.immobilization = org.immobilization + dmg * 3
-		end
-		org.owner:AddNaturalAdrenaline(0.5)
-		org.fearadd = org.fearadd + 0.5
-
-		--if org.isPly and !org[key.."amputated"] then org.owner:Notify(dislocated_arm[math.random(#dislocated_arm)], 1, "dislocated"..key, 1, nil, nil) end
-		sendThought(org, "Your " .. limbName[key] .. " is dislocated.", "thought_dislocated" .. key, 1, Color(255, 220, 220))
-
-		--timer.Simple(0, function() hg.LightStunPlayer(org.owner,1) end)
-		playBoneFractureSound(org.owner)
-		if org.isPly and hg.QueuePainScream then hg.QueuePainScream(org.owner, 1) end
-		//dislocated
+		doDislocate(org, key, dmg, segment)
 	end
 
 	hg.AddHarmToAttacker(dmgInfo, (org[key] - oldDmg) * 1.5, "Arms bone damage harm")
@@ -720,6 +705,17 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
 		end
 	end
 
+	if not isStab and dmg > 0.05 and not org.NoKnockdown then
+		local headDmg = hasHelmet and dmg * 0.3 or dmg
+		org.disorientation = math.min(org.disorientation + math.min(headDmg * 0.15, 1.5), 1.5)
+		if headDmg > 0.5 and org.consciousness and org.consciousness < 0.85 then
+			local fallChance = math.Clamp((headDmg - 0.5) * 0.04, 0.08, 0.55)
+			if math.Rand(0, 1) < fallChance then
+				org.needfake = true
+			end
+		end
+	end
+
 	if org.isPly and dmg > 0.3 then
 		local targetPlayer = org.owner
 		if IsValid(org.owner.FakeRagdoll) then
@@ -835,7 +831,7 @@ input_list.pelvis = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoc
 	org.painadd = org.painadd + dmg * 1
 	org.shock = org.shock + dmg * 1
 
-	local result = damageBone(org, bone, dmg * 0.5, dmgInfo, "pelvis", boneindex, dir, hit, ricochet)
+	local result = damageBone(org, 0.15, dmg * 0.5, dmgInfo, "pelvis", boneindex, dir, hit, ricochet)
 	
 	hg.AddHarmToAttacker(dmgInfo, (org.pelvis - oldDmg) / 2, "Pelvis bone damage harm")
 
@@ -864,8 +860,12 @@ local function upper_limb(org, bone, dmg, dmgInfo, amputate_key, limb_key, segme
 	local d = org[limb_key]
 	org[limb_key] = org[limb_key] * 0.5
 
-	if d < 0.7 then return 0 end
-	if d < 1 and !dmgInfo:IsDamageType(DMG_CLUB+DMG_CRUSH+DMG_FALL) then return 0 end
+	if d < 0.5 then return 0 end
+	if d < 1 and !dmgInfo:IsDamageType(DMG_CLUB+DMG_CRUSH+DMG_FALL) then
+		if math.Rand(0, 1) >= 0.5 then return 0 end
+		doDislocate(org, limb_key, d, segment)
+		return result, vecrand
+	end
 
 	if org.isPly and !org[amputate_key.."amputated"] then org.just_damaged_bone = CurTime() end
 
@@ -890,24 +890,7 @@ local function upper_limb(org, bone, dmg, dmgInfo, amputate_key, limb_key, segme
 		playBoneFractureSound(org.owner)
 		if org.isPly and hg.QueuePainScream then hg.QueuePainScream(org.owner, 1.35) end
 	else
-		org[limb_key.."dislocation"] = true
-		if hg.fakeBoneFlop then
-			hg.fakeBoneFlop.SetLimbSegmentState(org, limb_key, segment, not stabilized)
-		end
-
-		if not stabilized then
-			org.painadd = org.painadd + 35
-			org.immobilization = org.immobilization + d * 10
-		else
-			org.painadd = org.painadd + 10
-			org.immobilization = org.immobilization + d * 3
-		end
-		org.owner:AddNaturalAdrenaline(0.5)
-		org.fearadd = org.fearadd + 0.5
-
-		timer.Simple(0, function() hg.LightStunPlayer(org.owner,2) end)
-		playBoneFractureSound(org.owner)
-		if org.isPly and hg.QueuePainScream then hg.QueuePainScream(org.owner, 1) end
+		doDislocate(org, limb_key, d, segment)
 	end
 
 	hg.AddHarmToAttacker(dmgInfo, (org[limb_key] - oldDmg) * 1.5, "Upper limb bone damage harm")

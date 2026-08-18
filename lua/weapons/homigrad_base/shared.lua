@@ -370,6 +370,7 @@ function SWEP:CanUse(ignoreSprint)
 	if gunInterruptedUntil > CurTime() then return false end
 	if owner:IsPlayer() and owner:GetNWBool("hg_hold_wound_twohand", false) then return false end
 	if owner.organism and owner.organism.rarmamputated and !self:IsPistolHoldType() then return false end
+	if owner:IsPlayer() and owner:GetNetVar("ducttaped_hands", false) then return false end
 	return not (self.reload or self.deploy or (owner:IsPlayer() and ((!ignoreSprint and self:IsSprinting()) or (owner.organism and owner.organism.otrub))))
 end
 

@@ -262,7 +262,10 @@ local function hitArtery(artery, org, dmg, dmgInfo, boneindex, dir, hit)
 			return
 		end
 	end
-	org.painadd = org.painadd + dmg * 1
+	org.painadd = math.min(org.painadd + dmg * 1 + 45, 150)
+	org.shock = math.min(org.shock + 15, 95)
+	org.fearadd = math.min(org.fearadd + 1.5, 3)
+	org.panicattackadd = math.max(org.panicattackadd or 0, 0.9)
 	if org[artery] == 1 then return 0 end
 	if org[string.Replace(artery, "artery", "").."amputated"] then return end
 

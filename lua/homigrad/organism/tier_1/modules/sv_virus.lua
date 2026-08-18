@@ -18,7 +18,8 @@ function VirusModule.InfectPlayer(ply)
         BrainDamageInterval = 2,
         NextBrainDamageTime = CurTime(),
         NextHPDamageTime = CurTime() + 5,
-        NextOxygenIssueTime = CurTime() + math.random(10, 15)
+        NextOxygenIssueTime = CurTime() + math.random(10, 15),
+        NextVomitTime = CurTime() + math.random(15, 25)
     }
     net.Start("VirusStageUpdate")
     net.WriteInt(ply.Virus.Stage, 8)
@@ -70,6 +71,12 @@ function VirusModule.ApplyVirusEffects(ply)
         if CurTime() >= virus.NextHPDamageTime then
             ply:TakeDamage(2, ply, ply)
             virus.NextHPDamageTime = CurTime() + 5
+        end
+        if CurTime() >= (virus.NextVomitTime or 0) then
+            virus.NextVomitTime = CurTime() + (virus.Stage >= 4 and math.Rand(8, 14) or math.Rand(18, 30))
+            if ply.organism and not ply.organism.otrub and not ply.organism.neckslit then
+                hg.organism.Vomit(ply)
+            end
         end
         ply.organism.lungsL[1] = math.min(ply.organism.lungsL[1] + virus.LungDamage, 1)
         ply.organism.lungsR[1] = math.min(ply.organism.lungsR[1] + virus.LungDamage, 1)

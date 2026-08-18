@@ -1577,6 +1577,8 @@ end
 			end
 			if shards == 0 then continue end
 
+			org.painadd = math.min((org.painadd or 0) + shards * 0.25, 150)
+
 			local speed = ply:GetVelocity():Length()
 			if IsValid(ply.FakeRagdoll) and IsValid(ply.FakeRagdoll:GetPhysicsObject()) then
 				speed = math.max(speed, ply.FakeRagdoll:GetPhysicsObject():GetVelocity():Length())

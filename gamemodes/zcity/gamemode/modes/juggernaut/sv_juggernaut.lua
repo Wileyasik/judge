@@ -641,6 +641,17 @@ local function JuggernautThink(owner, org, timeValue)
 	org.immobilization = math.Approach(org.immobilization or 0, 0, tv * 0.5)
 	org.fear = math.Approach(org.fear or 0, 0, tv * 0.5)
 	org.heartStrain = math.max((org.heartStrain or 0) - tv * 0.1, 0)
+
+	org.disorientation = math.Approach(org.disorientation or 0, 0, timeValue * 1.5)
+	org.panicattackadd = math.Approach(org.panicattackadd or 0, 0, timeValue * 1.5)
+	org.panicattack = math.Approach(org.panicattack or 0, 0, timeValue * 1.5)
+	org.concussion = math.Approach(org.concussion or 0, 0, timeValue * 0.5)
+	org.concussion_onset = math.Approach(org.concussion_onset or 0, 0, timeValue * 0.5)
+	org.concussion_post = math.Approach(org.concussion_post or 0, 0, timeValue * 0.4)
+	org.concussion_tinnitus = math.Approach(org.concussion_tinnitus or 0, 0, timeValue * 0.5)
+	org.nausea = math.Approach(org.nausea or 0, 0, timeValue * 0.5)
+	org.nausea_target = math.Approach(org.nausea_target or 0, 0, timeValue * 0.5)
+	org.nausea_pending = math.Approach(org.nausea_pending or 0, 0, timeValue * 0.5)
 end
 
 hook.Add("Org Think", "juggernaut_regen", function(owner, org, timeValue)

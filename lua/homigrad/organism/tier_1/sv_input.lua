@@ -400,6 +400,17 @@ function hg.organism.AmputateLimb(org, limb)
 
 	org[amputatedKey] = true
 
+	org.painadd = math.min((org.painadd or 0) + 80, 150)
+	org.avgpain = math.min((org.avgpain or 0) + 40, 150)
+	org.shock = math.min((org.shock or 0) + 40, 95)
+	org.immobilization = math.min((org.immobilization or 0) + 45, 100)
+	org.fearadd = math.min((org.fearadd or 0) + 2, 3)
+	if IsValid(org.owner) and org.owner:IsPlayer() and org.owner:Alive() then
+		org.owner:AddNaturalAdrenaline(1)
+		if hg.QueuePainScream then hg.QueuePainScream(org.owner, 2) end
+		if hg.LightStunPlayer then hg.LightStunPlayer(org.owner, 3) end
+	end
+
 	for i = 1, 5 do
 		hg.organism.AddWoundManual(org.owner, 50, vec + VectorRand(-2, 2), ang, boneup, CurTime() + math.Rand(0, 2))
 	end
@@ -1969,8 +1980,8 @@ local function velocityDamage(ent, data)
 		if hitgroup == HITGROUP_STOMACH and (dmg * 3 > 0.25) then hg.organism.input_list.pelvis(org, bone, dmg * 3, dmgInfo) end
 		local physAng = data.PhysObject:GetAngles()
 		
-		if hitgroup == HITGROUP_STOMACH and physAng:Forward():Dot(data.HitNormal) > 0.6 then hg.organism.input_list.spine1(org, bone, dmg * (math.random(3) > 1 and 1 or 0) * 3, dmgInfo) end -- | И В ПРАВДУ ПОЧЕМУ У НАС СПИНА ЛОМАЕТСЯ ОТ ПАДЕНИЯ НА ГРУДЬ ИЛИ ЖИВОТ...
-		if hitgroup == HITGROUP_CHEST and physAng:Forward():Dot(data.HitNormal) > 0.6 then hg.organism.input_list.spine2(org, bone, dmg * (math.random(3) > 1 and 1 or 0) * 3, dmgInfo) end
+		if hitgroup == HITGROUP_STOMACH and math.abs(physAng:Forward():Dot(data.HitNormal)) > 0.35 then hg.organism.input_list.spine1(org, bone, dmg * 3, dmgInfo) end -- | И В ПРАВДУ ПОЧЕМУ У НАС СПИНА ЛОМАЕТСЯ ОТ ПАДЕНИЯ НА ГРУДЬ ИЛИ ЖИВОТ...
+		if hitgroup == HITGROUP_CHEST and math.abs(physAng:Forward():Dot(data.HitNormal)) > 0.35 then hg.organism.input_list.spine2(org, bone, dmg * 3, dmgInfo) end
 
 
 		--print(dmg * 3, dmg * 80)
