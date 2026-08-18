@@ -265,6 +265,10 @@ hook.Add("HomigradDamage", "GuiltReg", function(ply, dmgInfo, hitgroup, ent, har
 
     zb.HarmDoneKarma[Victim][Attacker] = zb.HarmDoneKarma[Victim][Attacker] + karmaLoss
 
+    if karmaLoss > 0 and IsValid(Victim) and Victim:IsPlayer() then
+        SetKarma(Victim, (Victim.Karma or 100) + karmaLoss)
+    end
+
     if shouldBanGuilt and Attacker.Guilt >= 100 and not Attacker.KarmaTeamDamageBanned then
 		Attacker.KarmaTeamDamageBanned = true
 		local banTime = zb.KarmaTeamDamageBanTime

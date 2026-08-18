@@ -395,10 +395,115 @@ local function manageTinnitusSound(org, targetPlayer)
 end
 
 local input_list = hg.organism.input_list
+local toothModel = Model("models/phobias/general/tooth/tooth.mdl")
+local toothFallbackModel = Model("models/grub_nugget_small.mdl")
+
+local function SpawnTeeth(org, count, hitPos, forceDir)
+	local owner = org.owner
+	if not IsValid(owner) then return end
+
+	local character = hg.GetCurrentCharacter(owner)
+	if not IsValid(character) then character = owner end
+
+	local pos = isvector(hitPos) and hitPos or nil
+	if not pos then
+		local headBone = character:LookupBone("ValveBiped.Bip01_Head1")
+		pos = headBone and character:GetBonePosition(headBone) or character:WorldSpaceCenter()
+	end
+
+	local direction = isvector(forceDir) and forceDir:GetNormalized() or character:GetForward()
+	local baseVelocity = character:GetVelocity()
+	local model = util.IsValidModel(toothModel) and toothModel or toothFallbackModel
+
+	for _ = 1, math.min(count, 6) do
+		local tooth = ents.Create("prop_physics")
+		if not IsValid(tooth) then continue end
+
+		tooth:SetModel(model)
+		tooth:SetPos(pos + VectorRand(-1.5, 1.5))
+		tooth:SetAngles(AngleRand())
+		tooth:SetModelScale(math.Rand(0.85, 1.1), 0)
+		tooth:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+		tooth:Spawn()
+		tooth:Activate()
+
+		local phys = tooth:GetPhysicsObject()
+		if IsValid(phys) then
+			phys:SetMass(0.05)
+			phys:SetVelocity(baseVelocity + direction * math.Rand(90, 180) + VectorRand(-55, 55) + vector_up * math.Rand(20, 70))
+			phys:AddAngleVelocity(VectorRand(-500, 500))
+		end
+
+		tooth:AddCallback("PhysicsCollide", function(ent, data)
+			if ent.toothLanded or data.Speed < 45 then return end
+			ent.toothLanded = true
+			ent:EmitSound("physics/plaster/drywall_impact_hard" .. math.random(3) .. ".wav", 45, math.random(145, 165), 0.25)
+		end)
+
+		timer.Simple(18, function()
+			if IsValid(tooth) then tooth:SetModelScale(0, 2) end
+		end)
+		SafeRemoveEntityDelayed(tooth, 20)
+	end
+
+	local effect = EffectData()
+	effect:SetOrigin(pos)
+	effect:SetNormal(direction)
+	util.Effect("BloodImpact", effect, true, true)
+end
+
 input_list.jaw = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet)
 	local oldDmg = org.jaw
+	local incomingDmg = dmg
+	local rawDamageType = dmgInfo:GetDamageType()
 
 	local result, vecrand = damageBone(org, 0.25, dmg, dmgInfo, "jaw", boneindex, dir, hit, ricochet)
+	local jawDelta = math.max(org.jaw - oldDmg, 0)
+	org.teethLost = math.Clamp(org.teethLost or 0, 0, 32)
+
+	if jawDelta > 0 and incomingDmg >= 0.12 and org.teethLost < 32 then
+		local typeMul = 0.35
+		if bit.band(rawDamageType, DMG_CLUB) ~= 0 then
+			typeMul = 1.35
+		elseif bit.band(rawDamageType, DMG_CRUSH) ~= 0 or bit.band(rawDamageType, DMG_FALL) ~= 0 then
+			typeMul = 1.15
+		elseif bit.band(rawDamageType, DMG_BUCKSHOT) ~= 0 then
+			typeMul = 1
+		elseif bit.band(rawDamageType, DMG_BULLET) ~= 0 then
+			typeMul = 0.75
+		elseif bit.band(rawDamageType, DMG_BLAST) ~= 0 then
+			typeMul = 0.55
+		elseif bit.band(rawDamageType, DMG_SLASH) ~= 0 then
+			typeMul = 0.25
+		end
+
+		local severity = math.Clamp(incomingDmg * 0.55 + jawDelta * 1.6, 0, 2)
+		local chance = math.Clamp((severity - 0.12) * 0.42 * typeMul, 0, 0.85)
+		if math.Rand(0, 1) < chance then
+			local lost = math.random(1, math.Clamp(math.ceil(severity * 3.5 * typeMul), 1, 8))
+			if (org.jaw == 1 and oldDmg < 1) or severity > 1.25 then
+				lost = lost + math.random(1, 4)
+			end
+
+			lost = math.min(lost, 32 - org.teethLost)
+			org.teethLost = org.teethLost + lost
+			SpawnTeeth(org, lost, hit, dir)
+			org.painadd = math.min((org.painadd or 0) + 4 + lost * 3, 150)
+			org.shock = math.min((org.shock or 0) + 1 + lost * 1.5, 95)
+			hg.AddHarmToAttacker(dmgInfo, lost * 0.08, "Teeth loss harm")
+
+			if IsValid(org.owner) and hg.organism.AddWoundManual then
+				hg.organism.AddWoundManual(org.owner, math.min(4 + lost * 2, 18), Vector(1, -3, 0), angle_zero, "ValveBiped.Bip01_Head1", CurTime())
+				org.owner:EmitSound("physics/flesh/flesh_bloody_impact_hard1.wav", 65, math.random(105, 120), 0.7)
+			end
+
+			if org.isPly then
+				local message = lost == 1 and "You lost a tooth." or ("You lost " .. lost .. " teeth.")
+				if !hasNewThoughts(org) then org.owner:Notify(message, true, "teeth", 2) end
+				sendThought(org, message, "thought_teeth", 3, Color(255, 210, 210))
+			end
+		end
+	end
 
 	hg.AddHarmToAttacker(dmgInfo, (org.jaw - oldDmg) * 3, "Jaw bone damage harm")
 

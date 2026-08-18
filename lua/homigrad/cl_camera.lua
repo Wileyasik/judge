@@ -709,6 +709,7 @@ local eyeangles = entmeta.EyeAngles
 local fLPly = LocalPlayer
 local IsValid = IsValid
 local renderingScene = false
+
 local function renderscene(pos, angle, fov)
 	if renderingScene then return end
 

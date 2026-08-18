@@ -3,16 +3,16 @@ local module = hg.organism.module
 hg.organism.lastindex = hg.organism.lastindex or 1000000
 local panicattack_threshold = 0.45
 local panicattack_add_decay_time = 90
-local panicattack_rise_time = 10
+local panicattack_rise_time = 2.5
 local panicattack_decay_time = 200
-local panicattack_gain_chance = 3
-local panicattack_gain_mul = 0.4
+local panicattack_gain_chance = 1
+local panicattack_gain_mul = 1
 local panicattack_disorientation = 0.45
 local panicattack_adrenaline_add_target = 4
 local panicattack_adrenaline_add_rise_time = 14
 local panicattack_heart_roll_delay = 15
 local panicattack_heart_roll_chance = 1
-local panicattack_damage_scale = 0.006
+local panicattack_damage_scale = 0.022
 local panicattack_witness_radius = 850
 local panicattack_death_radius = 900
 local seizure_duration = 90
@@ -58,6 +58,7 @@ hook.Add("Org Clear", "Main", function(org)
 	org.consciousness = 1
 	org.disorientation = 0
 	org.jaw = 0
+	org.teethLost = 0
 	org.spine1 = 0
 	org.spine2 = 0
 	org.spine3 = 0
@@ -243,6 +244,8 @@ local function send_organism(org, ply)
 	sendtable.rarmdislocation = org.rarmdislocation
 	sendtable.larmdislocation = org.larmdislocation
 	sendtable.jawdislocation = org.jawdislocation
+	sendtable.jaw = org.jaw
+	sendtable.teethLost = org.teethLost
 	sendtable.llegamputated = org.llegamputated
 	sendtable.rlegamputated = org.rlegamputated
 	sendtable.rarmamputated = org.rarmamputated
@@ -331,6 +334,8 @@ local function send_bareinfo(org)
 	sendtable.rarmdislocation = org.rarmdislocation
 	sendtable.larmdislocation = org.larmdislocation
 	sendtable.jawdislocation = org.jawdislocation
+	sendtable.jaw = org.jaw
+	sendtable.teethLost = org.teethLost
 	sendtable.llegamputated = org.llegamputated
 	sendtable.rlegamputated = org.rlegamputated
 	sendtable.rarmamputated = org.rarmamputated
@@ -395,6 +400,12 @@ end
 function hg.organism.AddPanicAttack(org, amount, silent)
 	if not org then return 0 end
 	if not isnumber(amount) or amount <= 0 then return org.panicattackadd or 0 end
+	if silent and IsValid(org.owner) and org.owner:IsPlayer() and (org.owner.lastKillTime or 0) > CurTime() - 4 then
+		return org.panicattackadd or 0
+	end
+	if IsValid(org.owner) and org.owner:IsPlayer() then
+		org.owner:PrintMessage(HUD_PRINTCONSOLE, "[PANIC:ADD] +" .. amount)
+	end
 	if math.random(panicattack_gain_chance) != 1 then return org.panicattackadd or 0 end
 	org.panicattackadd = math.Clamp((org.panicattackadd or 0) + amount * panicattack_gain_mul, 0, 1)
 	return org.panicattackadd
@@ -472,6 +483,7 @@ local function panic_witness_event(victim, attacker, amount, radius)
 		if not watcher:IsPlayer() or watcher == victim then continue end
 		if not watcher:Alive() or not watcher.organism or watcher.organism.otrub then continue end
 		if IsValid(attacker) and watcher == attacker then continue end
+		if IsValid(victim.killedBy) and watcher == victim.killedBy then continue end
 		local watcherEnt = hg.GetCurrentCharacter(watcher) or watcher
 		local tr = util.TraceLine({
 			start = watcher:EyePos(),
@@ -480,9 +492,19 @@ local function panic_witness_event(victim, attacker, amount, radius)
 			mask = MASK_SHOT
 		})
 		if tr.Hit then continue end
+		watcher:PrintMessage(HUD_PRINTCONSOLE, "[PANIC:WITNESS] +" .. amount .. " attacker=" .. (IsValid(attacker) and attacker:Nick() or "NIL") .. " victim=" .. (IsValid(victim) and victim:Nick() or "NIL") .. " killedBy=" .. (IsValid(victim.killedBy) and victim.killedBy:Nick() or "NIL"))
 		hg.organism.AddPanicAttack(watcher.organism, amount, true)
 	end
 end
+hook.Add("EntityTakeDamage", "PanicTrackLastAttacker", function(target, dmgInfo)
+	local owner = target:IsPlayer() and target or (IsValid(target.ply) and target.ply) or nil
+	if not IsValid(owner) or not owner:IsPlayer() then return end
+	local att = resolve_panic_attacker(owner, dmgInfo:GetAttacker())
+	if IsValid(att) then
+		owner.lastPanicAttacker = att
+		owner.lastPanicAttackTime = CurTime()
+	end
+end)
 local numerical = {
 	"One.",
 	"Two.",
@@ -525,8 +547,12 @@ end)
 hook.Add("HomigradDamage", "PanicAttackDamage", function(ply, dmgInfo)
 	if not IsValid(ply) or not ply:IsPlayer() or not ply:Alive() then return end
 	if not ply.organism then return end
-	local amount = math.Clamp(dmgInfo:GetDamage() * panicattack_damage_scale + (dmgInfo:IsDamageType(DMG_BLAST) and 0.08 or 0), 0.03, 0.35)
+	local amount = math.Clamp(dmgInfo:GetDamage() * panicattack_damage_scale + (dmgInfo:IsDamageType(DMG_BLAST) and 0.08 or 0), 0.03, 0.55)
 	local attacker = resolve_panic_attacker(ply, dmgInfo:GetAttacker())
+	if not IsValid(attacker) and IsValid(ply.lastPanicAttacker) and (ply.lastPanicAttackTime or 0) > CurTime() - 30 then
+		attacker = ply.lastPanicAttacker
+	end
+	ply:PrintMessage(HUD_PRINTCONSOLE, "[PANIC:DAMAGE] +" .. amount .. " attacker=" .. (IsValid(attacker) and attacker:Nick() or "NIL"))
 	hg.organism.AddPanicAttack(ply.organism, amount)
 	if dmgInfo:GetDamage() <= 0 and not dmgInfo:IsDamageType(DMG_BLAST) then return end
 	panic_witness_event(ply, attacker, math.Clamp(amount * 0.75, 0.04, 0.2), panicattack_witness_radius)
@@ -1027,11 +1053,22 @@ hook.Add("PlayerDeath","next-respawn-full",function(ply)
 end)
 hook.Add("PlayerDeath", "PanicAttackWitnessDeath", function(victim, inflictor, attacker)
 	local realAttacker = resolve_panic_attacker(victim, attacker)
-	panic_witness_event(victim, realAttacker, 0.14, panicattack_death_radius)
+	if not IsValid(realAttacker) and IsValid(victim.lastPanicAttacker) and (victim.lastPanicAttackTime or 0) > CurTime() - 30 then
+		realAttacker = victim.lastPanicAttacker
+	end
+	victim.killedBy = realAttacker
+	if IsValid(realAttacker) then
+		realAttacker.lastKillTime = CurTime()
+	end
 end)
 hook.Add("OnNPCKilled", "PanicAttackWitnessNPCDeath", function(victim, attacker, inflictor)
 	local realAttacker = resolve_panic_attacker(victim, attacker)
-	panic_witness_event(victim, realAttacker, 0.1, panicattack_death_radius)
+	if not IsValid(realAttacker) and IsValid(victim.lastPanicAttacker) and (victim.lastPanicAttackTime or 0) > CurTime() - 30 then
+		realAttacker = victim.lastPanicAttacker
+	end
+	if IsValid(realAttacker) then
+		realAttacker.lastKillTime = CurTime()
+	end
 end)
 hook.Add("HG_OnWakeOtrub", "afterOtrub", function( owner )
 	owner.organism.after_otrub = true

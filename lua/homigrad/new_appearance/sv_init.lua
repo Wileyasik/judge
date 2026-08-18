@@ -27,6 +27,11 @@ local function CheckAttachments(ply,tbl)
             tbl.AAttachments[i] = ""
             if ply.ChatPrint then ply:ChatPrint(uid .. " - is restricted, removed") end
         end
+
+        if hg.Accessories[uid] and hg.Accessories[uid].onlySuperAdmin and not ply:IsSuperAdmin() then
+            tbl.AAttachments[i] = ""
+            if ply.ChatPrint then ply:ChatPrint(uid .. " - is superadmin only, removed") end
+        end
     end
 
     local tMdl = APmodule.PlayerModels[1][tbl.AModel] or APmodule.PlayerModels[2][tbl.AModel] or tbl.AModel

@@ -668,9 +668,10 @@ hook.Add("HG_CalcView", "CinematicDeathHGOverride", CinematicDeathHGCalcView)
 
 -- audio and visual overrides
 local function CinematicDeathMute()
-    if CDeath.isDead and CDeath.stage2Started and not CDeath.inSpectator and not CDeath.compatActive then
-        return false
-    end
+	local ply = LocalPlayer()
+	if IsValid(ply) and not ply:Alive() and CDeath.isDead and CDeath.stage2Started and not CDeath.inSpectator and not CDeath.compatActive then
+		return false
+	end
 end
 hook.Add("EntityEmitSound", "CinematicDeathMute", CinematicDeathMute)
 

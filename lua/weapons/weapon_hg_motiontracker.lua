@@ -76,7 +76,7 @@ local SLAMPlacementRadius = 80
 end]]
 
 if CLIENT then
-	function SWEP:DrawWorldModel2()
+	function SWEP:DrawWorldModel2(prepareOnly)
 		render.SetColorModulation(0.45,0.52,1)
 		local owner = self:GetOwner()
 
@@ -158,6 +158,8 @@ if CLIENT then
 		end
 
 		WorldModel:SetupBones()
+
+		if prepareOnly then return end
 		
 		if IsValid(self.worldModel2) then
 			self.worldModel2:SetNoDraw(true)

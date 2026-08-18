@@ -30,8 +30,8 @@ SWEP.weight = 0.4
 SWEP.AttackTime = 0.3
 SWEP.AnimTime1 = 0.95
 SWEP.WaitTime1 = 0.75
-SWEP.AttackLen1 = 36
-SWEP.AttackLen2 = 34
+SWEP.AttackLen1 = 41
+SWEP.AttackLen2 = 39
 
 SWEP.AnimTime2 = 0.85
 SWEP.Attack2Time = 0.15
@@ -293,10 +293,10 @@ function SWEP:CanSecondaryAttack()
     return true
 end
 
-function SWEP:DrawWorldModel2()
+function SWEP:DrawWorldModel2(prepareOnly)
     local oldExchange = self.WorldModelExchange
     self.WorldModelExchange = not IsValid(self:GetOwner()) and self.DroppedWorldModel or oldExchange
     local meleeBase = weapons.GetStored("weapon_melee")
-    meleeBase.DrawWorldModel2(self)
+    meleeBase.DrawWorldModel2(self, prepareOnly)
     self.WorldModelExchange = oldExchange
 end

@@ -221,17 +221,8 @@ function GAMEMODE:MouthMoveAnimation(ply)
 end
 
 if CLIENT then
-    local entities = ents.FindByClass("prop_ragdoll")
-    table.Add(entities, player.GetAll())
-
-    for i, ply in ipairs(entities) do
-        ply.RenderOverride = function(self, flags)
-            if not IsValid(self) then return end
-            local ent = self.FakeRagdoll
-            if IsValid(ent) then return end
-            
-            hg.renderOverride(self, ent, flags)
-        end
+    for _, ply in ipairs(player.GetAll()) do
+        hg.InstallPlayerRenderOverride(ply)
     end
 end
 

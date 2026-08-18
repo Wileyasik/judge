@@ -132,7 +132,7 @@ end
 
 function MODE:PickVariant()
 	local count = self:GetPlayerCount()
-	local pool = count >= self.VariantMinPlayers and { 1, 2, 3, 4 } or { 1, 3, 4 }
+	local pool = count >= self.VariantMinPlayers and { 1, 2, 3 } or { 1, 3 }
 	return pool[math.random(#pool)]
 end
 

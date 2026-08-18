@@ -170,11 +170,21 @@ if SERVER then
 			end
 		end
 
+		local isDrink = self.WaterModel[self.WorldModel]
+		local teethLost = math.Clamp(org.teethLost or 0, 0, 32)
+		local chewPenalty = isDrink and 0 or teethLost / 32
+
 		org.satiety = org.satiety + 25/5
 		owner:ViewPunch(ang_eat)
 		
-		ent:EmitSound( self.WaterModel[self.WorldModel] and "snd_jack_hmcd_drink"..math.random(3)..".wav" or "snd_jack_hmcd_eat"..math.random(4)..".wav", 60, math.random(95, 105))
-		self.CDEating = CurTime() + 0.5
+		ent:EmitSound(isDrink and "snd_jack_hmcd_drink"..math.random(3)..".wav" or "snd_jack_hmcd_eat"..math.random(4)..".wav", 60, math.random(95, 105))
+		self.CDEating = CurTime() + 0.5 + chewPenalty * 0.9
+		if not isDrink and teethLost >= 4 then
+			org.painadd = math.min((org.painadd or 0) + 0.5 + chewPenalty * 2.5, 150)
+		end
+		if not isDrink and (org.jaw == 1 or org.jawdislocation) then
+			org.painadd = math.min((org.painadd or 0) + 3, 150)
+		end
 		self.Eating = self.Eating + 1
 
 		if self.Eating > 5 then

@@ -423,6 +423,30 @@ hg.ConVars = hg.ConVars or {}
 	end
 --//
 --\\ custom spawn
+	if CLIENT then
+		function hg.InstallPlayerRenderOverride(ply)
+			if not IsValid(ply) or not ply:IsPlayer() then return end
+
+			ply.RenderOverride = function(self, flags)
+				if not IsValid(self) or self:IsDormant() then return end
+				if IsValid(self.FakeRagdoll) then return end
+
+				hg.renderOverride(self, nil, flags)
+			end
+		end
+
+		hook.Add("NetworkEntityCreated", "HG.InstallPlayerRenderOverride", function(ent)
+			if ent:IsPlayer() then hg.InstallPlayerRenderOverride(ent) end
+		end)
+
+		hook.Add("InitPostEntity", "HG.InstallLocalPlayerRenderOverride", function()
+			timer.Simple(0, function()
+				local ply = LocalPlayer()
+				if IsValid(ply) then hg.InstallPlayerRenderOverride(ply) end
+			end)
+		end)
+	end
+
 	gameevent.Listen("player_spawn")
 
 	DEFAULT_JUMP_POWER = 200
@@ -495,16 +519,7 @@ hg.ConVars = hg.ConVars or {}
 		ply:RemoveFlags(FL_NOTARGET)
 
 
-		ply.RenderOverride = function(self, flags)
-			if not IsValid(self) or self:IsDormant() then return end
-			local p,a = self:GetBonePosition(1)
-			if not p or p:IsEqualTol(self:GetPos(), 0.01) then return end
-			local ent = self.FakeRagdoll
-			if hg.TPIKDebug and self == lply then hg.TPIKDebug(self, "RenderOverride local, bonepos=", tostring(p), "FakeRagdoll=", tostring(IsValid(ent) and ent)) end
-			if IsValid(ent) then return end
-
-			hg.renderOverride(self, ent, flags)
-		end
+		if CLIENT then hg.InstallPlayerRenderOverride(ply) end
 
 		hook.Run("Player Getup", ply)
 
@@ -659,8 +674,7 @@ local IsValid = IsValid
 	end
 --//
 --\\ Render Override
-	hg.renderOverride = function(self, ent, flags)
-		if hg.TPIKDebug and self == lply then hg.TPIKDebug(self, "renderOverride entry") end
+hg.renderOverride = function(self, ent, flags)
 		if bit.band(flags, STUDIO_RENDER) != STUDIO_RENDER then return end
 		if IsValid(RENDERING_SCOPE) and self == RENDERING_SCOPE:GetOwner() then return end
 		--if self == lply and !selfdraw then return end

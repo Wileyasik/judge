@@ -438,7 +438,7 @@ local painScreamSounds = {
 		"painSounds/bigFemalePain4.mp3",
 	},
 }
-local painScreamUniversalChance = 0.5
+local painScreamUniversalChance = 0.05
 local burnScreamSounds = {
 	"screams/universal1/burnOne.mp3",
 	"screams/universal1/burnTwo.mp3",
@@ -448,9 +448,9 @@ local burnScreamSounds = {
 	"screams/universal1/burnSix.mp3",
 }
 local burnScreamUniversalChance = 0.5
-local painScreamRestartFade = 0.6
+local painScreamRestartFade = 0.8
 local painScreamEndFade = 0.05
-local painScreamChance = 0.42
+local painScreamChance = 0.52
 local silentCombatClasses = {
 	arena_cleaner = true,
 	terrorist = true,

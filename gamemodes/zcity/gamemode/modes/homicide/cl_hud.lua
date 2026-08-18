@@ -125,7 +125,7 @@ hook.Add("HUDPaint", "HMCD_SubRoles_Abilities", function()
 					text = "[ALT + E] Martial Arts knockdown"
 					canShow = true
 				else
-					text = "[ALT + E] Martial Arts disarm"
+					text = "[ALT + E] Martial Arts knockdown"
 					canShow = true
 				end
 			elseif(hasMelee and isBehind)then

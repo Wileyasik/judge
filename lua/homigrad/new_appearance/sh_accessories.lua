@@ -2733,6 +2733,20 @@ hg.Accessories = {
         norender = true,
         placement = "head",
     },
+    ["hotline miami mask"] = {
+        model = "models/splinks/hotline_miami/props/masks.mdl",
+        bone = "ValveBiped.Bip01_Head1",
+        malepos = {Vector(-69.212,-0.5,0.8),Angle(4.975,-89.77,-90.292),1.075},
+        fempos = {Vector(-65.212,-0.6,0.3),Angle(4.975,-89.77,-90.292),2},
+        scaleVec = Vector(1,1,1),
+        scaleVecFem = Vector(1,1,1),
+        skin = 0,
+        placement = "mask",
+        norender = true,
+        randomBodygroups = true,
+        onlySuperAdmin = true,
+        name = "Hotline Miami Mask"
+     }, 
 
 }
 

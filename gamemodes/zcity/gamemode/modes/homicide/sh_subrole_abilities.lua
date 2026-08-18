@@ -572,6 +572,104 @@ MODE.MAMoves = {
 }
 
 if SERVER then
+	local maMoveCategories = {
+		mw_dyli_front = "disarm",
+		mw_suplex = "knockdown",
+		mw_necktrauma = "knockdown",
+		mw_cagematch = "knockdown",
+		mw_sweetdreams = "knockdown"
+	}
+	local maCooldowns = {
+		disarm = 8,
+		knockdown = 8
+	}
+	local maLimbNames = {
+		larm = "left arm",
+		rarm = "right arm",
+		lleg = "left leg",
+		rleg = "right leg"
+	}
+
+	function MODE.MAForceUncon(target, duration)
+		if not IsValid(target) or not target:Alive() or not target.organism then return end
+		local org = target.organism
+		org.consciousness = 0
+		org.needotrub = true
+		org.needfake = true
+		if not IsValid(target.FakeRagdoll) then hg.Fake(target, nil, true) end
+		timer.Simple(duration or 6, function()
+			if not IsValid(target) or not target:Alive() or not target.organism then return end
+			local org = target.organism
+			org.consciousness = 1
+			org.needotrub = false
+			org.needfake = false
+		end)
+	end
+
+	hook.Add("EntityTakeDamage", "MMA_MoveProtection", function(ent, dmg)
+		if not IsValid(ent) then return end
+		local ply = ent:IsPlayer() and ent or (IsValid(ent.ply) and ent.ply)
+		if not IsValid(ply) or ply.SubRole ~= "traitor_martialartist" then return end
+		if (ply.WWE_HoldDownUntil or 0) > CurTime() then
+			dmg:SetDamage(0)
+			return true
+		end
+	end, 0.5)
+
+	local function dislocateMALimb(target)
+		if not IsValid(target) or not target:Alive() or not target.organism or target.organism.superfighter then return end
+
+		local available = {}
+		for limb in pairs(maLimbNames) do
+			if not target.organism[limb .. "dislocation"] and not target.organism[limb .. "amputated"] then
+				available[#available + 1] = limb
+			end
+		end
+		if #available == 0 then return end
+
+		local limb = available[math.random(#available)]
+		local org = target.organism
+		org[limb .. "dislocation"] = true
+		org.painadd = math.min((org.painadd or 0) + 25, 150)
+		org.shock = math.min((org.shock or 0) + 8, 95)
+		target:EmitSound("physics/body/body_medium_break" .. math.random(2, 4) .. ".wav", 70, math.random(90, 105))
+		target:Notify("Your " .. maLimbNames[limb] .. " was dislocated by the takedown.", true, "ma_dislocation", 3)
+	end
+
+	function MODE.RunMartialArtistMove(ply, moveId, target)
+		if not IsValid(ply) or not ply:Alive() or ply.SubRole ~= "traitor_martialartist" then return false end
+		if not (WWE and WWE.moves and WWE.moves[moveId]) then return false end
+
+		local category = maMoveCategories[moveId]
+		if moveId ~= "mw_giantswing" and not category then return false end
+
+		ply.MACooldowns = ply.MACooldowns or {}
+		if category and (ply.MACooldowns[category] or 0) > CurTime() then return false end
+
+		local success = WWE.RunMove(ply, moveId)
+		if not success then return false end
+
+		if not IsValid(target) then
+			target = ply.WWE_LastTarget
+		end
+
+		if category then
+			ply.MACooldowns[category] = CurTime() + maCooldowns[category]
+		end
+
+		if IsValid(target) then
+			MODE.MAForceUncon(target, 8)
+		end
+
+		if category == "knockdown" and IsValid(target) and math.Rand(0, 1) < 0.35 then
+			timer.Simple(0.8, function()
+				dislocateMALimb(target)
+			end)
+		end
+
+		return true
+	end
+
     util.AddNetworkString("HMCD_MA_Move")
     util.AddNetworkString("HMCD_MA_MoveList")
     util.AddNetworkString("HMCD_MA_RequestList")
@@ -595,6 +693,7 @@ if SERVER then
     end
 
     hook.Add("PlayerSpawn", "HMCD_MA_SendMoveList", function(ply)
+		ply.MACooldowns = nil
         if ply.SubRole == "traitor_martialartist" then
             MODE.SendMAMoveList(ply)
         end
@@ -614,9 +713,8 @@ if SERVER then
         if not ply:Alive() then return end
 
         local moveId = net.ReadString()
-        if not (WWE and WWE.moves and WWE.moves[moveId]) then return end
-
-        WWE.RunMove(ply, moveId)
+		local _, target = MODE.GetPlayerTraceToOther(ply, nil, 160)
+		MODE.RunMartialArtistMove(ply, moveId, target)
     end)
 end
 

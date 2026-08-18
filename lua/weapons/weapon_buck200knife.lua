@@ -23,7 +23,8 @@ SWEP.SuicidePunchAng = Angle(-5, -15, 0)
 
 SWEP.PenetrationSizePrimary = 2
 SWEP.PenetrationSizeSecondary = 0
-
+SWEP.AttackLen1 = 41
+SWEP.AttackLen2 = 39
 
 SWEP.PenetrationPrimary = 4
 SWEP.PenetrationSecondary = 0
@@ -47,7 +48,7 @@ SWEP.basebone = 76
 SWEP.HoldPos = Vector(-2,-5,-5)
 SWEP.HoldAng = Angle(-15,20,-10)
 
-SWEP.AttackPos = Vector(0,0,0)
+SWEP.   Pos = Vector(0,0,0)
 SWEP.AttackingPos = Vector(0,0,0)
 
 SWEP.weaponPos = Vector(-1,0,0)

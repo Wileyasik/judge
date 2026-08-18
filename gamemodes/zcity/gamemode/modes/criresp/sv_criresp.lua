@@ -1,6 +1,6 @@
 MODE.name = "criresp"
 MODE.PrintName = "Crisis Response"
-MODE.end_time = 7
+MODE.end_time = 15
 
 MODE.ForBigMaps = false
 MODE.ROUND_TIME = 480
@@ -414,11 +414,9 @@ function MODE:EndRound()
 	-- Criminals defend the map, so they win if time expires or both teams are eliminated.
 	if winner ~= 0 and winner ~= 1 then winner = 1 end
 
-	timer.Simple(2,function()
-		net.Start("cri_roundend")
-			net.WriteBool(winner == 1)
-		net.Broadcast()
-	end)
+	net.Start("cri_roundend")
+		net.WriteBool(winner == 1)
+	net.Broadcast()
 
 	for k,ply in player.Iterator() do
 		if ply:Team() == winner then

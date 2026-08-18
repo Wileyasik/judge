@@ -5,20 +5,102 @@ local swatDeploymentTime = 0
 local modeSound
 local introDuration = 10
 local victoryDuration = 6
+local victoryScreenDuration = victoryDuration
+local soundGeneration = 0
+local introChannel
+local introReady = false
+local introPending = false
+local introGeneration = 0
 
-local function PlayModeSound(path, duration)
+local function StopIntro()
+	introGeneration = introGeneration + 1
+	introReady = false
+	introPending = false
+	if IsValid(introChannel) then
+		introChannel:Stop()
+		introChannel = nil
+	end
+end
+
+local function StartIntro()
+	local channel = introChannel
+	if not IsValid(channel) then
+		PreloadIntro(true)
+		return
+	end
+	if not introReady then
+		introPending = true
+		return
+	end
+
+	channel:SetTime(0)
+	channel:Play()
+	local gen = introGeneration
+	local trackDuration = channel:GetLength()
+	if not isnumber(trackDuration) or trackDuration <= 0 then
+		trackDuration = introDuration
+	end
+	timer.Simple(trackDuration, function()
+		if gen ~= introGeneration then return end
+		if introChannel == channel and IsValid(channel) then
+			channel:Stop()
+			introChannel = nil
+			introReady = false
+		end
+	end)
+end
+
+local function PreloadIntro(autoPlay)
+	introGeneration = introGeneration + 1
+	local gen = introGeneration
+	introReady = false
+	if IsValid(introChannel) then
+		introChannel:Stop()
+		introChannel = nil
+	end
+	introPending = autoPlay or introPending
+
+	sound.PlayFile("sound/Crirespstart.mp3", "noplay noblock", function(channel)
+		if gen ~= introGeneration then
+			if IsValid(channel) then channel:Stop() end
+			return
+		end
+		if not IsValid(channel) then
+			introPending = false
+			return
+		end
+
+		introChannel = channel
+		introReady = true
+		if introPending then
+			introPending = false
+			StartIntro()
+		end
+	end)
+end
+
+local function PlayModeSound(path, duration, playToEnd, onReady)
+	soundGeneration = soundGeneration + 1
+	local generation = soundGeneration
 	if IsValid(modeSound) then modeSound:Stop() end
 
 	sound.PlayFile("sound/" .. path, "noplay noblock", function(channel)
+		if generation ~= soundGeneration then
+			if IsValid(channel) then channel:Stop() end
+			return
+		end
 		if not IsValid(channel) then return end
 
 		modeSound = channel
 		channel:Play()
-		timer.Simple(duration, function()
-			if modeSound == channel and IsValid(channel) then
-				channel:Stop()
-				modeSound = nil
-			end
+		local fileDuration = channel:GetLength()
+		if not isnumber(fileDuration) or fileDuration <= 0 then fileDuration = duration end
+		if onReady then onReady(fileDuration) end
+
+		timer.Simple(playToEnd and fileDuration or duration, function()
+			if modeSound ~= channel then return end
+			if not playToEnd and IsValid(channel) then channel:Stop() end
+			modeSound = nil
 		end)
 	end)
 end
@@ -26,6 +108,8 @@ end
 net.Receive("criresp_start", function()
 	submode = net.ReadString() or "sobr"
 	swatDeploymentTime = CurTime() + net.ReadUInt(7)
+	StopIntro()
+	PreloadIntro()
 end)
 
 local function TeamInfo(team_)
@@ -57,7 +141,10 @@ net.Receive("cri_roundend", function()
 	endWinner = net.ReadBool() and 1 or 0
 	endStart = CurTime()
 	swatDeploymentTime = 0
-	PlayModeSound("Crirespwin.mp3", victoryDuration)
+	victoryScreenDuration = victoryDuration
+	PlayModeSound("Crirespwin.mp3", victoryDuration, true, function(fileDuration)
+		victoryScreenDuration = math.max(victoryDuration, fileDuration)
+	end)
 end)
 
 surface.CreateFont("ZB_CrirespHeader", {
@@ -99,9 +186,9 @@ function MODE:HUDPaint()
 
 	if endStart > 0 then
 		local t = CurTime() - endStart
-		if t < victoryDuration then
+		if t < victoryScreenDuration then
 			local ina = math.Clamp(t / 0.4, 0, 1)
-			local outa = math.Clamp((victoryDuration - t) / 0.6, 0, 1)
+			local outa = math.Clamp((victoryScreenDuration - t) / 0.6, 0, 1)
 			local a = 255 * ina * outa
 			local title, titleCol, teamName
 			if endWinner == 1 then
@@ -133,5 +220,5 @@ end
 function MODE:RoundStart()
 	endStart = 0
 	endWinner = nil
-	PlayModeSound("Crirespstart.mp3", introDuration)
+	StartIntro()
 end

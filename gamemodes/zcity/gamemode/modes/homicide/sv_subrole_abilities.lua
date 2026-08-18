@@ -216,7 +216,7 @@ hook.Add("PlayerPostThink", "HMCD_SubRoles_Abilities", function(ply)
 
 					-- aimed at a ragdoll lying on the floor? pick it up with a giantswing
 					if(WWE and WWE.moves and WWE.moves.mw_giantswing)then
-						if(WWE.RunMove(ply, "mw_giantswing"))then return end
+						if(MODE.RunMartialArtistMove(ply, "mw_giantswing"))then return end
 					end
 
 					-- pick a move suited to our position relative to the target (front / back)
@@ -236,7 +236,7 @@ hook.Add("PlayerPostThink", "HMCD_SubRoles_Abilities", function(ply)
 					if(#moves == 0)then return end
 
 					local moveId = moves[math.random(#moves)]
-					if(WWE and WWE.RunMove)then WWE.RunMove(ply, moveId) end
+					if(WWE and WWE.RunMove)then MODE.RunMartialArtistMove(ply, moveId, action_ply) end
 				end
 			end
 

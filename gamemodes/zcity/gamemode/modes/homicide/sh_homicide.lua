@@ -123,7 +123,8 @@ local function ApplyTraitorLoadout(ply)
 		ply:Give("weapon_hg_nunchuks")
 	elseif skillset == "brawler" then
 		ply.organism.stamina.max = 300
-		ply.MeleeDamageMul = 1.5
+		ply.MeleeDamageMul = 1.85
+		ply.organism.painresist = 0.8
 	end
 
 	local inv = ply:GetNetVar("Inventory", {})
@@ -154,6 +155,15 @@ local function ApplyTraitorLoadout(ply)
 			timer.Simple(0.5, function()
 				if IsValid(ply) and ply:HasWeapon("weapon_p22") then
 					local w = ply:GetWeapon("weapon_p22")
+					if IsValid(w) and w:GetPrimaryAmmoType() >= 0 then
+						ply:GiveAmmo(w:GetMaxClip1(), w:GetPrimaryAmmoType(), true)
+					end
+				end
+			end)
+		elseif wep == "weapon_pb_ammo" then
+			timer.Simple(0.5, function()
+				if IsValid(ply) and ply:HasWeapon("weapon_pb") then
+					local w = ply:GetWeapon("weapon_pb")
 					if IsValid(w) and w:GetPrimaryAmmoType() >= 0 then
 						ply:GiveAmmo(w:GetMaxClip1(), w:GetPrimaryAmmoType(), true)
 					end
@@ -314,7 +324,7 @@ Despite being zombie, still bears appearance of a normal human.]],
 	},
 	["traitor_brawler"] = {
 		Name = "Brawler",
-		Description = "A bare-knuckle brawler. Devastating 1.5x melee and can choke or execute victims with melee weapons, but no firearms and fragile from behind.",
+		Description = "A bare-knuckle brawler. Devastating 1.85x melee and can choke or execute victims with melee weapons, but no firearms and fragile from behind.",
 		Objective = "Use your fists and grapples to eliminate everyone before the Judge stops you.",
 		SpawnFunction = function(ply)
 		end,

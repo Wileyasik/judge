@@ -1077,7 +1077,7 @@ local observe_state = {
 	was_alive = true,
 	require_admire_reset = false
 }
-local observe_parts = {"Arms", "Torso", "Legs"}
+local observe_parts = {"Head", "Arms", "Torso", "Legs"}
 local observe_stage_time = 4.5
 local observe_text_delay = 1.8
 local observe_type_speed = 28
@@ -1089,6 +1089,20 @@ local observe_line_screen_up = 22
 local observe_font = "ZCity_Veteran"
 
 local observe_bone_sets = {
+	Head = {
+		{
+			label = "Head",
+			bones = {"ValveBiped.Bip01_Head1"},
+			side = 1,
+			offset = 4,
+			fracture_keys = {"skull", "jaw"},
+			dis_key = "jawdislocation",
+			teeth = true,
+			hitgroups = {
+				[HITGROUP_HEAD] = true
+			}
+		}
+	},
 	Arms = {
 		{
 			label = "Left Arm",
@@ -1338,14 +1352,22 @@ local function build_observe_text(entry, ent)
 
 	local fracture = has_fracture(org, entry.fracture_keys or {})
 	local dislocation = entry.dis_key and (org[entry.dis_key] or false) or false
+	local teethLost = entry.teeth and math.Clamp(org.teethLost or 0, 0, 32) or 0
 	local woundcount = count_wounds_for_groups(ent, wounds, entry.hitgroups or {})
 	local arterialcount = count_arterial_for_groups(ent, arterialwounds, entry.hitgroups or {})
-	if not fracture and not dislocation and woundcount <= 0 and arterialcount <= 0 then
+	if not fracture and not dislocation and teethLost <= 0 and woundcount <= 0 and arterialcount <= 0 then
 		return entry.label .. ": All fine."
 	end
 	local parts = {}
 	if fracture then parts[#parts + 1] = "Fracture" end
 	if dislocation then parts[#parts + 1] = "Dislocated" end
+	if teethLost == 32 then
+		parts[#parts + 1] = "No teeth"
+	elseif teethLost == 1 then
+		parts[#parts + 1] = "1 missing tooth"
+	elseif teethLost > 1 then
+		parts[#parts + 1] = teethLost .. " missing teeth"
+	end
 	local bleeding = get_bleeding_label(woundcount)
 	if bleeding then parts[#parts + 1] = bleeding end
 	if arterialcount > 0 then parts[#parts + 1] = "Arterial bleeding" end

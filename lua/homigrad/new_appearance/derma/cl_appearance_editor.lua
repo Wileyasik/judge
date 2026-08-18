@@ -1285,6 +1285,7 @@ function PANEL:PostInit()
                 local hasItem = lply.PS_HasItem and lply:PS_HasItem(k)
                 if not hasItem and v.bPointShop and not hg.Appearance.GetAccessToAll(lply) then continue end
                 if v.allowed and not v.allowed[lply:SteamID()] and not hg.Appearance.GetAccessToAll(lply) then continue end
+                if v.onlySuperAdmin and not lply:IsSuperAdmin() then continue end
                 local fk = BuildAccessoryFamilyKey(v)
                 local fam = families[fk]
                 if not fam then

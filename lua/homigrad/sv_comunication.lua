@@ -66,7 +66,7 @@ hook.Add("PlayerCanSeePlayersChat", "RealiticChar", function(text, teamOnly, lis
 end)
 
 local function funca(ply, txt)
-	if !ply:Alive() or !ply.organism then return end
+	if !ply:Alive() or !ply.organism then return txt end
 	local starttxt = txt
 
 	if ply.organism.pain > 80 then
@@ -93,6 +93,23 @@ local function funca(ply, txt)
 			len = len + 1
 			chars[len] = utf8.char(code)
 		end
+		txt = table.concat(chars)
+	end
+
+	local teethLost = math.Clamp(ply.organism.teethLost or 0, 0, 32)
+	if teethLost >= 4 then
+		local iter = utf8.codes(txt)
+		local chars = {}
+		local replacementChance = math.Clamp(math.floor(34 - teethLost * 0.85), 7, 30)
+		local minus = utf8.codepoint("-", 1, 1)
+
+		for _, code in iter do
+			if code ~= 32 and math.random(replacementChance) == 1 then
+				code = minus
+			end
+			chars[#chars + 1] = utf8.char(code)
+		end
+
 		txt = table.concat(chars)
 	end
 	

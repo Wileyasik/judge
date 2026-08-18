@@ -301,6 +301,18 @@ function DrawAccesories(ply, ent, accessories,accessData, islply, force, setup)
 
 	ply.modelAccess = ply.modelAccess or {}
 
+	local bodygroupOwner = ply
+	if not ply:IsPlayer() then
+		local realOwner = ply:GetNWEntity("ply")
+		if IsValid(realOwner) and realOwner:IsPlayer() then
+			bodygroupOwner = realOwner
+		end
+	end
+
+	if accessData["randomBodygroups"] and not bodygroupOwner:IsPlayer() then
+		return
+	end
+
 	local fem = ThatPlyIsFemale(ent)
 	if not IsValid(ply.modelAccess[accessories]) then
 		if not accessData["model"] then return end
@@ -310,7 +322,39 @@ function DrawAccesories(ply, ent, accessories,accessData, islply, force, setup)
 		model:SetNoDraw(true)
 		model:SetModelScale( accessData[fem and "fempos" or "malepos"][3] )
 		model:SetSkin( isfunction(accessData["skin"]) and accessData["skin"](ent) or accessData["skin"] )
-		model:SetBodyGroups( accessData["bodygroups"] or "" )
+
+		local bodygroups = accessData["bodygroups"]
+		local best, bestCount = nil, 0
+		if accessData["randomBodygroups"] then
+			local groups = model:GetBodyGroups()
+			for _, g in ipairs(groups) do
+				local count = g.num or #(g.submodels or {})
+				if count > bestCount then
+					best, bestCount = g, count
+				end
+			end
+			if best and bestCount > 0 then
+				local valid = {}
+				local submodels = best.submodels or {}
+				for i = 0, bestCount - 1 do
+					local subName = string.lower(tostring(submodels[i + 1] or ""))
+					if not subName:find("empty") and i != 1 and i != 20 then
+						valid[#valid + 1] = i
+					end
+				end
+				if #valid > 0 then
+					bodygroupOwner.bodygroupPick = bodygroupOwner.bodygroupPick or {}
+					if not bodygroupOwner.bodygroupPick[accessories] then
+						bodygroupOwner.bodygroupPick[accessories] = valid[math.random(#valid)]
+					end
+					bodygroups = tostring(bodygroupOwner.bodygroupPick[accessories])
+				end
+			end
+		end
+		model:SetBodyGroups( bodygroups or "" )
+		if accessData["randomBodygroups"] and best and bodygroups then
+			model:SetBodygroup(best.id, tonumber(bodygroups) or 0)
+		end
 		model:SetParent(ent, ent:LookupBone(accessData["bone"]))
 		if accessData.bonemerge then
 			model:AddEffects(EF_BONEMERGE)

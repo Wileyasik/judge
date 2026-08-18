@@ -11,6 +11,39 @@ MODE.TypeSounds = {
 	["standard"] = "rem_newroundcommence.mp3",
 	["suicidelunatic"] = "allah.mp3",
 }
+
+local function PlayRoundBeginSound(roundType, sequence)
+	if MODE.RoundBeginSoundSequence == sequence then return end
+	MODE.RoundBeginSoundSequence = sequence
+
+	if IsValid(MODE.RoundBeginSoundChannel) then
+		MODE.RoundBeginSoundChannel:Stop()
+		MODE.RoundBeginSoundChannel = nil
+	end
+
+	local lply = LocalPlayer()
+	if not IsValid(lply) then return end
+
+	MODE.Type = roundType or "standard"
+	local roundSound = MODE.TypeSounds[MODE.Type] or "rem_newroundcommence.mp3"
+	if istable(roundSound) then roundSound = table.Random(roundSound) end
+
+	lply:SetDSP(0)
+	lply:ConCommand("soundfade 0 1")
+	MODE.RoundBeginSoundStartTime = CurTime()
+
+	sound.PlayFile("sound/" .. roundSound, "noplay noblock", function(channel)
+		if not IsValid(channel) then return end
+		if MODE.RoundBeginSoundSequence ~= sequence then channel:Stop() return end
+		channel:Play()
+		MODE.RoundBeginSoundChannel = channel
+	end)
+end
+
+net.Receive("HMCD_RoundBeginSound", function()
+	PlayRoundBeginSound(net.ReadString(), net.ReadUInt(16))
+end)
+
 local fade = 0
 local HMCD_ScreenDuration = 10
 local hmcd_show_associates
@@ -88,19 +121,6 @@ net.Receive("HMCD_RoundStart",function()
 	end
 
 	MODE.RoleEndedChosingState = screen_time_is_default
-
-	if(screen_time_is_default)then
-		if MODE.RoundBeginSound then
-			MODE.RoundBeginSound:Stop()
-			MODE.RoundBeginSound = nil
-		end
-
-		local roundSound = MODE.TypeSounds[MODE.Type] or "rem_newroundcommence.mp3"
-		if istable(roundSound) then roundSound = table.Random(roundSound) end
-
-		MODE.RoundBeginSound = CreateSound(LocalPlayer(), roundSound)
-		MODE.RoundBeginSound:PlayEx(1, 100)
-	end
 
 	MODE.RoundTextTilts = {}
 	for i = 1, 64 do
@@ -448,25 +468,27 @@ function MODE:HUDPaint()
 	local lply = LocalPlayer()
 	if not IsValid(lply) then return end
 	if not MODE.Type or not MODE.TypeObjectives[MODE.Type] then return end
-	if lply:Team() == TEAM_SPECTATOR then return end
+if lply:Team() == TEAM_SPECTATOR then return end
+	if MODE.RoundBeginSoundChannel then
+		local soundElapsed = CurTime() - (MODE.RoundBeginSoundStartTime or CurTime())
+		if soundElapsed > HMCD_ScreenDuration then
+			MODE.RoundBeginSoundChannel:Stop()
+			MODE.RoundBeginSoundChannel = nil
+		else
+			local soundFade = math.Clamp((HMCD_ScreenDuration - soundElapsed) / 1.5, 0, 1)
+			MODE.RoundBeginSoundChannel:SetVolume(soundFade)
+		end
+	end
+	if not StartTime then return end
 
 	local t = CurTime() - StartTime
 	if t > HMCD_ScreenDuration then
-		if MODE.RoundBeginSound then
-			MODE.RoundBeginSound:Stop()
-			MODE.RoundBeginSound = nil
-		end
-
 		hmcd_clear_associates()
 
 		return
 	end
 
 	local out_fade = math.Clamp((HMCD_ScreenDuration - t) / 1.5, 0, 1)
-
-	if MODE.RoundBeginSound then
-		MODE.RoundBeginSound:ChangeVolume(out_fade, 0)
-	end
 
 	MODE.CursorLerpX = Lerp(FrameTime() * 6, MODE.CursorLerpX or 0, (gui.MouseX() - sw * 0.5) / (sw * 0.5))
 	MODE.CursorLerpY = Lerp(FrameTime() * 6, MODE.CursorLerpY or 0, (gui.MouseY() - sh * 0.5) / (sh * 0.5))

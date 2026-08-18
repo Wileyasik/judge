@@ -107,7 +107,7 @@ if CLIENT then
         end
     end
 
-	function SWEP:DrawWorldModel2()
+	function SWEP:DrawWorldModel2(prepareOnly)
 		local owner = self:GetOwner()
 
         if not IsValid(self.worldModel) then
@@ -202,6 +202,8 @@ if CLIENT then
         end
 
         WorldModel:SetupBones()
+
+		if prepareOnly then return end
         
         if IsValid(self.worldModel2) then
             self.worldModel2:SetNoDraw(true)
@@ -335,8 +337,8 @@ end
 local host_timescale = game.GetTimeScale
 
 function SWEP:Camera(eyePos, eyeAng, view, vellen)
+	self:DrawWorldModel2(true)
     self:SetHandPos()
-    self:DrawWorldModel2()
 
     local owner = self:GetOwner()
 	local isPlayer = IsValid(owner) and owner:IsPlayer()

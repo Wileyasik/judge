@@ -185,7 +185,7 @@ local RoleConfigs = {
             ["damned"] = {cost = 30, name = "Damned", desc = "You start with nothing."},
             ["chemist"] = {cost = 10, name = "Chemist", desc = "Detect chemicals in the air."},
             ["martialartist"] = {cost = 30, name = "Martial Artist", desc = "High stamina. Armed with nunchucks. Uses WWE-style moves via the radial menu."},
-            ["brawler"] = {cost = 30, name = "Brawler", desc = "Devastating 1.5x melee. Can choke or execute victims with melee weapons, but no firearms and fragile from behind.", meleeOnly = true}
+            ["brawler"] = {cost = 30, name = "Brawler", desc = "Devastating 1.85x melee. Can choke or execute victims with melee weapons, but no firearms and fragile from behind.", meleeOnly = true}
         },
         items = {
             ["weapon_p22"] = {cost = 6, name = "Walther P22"},
@@ -212,10 +212,12 @@ local RoleConfigs = {
         },
         addons = {
             ["weapon_p22_silencer"] = {cost = 2, name = "P22 Silencer", parent = "weapon_p22"},
-            ["weapon_p22_ammo"] = {cost = 2, name = "P22 Extra Ammo", parent = "weapon_p22", desc = "Start with an extra magazine."}
+            ["weapon_p22_ammo"] = {cost = 2, name = "P22 Extra Ammo", parent = "weapon_p22", desc = "Start with an extra magazine."},
+            ["weapon_pb_ammo"] = {cost = 4, name = "PB Extra Ammo", parent = "weapon_pb", desc = "Start with an extra magazine."}
         },
         addonOrder = {
-            ["weapon_p22"] = {"weapon_p22_silencer", "weapon_p22_ammo"}
+            ["weapon_p22"] = {"weapon_p22_silencer", "weapon_p22_ammo"},
+            ["weapon_pb"] = {"weapon_pb_ammo"}
         },
         exclusions = {
             ["weapon_6x5"] = {["weapon_buck200knife"] = true, ["weapon_hg_ritual"] = true, ["weapon_hg_akula"] = true},

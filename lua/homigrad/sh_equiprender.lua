@@ -153,9 +153,12 @@ if CLIENT then
 			local fem = ThatPlyIsFemale(ent)
 			local wearerScale = placement == "torso" and ply.PlayerClassName == "swat" and swatTorsoArmorScale or 1
 			local armorScale = ((fem and armorData.femscale) or armorData.scale or 1) * wearerScale
+			local armorModel = ply:GetNWString("ArmorModel" .. armor, "")
+			if armorModel == "" then armorModel = armorData["model"] end
+			if not armorModel or armorModel == "" then continue end
 
 			if not IsValid(ply.modelArmor[armor]) then
-				local model = ClientsideModel(ply:GetNWString("ArmorModel" .. armor) or armorData["model"])
+				local model = ClientsideModel(armorModel)
 				if not IsValid(model) then model = ClientsideModel(armorData["model"]) end
 				if not IsValid(model) then continue end
 				ply.modelArmor[armor] = model
@@ -189,7 +192,7 @@ if CLIENT then
 
 				ply.modelArmorBroken = ply.modelArmorBroken or {}
 				if not IsValid(ply.modelArmorBroken[armor]) then
-					local omodel = ClientsideModel(ply:GetNWString("ArmorModel" .. armor) or armorData["model"])
+					local omodel = ClientsideModel(armorModel)
 					if not IsValid(omodel) then omodel = ClientsideModel(armorData["model"]) end
 					if IsValid(omodel) then
 						omodel:SetNoDraw(true)

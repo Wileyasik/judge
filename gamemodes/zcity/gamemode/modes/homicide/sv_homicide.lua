@@ -812,6 +812,7 @@ local modes = {
 }
 
 util.AddNetworkString("HMCD_RoundStart")
+util.AddNetworkString("HMCD_RoundBeginSound")
 util.AddNetworkString("HMCD_SetNextTraitorRole")
 
 MODE.NextRoundTraitorRoles = MODE.NextRoundTraitorRoles or {}
@@ -1479,6 +1480,12 @@ function MODE:ShouldRoundEnd()
 end
 
 function MODE:RoundStart()
+	MODE.RoundBeginSoundSequence = ((MODE.RoundBeginSoundSequence or 0) + 1) % 65536
+	net.Start("HMCD_RoundBeginSound")
+		net.WriteString(MODE.Type or "standard")
+		net.WriteUInt(MODE.RoundBeginSoundSequence, 16)
+	net.Broadcast()
+
 	local roles_choose = MODE.ShouldStartRoleRound()
 	MODE.StartRoundTime = CurTime()
 	MODE.RoleChooseRound = false

@@ -115,7 +115,7 @@ hook.Add("Think", "juggernaut_music", function()
 	local t = CurTime() - rs
 	if t >= 0 and t <= 20 then
 		MusicPlayedFor = rs
-		surface.PlaySound("brawlstart.mp3")
+		surface.PlaySound(math.random(2) == 1 and "Jugger_Start.mp3" or "Jugger_Start2.mp3")
 	end
 end)
 
@@ -339,5 +339,5 @@ function MODE:HUDPaint()
 end
 
 function MODE:EndRound()
-	surface.PlaySound("brawlwin.mp3")
+	surface.PlaySound("Jugger_Win.mp3")
 end
