@@ -679,6 +679,7 @@ hook.Add("Think", "Fake", function()
 		
 		local power = org.pain and ((org.pain > 50 or org.blood < 2900 or org.o2[1] < 5) and 0.3) or ((org.pain > 20 or org.blood < 4200 or org.o2[1] < 10) and 0.5) or 1
 		power = power * org.consciousness
+		power = power * (1 + math.min(org.berserk or 0, 3) * 0.3)
 		ragdoll.power = power
 
 		if ragdoll.StrangleLocked and org.o2 and org.o2.range and org.o2.range > 0 then
@@ -689,6 +690,8 @@ hook.Add("Think", "Fake", function()
 		end
 
 		local inmove = false
+
+		ragdoll.hgProcMove = hg.KeyDown(ply, IN_FORWARD) or hg.KeyDown(ply, IN_BACK) or hg.KeyDown(ply, IN_MOVELEFT) or hg.KeyDown(ply, IN_MOVERIGHT)
 		
 		local ragdollcombat = hg.RagdollCombatInUse(ply)
 		if !ragdollcombat and ragdoll == ply.FakeRagdoll then
@@ -698,6 +701,17 @@ hook.Add("Think", "Fake", function()
 		if (org.lightstun < CurTime()) and (tracehuy.Hit or ply.FakeRagdoll ~= ragdoll) and org.spine1 < hg.organism.fake_spine1 and org.canmove and ((ply.lastFake and (ply.lastFake) > CurTime()) or ply.FakeRagdoll ~= ragdoll) and !ply.jumpedfake then
 			local power = 1
 			inmove = true
+
+			local pelvisPhys = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, 0))
+			local headPhys = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, 10))
+			local bodyLying = false
+			if IsValid(pelvisPhys) and IsValid(headPhys) then
+				local pelvisPos = pelvisPhys:GetPos()
+				local headPos = headPhys:GetPos()
+				if pelvisPos and headPos then
+					bodyLying = math.abs(pelvisPos.z - headPos.z) < 45
+				end
+			end
 			
 			local ragbonecount = ragdoll:GetPhysicsObjectCount()
 			for i = 0, ragbonecount - 1 do
@@ -723,7 +737,28 @@ hook.Add("Think", "Fake", function()
 					name = name or "__INVALIDBONE__"
 
 					if name then
+						if hg.ProcLimb then
+							bonepos, boneang = hg.ProcLimb(ragdoll, ply, i, name, bonepos, boneang)
+						end
+
+						if (name:find("Thigh") or name:find("Calf") or name:find("Foot")) and bonepos.z < physobj:GetPos().z - 12 then
+							local ft = {}
+							ft.start = bonepos + vector_up * 120
+							ft.endpos = bonepos - vector_up * 24
+							ft.filter = { ply, ragdoll }
+							ft.mask = MASK_SOLID
+							local trFloor = util_TraceLine(ft)
+							if trFloor.Hit and trFloor.HitNormal.z > 0.3 and trFloor.HitPos.z > bonepos.z then
+								bonepos = Vector(bonepos.x, bonepos.y, trFloor.HitPos.z - 2)
+							end
+						end
+
 						local bone_impulse = ply.HitBones and ply.HitBones[name] or CurTime()
+
+						if (name:find("Thigh") or name:find("Calf") or name:find("Foot")) and bodyLying and not ragdoll.hgProcMove then
+							continue
+						end
+
 						local amt_impulse = (2 - math.Clamp(bone_impulse - CurTime(),0,2)) / 2
 						
 						local p = {}
@@ -1860,6 +1895,8 @@ hook.Add("Think", "Fake", function()
 			shadowControl(ragdoll, 11, 0.001, AngleRand(-rand,rand), maxangspeed, maxangdamp)
 			shadowControl(ragdoll, 12, 0.001, AngleRand(-rand,rand), maxangspeed, maxangdamp)
 		end
+
+		ragdoll.hgControlled = inmove
 
 	end
 end)
