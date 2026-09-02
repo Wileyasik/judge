@@ -1237,6 +1237,10 @@ function SWEP:MultiplyDMG(owner, ent, vellen, mul)
         mul = mul * (1 + owner.organism.berserk)
     end
 
+    if owner.organism and (owner.organism.psycheAnger or 0) > 0.2 then
+        mul = mul * (1 + 0.1 * math.Clamp((owner.organism.psycheAnger - 0.2) / 0.8, 0, 1))
+    end
+
     return mul
 end
 

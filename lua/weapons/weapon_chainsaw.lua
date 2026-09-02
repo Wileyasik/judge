@@ -661,6 +661,10 @@ function SWEP:ChainsawHit()
         mul = mul * 5
     end
 
+    if owner.organism and (owner.organism.psycheAnger or 0) > 0.2 then
+        mul = mul * (1 + 0.1 * math.Clamp((owner.organism.psycheAnger - 0.2) / 0.8, 0, 1))
+    end
+
     local dmg = math.random((self.ChainsawAttackDamage or 15) - 1, (self.ChainsawAttackDamage or 15) + 1) * mul / 1.5
 
     if not (hitent:IsPlayer() or hitent:IsRagdoll() or hitent:IsNPC()) then

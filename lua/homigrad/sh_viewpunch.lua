@@ -280,10 +280,32 @@ local IsValid = IsValid
 
 			ViewPunch(ang)
 		end)
+
+		local lastCameraPunchSent = Angle()
+		local nextCameraPunchSend = 0
+		hook.Add("Think", "hg_camera_punch_net", function()
+			local punch = vp_punch_angle2 + vp_punch_angle3
+			punch = Angle(punch.p, punch.y, 0)
+			if punch:IsZero() and lastCameraPunchSent:IsZero() then return end
+			local now = SysTime()
+			if now < nextCameraPunchSend then return end
+			nextCameraPunchSend = now + 0.03
+			lastCameraPunchSent = punch
+			net.Start("hg_camera_punch", true)
+			net.WriteAngle(punch)
+			net.SendToServer()
+		end)
 	else
 		local PLAYER = FindMetaTable("Player")
 
 		util.AddNetworkString("ViewPunch")
+		util.AddNetworkString("hg_camera_punch")
+
+		net.Receive("hg_camera_punch", function(len, ply)
+			if not IsValid(ply) or not ply:IsPlayer() then return end
+			ply.hgCameraPunch = net.ReadAngle()
+			ply.hgCameraPunchTime = CurTime()
+		end)
 
 		function PLAYER:ViewPunch(ang)
 			net.Start("ViewPunch")

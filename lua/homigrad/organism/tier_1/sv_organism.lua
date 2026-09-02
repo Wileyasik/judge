@@ -47,6 +47,7 @@ hook.Add("Org Clear", "Main", function(org)
 	module.random_events[1](org)
 	module.concussion[1](org)
 	module.trauma_combo[1](org)
+	module.psyche[1](org)
 	org.brain = 0
 	org.brainFrontal = 0
 	org.brainParietal = 0
@@ -354,6 +355,8 @@ local function send_organism(org, ply, recipientForce, reliable)
 	sendtable.noradrenaline = org.noradrenaline
 	sendtable.panicattackadd = org.panicattackadd
 	sendtable.panicattack = org.panicattack
+	sendtable.psycheAnger = org.psycheAnger or 0
+	sendtable.psycheApathy = org.psycheApathy or 0
 	sendtable.seizure = org.seizure
 	sendtable.seizureActive = org.seizureActive
 	sendtable.seizureStart = org.seizureStart
@@ -838,6 +841,7 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	module.pulse[2](owner, org, timeValue)
 	module.concussion[2](owner, org, timeValue)
 	module.trauma_combo[2](owner, org, timeValue)
+	module.psyche[2](owner, org, timeValue)
 	if org.owner.PlayerClassName == "furry" then
 		org.assimilated = 0
 	end

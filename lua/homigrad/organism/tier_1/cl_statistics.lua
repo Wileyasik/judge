@@ -128,6 +128,8 @@ local list = {
 	{"adrenalineAdd", 5, true},
 	{"panicattackadd", 1, true},
 	{"panicattack", 1, true},
+	{"psycheAnger", 1, true},
+	{"psycheApathy", 1, true},
 	0, 
 	{"stamina", {"stamina", "range"}}, 
 	{{"stamina.max", "stamina", "max"}, 

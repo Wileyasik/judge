@@ -527,9 +527,15 @@ function SWEP:GetTrace(bCacheTrace, desiredPos, desiredAng, NoTrace, closeanim)
 	local dir = ang:Forward()
 
 	local fake = CLIENT and owner.FakeRagdoll or nil
+	local traceFilter = {self, gun}
+	if IsValid(self.worldModel) then traceFilter[#traceFilter + 1] = self.worldModel end
+	local fakeGun = self.GetNWEntity and self:GetNWEntity("fakeGun") or nil
+	if IsValid(fakeGun) then traceFilter[#traceFilter + 1] = fakeGun end
+	if not owner.suiciding then traceFilter[#traceFilter + 1] = owner end
+	if not owner.suiciding and fake then traceFilter[#traceFilter + 1] = fake end
 	tr.start = pos
 	tr.endpos = pos + dir * 8000
-	tr.filter = {self, gun, not owner.suiciding and owner or NULL, not owner.suiciding and fake}
+	tr.filter = traceFilter
 
 	local trace = util_TraceLine(tr)
 	if bCacheTrace then
@@ -643,12 +649,24 @@ function SWEP:FireBullet()
 	local trace
 	local dir = ang:Forward()
 	if isply then
-		//print(gun:GetAngles(), dir, owner.offsetView)
+		if SERVER then
+			if (CurTime() - (self.hgClientRayTime or 0)) < 0.15 and isvector(self.hgClientRayPos) and isangle(self.hgClientRayAng) then
+				pos = self.hgClientRayPos
+				dir = self.hgClientRayAng:Forward()
+			else
+				local punchAng = owner.hgCameraPunch and CurTime() - (owner.hgCameraPunchTime or 0) < 0.3 and owner.hgCameraPunch or Angle(0, 0, 0)
+				dir = (owner:EyeAngles() - punchAng):Forward()
+			end
+		end
 		local dist, point = util.DistanceToLine(pos, pos - dir * 50, owner:EyePos())
+		local blockFilter = {gun, self, owner, ent}
+		if IsValid(self.worldModel) then blockFilter[#blockFilter + 1] = self.worldModel end
+		if IsValid(fakeGun) then blockFilter[#blockFilter + 1] = fakeGun end
+		if SERVER and IsValid(hg.ragdollFake[owner]) then blockFilter[#blockFilter + 1] = hg.ragdollFake[owner] end
 		local tr = {}
 		tr.start = point
 		tr.endpos = pos
-		tr.filter = {owner, ent, SERVER and hg.ragdollFake[owner]}
+		tr.filter = blockFilter
 		trace = util.TraceLine(tr)
 	end
 
@@ -956,4 +974,33 @@ else
 			net.WriteString(shell)
 		net.Broadcast()
 	end
+end
+
+if SERVER then
+	util.AddNetworkString("hg_client_ray")
+	net.Receive("hg_client_ray", function(len, ply)
+		if not IsValid(ply) or not ply:IsPlayer() then return end
+		local wep = ply:GetActiveWeapon()
+		if not IsValid(wep) then return end
+		wep.hgClientRayPos = net.ReadVector()
+		wep.hgClientRayAng = net.ReadAngle()
+		wep.hgClientRayTime = CurTime()
+	end)
+else
+	local nextRaySend = 0
+	hook.Add("Think", "hg_client_ray_net", function()
+		local lply = LocalPlayer()
+		if not IsValid(lply) or not lply:Alive() then return end
+		local wep = lply:GetActiveWeapon()
+		if not IsValid(wep) or not wep.FireBullet or not wep.GetTrace then return end
+		local now = SysTime()
+		if now < nextRaySend then return end
+		nextRaySend = now + 0.03
+		local tr, pos, ang = wep:GetTrace(true)
+		if not isvector(pos) or not isangle(ang) then return end
+		net.Start("hg_client_ray", true)
+		net.WriteVector(pos)
+		net.WriteAngle(ang)
+		net.SendToServer()
+	end)
 end

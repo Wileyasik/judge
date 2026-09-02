@@ -138,6 +138,7 @@ if CLIENT then
 
 	hg.notifications = hg.notifications or {}
 	hg.thoughts = hg.thoughts or {}
+	hg.activeNotifications = hg.activeNotifications or {}
 	hg.notificationFont = "HuyFont"
 
 	hook.Add("Player_Death","removeNotifications",function(ply)
@@ -146,6 +147,7 @@ if CLIENT then
 		//hg.currentNotification = nil
 		hg.notifications = {}
 		hg.thoughts = {}
+		hg.activeNotifications = {}
 	end)
 
 	hook.Add("Player Spawn","removeNotificationsa",function(ply)
@@ -154,6 +156,7 @@ if CLIENT then
 		hg.currentNotification = nil
 		hg.notifications = {}
 		hg.thoughts = {}
+		hg.activeNotifications = {}
 	end)
 
 	hook.Add("HG_OnOtrub","removeNotificationsb",function(ply)
@@ -162,6 +165,7 @@ if CLIENT then
 		//hg.currentNotification = nil
 		hg.notifications = {}
 		hg.thoughts = {}
+		hg.activeNotifications = {}
 	end)
 
 	local defaultShowTimer = 3
@@ -306,6 +310,40 @@ if CLIENT then
 
 	local bluewhite = Color(187, 187, 255)
 
+	local function DrawNotificationStack(time)
+		for i = #hg.activeNotifications, 1, -1 do
+			local active = hg.activeNotifications[i]
+			local age = time - active[2]
+
+			if age > 2 then
+				table.remove(hg.activeNotifications, i)
+			else
+				local msg = active[1]
+				local clr = active[3]
+				local alpha = math.Clamp((1 - age / 2), 0, 1) * 255
+				local posFromBottom = i - 1
+				local scale = math.max(1 - posFromBottom * 0.08, 0.84)
+
+				surface.SetFont(hg.notificationFont)
+				local txtw, txth = surface.GetTextSize(msg)
+
+				local x = ScrW() / 2
+				local y = ScrH() - ScrH() / 6 - (posFromBottom + 1) * ScreenScale(14)
+
+				local m = Matrix()
+				m:Translate(Vector(x, y, 0))
+				m:Scale(Vector(scale, scale, 1))
+				m:Translate(Vector(-txtw / 2, 0, 0))
+
+				cam.PushModelMatrix(m, true)
+				DisableClipping(true)
+					draw.SimpleTextOutlined(msg, hg.notificationFont, 0, 0, Color(clr.r, clr.g, clr.b, alpha), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER, 1.5, Color(colBrown.r, colBrown.g, colBrown.b, alpha))
+				DisableClipping(false)
+				cam.PopModelMatrix()
+			end
+		end
+	end
+
 	local function NotificationsDraw()
 		time_spent = CurTime()
 		lply = LocalPlayer()
@@ -314,6 +352,8 @@ if CLIENT then
 		//if org.otrub and !last_message then return end
 
 		//if hg_old_notificate:GetBool() then return end
+		DrawNotificationStack(time_spent)
+
 		local tbl = hg.currentNotification
 
 		if tbl and istable(tbl) and not table.IsEmpty(tbl) then
@@ -339,6 +379,9 @@ if CLIENT then
 					//surface.PlaySound("peepsnd")
 					oldclick = click
 				end
+
+				local floatProgress = math.Clamp((time_spent - (time + time_to_read)) / wait, 0, 1)
+				local floatUp = floatProgress * ScreenScale(14)
 
 				local txt = utf8.sub(utf8.force(msg), 1, click)
 
@@ -374,7 +417,7 @@ if CLIENT then
 
 					local rand = org.berserk * 2 * (col.a / 255)
 
-					local x, y = ScrW() / 2 + math.Rand(-rand, rand), ScrH() - ScrH() / 6 + math.Rand(-rand, rand)
+					local x, y = ScrW() / 2 + math.Rand(-rand, rand), ScrH() - ScrH() / 6 - floatUp + math.Rand(-rand, rand)
 
 					local m = Matrix()
 					m:Translate( Vector( x, y, 0 ) )
@@ -404,12 +447,12 @@ if CLIENT then
 
 					render.PopFilterMag()
 				elseif lply.PlayerClassName == "furry" then
-					local x, y = ScrW() / 2 - txtw / 2 + math.Rand(0, org.pain > 10 and org.pain / 10 or 0) + math.Rand(0, (255 - clr.g) / 255 * 2), ScrH() - ScrH() / 6 + math.Rand(0, org.pain > 10 and org.pain / 10 or 0) + math.Rand(0, (255 - clr.g) / 255 * 2)
+					local x, y = ScrW() / 2 - txtw / 2 + math.Rand(0, org.pain > 10 and org.pain / 10 or 0) + math.Rand(0, (255 - clr.g) / 255 * 2), ScrH() - ScrH() / 6 - floatUp + math.Rand(0, org.pain > 10 and org.pain / 10 or 0) + math.Rand(0, (255 - clr.g) / 255 * 2)
 
 					draw.SimpleText(last_message or txt, "ZB_ProotOSMedium", x + 2, y + 2, ColorAlpha(color_black, col.a), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 					draw.SimpleText(last_message or txt, "ZB_ProotOSMedium", x, y, ColorAlpha(bluewhite, col.a), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 				else
-					local x, y = ScrW() / 2 - txtw / 2 + math.Rand(0, org.pain > 10 and org.pain / 10 or 0) + math.Rand(0, (255 - clr.g) / 255 * 2), ScrH() - ScrH() / 6 + math.Rand(0, org.pain > 10 and org.pain / 10 or 0) + math.Rand(0, (255 - clr.g) / 255 * 2)
+					local x, y = ScrW() / 2 - txtw / 2 + math.Rand(0, org.pain > 10 and org.pain / 10 or 0) + math.Rand(0, (255 - clr.g) / 255 * 2), ScrH() - ScrH() / 6 - floatUp + math.Rand(0, org.pain > 10 and org.pain / 10 or 0) + math.Rand(0, (255 - clr.g) / 255 * 2)
 
 					draw.SimpleTextOutlined(last_message or txt, font, x, y, col, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER, 1.5, colBrown)
 				end
@@ -420,6 +463,11 @@ if CLIENT then
 				if tbl and clr and tbl[1] then
 					//MsgC(Color(clr.r, clr.g, clr.b, 255), (last_message or tbl[1]).."\n")
 					chat.AddText(Color(clr.r, clr.g, clr.b, 255), (last_message or tbl[1]).."\n")
+				end
+
+				table.insert(hg.activeNotifications, 1, {msg, time_spent, clr})
+				while #hg.activeNotifications > 3 do
+					table.remove(hg.activeNotifications)
 				end
 
 				last_message = nil

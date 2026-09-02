@@ -170,7 +170,7 @@ module[2] = function(owner, org, timeValue)
 	org.avgpain = min(org.avgpain + add, 150)
 	if !org.lasthit or org.lasthit + 1 < CurTime() then org.avgpain = max(org.avgpain - sub, 0) end
 	org.painlessen = sub
-	org.pain = org.avgpain * math.max(1 - adrenaline / 4, 0.75) * math.max(1 - org.analgesia, 0)
+	org.pain = org.avgpain * math.max(1 - adrenaline / 4, 0.75) * math.max(1 - org.analgesia, 0) * (org.psychePainMul or 1)
 	org.nearpainlimit = not org.otrub and org.pain >= org.pain_turn * pain_fake_threshold
 	if org.isPly and org.pain >= 85 and IsValid(owner) and owner.Thought then
 		owner:Thought("You are experiencing excruciating pain.", 8, "thought_excruciatingpain", 0, Color(255, 160, 160))
@@ -311,7 +311,7 @@ module[2] = function(owner, org, timeValue)
 	end
 	stamina.sub = stamina.sub + stamina.subadd + (org.painkiller > 1.6 and (stamina[1] > 10 and 0.8 or 0) or 0) + (org.analgesia > 1.7 and (stamina[1] > 10 and 2 or 0) or 0)
 	stamina.sub = stamina.sub * (owner.StaminaExhaustMul or 1)
-	stamina.sub = stamina.sub / (1 + org.berserk)
+	stamina.sub = stamina.sub / (1 + org.berserk + (org.psycheAnger or 0) * 0.5) * (1 + 0.1 * (org.psycheApathy or 0))
 	if org.o2[1] < 10 then
 		stamina.sub = 0
 	end
@@ -323,9 +323,9 @@ module[2] = function(owner, org, timeValue)
 		stamina.sub = stamina.sub * panicattack_stamina_drain_mul
 	end
 	org.hungry = org.hungry or 0
-	stamina.max = (org.superfighter and 2 or 1) * ((stamina.range * (1 - (org.pneumothorax) / 2) + org.adrenaline * 20 ) * math.max(1 - org.hemotransfusionshock,0.2)) * math.max(1 - (org.hungry/100),0.65)
+	stamina.max = (org.superfighter and 2 or 1) * ((stamina.range * (1 - (org.pneumothorax) / 2) + org.adrenaline * 20 ) * math.max(1 - org.hemotransfusionshock,0.2)) * math.max(1 - (org.hungry/100),0.65) * (1 - 0.1 * (org.psycheApathy or 0))
 	stamina[1] = max(stamina[1] - stamina.sub * timeValue * 16 * (2 - (org.o2[1] / org.o2.range)), 0)
-	stamina[1] = min(stamina[1] + stamina.regen * timeValue * 8 * 1.5 * math.max(org.stamina[1] / org.stamina.max, 0.2) ^ 0.5 * (org.noradrenaline / 2 + 1) * (org.o2[1] / org.o2.range) * (org.adrenaline / 16 + 1) * (org.satiety/700 + 1) * ((owner:IsPlayer() and owner:Crouching() and velLen < 0.1) and 1.1 or 1) * (org.holdingbreath and 0 or 1) * (org.lungsfunction and 1 or 0) * (stamina.regenMul or 1), stamina.max)
+	stamina[1] = min(stamina[1] + stamina.regen * timeValue * 8 * 1.5 * math.max(org.stamina[1] / org.stamina.max, 0.2) ^ 0.5 * (org.noradrenaline / 2 + 1) * (org.o2[1] / org.o2.range) * (org.adrenaline / 16 + 1) * (org.satiety/700 + 1) * ((owner:IsPlayer() and owner:Crouching() and velLen < 0.1) and 1.1 or 1) * (org.holdingbreath and 0 or 1) * (org.lungsfunction and 1 or 0) * (stamina.regenMul or 1) * (1 - 0.15 * (org.psycheApathy or 0)), stamina.max)
 	stamina.regenMul = math.Approach(stamina.regenMul or 1, 1, timeValue * (org.BlockRegenRecoverRate or 0.25))
 
 	if cvars.Number("developer", 0) >= 1 and stamina.regenMul < 0.999 then

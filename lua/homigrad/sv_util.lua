@@ -548,7 +548,8 @@ function hg.ProcessBulletNearMiss(data)
 		if !org.otrub then
 			local strength = math.Clamp((1 - dist / 120) * (data.Damage or 25) / 45, 0.08, 1)
 			ply:AddNaturalAdrenaline(0.035 * strength)
-			org.fearadd = org.fearadd + 0.12 * strength
+			org.fearadd = org.fearadd + 0.4 * strength
+			org.fear = math.max(org.fear, 0.25 + 0.45 * strength)
 			hg.organism.AddPanicAttack(org, 0.0004 + strength * 0.0025, true)
 			net.Start("hg_bullet_nearmiss")
 				net.WriteVector(pos)
