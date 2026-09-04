@@ -47,11 +47,11 @@ net.Receive("HMCD_ChokingOther", function(len, ply)
 	if(status)then
 		local other_ply = net.ReadEntity()
 
-		if(IsValid(attacker_ply))then
+		if(IsValid(attacker_ply) and attacker_ply == LocalPlayer())then
 			MODE.StartChokingOther(LocalPlayer(), other_ply)
 		end
 	else
-		if(IsValid(attacker_ply))then
+		if(IsValid(attacker_ply) and attacker_ply == LocalPlayer())then
 			MODE.StopChokingOther(LocalPlayer())
 		end
 	end

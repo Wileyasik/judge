@@ -523,7 +523,7 @@ function SWEP:SetHandPos(noset)
 
 	local choke_data = ply.Ability_Choke
 
-	if(choke_data and IsValid(choke_data.Victim))then
+	if(choke_data and IsValid(choke_data.Victim) and victim.BeingVictimOfChoke)then
 		local victim = choke_data.Victim
 		local poseEnt = (IsValid(victim.FakeRagdoll) and victim.FakeRagdoll) or victim
 		local head, anga = poseEnt:GetBonePosition(poseEnt:LookupBone("ValveBiped.Bip01_Head1"))
@@ -1638,7 +1638,7 @@ function SWEP:Think()
 		self:SetFists(true)
 	end
 
-	if IsValid(owner) and owner:KeyDown(IN_ATTACK2) and (not self:GetFists() or IsZombieHandsClass(owner.PlayerClassName)) then
+	if IsValid(owner) and ((owner:KeyDown(IN_ATTACK2) and (not self:GetFists() or IsZombieHandsClass(owner.PlayerClassName))) or owner.Ability_Choke) then
 		if IsValid(self.CarryEnt) or game.GetWorld() == self.CarryEnt then self:ApplyForce() end
 	elseif self.CarryEnt then
 		if IsValid(self.CarryEnt) and self.CarryEnt.organism and self.CarryEnt.organism.alive then

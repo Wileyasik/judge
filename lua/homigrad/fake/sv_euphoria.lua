@@ -1,17 +1,10 @@
 local hg_euphoria_tension = CreateConVar("hg_euphoria_tension", "1", FCVAR_ARCHIVE + FCVAR_NOTIFY, "euphoria tension on fake ragdolls", 0, 1)
-local hg_euphoria_flinch = CreateConVar("hg_euphoria_flinch", "1", FCVAR_ARCHIVE + FCVAR_NOTIFY, "euphoria flinch on hit", 0, 1)
-local hg_euphoria_slowmo = CreateConVar("hg_euphoria_slowmo", "1", FCVAR_ARCHIVE + FCVAR_NOTIFY, "euphoria slow-mo on strong hit", 0, 1)
 local hg_euphoria_stumble = CreateConVar("hg_euphoria_stumble", "1", FCVAR_ARCHIVE + FCVAR_NOTIFY, "euphoria landing absorb and settle on fake ragdolls", 0, 1)
 local hg_euphoria_detail = CreateConVar("hg_euphoria_detail", "1", FCVAR_ARCHIVE + FCVAR_NOTIFY, "euphoria detail reactions (wound grab, wall grab, get-up)", 0, 1)
 
 local EUPHORIA_TENSION_TIME = 0.6
 local EUPHORIA_TENSION_ANG = 12
 local EUPHORIA_TENSION_LIN = 3
-local EUPHORIA_PROP_BASE = 100
-local EUPHORIA_PROP_HEAD_WHIP = 0.9
-local EUPHORIA_PROP_FALLOFF = 220
-local EUPHORIA_PROP_MIN = 0.35
-local EUPHORIA_PROP_SPINE_CURL = 55
 local EUPHORIA_LANDING_MIN_SPEED = 180
 local EUPHORIA_LANDING_MIN_HS = 110
 local EUPHORIA_LANDING_ABSORB = 0.65
@@ -40,10 +33,6 @@ local EUPHORIA_WALL_SMEAR_TIME = 0.9
 local EUPHORIA_WALL_SMEAR_STICK = 8
 local EUPHORIA_WALL_SLIDE_SPEED = 55
 local EUPHORIA_WALL_STICK = 20
-local EUPHORIA_SLOWMO_TIME = 0.32
-local EUPHORIA_SLOWMO_SCALE = 0.45
-local EUPHORIA_SLOWMO_RAMP = 0.35
-local EUPHORIA_SLOWMO_COOLDOWN = 0.8
 local EUPHORIA_CURL_TIME = 2.5
 local EUPHORIA_CURL_WINDOW = 1.2
 local EUPHORIA_CURL_TRIGGER = 2
@@ -55,6 +44,14 @@ local function isFloppyBone(ragdoll, physNum)
 	local bone = ragdoll:TranslatePhysBoneToBone(physNum)
 	if bone < 0 then return false end
 	return floppy[ragdoll:GetBoneName(bone)] == true
+end
+
+local function springPull(phys, target, stiffness, damping, dtime)
+	local pos = phys:GetPos()
+	local vel = phys:GetVelocity()
+	local toTarget = target - pos
+	local force = toTarget * stiffness - vel * damping
+	phys:AddVelocity(force * dtime)
 end
 
 local function tensionBones(ragdoll, strength, dtime, allowLinear)
@@ -109,67 +106,6 @@ local function nearestPhys(ragdoll, pos)
 		end
 	end
 	return best
-end
-
-local function flinchRagdoll(ragdoll, dmgInfo)
-	local dir = dmgInfo:GetDamageForce()
-	local len = dir:Length()
-	local hitPos = dmgInfo:GetDamagePosition()
-
-	if len <= 1 then
-		local root = ragdoll:GetPhysicsObject()
-		local base = IsValid(root) and root:GetPos() or ragdoll:GetPos()
-		if hitPos and hitPos:Distance(base) > 1 then
-			dir = base - hitPos
-			len = dir:Length()
-		end
-	end
-
-	if len <= 1 then
-		dir = Vector(math.Rand(-1, 1), math.Rand(-1, 1), math.Rand(-0.3, 0.6))
-		len = dir:Length()
-	end
-
-	dir = dir / len
-	local mul = ragdoll.power or 1
-
-	local bones = {
-		[0] = 0.5, [1] = 0.7, [2] = 0.7, [3] = 0.7, [10] = 1.1,
-		[4] = 0.85, [5] = 0.9, [6] = 0.85, [7] = 0.9,
-		[8] = 0.75, [9] = 0.65, [11] = 0.75, [12] = 0.65, [13] = 0.6, [14] = 0.6,
-	}
-
-	local headPhys = ragdoll:GetPhysicsObjectNum(hg.realPhysNum(ragdoll, 10))
-	local isHeadHit = hitPos and IsValid(headPhys) and headPhys:GetPos():Distance(hitPos) < 70
-
-	for physNum, weight in pairs(bones) do
-		local phys = ragdoll:GetPhysicsObjectNum(hg.realPhysNum(ragdoll, physNum))
-		if not IsValid(phys) then continue end
-
-		local falloff = 1
-		if hitPos then
-			falloff = math.Clamp(1 - phys:GetPos():Distance(hitPos) / EUPHORIA_PROP_FALLOFF, EUPHORIA_PROP_MIN, 1)
-		end
-
-		if physNum == 10 then
-			if isHeadHit then
-				phys:AddAngleVelocity(dir * EUPHORIA_PROP_BASE * weight * falloff * mul * 1.3 * (0.6 + math.Rand(0, 0.4)))
-			else
-				phys:AddAngleVelocity(-dir * EUPHORIA_PROP_BASE * weight * falloff * mul * EUPHORIA_PROP_HEAD_WHIP * (0.6 + math.Rand(0, 0.4)))
-			end
-		else
-			phys:AddAngleVelocity(dir * EUPHORIA_PROP_BASE * weight * falloff * mul * (0.6 + math.Rand(0, 0.4)))
-		end
-
-		if physNum >= 1 and physNum <= 3 then
-			phys:AddAngleVelocity(dir:Cross(Vector(0, 0, 1)) * EUPHORIA_PROP_SPINE_CURL * falloff * mul)
-		end
-	end
-
-	local root = ragdoll:GetPhysicsObject()
-	if IsValid(root) then
-		root:AddVelocity(dir * 55 * mul)
-	end
 end
 
 local function landingReaction(ragdoll, ply, hSpeed)
@@ -232,41 +168,6 @@ local function startGetUp(ragdoll, ply)
 	ragdoll.hgGetUp = { untilT = SysTime() + dur, dur = dur, berserk = berserk }
 end
 
-local slowmoUntil = 0
-local slowmoLast = 0
-local slowmoActive = false
-
-local function slowmoThink()
-	local now = SysTime()
-
-	if now < slowmoUntil then
-		game.SetTimeScale(EUPHORIA_SLOWMO_SCALE)
-		return
-	end
-
-	local left = slowmoUntil + EUPHORIA_SLOWMO_RAMP - now
-	if left <= 0 then
-		game.SetTimeScale(1)
-		slowmoActive = false
-		hook.Remove("Think", "HG_EuphoriaSlowmo")
-		return
-	end
-
-	game.SetTimeScale(Lerp(left / EUPHORIA_SLOWMO_RAMP, EUPHORIA_SLOWMO_SCALE, 1))
-end
-
-local function triggerSlowmo()
-	local now = SysTime()
-	if now - slowmoLast < EUPHORIA_SLOWMO_COOLDOWN then return end
-
-	slowmoLast = now
-	slowmoUntil = math.max(slowmoUntil, now + EUPHORIA_SLOWMO_TIME)
-
-	if slowmoActive then return end
-	slowmoActive = true
-	hook.Add("Think", "HG_EuphoriaSlowmo", slowmoThink)
-end
-
 hook.Add("EntityTakeDamage", "HG_EuphoriaHit", function(ent, dmgInfo)
 	if not IsValid(ent) then return end
 
@@ -322,14 +223,6 @@ hook.Add("EntityTakeDamage", "HG_EuphoriaHit", function(ent, dmgInfo)
 	end
 
 	if dmg >= 12 then
-		if hg_euphoria_flinch:GetBool() then
-			flinchRagdoll(ragdoll, dmgInfo)
-		end
-
-		if hg_euphoria_slowmo:GetBool() then
-			triggerSlowmo()
-		end
-
 		if hg_euphoria_detail:GetBool() then
 			local hitPos = dmgInfo:GetDamagePosition()
 			local rootPhys = ragdoll:GetPhysicsObject()
@@ -477,43 +370,17 @@ hook.Add("Think", "HG_EuphoriaWound", function()
 			end
 		end
 
-		local p = {}
-		p.secondstoarrive = 0.04
-		p.pos = target
-		p.angle = handPhys:GetAngles()
-		p.maxangular = 0
-		p.maxangulardamp = 0
-		p.maxspeed = 340
-		p.maxspeeddamp = 90
-		p.teleportdistance = 0
-		handPhys:ComputeShadowControl(p)
+		springPull(handPhys, target, 600 * frac, 30, dtime)
 
 		if IsValid(forearmPhys) then
-			local fp = {}
-			fp.secondstoarrive = 0.06
-			fp.pos = target + (forearmPhys:GetPos() - handPos)
-			fp.angle = forearmPhys:GetAngles()
-			fp.maxangular = 0
-			fp.maxangulardamp = 0
-			fp.maxspeed = 240
-			fp.maxspeeddamp = 70
-			fp.teleportdistance = 0
-			forearmPhys:ComputeShadowControl(fp)
+			local forearmTarget = target + (forearmPhys:GetPos() - handPos)
+			springPull(forearmPhys, forearmTarget, 400 * frac, 20, dtime)
 		end
 	end
 end)
 
-local function legRestShadow(phys, target, speed, damp)
-	local p = {}
-	p.secondstoarrive = 0.2
-	p.pos = target
-	p.angle = phys:GetAngles()
-	p.maxangular = 0
-	p.maxangulardamp = 0
-	p.maxspeed = speed
-	p.maxspeeddamp = damp
-	p.teleportdistance = 0
-	phys:ComputeShadowControl(p)
+local function legRestShadow(phys, target, stiffness, damping, dtime)
+	springPull(phys, target, stiffness, damping, dtime)
 end
 
 hook.Add("Think", "HG_EuphoriaLegRest", function()
@@ -550,6 +417,9 @@ hook.Add("Think", "HG_EuphoriaLegRest", function()
 		local rFootPos = rFoot:GetPos()
 		if not lFootPos or not rFootPos then continue end
 
+		local footHeight = math.min(lFootPos.z, rFootPos.z)
+		if footHeight > pelvisPos.z - 30 then continue end
+
 		local mid = (lFootPos + rFootPos) / 2
 		local target = mid + Vector(0, 0, 5)
 		local dir = lFootPos - rFootPos
@@ -560,24 +430,19 @@ hook.Add("Think", "HG_EuphoriaLegRest", function()
 			right = Vector(1, 0, 0)
 		end
 
-		legRestShadow(lFoot, target - right * 3, 150, 70)
-		legRestShadow(rFoot, target + right * 3, 150, 70)
+		local dtime = (SysTime() - (ragdoll.hgLegRestLast or SysTime())) * game.GetTimeScale()
+		ragdoll.hgLegRestLast = SysTime()
+		if dtime <= 0 or dtime > 0.1 then continue end
+
+		legRestShadow(lFoot, target - right * 3, 800, 40, dtime)
+		legRestShadow(rFoot, target + right * 3, 800, 40, dtime)
 	end
 end)
 
-local function curlTarget(ragdoll, physNum, target, speed, damp)
+local function curlTarget(ragdoll, physNum, target, stiffness, damping, dtime)
 	local phys = ragdoll:GetPhysicsObjectNum(hg.realPhysNum(ragdoll, physNum))
 	if not IsValid(phys) then return end
-	local p = {}
-	p.secondstoarrive = 0.12
-	p.pos = target
-	p.angle = phys:GetAngles()
-	p.maxangular = 0
-	p.maxangulardamp = 0
-	p.maxspeed = speed
-	p.maxspeeddamp = damp
-	p.teleportdistance = 0
-	phys:ComputeShadowControl(p)
+	springPull(phys, target, stiffness, damping, dtime)
 end
 
 hook.Add("Think", "HG_EuphoriaCurl", function()
@@ -618,22 +483,26 @@ hook.Add("Think", "HG_EuphoriaCurl", function()
 		end
 		local chestPos = spine:GetPos()
 
-		local speed = 240 * ease
-		local damp = 70
+		local stiffness = 1200 * ease
+		local damping = 50
+
+		local dtime = (now - (ragdoll.hgCurlLast or now)) * game.GetTimeScale()
+		ragdoll.hgCurlLast = now
+		if dtime <= 0 or dtime > 0.1 then continue end
 
 		local up = pelvisAng:Up()
 		local fwd = pelvisAng:Forward()
 		local right = pelvisAng:Right()
 
-		curlTarget(ragdoll, 12, pelvisPos + up * 20 + fwd * 8, speed, damp)
-		curlTarget(ragdoll, 13, pelvisPos + up * 16 + fwd * 6, speed, damp)
-		curlTarget(ragdoll, 9, pelvisPos + up * 20 + fwd * 8, speed, damp)
-		curlTarget(ragdoll, 14, pelvisPos + up * 16 + fwd * 6, speed, damp)
-		curlTarget(ragdoll, 5, chestPos + up * 10 - right * 10, speed, damp)
-		curlTarget(ragdoll, 4, chestPos + up * 12 - right * 15, speed, damp)
-		curlTarget(ragdoll, 7, chestPos + up * 10 + right * 10, speed, damp)
-		curlTarget(ragdoll, 6, chestPos + up * 12 + right * 15, speed, damp)
-		curlTarget(ragdoll, 10, chestPos + up * 4, speed, damp)
+		curlTarget(ragdoll, 12, pelvisPos + up * 20 + fwd * 8, stiffness, damping, dtime)
+		curlTarget(ragdoll, 13, pelvisPos + up * 16 + fwd * 6, stiffness, damping, dtime)
+		curlTarget(ragdoll, 9, pelvisPos + up * 20 + fwd * 8, stiffness, damping, dtime)
+		curlTarget(ragdoll, 14, pelvisPos + up * 16 + fwd * 6, stiffness, damping, dtime)
+		curlTarget(ragdoll, 5, chestPos + up * 10 - right * 10, stiffness, damping, dtime)
+		curlTarget(ragdoll, 4, chestPos + up * 12 - right * 15, stiffness, damping, dtime)
+		curlTarget(ragdoll, 7, chestPos + up * 10 + right * 10, stiffness, damping, dtime)
+		curlTarget(ragdoll, 6, chestPos + up * 12 + right * 15, stiffness, damping, dtime)
+		curlTarget(ragdoll, 10, chestPos + up * 4, stiffness, damping, dtime)
 	end
 end)
 

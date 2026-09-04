@@ -1,3 +1,4 @@
+﻿--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -13,7 +14,6 @@ SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_vector_45.mdl"
-
 
 SWEP.ModularParts = {
 	magazine = {
@@ -70,7 +70,6 @@ SWEP.AnimsEvents = {
 		[0.65] = function(self) self:EmitSound("weapons/darsu_eft/vector/vector_magrelease_button.ogg") end,
     },
 }
-
 
 SWEP.AnimList = {
 	["fire"] = "fire",
@@ -159,7 +158,6 @@ end
 SWEP.ReloadHold = nil
 SWEP.FakeVPShouldUseHand = false
 
-
 SWEP.weaponInvCategory = 1
 SWEP.CustomEjectAngle = Angle(0, 0, 90)
 SWEP.Primary.ClipSize = 33
@@ -176,7 +174,6 @@ SWEP.SupressedSound = {"weapons/darsu_eft/vector/fire_new/vector_9mm_outdoor_sil
 SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.04545
 SWEP.ReloadTime = 3
-
 
 SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1"
 
@@ -230,7 +227,6 @@ SWEP.attAng = Angle(-0.02, 0, 0)
 SWEP.lengthSub = 25
 SWEP.handsAng = Angle(7, 2, 0)
 
--- tpik hand positions
 SWEP.RHPos = Vector(3, -7, 3.5)
 SWEP.RHAng = Angle(0, -8, 90)
 SWEP.LHPos = Vector(11, 1.6, -3)
@@ -576,10 +572,6 @@ if CLIENT then
 		self.HeldMagCSModel = nil
 	end
 end
-
---========================================================
--- FIRE ANIMATION
---========================================================
 
 SWEP.FireAnimTime = 0.05
 SWEP.FireAnimCandidates = {"fire", "fire1"}

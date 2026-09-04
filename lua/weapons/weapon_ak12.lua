@@ -1,3 +1,4 @@
+﻿--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "homigrad_base"
 SWEP.ARC9ActionLHIKFadeOutTime = 0.1
 SWEP.ARC9ActionLHIKFadeInTime = 0.3
@@ -16,7 +17,6 @@ SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_ak12.mdl"
-
 
 SWEP.ModularParts = {
 	magazine = {
@@ -175,7 +175,6 @@ SWEP.lmagpos = Vector(0, 0, 0)
 SWEP.lmagang = Angle(0, 0, 0)
 SWEP.lmagpos2 = Vector(0, 0, 1)
 SWEP.lmagang2 = Angle(90, 0, -90)
-
 
 SWEP.weaponInvCategory = 1
 SWEP.CustomEjectAngle = Angle(0, 0, 90)

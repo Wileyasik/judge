@@ -1,3 +1,4 @@
+--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -5,27 +6,12 @@ SWEP.PrintName = "Saiga-12K"
 SWEP.Author = "Izhevsk Machine-Building Plant"
 SWEP.Instructions = "Automatic shotgun chambered in 12/70\n\nRate of fire 400 rounds per minute"
 SWEP.Category = "Weapons - Shotguns"
-SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
-SWEP.holsteredPos = Vector(-1, 4, -13)
-SWEP.holsteredAng = Angle(230, 0, 180)
 SWEP.Slot = 2
 SWEP.SlotPos = 10
+
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_saiga12k.mdl"
-
-
-SWEP.ModularParts = {
-	pistolgrip = {
-		model = "models/weapons/mods/ak_pgrip_ak74_bakelit.mdl",
-		bonemerge = false,
-		bone = "mod_pistol_grip",
-		pos = Vector(0, 0, 0),
-		ang = Angle(0, 0, 0)
-	},
-}
-SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
-SWEP.HeldMagOffsetAng = Angle(0, 0, 0)
 
 SWEP.FakePos = Vector(-13, 3, 12)
 SWEP.FakeAng = Angle(0, 0, -0.5)
@@ -39,15 +25,31 @@ SWEP.GunCamPos = Vector(4, -15, -6)
 SWEP.GunCamAng = Angle(190, -5, -100)
 
 SWEP.FakeEjectBrassATT = "2"
-
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
 SWEP.ViewPunchDiv = 150
 
+SWEP.ModularParts = {
+	pistolgrip = {
+		model = "models/weapons/mods/ak_pgrip_ak74_bakelit.mdl",
+		bonemerge = false,
+		bone = "mod_pistol_grip",
+		pos = Vector(0, 0, 0),
+		ang = Angle(0, 0, 0)
+	},
+}
+
+SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
+SWEP.HeldMagOffsetAng = Angle(0, 0, 0)
+
+SWEP.WorldPartsOffsetPos = Vector(-20, 5, 10)
+SWEP.WorldPartsOffsetAng = Angle(0, 0, 0)
+SWEP.WorldMagazineBoneOverride = "weapon"
+SWEP.WorldMagazineOffsetPos = Vector(0, -17.3, -0.55)
+SWEP.WorldMagazineOffsetAng = Angle(0, 0, 0)
+
 SWEP.MagModel = "models/weapons/mods/mag_ak_molot_556x45_45.mdl"
 SWEP.FakeMagDropBone = 50
-
-local path = "weapons/darsu_eft/saiga12/"
 
 SWEP.AnimsEvents = {
 	["look0"] = {
@@ -79,6 +81,94 @@ SWEP.AnimList = {
 	["inspect"] = "look0",
 }
 
+SWEP.Primary.ClipSize = 10
+SWEP.Primary.DefaultClip = 10
+SWEP.Primary.Automatic = true
+SWEP.Primary.Ammo = "12/70 gauge"
+SWEP.IsShotgun = true
+SWEP.Primary.Cone = 0
+SWEP.Primary.Damage = 21
+SWEP.Primary.Spread = Vector(0.01, 0.01, 0.01)
+SWEP.Primary.Force = 12
+SWEP.Primary.Sound = {"weapons/darsu_eft/saiga12/fire_close.wav", 80, 70, 75}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_hammer.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.Wait = 0.15
+SWEP.NumBullet = 8
+SWEP.ReloadTime = 3
+SWEP.ReloadHold = nil
+SWEP.FakeVPShouldUseHand = false
+SWEP.AnimShootMul = 3
+SWEP.AnimShootHandMul = 10
+
+SWEP.PPSMuzzleEffect = "pcf_jack_mf_mshotgun"
+SWEP.CustomShell = "12x70"
+SWEP.ShellEject = "ShotgunShellEject"
+
+SWEP.DeploySnd = {"homigrad/weapons/draw_hmg.mp3", 55, 100, 110}
+SWEP.HolsterSnd = {"homigrad/weapons/hmg_holster.mp3", 55, 100, 110}
+SWEP.HoldType = "rpg"
+SWEP.weight = 3.6
+SWEP.ScrappersSlot = "Primary"
+
+SWEP.LocalMuzzlePos = Vector(25,-3.28,6.55)
+SWEP.LocalMuzzleAng = Angle(0,0,0)
+SWEP.WeaponEyeAngles = Angle(0, 0, 0)
+
+SWEP.WorldPos = Vector(4, -0.8, 4)
+SWEP.WorldAng = Angle(0, 0, 0)
+SWEP.UseCustomWorldModel = true
+SWEP.attPos = Vector(1, 0, 0)
+SWEP.attAng = Angle(-0.02, 0, 0)
+SWEP.lengthSub = 25
+SWEP.handsAng = Angle(7, 2, 0)
+SWEP.DistSound = "weapons/darsu_eft/saiga12/saiga12_dist.wav"
+
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(-1, 4, -13)
+SWEP.holsteredAng = Angle(230, 0, 180)
+
+SWEP.RHandPos = Vector(0, -1, 0)
+SWEP.LHandPos = Vector(7, -2, -2)
+SWEP.RHPos = Vector(3, -7, 3.5)
+SWEP.RHAng = Angle(0, -8, 90)
+SWEP.LHPos = Vector(11, 1.6, -3)
+SWEP.LHAng = Angle(-110, -180, 5)
+SWEP.ShootAnimMul = 2
+SWEP.Penetration = 12
+SWEP.punchmul = 4
+SWEP.punchspeed = 0.5
+SWEP.addSprayMul = 1
+
+SWEP.Spray = {}
+for i = 1, 20 do
+	SWEP.Spray[i] = Angle(-0.0, 0, 0) * 1
+end
+
+SWEP.Ergonomics = 0.75
+
+SWEP.WepSelectIcon2 = Material("entities/arc9_eft_saiga12k.png")
+SWEP.IconOverride = "entities/arc9_eft_saiga12k.png"
+
+SWEP.weaponInvCategory = 1
+SWEP.CustomEjectAngle = Angle(0, 0, 90)
+
+SWEP.StartAtt = {"holo7"}
+SWEP.availableAttachments = {
+	sight = {
+		["mountType"] = {"picatinny"},
+		["mount"] = {["picatinny"] = Vector(-22.5, 0.02, 2)},
+		["mountAngle"] = Angle(0,0,90)
+	},
+	barrel = {
+		[1] = {"supressor13", Vector(0, 0, 0), {}},
+		[2] = {"supressor12", Vector(0, 0, 0), {}},
+		["mount"] = Vector(-0.5, -0, 0),
+		["mountAngle"] = Angle(0, -0, 90),
+	},
+}
+
+local path = "weapons/darsu_eft/saiga12/"
+
 function SWEP:AllowedInspect()
 	if not self:CanUse() then return end
 	if self.isReloading then return end
@@ -98,93 +188,6 @@ function SWEP:ModelCreated(model)
 		model:SetSubMaterial(i, "")
 	end
 end
-
-SWEP.ReloadHold = nil
-SWEP.FakeVPShouldUseHand = false
-
-
-SWEP.weaponInvCategory = 1
-SWEP.CustomEjectAngle = Angle(0, 0, 90)
-SWEP.Primary.ClipSize = 10
-SWEP.Primary.DefaultClip = 10
-SWEP.Primary.Automatic = true
-SWEP.Primary.Ammo = "12/70 gauge"
-SWEP.IsShotgun = true
-SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 21
-SWEP.Primary.Spread = Vector(0.01, 0.01, 0.01)
-SWEP.Primary.Force = 12
-SWEP.Primary.Sound = {"weapons/darsu_eft/saiga12/fire_close.wav", 80, 70, 75}
-SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_hammer.wav", 75, 100, 105, CHAN_WEAPON, 2}
-SWEP.Primary.Wait = 0.15
-SWEP.NumBullet = 8
-SWEP.AnimShootMul = 3
-SWEP.AnimShootHandMul = 10
-SWEP.ReloadTime = 3
-
-SWEP.PPSMuzzleEffect = "pcf_jack_mf_mshotgun"
-
-SWEP.DeploySnd = {"homigrad/weapons/draw_hmg.mp3", 55, 100, 110}
-SWEP.HolsterSnd = {"homigrad/weapons/hmg_holster.mp3", 55, 100, 110}
-SWEP.HoldType = "rpg"
-
-SWEP.WepSelectIcon2 = Material("entities/arc9_eft_saiga12k.png")
-SWEP.IconOverride = "entities/arc9_eft_saiga12k.png"
-
-SWEP.weight = 3.6
-SWEP.ScrappersSlot = "Primary"
-
-SWEP.CustomShell = "12x70"
-SWEP.ShellEject = "ShotgunShellEject"
-
-SWEP.LocalMuzzlePos = Vector(25,-3.28,6.55)
-SWEP.LocalMuzzleAng = Angle(0,0,0)
-SWEP.WeaponEyeAngles = Angle(0, 0, 0)
-
-SWEP.DistSound = "weapons/darsu_eft/saiga12/saiga12_dist.wav"
-
-SWEP.StartAtt = {"holo7"}
-SWEP.availableAttachments = {
-	sight = {
-		["mountType"] = {"picatinny"},
-		["mount"] = {["picatinny"] = Vector(-22.5, 0.02, 2)},
-		["mountAngle"] = Angle(0,0,90) 
-	},
-    barrel = {
-        [1] = {"supressor13", Vector(0, 0, 0), {}},
-        [2] = {"supressor12", Vector(0, 0, 0), {}},
-        ["mount"] = Vector(-0.5, -0, 0),
-        ["mountAngle"] = Angle(0, -0, 90),
-    },
-}
-
-SWEP.RHandPos = Vector(0, -1, 0)
-SWEP.LHandPos = Vector(7, -2, -2)
-SWEP.Penetration = 12
-SWEP.Spray = {}
-for i = 1, 20 do
-	SWEP.Spray[i] = Angle(-0.0, 0, 0) * 1
-end
-
-SWEP.Ergonomics = 0.75
-SWEP.WorldPos = Vector(4, -0.8, 4)
-SWEP.WorldAng = Angle(0, 0, 0)
-SWEP.UseCustomWorldModel = true
-SWEP.attPos = Vector(1, 0, 0)
-SWEP.attAng = Angle(-0.02, 0, 0)
-SWEP.lengthSub = 25
-SWEP.handsAng = Angle(7, 2, 0)
-
-SWEP.RHPos = Vector(3, -7, 3.5)
-SWEP.RHAng = Angle(0, -8, 90)
-SWEP.LHPos = Vector(11, 1.6, -3)
-SWEP.LHAng = Angle(-110, -180, 5)
-
-SWEP.ShootAnimMul = 2
-
-SWEP.punchmul = 4
-SWEP.punchspeed = 0.5
-SWEP.addSprayMul = 1
 
 function SWEP:AnimHoldPost(model)
 end
@@ -280,13 +283,6 @@ function SWEP:DrawPost()
 
 	self:DrawModularParts()
 end
-
-SWEP.WorldPartsOffsetPos = Vector(-20, 5, 10)
-SWEP.WorldPartsOffsetAng = Angle(0, 0, 0)
-
-SWEP.WorldMagazineBoneOverride = "weapon"
-SWEP.WorldMagazineOffsetPos = Vector(0, -17.3, -0.55)
-SWEP.WorldMagazineOffsetAng = Angle(0, 0, 0)
 
 if CLIENT then
 	local MOD_VECTOR_ZERO = Vector(0, 0, 0)
@@ -561,10 +557,6 @@ if CLIENT then
 		self.HeldMagCSModel = nil
 	end
 end
-
---========================================================
--- FIRE ANIMATION
---========================================================
 
 SWEP.FireAnimTime = 0.15
 SWEP.FireAnimCandidates = {"fire"}

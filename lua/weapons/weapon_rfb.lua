@@ -1,3 +1,4 @@
+--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -5,27 +6,12 @@ SWEP.PrintName = "RFB"
 SWEP.Author = "Kel-Tec"
 SWEP.Instructions = "Semi-automatic bullpup rifle chambered in 7.62x51 NATO\n\nRate of fire ~250 rounds per minute"
 SWEP.Category = "Weapons - Sniper Rifles"
-SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
-SWEP.holsteredPos = Vector(4, 6, -6)
-SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Slot = 2
 SWEP.SlotPos = 13
+
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_rfb.mdl"
-
-
-SWEP.ModularParts = {
-	magazine = {
-		model = "models/weapons/mods/mag_ar10_kac_steel_762x51_20.mdl",
-		bonemerge = false,
-		bone = "mod_magazine",
-		pos = Vector(0, 8.2, -0.5),
-		ang = Angle(0, 90, 0)
-	},
-}
-SWEP.HeldMagOffsetPos = Vector(0, 0.6, 2)
-SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
 
 SWEP.FakePos = Vector(-14, 2.52, 7.5)
 SWEP.FakeAng = Angle(0, 0, 0)
@@ -38,19 +24,32 @@ SWEP.ZoomPos = Vector(0, -1.7702, 6.4954)
 SWEP.GunCamPos = Vector(4, -15, -6)
 SWEP.GunCamAng = Angle(190, -5, -100)
 
-SWEP.Podkid = 25
 SWEP.FakeEjectBrassATT = "2"
-
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
 SWEP.ViewPunchDiv = 1
+SWEP.Podkid = 25
 SWEP.punchmul = 4
 SWEP.punchspeed = 0.7
 
-SWEP.AnimShootMul = 2
-SWEP.AnimShootHandMul = 6
+SWEP.ModularParts = {
+	magazine = {
+		model = "models/weapons/mods/mag_ar10_kac_steel_762x51_20.mdl",
+		bonemerge = false,
+		bone = "mod_magazine",
+		pos = Vector(0, 8.2, -0.5),
+		ang = Angle(0, 90, 0)
+	},
+}
 
-local path_reload = "weapons/darsu_eft/sa58/"
+SWEP.HeldMagOffsetPos = Vector(0, 0.6, 2)
+SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
+
+SWEP.WorldPartsOffsetPos = Vector(-20, 5, 10)
+SWEP.WorldPartsOffsetAng = Angle(0, 0, 0)
+SWEP.WorldMagazineBoneOverride = "weapon"
+SWEP.WorldMagazineOffsetPos = Vector(0, -17.3, -0.55)
+SWEP.WorldMagazineOffsetAng = Angle(0, 0, 0)
 
 SWEP.AnimsEvents = {
 	["inspect0"] = {
@@ -70,7 +69,6 @@ SWEP.AnimsEvents = {
 	},
 }
 
-
 SWEP.AnimList = {
 	["fire"] = "fire",
 	["idle"] = "idle",
@@ -78,6 +76,91 @@ SWEP.AnimList = {
 	["reload_empty"] = "reload_empty0",
 	["inspect"] = "inspect0",
 }
+
+SWEP.Primary.ClipSize = 20
+SWEP.Primary.DefaultClip = 20
+SWEP.Primary.Automatic = false
+SWEP.Primary.Ammo = "7.62x51 mm"
+SWEP.Primary.Cone = 0
+SWEP.Primary.Damage = 64
+SWEP.Primary.Spread = 0
+SWEP.Primary.Force = 28
+SWEP.Primary.Sound = {"weapons/darsu_eft/rfb/rfb_fire_close.ogg", 85, 90, 100}
+SWEP.SupressedSound = {"weapons/darsu_eft/rfb/rfb_fire_silenced_close.ogg", 65, 90, 100}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.Wait = 0.15
+SWEP.ReloadTime = 3
+SWEP.ReloadHold = nil
+SWEP.FakeVPShouldUseHand = false
+
+SWEP.PPSMuzzleEffect = "muzzleflash_SR25"
+SWEP.CustomShell = "762x51"
+SWEP.ShellEject = "EjectBrass_762"
+
+SWEP.LocalMuzzlePos = Vector(16.2, -1.75, 4.4)
+SWEP.LocalMuzzleAng = Angle(0, 0, 0)
+SWEP.WeaponEyeAngles = Angle(0, 0, 0)
+
+SWEP.HoldType = "rpg"
+SWEP.weight = 3.8
+SWEP.Ergonomics = 0.85
+SWEP.ScrappersSlot = "Primary"
+
+SWEP.WorldPos = Vector(4, -0.8, -0.5)
+SWEP.WorldAng = Angle(0, 0, 0)
+SWEP.UseCustomWorldModel = true
+SWEP.attPos = Vector(1, 0, 0)
+SWEP.attAng = Angle(-0.02, 0, 0)
+SWEP.lengthSub = 25
+SWEP.handsAng = Angle(7, 2, 0)
+SWEP.DistSound = "weapons/darsu_eft/rfb/rfb_fire_close.ogg"
+
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
+
+SWEP.RHandPos = Vector(0, -1, 0)
+SWEP.LHandPos = Vector(7, -2, -2)
+SWEP.RHPos = Vector(3, -7, 3.5)
+SWEP.RHAng = Angle(0, -8, 90)
+SWEP.LHPos = Vector(11, 1.6, -3)
+SWEP.LHAng = Angle(-110, -180, 5)
+SWEP.ShootAnimMul = 4
+SWEP.AnimShootMul = 2
+SWEP.AnimShootHandMul = 6
+
+SWEP.Penetration = 19
+
+SWEP.Spray = {}
+for i = 1, 20 do
+	SWEP.Spray[i] = Angle(-0.03 - math.cos(i) * 0.02, math.cos(i * i) * 0.04, 0) * 1.5
+end
+SWEP.SprayRand = {Angle(-0.08, -0.06, 0), Angle(-0.12, 0.06, 0)}
+
+SWEP.WepSelectIcon2 = Material("entities/arc9_eft_rfb.png")
+SWEP.IconOverride = "entities/arc9_eft_rfb.png"
+
+SWEP.weaponInvCategory = 1
+SWEP.CustomEjectAngle = Angle(0, 0, 90)
+
+SWEP.StartAtt = {"optic7"}
+SWEP.availableAttachments = {
+	barrel = {
+		[1] = {"supressor9", Vector(1.5, 0, 0), {}},
+		[2] = {"supressor16", Vector(1.5, 0, 0), {}},
+		[3] = {"supressor15", Vector(1.5, 0, 0), {}},
+		["mount"] = Vector(-1.2, 0.05, 0),
+	},
+	sight = {
+		["mountType"] = {"picatinny"},
+		["mount"] = {["picatinny"] = Vector(-11, 1.75, 0.05)},
+	},
+}
+
+SWEP.FakeMagDropBone = 50
+SWEP.MagModel = "models/weapons/mods/mag_ar10_kac_steel_762x51_20.mdl"
+
+local path_reload = "weapons/darsu_eft/sa58/"
 
 function SWEP:AllowedInspect()
 	if not self:CanUse() then return end
@@ -98,127 +181,6 @@ function SWEP:ModelCreated(model)
 		model:SetSubMaterial(i, "")
 	end
 end
-
-SWEP.ReloadHold = nil
-SWEP.FakeVPShouldUseHand = false
-
-
-SWEP.FakeMagDropBone = 50
-SWEP.MagModel = "models/weapons/mods/mag_ar10_kac_steel_762x51_20.mdl"
-
-if CLIENT then
-	local vector_full = Vector(1, 1, 1)
-	SWEP.FakeReloadEvents = {
-		[0.10] = function(self, timeMul)
-			self:GetWM():ManipulateBoneScale(38, vector_full)
-			self:GetWM():ManipulateBoneScale(39, vector_origin)
-			self:GetWM():ManipulateBoneScale(40, vector_origin)
-			self:GetWM():ManipulateBoneScale(41, vector_origin)
-		end,
-		[0.35] = function(self, timeMul)
-			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 0.5 * timeMul, nil, nil, function()
-				local wm = self:GetWM()
-				if IsValid(wm) then
-				wm:ManipulateBoneScale(38, vector_full)
-				wm:ManipulateBoneScale(39, vector_full)
-				end
-			end)
-		end,
-		[0.40] = function(self, timeMul)
-			if self:Clip1() < 1 then
-				hg.CreateMag( self, Vector(50,10,10), nil, true )
-			end
-		end,
-		[0.70] = function(self, timeMul)
-			self:GetWM():ManipulateBoneScale(38, vector_origin)
-			self:GetWM():ManipulateBoneScale(39, vector_origin)
-			self:GetWM():ManipulateBoneScale(40, vector_origin)
-			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 1 * timeMul, nil, nil, function()
-				local wm = self:GetWM()
-				if IsValid(wm) then
-				wm:ManipulateBoneScale(38, vector_origin)
-				wm:ManipulateBoneScale(39, vector_origin)
-				wm:ManipulateBoneScale(40, vector_origin)
-				end
-			end)
-		end,
-	}
-end
-
-SWEP.weaponInvCategory = 1
-SWEP.CustomEjectAngle = Angle(0, 0, 90)
-SWEP.Primary.ClipSize = 20
-SWEP.Primary.DefaultClip = 20
-SWEP.Primary.Automatic = false
-SWEP.Primary.Ammo = "7.62x51 mm"
-SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 64
-SWEP.Primary.Spread = 0
-SWEP.Primary.Force = 28
-SWEP.Primary.Sound = {"weapons/darsu_eft/rfb/rfb_fire_close.ogg", 85, 90, 100}
-SWEP.SupressedSound = {"weapons/darsu_eft/rfb/rfb_fire_silenced_close.ogg", 65, 90, 100}
-SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
-SWEP.Primary.Wait = 0.15
-SWEP.ReloadTime = 3
-
-SWEP.PPSMuzzleEffect = "muzzleflash_SR25"
-
-SWEP.CustomShell = "762x51"
-SWEP.ShellEject = "EjectBrass_762"
-
-SWEP.LocalMuzzlePos = Vector(16.2, -1.75, 4.4)
-SWEP.LocalMuzzleAng = Angle(0, 0, 0)
-SWEP.WeaponEyeAngles = Angle(0, 0, 0)
-
-SWEP.HoldType = "rpg"
-
-SWEP.WepSelectIcon2 = Material("entities/arc9_eft_rfb.png")
-SWEP.IconOverride = "entities/arc9_eft_rfb.png"
-
-SWEP.weight = 3.8
-SWEP.ScrappersSlot = "Primary"
-
-SWEP.DistSound = "weapons/darsu_eft/rfb/rfb_fire_close.ogg"
-
-SWEP.StartAtt = {"optic7"}
-SWEP.availableAttachments = {
-		barrel = {
-		[1] = {"supressor9", Vector(1.5, 0, 0), {}},
-		[2] = {"supressor16", Vector(1.5, 0, 0), {}},
-		[3] = {"supressor15", Vector(1.5, 0, 0), {}},
-		["mount"] = Vector(-1.2, 0.05, 0),
-	},
-	sight = {
-		["mountType"] = {"picatinny"},
-		["mount"] = {["picatinny"] = Vector(-11, 1.75, 0.05)},
-	},
-}
-
-SWEP.RHandPos = Vector(0, -1, 0)
-SWEP.LHandPos = Vector(7, -2, -2)
-SWEP.Penetration = 19
-SWEP.Spray = {}
-for i = 1, 20 do
-	SWEP.Spray[i] = Angle(-0.03 - math.cos(i) * 0.02, math.cos(i * i) * 0.04, 0) * 1.5
-end
-
-SWEP.SprayRand = {Angle(-0.08, -0.06, 0), Angle(-0.12, 0.06, 0)}
-
-SWEP.Ergonomics = 0.85
-SWEP.WorldPos = Vector(4, -0.8, -0.5)
-SWEP.WorldAng = Angle(0, 0, 0)
-SWEP.UseCustomWorldModel = true
-SWEP.attPos = Vector(1, 0, 0)
-SWEP.attAng = Angle(-0.02, 0, 0)
-SWEP.lengthSub = 25
-SWEP.handsAng = Angle(7, 2, 0)
-
-SWEP.RHPos = Vector(3, -7, 3.5)
-SWEP.RHAng = Angle(0, -8, 90)
-SWEP.LHPos = Vector(11, 1.6, -3)
-SWEP.LHAng = Angle(-110, -180, 5)
-
-SWEP.ShootAnimMul = 4
 
 function SWEP:AnimHoldPost(model)
 end
@@ -318,253 +280,44 @@ function SWEP:DrawPost()
 	self:DrawModularParts()
 end
 
-SWEP.WorldPartsOffsetPos = Vector(-20, 5, 10)
-SWEP.WorldPartsOffsetAng = Angle(0, 0, 0)
-
-SWEP.WorldMagazineBoneOverride = "weapon"
-SWEP.WorldMagazineOffsetPos = Vector(0, -17.3, -0.55)
-SWEP.WorldMagazineOffsetAng = Angle(0, 0, 0)
-
 if CLIENT then
-	local MOD_VECTOR_ZERO = Vector(0, 0, 0)
-	local MOD_ANGLE_ZERO = Angle(0, 0, 0)
-
-	function SWEP:ModularCreateDroppedFakeModel()
-		if not self.WorldModelFake then return end
-		if IsValid(self.ModularDroppedFakeWorldModel) then return end
-
-		local model = ClientsideModel(self.WorldModelFake, RENDERGROUP_BOTH)
-		if not IsValid(model) then return end
-
-		model:SetNoDraw(true)
-		model:DrawShadow(true)
-
-		if self.FakeScale then
-			model:SetModelScale(self.FakeScale, 0)
-		end
-
-		if self.FakeBodyGroups then
-			model:SetBodyGroups(self.FakeBodyGroups)
-		end
-		if self.FakeSkin ~= nil then model:SetSkin(self.FakeSkin) end
-
-		if self.ModelCreated then
-			self:ModelCreated(model)
-		end
-
-		self.ModularDroppedFakeWorldModel = model
-	end
-
-	function SWEP:ModularCreateDroppedModels()
-		local parts = self.ModularParts
-		if not istable(parts) then return end
-
-		self.ModularDroppedPartModels = self.ModularDroppedPartModels or {}
-		self.ModularDroppedPartPaths = self.ModularDroppedPartPaths or {}
-
-		for partName, partData in pairs(parts) do
-			if not istable(partData) or not isstring(partData.model) or partData.model == "" then
-				continue
-			end
-			local modelPath = self:GetModularPartModel(partName, partData.model, "world")
-
-			local model = self.ModularDroppedPartModels[partName]
-			local oldPath = self.ModularDroppedPartPaths[partName]
-			if not isstring(modelPath) or modelPath == "" then
-				if IsValid(model) then model:Remove() end
-				self.ModularDroppedPartModels[partName] = nil
-				self.ModularDroppedPartPaths[partName] = nil
-				continue
-			end
-
-			if IsValid(model) and oldPath ~= modelPath then
-				model:Remove()
-				model = nil
-			end
-
-			if not IsValid(model) then
-				model = ClientsideModel(modelPath, RENDERGROUP_BOTH)
-				if IsValid(model) then
-					model:SetNoDraw(true)
-					model:DrawShadow(true)
-					self.ModularDroppedPartModels[partName] = model
-					self.ModularDroppedPartPaths[partName] = modelPath
+	local vector_full = Vector(1, 1, 1)
+	SWEP.FakeReloadEvents = {
+		[0.10] = function(self, timeMul)
+			self:GetWM():ManipulateBoneScale(38, vector_full)
+			self:GetWM():ManipulateBoneScale(39, vector_origin)
+			self:GetWM():ManipulateBoneScale(40, vector_origin)
+			self:GetWM():ManipulateBoneScale(41, vector_origin)
+		end,
+		[0.35] = function(self, timeMul)
+			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 0.5 * timeMul, nil, nil, function()
+				local wm = self:GetWM()
+				if IsValid(wm) then
+				wm:ManipulateBoneScale(38, vector_full)
+				wm:ManipulateBoneScale(39, vector_full)
 				end
+			end)
+		end,
+		[0.40] = function(self, timeMul)
+			if self:Clip1() < 1 then
+				hg.CreateMag( self, Vector(50,10,10), nil, true )
 			end
-		end
-	end
-
-	function SWEP:ModularRemoveDroppedModels()
-		if self.ModularDroppedPartModels then
-			for partName, model in pairs(self.ModularDroppedPartModels) do
-				if IsValid(model) then model:Remove() end
-			end
-		end
-		self.ModularDroppedPartModels = nil
-		self.ModularDroppedPartPaths = nil
-
-		if IsValid(self.ModularDroppedFakeWorldModel) then
-			self.ModularDroppedFakeWorldModel:Remove()
-		end
-		self.ModularDroppedFakeWorldModel = nil
-	end
-
-	local function ModularApplyPartAppearance(model, partData)
-		if not IsValid(model) or not istable(partData) then return end
-
-		if partData.skin ~= nil then
-			model:SetSkin(partData.skin)
-		end
-
-		if istable(partData.bodygroups) then
-			for bodygroupID, value in pairs(partData.bodygroups) do
-				model:SetBodygroup(tonumber(bodygroupID) or bodygroupID, tonumber(value) or 0)
-			end
-		end
-
-		if istable(partData.submaterials) then
-			for materialID, materialPath in pairs(partData.submaterials) do
-				model:SetSubMaterial(tonumber(materialID) or materialID, materialPath or "")
-			end
-		end
-	end
-
-	function SWEP:ModularDrawDroppedModel()
-		local owner = self:GetOwner()
-		if IsValid(owner) and owner:IsPlayer() then return end
-
-		if not IsValid(self.ModularDroppedFakeWorldModel) then
-			self:ModularCreateDroppedFakeModel()
-		end
-
-		self:ModularCreateDroppedModels()
-
-		local basePosition, baseAngles = LocalToWorld(
-			self.WorldPartsOffsetPos or MOD_VECTOR_ZERO,
-			self.WorldPartsOffsetAng or MOD_ANGLE_ZERO,
-			self:GetPos(),
-			self:GetAngles()
-		)
-
-		local fake = self.ModularDroppedFakeWorldModel
-		local parts = self.ModularParts
-
-		if IsValid(fake) then
-			fake:SetRenderOrigin(basePosition)
-			fake:SetRenderAngles(baseAngles)
-			fake:SetPos(basePosition)
-			fake:SetAngles(baseAngles)
-			fake:SetupBones()
-		end
-
-		if istable(parts) and istable(self.ModularDroppedPartModels) then
-			local positioned = {}
-			local function positionPart(partName)
-				if positioned[partName] then return positioned[partName] end
-				local partData = parts[partName]
-				local model = self.ModularDroppedPartModels[partName]
-				if not IsValid(model) or not istable(partData) then return end
-
-				local boneName = partData.bone or ""
-				local extraPosition = MOD_VECTOR_ZERO
-				local extraAngles = MOD_ANGLE_ZERO
-
-				if partName == "magazine" and self.WorldMagazineBoneOverride then
-					boneName = self.WorldMagazineBoneOverride
-					extraPosition = self.WorldMagazineOffsetPos or MOD_VECTOR_ZERO
-					extraAngles = self.WorldMagazineOffsetAng or MOD_ANGLE_ZERO
+		end,
+		[0.70] = function(self, timeMul)
+			self:GetWM():ManipulateBoneScale(38, vector_origin)
+			self:GetWM():ManipulateBoneScale(39, vector_origin)
+			self:GetWM():ManipulateBoneScale(40, vector_origin)
+			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 1 * timeMul, nil, nil, function()
+				local wm = self:GetWM()
+				if IsValid(wm) then
+				wm:ManipulateBoneScale(38, vector_origin)
+				wm:ManipulateBoneScale(39, vector_origin)
+				wm:ManipulateBoneScale(40, vector_origin)
 				end
-
-				local partBasePosition, partBaseAngles = basePosition, baseAngles
-
-				if partData.parent then
-					local parent = positionPart(partData.parent)
-					if not IsValid(parent) then return end
-					partBasePosition, partBaseAngles = parent:GetPos(), parent:GetAngles()
-				elseif IsValid(fake) and isstring(boneName) and boneName ~= "" then
-					local boneID = fake:LookupBone(boneName)
-					if boneID ~= nil then
-						local boneMatrix = fake:GetBoneMatrix(boneID)
-						if boneMatrix then
-							partBasePosition = boneMatrix:GetTranslation()
-							partBaseAngles = boneMatrix:GetAngles()
-						end
-					end
-				end
-
-				local localPosition = (partData.pos or MOD_VECTOR_ZERO) + extraPosition
-				local localAngles = Angle(
-					(partData.ang or MOD_ANGLE_ZERO).p,
-					(partData.ang or MOD_ANGLE_ZERO).y,
-					(partData.ang or MOD_ANGLE_ZERO).r
-				)
-				localAngles:Add(extraAngles)
-
-				local position, angles = LocalToWorld(localPosition, localAngles, partBasePosition, partBaseAngles)
-				position, angles = self:ApplyManagedStockPartOffset(partName, position, angles)
-
-				model:SetRenderOrigin(position)
-				model:SetRenderAngles(angles)
-				model:SetPos(position)
-				model:SetAngles(angles)
-				model:SetupBones()
-
-				ModularApplyPartAppearance(model, partData)
-				positioned[partName] = model
-				return model
-			end
-
-			for partName in pairs(parts) do
-				positionPart(partName)
-			end
-		end
-
-		if IsValid(fake) then
-			fake:DrawModel()
-		end
-
-		if istable(parts) and istable(self.ModularDroppedPartModels) then
-			for partName, partData in pairs(parts) do
-				local model = self.ModularDroppedPartModels[partName]
-				if IsValid(model) then
-					model:DrawModel()
-				end
-			end
-		end
-
-		local originalWorldModel = self.worldModel
-		self.worldModel = fake
-		self:DrawAttachments()
-		self.worldModel = originalWorldModel
-	end
-
-	function SWEP:DrawWorldModel()
-		local owner = self:GetOwner()
-		if IsValid(owner) and owner:IsPlayer() then return end
-		self:ModularDrawDroppedModel()
-	end
-
-	function SWEP:DrawWorldModelTranslucent()
-		local owner = self:GetOwner()
-		if IsValid(owner) and owner:IsPlayer() then return end
-		self:ModularDrawDroppedModel()
-	end
-
-	function SWEP:OnRemove()
-		self:ModularRemoveDroppedModels()
-		self:CleanupARC9DefaultLHIKSource()
-		for _, model in pairs(self.ModularHeldPartModels or {}) do
-			if IsValid(model) then model:Remove() end
-		end
-		self.ModularHeldPartModels = nil
-		self.ModularHeldPartPaths = nil
-		self.HeldMagCSModel = nil
-	end
+			end)
+		end,
+	}
 end
-
---========================================================
--- FIRE ANIMATION
---========================================================
 
 SWEP.FireAnimTime = 0.15
 SWEP.FireAnimCandidates = {"fire"}

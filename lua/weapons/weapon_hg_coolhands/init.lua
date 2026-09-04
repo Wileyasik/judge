@@ -680,7 +680,7 @@ function SWEP:Think()
 		return
 	end
 
-	if IsValid(owner) and owner:KeyDown(IN_ATTACK2) and not self:GetFists() then
+	if IsValid(owner) and ((owner:KeyDown(IN_ATTACK2) and not self:GetFists()) or owner.Ability_Choke) then
 		if IsValid(self.CarryEnt) or game.GetWorld() == self.CarryEnt then self:ApplyForce() end
 	elseif self.CarryEnt then
 		self:SetCarrying()

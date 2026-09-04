@@ -1,3 +1,4 @@
+﻿--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "weapon_ak74"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false

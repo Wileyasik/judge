@@ -1,3 +1,4 @@
+--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -13,7 +14,6 @@ SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_pp1901_2.mdl"
-
 
 SWEP.ModularParts = {
 	magazine = {
@@ -165,7 +165,6 @@ end
 SWEP.ReloadHold = nil
 SWEP.FakeVPShouldUseHand = false
 
-
 SWEP.weaponInvCategory = 1
 SWEP.CustomEjectAngle = Angle(0, 0, 90)
 SWEP.Primary.ClipSize = 30
@@ -239,7 +238,6 @@ SWEP.lengthSub = 25
 SWEP.handsAng = Angle(7, 2, 0)
 SWEP.DistSound = path .. "vityaz_fire_close.ogg"
 
--- tpik hand positions
 SWEP.RHPos = Vector(3, -7, 3.5)
 SWEP.RHAng = Angle(0, -8, 90)
 SWEP.LHPos = Vector(11, 1.6, -3)
@@ -585,10 +583,6 @@ if CLIENT then
 		self.HeldMagCSModel = nil
 	end
 end
-
---========================================================
--- FIRE ANIMATION
---========================================================
 
 SWEP.FireAnimTime = 0.08
 SWEP.FireAnimCandidates = {"fire", "fire1"}

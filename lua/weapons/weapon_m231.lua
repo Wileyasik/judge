@@ -1,10 +1,11 @@
+--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "homigrad_base"
 SWEP.ARC9ActionLHIKFadeOutTime = 0.1
 SWEP.ARC9ActionLHIKFadeInTime = 1
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "Patriot"
-SWEP.Author = "Colt’s Manufacturing Company"
+SWEP.Author = "Colt's Manufacturing Company"
 SWEP.Instructions = "Model 231, chambered in 5.56x45\n\nRate of fire 900 rounds per minute"
 SWEP.Category = "Weapons - Machineguns"
 SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
@@ -15,8 +16,6 @@ SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_m4a1.mdl"
-
-
 
 SWEP.ModularParts = {
 	receiver = {
@@ -79,24 +78,6 @@ SWEP.ModularParts = {
 SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
 SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
 
-SWEP.AnimsEvents = {
-	["inspect"] = {
-		[0.01] = function(self) self:EmitSound("arc9_eft_shared/weap_handon.ogg") end,
-		[0.4] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin9.ogg") end,
-		[0.8] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin6.ogg") end,
-	},
-	["reload7"] = {
-		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_mag_out1.ogg") end,
-		[0.5] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_mag_in1.ogg") end,
-	},
-	["reload_empty7"] = {
-		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_magrelease_button.ogg") end,
-		[0.15] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_mag_out1.ogg") end,
-		[0.5] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_mag_in1.ogg") end,
-		[0.65] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_bolt_in.ogg") end,
-	},
-}
-
 SWEP.FakePos = Vector(-14, 2.52, 7.5)
 SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.AttachmentPos = Vector(-2, 0, 0)
@@ -120,6 +101,95 @@ SWEP.AnimList = {
 	["inspect"] = "look_0",
 }
 
+SWEP.AnimsEvents = {
+	["inspect"] = {
+		[0.01] = function(self) self:EmitSound("arc9_eft_shared/weap_handon.ogg") end,
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin9.ogg") end,
+		[0.8] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin6.ogg") end,
+	},
+	["reload7"] = {
+		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_mag_out1.ogg") end,
+		[0.5] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_mag_in1.ogg") end,
+	},
+	["reload_empty7"] = {
+		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_magrelease_button.ogg") end,
+		[0.15] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_mag_out1.ogg") end,
+		[0.5] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_mag_in1.ogg") end,
+		[0.65] = function(self) self:EmitSound("weapons/darsu_eft/m4a1/mcx_bolt_in.ogg") end,
+	},
+}
+
+SWEP.weaponInvCategory = 1
+SWEP.CustomEjectAngle = Angle(0, 0, 90)
+SWEP.Primary.ClipSize = 100
+SWEP.Primary.DefaultClip = 100
+SWEP.Primary.Automatic = true
+SWEP.Primary.Ammo = "5.56x45 mm"
+SWEP.Primary.Cone = 0
+SWEP.Primary.Damage = 36
+SWEP.Primary.Spread = 0
+SWEP.Primary.Force = 28
+SWEP.animposmul = 2
+SWEP.Primary.Sound = {"weapons/darsu_eft/m4a1/fire_new/m4a1_outdoor_close_onseshot_01.wav", 85, 90, 100}
+SWEP.SupressedSound = {"weapons/darsu_eft/m4a1/fire_new/m4a1_fire_silenced_close_loop2.wav", 65, 90, 100}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.Wait = 0.04453
+SWEP.ReloadTime = 4
+
+SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1"
+
+SWEP.CustomShell = "556"
+SWEP.ShellEject = "EjectBrass_556"
+
+SWEP.LocalMuzzlePos = Vector(22.6, -1.7, 4.2)
+SWEP.LocalMuzzleAng = Angle(0, 0, 0)
+SWEP.WeaponEyeAngles = Angle(0, 0, 0)
+
+SWEP.HoldType = "rpg"
+
+SWEP.WepSelectIcon2 = Material("entities/arc9_eft_m16a2.png")
+SWEP.IconOverride = "entities/arc9_eft_m16a2.png"
+
+SWEP.weight = 3.2
+SWEP.ScrappersSlot = "Primary"
+
+SWEP.DistSound = "weapons/darsu_eft/m4a1/fire_new/tx15_fire_outdoor_close.wav"
+
+SWEP.startAtt = {}
+
+SWEP.availableAttachments = {
+	barrel = {
+		[1] = {"supressor5", Vector(0, 0, 0), {}},
+		[2] = {"supressor6", Vector(0, 0, 0), {}},
+		[3] = {"supressor15", Vector(1.3, 0, 0), {}},
+		["mount"] = Vector(-0.5, 0.1, 0),
+	},
+}
+
+SWEP.RHandPos = Vector(0, -1, 0)
+SWEP.LHandPos = Vector(7, -2, -2)
+SWEP.Penetration = 18
+SWEP.Spray = {}
+for i = 1, 20 do
+	SWEP.Spray[i] = Angle(-0.0, 0, 0) * 1
+end
+
+SWEP.Ergonomics = 0.85
+SWEP.WorldPos = Vector(4, -0.8, -0.5)
+SWEP.WorldAng = Angle(0, 0, 0)
+SWEP.UseCustomWorldModel = true
+SWEP.attPos = Vector(1, 0, 0)
+SWEP.attAng = Angle(-0.02, 0, 0)
+SWEP.lengthSub = 25
+SWEP.handsAng = Angle(7, 2, 0)
+
+SWEP.RHPos = Vector(3, -7, 3.5)
+SWEP.RHAng = Angle(0, -8, 90)
+SWEP.LHPos = Vector(11, 1.6, -3)
+SWEP.LHAng = Angle(-110, -180, 5)
+
+SWEP.ShootAnimMul = 2
+
 function SWEP:AllowedInspect()
 	if not self:CanUse() then return end
 	if self.isReloading then return end
@@ -133,9 +203,11 @@ function SWEP:ModelCreated(model)
 	if not IsValid(model) then return end
 end
 
+function SWEP:AnimHoldPost(model)
+end
+
 SWEP.ReloadHold = nil
 SWEP.FakeVPShouldUseHand = false
-
 
 SWEP.FakeMagDropBone = 50
 SWEP.MagModel = "models/weapons/mods/mag_stanag_beta_c_mag_556x45_100.mdl"
@@ -182,78 +254,12 @@ if CLIENT then
 	}
 end
 
+SWEP.WorldPartsOffsetPos = Vector(-20, 5, 10)
+SWEP.WorldPartsOffsetAng = Angle(0, 0, 0)
 
-SWEP.weaponInvCategory = 1
-SWEP.CustomEjectAngle = Angle(0, 0, 90)
-SWEP.Primary.ClipSize = 100
-SWEP.Primary.DefaultClip = 100
-SWEP.Primary.Automatic = true
-SWEP.Primary.Ammo = "5.56x45 mm"
-SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 36
-SWEP.Primary.Spread = 0
-SWEP.Primary.Force = 28
-SWEP.animposmul = 2
-SWEP.Primary.Sound = {"weapons/darsu_eft/m4a1/fire_new/m4a1_outdoor_close_onseshot_01.wav", 85, 90, 100}
-SWEP.SupressedSound = {"weapons/darsu_eft/m4a1/fire_new/m4a1_fire_silenced_close_loop2.wav", 65, 90, 100}
-SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
-SWEP.Primary.Wait = 0.04453
-SWEP.ReloadTime = 4
-
-SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1"
-
-SWEP.CustomShell = "556"
-SWEP.ShellEject = "EjectBrass_556"
-
-SWEP.LocalMuzzlePos = Vector(22.6, -1.7, 4.2)
-SWEP.LocalMuzzleAng = Angle(0, 0, 0)
-SWEP.WeaponEyeAngles = Angle(0, 0, 0)
-
-SWEP.HoldType = "rpg"
-
-SWEP.WepSelectIcon2 = Material("entities/arc9_eft_m16a2.png")
-SWEP.IconOverride = "entities/arc9_eft_m16a2.png"
-
-SWEP.weight = 3.2
-SWEP.ScrappersSlot = "Primary"
-
-SWEP.DistSound = "weapons/darsu_eft/m4a1/fire_new/tx15_fire_outdoor_close.wav"
-
-SWEP.availableAttachments = {
-	barrel = {
-		[1] = {"supressor5", Vector(0, 0, 0), {}},
-		[2] = {"supressor6", Vector(0, 0, 0), {}},
-		[3] = {"supressor15", Vector(1.3, 0, 0), {}},
-		["mount"] = Vector(-0.5, 0.1, 0),
-	},
-}
-
-SWEP.RHandPos = Vector(0, -1, 0)
-SWEP.LHandPos = Vector(7, -2, -2)
-SWEP.Penetration = 18
-SWEP.Spray = {}
-for i = 1, 20 do
-	SWEP.Spray[i] = Angle(-0.0, 0, 0) * 1
-end
-
-SWEP.Ergonomics = 0.85
-SWEP.WorldPos = Vector(4, -0.8, -0.5)
-SWEP.WorldAng = Angle(0, 0, 0)
-SWEP.UseCustomWorldModel = true
-SWEP.attPos = Vector(1, 0, 0)
-SWEP.attAng = Angle(-0.02, 0, 0)
-SWEP.lengthSub = 25
-SWEP.handsAng = Angle(7, 2, 0)
-
-SWEP.RHPos = Vector(3, -7, 3.5)
-SWEP.RHAng = Angle(0, -8, 90)
-SWEP.LHPos = Vector(11, 1.6, -3)
-SWEP.LHAng = Angle(-110, -180, 5)
-
-SWEP.ShootAnimMul = 2
-
-function SWEP:AnimHoldPost(model)
-end
+SWEP.WorldMagazineBoneOverride = "weapon"
+SWEP.WorldMagazineOffsetPos = Vector(0, -17.3, -0.55)
+SWEP.WorldMagazineOffsetAng = Angle(0, 0, 0)
 
 function SWEP:GetModularPartModel(partName, fallback, role)
 	if partName == "magazine" then
@@ -346,13 +352,6 @@ function SWEP:DrawPost()
 
 	self:DrawModularParts()
 end
-
-SWEP.WorldPartsOffsetPos = Vector(-20, 5, 10)
-SWEP.WorldPartsOffsetAng = Angle(0, 0, 0)
-
-SWEP.WorldMagazineBoneOverride = "weapon"
-SWEP.WorldMagazineOffsetPos = Vector(0, -17.3, -0.55)
-SWEP.WorldMagazineOffsetAng = Angle(0, 0, 0)
 
 if CLIENT then
 	local MOD_VECTOR_ZERO = Vector(0, 0, 0)
@@ -590,10 +589,6 @@ if CLIENT then
 		self.HeldMagCSModel = nil
 	end
 end
-
---========================================================
--- FIRE ANIMATION
---========================================================
 
 SWEP.FireAnimTime = 0.15
 SWEP.FireAnimCandidates = {"fire", "fire1"}

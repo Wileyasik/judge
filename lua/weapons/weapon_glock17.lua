@@ -1,3 +1,4 @@
+--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -7,9 +8,27 @@ SWEP.Instructions = "Glock is a brand of polymer-framed, short recoil-operated, 
 SWEP.Category = "Weapons - Pistols"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
+
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_pist_deagle.mdl"
 SWEP.WorldModelFake = "models/weapons/c_glock.mdl"
+
+SWEP.FakePos = Vector(-22, 2.34, 4.32)
+SWEP.FakeAng = Angle(0, 0, 0)
+SWEP.AttachmentPos = Vector(0.2,0,-6.5)
+SWEP.AttachmentAng = Angle(0,0,0)
+SWEP.FakeAttachment = "1"
+SWEP.FakeBodyGroups = "1150000000"
+
+SWEP.FakeEjectBrassBone = "shellport"
+
+SWEP.FakeVPShouldUseHand = true
+
+SWEP.CantFireFromCollision = true // 2 спусковых крючка все дела
+
+SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
+SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_UpperArm"
+SWEP.ViewPunchDiv = 1
 
 SWEP.ModularParts = {
 	magazine = {
@@ -35,40 +54,12 @@ SWEP.ModularParts = {
 	},
 }
 
-SWEP.FakePos = Vector(-22, 2.34, 4.32)
-SWEP.FakeAng = Angle(0, 0, 0)
-SWEP.AttachmentPos = Vector(0.2,0,-6.5)
-SWEP.AttachmentAng = Angle(0,0,0)
-SWEP.FakeAttachment = "1"
-SWEP.FakeBodyGroups = "1150000000"
-
-
-SWEP.FakeEjectBrassBone = "shellport"
-
-SWEP.FakeVPShouldUseHand = true
-
-SWEP.stupidgun = true
-
-SWEP.CantFireFromCollision = true // 2 спусковых крючка все дела
-
 SWEP.AnimList = {
 	["inspect"] = "inspect",
 	["reload"] = "reload0",
 	["reload_empty"] = "reload_empty0_0",
 	["idle"] = "idle",
 }
-
-function SWEP:AllowedInspect()
-	if not self:CanUse() then return end
-	if self.isReloading then return end
-	if self:Clip1() < self.Primary.ClipSize then return end
-	if self.drawBullet == false then return end
-	return true
-end
-
-SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
-SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_UpperArm"
-SWEP.ViewPunchDiv = 1
 
 SWEP.AnimsEvents = {
 	["inspect"] = {
@@ -91,7 +82,6 @@ SWEP.AnimsEvents = {
 	},
 }
 
-
 SWEP.lmagpos = Vector(1.8,0,-0.3)
 SWEP.lmagang = Angle(-10,0,0)
 SWEP.lmagpos2 = Vector(0,3.5,0.3)
@@ -101,6 +91,120 @@ SWEP.GunCamPos = Vector(2.2,-17,-3)
 SWEP.GunCamAng = Angle(180,0,-90)
 
 SWEP.MagModel = "models/weapons/mods/mag_glock_std_17.mdl"
+
+SWEP.weight = 1
+SWEP.ScrappersSlot = "Secondary"
+SWEP.weaponInvCategory = 2
+SWEP.ShellEject = "EjectBrass_9mm"
+SWEP.Primary.ClipSize = 17
+SWEP.Primary.DefaultClip = 17
+SWEP.Primary.Automatic = false
+SWEP.Primary.Ammo = "9x19 mm Parabellum"
+SWEP.Primary.Cone = 0
+SWEP.Primary.Damage = 21
+SWEP.Primary.Sound = {"weapons/darsu_eft/glock/glock17_close.wav", 75, 90, 100}
+SWEP.SupressedSound = {"weapons/darsu_eft/glock/glock17_close_silenced.ogg", 65, 90, 100}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_hammer.wav", 75, 100, 105, CHAN_WEAPON, 2}
+SWEP.Primary.Force = 25
+SWEP.Primary.Wait = PISTOLS_WAIT
+SWEP.ReloadTime = 3
+
+SWEP.DeploySnd = {"homigrad/weapons/draw_pistol.mp3", 55, 100, 110}
+SWEP.HolsterSnd = {"homigrad/weapons/holster_pistol.mp3", 55, 100, 110}
+SWEP.HoldType = "revolver"
+SWEP.ZoomPos = Vector(0, -1.9464, 1.9824)
+SWEP.RHandPos = Vector(-4, 0, -3)
+SWEP.LHandPos = false
+SWEP.SprayRand = {Angle(-0.03, -0.03, 0), Angle(-0.05, 0.03, 0)}
+SWEP.Ergonomics = 1.2
+SWEP.Penetration = 11.5
+
+SWEP.punchmul = 1.5
+SWEP.punchspeed = 3
+SWEP.WorldPos = Vector(2.9, -1.2, -2.8)
+SWEP.WorldAng = Angle(0, 0, 0)
+SWEP.UseCustomWorldModel = true
+SWEP.attPos = Vector(0, -0, 6.5)
+SWEP.attAng = Angle(0, -0.2, 0)
+SWEP.lengthSub = 25
+SWEP.DistSound = "m9/m9_dist.wav"
+SWEP.holsteredBone = "ValveBiped.Bip01_R_Thigh"
+SWEP.holsteredPos = Vector(0, -2, 1)
+SWEP.holsteredAng = Angle(0, 20, 30)
+SWEP.shouldntDrawHolstered = true
+
+SWEP.CustomShell = "9x19"
+SWEP.EjectPos = Vector(0,0,0)
+SWEP.EjectAng = Angle(-0,-180,0)
+
+SWEP.WepSelectIcon2 = Material("entities/arc9_eft_glock17.png")
+SWEP.IconOverride = "entities/arc9_eft_glock17.png"
+
+SWEP.LocalMuzzlePos = Vector(3.3, -1.95, 1.38)
+SWEP.LocalMuzzleAng = Angle(0, 0, 0)
+SWEP.WeaponEyeAngles = Angle(0,0,0)
+
+SWEP.RHPos = Vector(12,-4.5,3)
+SWEP.RHAng = Angle(0,-5,90)
+SWEP.LHPos = Vector(-1.2,-1.4,-2.8)
+SWEP.LHAng = Angle(5,9,-100)
+
+SWEP.ShootAnimMul = 3
+SWEP.SightSlideOffset = 1.2
+
+SWEP.stupidgun = true
+
+SWEP.HeldMagModel = "models/weapons/mods/mag_glock_std_17.mdl"
+SWEP.HeldMagBone = "mod_magazine"
+SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
+SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
+SWEP.HeldFrontSightModel = "models/weapons/mods/glock_fs.mdl"
+SWEP.HeldFrontSightBone = "mod_reciever"
+SWEP.HeldFrontSightOffsetPos = Vector(-0, -0, 0.04)
+SWEP.HeldFrontSightOffsetAng = Angle(0, -90, 0)
+SWEP.HeldRearSightModel = "models/weapons/mods/glock_rs.mdl"
+SWEP.HeldRearSightBone = "mod_reciever"
+SWEP.HeldRearSightOffsetPos = Vector(0, 0.05, 0)
+SWEP.HeldRearSightOffsetAng = Angle(0, -90, 0)
+
+SWEP.WorldPartsOffsetPos = Vector(-20, 5, 10)
+SWEP.WorldPartsOffsetAng = Angle(0, 0, 0)
+
+SWEP.availableAttachments = {
+	barrel = {
+		[1] = {"supressor2", Vector(0, 0.0, 0), {}},
+		[2] = {"supressor1", Vector(0, 0.0, 0), {}},
+		["mount"] = Vector(-0.5, 0, -0.05),
+		["mountAngle"] = Angle(0, 0, 180),
+	},
+	magwell = {
+		["mountType"] = "glock_mag",
+	},
+	sight = {
+		["mountType"] = "pistolmount",
+		["mountBone"] = "mod_reciever",
+		["mount"] = Vector(1, 0.5, 0.3),
+		["mountAngle"] = Angle(0,-90,90),
+	},
+	underbarrel = {
+		["mount"] = Vector(12.5, -0.35, -1),
+		["mountAngle"] = Angle(0, -0.6, 90),
+		["mountType"] = "picatinny_small"
+	},
+}
+
+function SWEP:AllowedInspect()
+	if not self:CanUse() then return end
+	if self.isReloading then return end
+	if self:Clip1() < self.Primary.ClipSize then return end
+	if self.drawBullet == false then return end
+	return true
+end
+
+function SWEP:ModelCreated(model)
+	if not IsValid(model) then return end
+	model:SetBodyGroups(self.FakeBodyGroups)
+end
 
 if CLIENT then
 	SWEP.FakeReloadEvents = {
@@ -125,112 +229,6 @@ if CLIENT then
 end
 
 SWEP.FakeMagDropBone = "mod_magazine"
-
-SWEP.WepSelectIcon2 = Material("entities/arc9_eft_glock17.png")
-SWEP.IconOverride = "entities/arc9_eft_glock17.png"
-
-SWEP.CustomShell = "9x19"
-SWEP.EjectPos = Vector(0,0,0)
-SWEP.EjectAng = Angle(-0,-180,0)
-
-SWEP.weight = 1
-
-SWEP.ScrappersSlot = "Secondary"
-
-SWEP.weaponInvCategory = 2
-SWEP.ShellEject = "EjectBrass_9mm"
-SWEP.Primary.ClipSize = 17
-SWEP.Primary.DefaultClip = 17
-SWEP.Primary.Automatic = false
-SWEP.Primary.Ammo = "9x19 mm Parabellum"
-SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 21
-SWEP.Primary.Sound = {"weapons/darsu_eft/glock/glock17_close.wav", 75, 90, 100}
-SWEP.SupressedSound = {"weapons/darsu_eft/glock/glock17_close_silenced.ogg", 65, 90, 100}
-SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_hammer.wav", 75, 100, 105, CHAN_WEAPON, 2}
-SWEP.Primary.Force = 25
-SWEP.Primary.Wait = PISTOLS_WAIT
-SWEP.ReloadTime = 3
-
-SWEP.DeploySnd = {"homigrad/weapons/draw_pistol.mp3", 55, 100, 110}
-SWEP.HolsterSnd = {"homigrad/weapons/holster_pistol.mp3", 55, 100, 110}
-SWEP.HoldType = "revolver"
-SWEP.ZoomPos = Vector(0, -1.9464, 1.9824)
---SWEP.RHandPos = Vector(-13.5,0,4)
-SWEP.RHandPos = Vector(-4, 0, -3)
-SWEP.LHandPos = false
-SWEP.SprayRand = {Angle(-0.03, -0.03, 0), Angle(-0.05, 0.03, 0)}
-SWEP.Ergonomics = 1.2
-SWEP.Penetration = 11.5
-
-SWEP.punchmul = 1.5
-SWEP.punchspeed = 3
---SWEP.WorldPos = Vector(13,0,3.5)
---SWEP.WorldAng = Angle(0,0,0)
-SWEP.WorldPos = Vector(2.9, -1.2, -2.8)
-SWEP.WorldAng = Angle(0, 0, 0)
-SWEP.UseCustomWorldModel = true
-SWEP.attPos = Vector(0, -0, 6.5)
-SWEP.attAng = Angle(0, -0.2, 0)
-SWEP.lengthSub = 25
-SWEP.DistSound = "m9/m9_dist.wav"
-SWEP.holsteredBone = "ValveBiped.Bip01_R_Thigh"
-SWEP.holsteredPos = Vector(0, -2, 1)
-SWEP.holsteredAng = Angle(0, 20, 30)
-SWEP.shouldntDrawHolstered = true
-SWEP.availableAttachments = {
-	barrel = {
-		[1] = {"supressor2", Vector(0, 0.0, 0), {}},
-		[2] = {"supressor1", Vector(0, 0.0, 0), {}},
-		["mount"] = Vector(-0.5, 0, -0.05),
-		["mountAngle"] = Angle(0, 0, 180),
-	},
-	magwell = {
-		["mountType"] = "glock_mag",
-	},
-	sight = {
-		["mountType"] = "pistolmount",
-		["mountBone"] = "mod_reciever",
-		["mount"] = Vector(1, 0.5, 0.3),
-		["mountAngle"] = Angle(0,-90,90),
-	},
-	underbarrel = {
-		["mount"] = Vector(12.5, -0.35, -1),
-		["mountAngle"] = Angle(0, -0.6, 90),
-		["mountType"] = "picatinny_small"
-	},
-}
-
---local to head
-SWEP.RHPos = Vector(12,-4.5,3)
-SWEP.RHAng = Angle(0,-5,90)
---local to rh
-SWEP.LHPos = Vector(-1.2,-1.4,-2.8)
-SWEP.LHAng = Angle(5,9,-100)
-
-SWEP.ShootAnimMul = 3
-SWEP.SightSlideOffset = 1.2
-
-function SWEP:ModelCreated(model)
-	if not IsValid(model) then return end
-	model:SetBodyGroups(self.FakeBodyGroups)
-end
-
-SWEP.HeldMagModel = "models/weapons/mods/mag_glock_std_17.mdl"
-SWEP.HeldMagBone = "mod_magazine"
-SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
-SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
-SWEP.HeldFrontSightModel = "models/weapons/mods/glock_fs.mdl"
-SWEP.HeldFrontSightBone = "mod_reciever"
-SWEP.HeldFrontSightOffsetPos = Vector(-0, -0, 0.04)
-SWEP.HeldFrontSightOffsetAng = Angle(0, -90, 0)
-SWEP.HeldRearSightModel = "models/weapons/mods/glock_rs.mdl"
-SWEP.HeldRearSightBone = "mod_reciever"
-SWEP.HeldRearSightOffsetPos = Vector(0, 0.05, 0)
-SWEP.HeldRearSightOffsetAng = Angle(0, -90, 0)
-
-SWEP.WorldPartsOffsetPos = Vector(-20, 5, 10)
-SWEP.WorldPartsOffsetAng = Angle(0, 0, 0)
 
 if CLIENT then
 	local zeroVector = Vector(0, 0, 0)
@@ -374,7 +372,3 @@ if CLIENT then
 		self:RemoveGlockModels()
 	end
 end
-
-SWEP.LocalMuzzlePos = Vector(3.3, -1.95, 1.38)
-SWEP.LocalMuzzleAng = Angle(0, 0, 0)
-SWEP.WeaponEyeAngles = Angle(0,0,0)

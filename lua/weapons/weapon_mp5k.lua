@@ -1,3 +1,4 @@
+--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "homigrad_base"
 SWEP.ARC9ActionLHIKFadeOutTime = 0.1
 SWEP.ARC9ActionLHIKFadeInTime = 0.45
@@ -15,7 +16,6 @@ SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_mp5k.mdl"
-
 
 SWEP.ModularParts = {
 	magazine = {
@@ -79,7 +79,6 @@ SWEP.AnimsEvents = {
 		[0.80] = function(self) self:EmitSound("weapons/darsu_eft/mp5/mp5_weap_bolt_in.ogg") end,
     },
 }
-
 
 SWEP.AnimList = {
 	["fire"] = "fire",
@@ -168,7 +167,6 @@ end
 SWEP.ReloadHold = nil
 SWEP.FakeVPShouldUseHand = false
 
-
 SWEP.weaponInvCategory = 1
 SWEP.CustomEjectAngle = Angle(0, 0, 90)
 SWEP.Primary.ClipSize = 30
@@ -185,7 +183,6 @@ SWEP.SupressedSound = {"weapons/darsu_eft/mp5/fire_new/mp5sd_outdoor_close_silen
 SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.06061
 SWEP.ReloadTime = 3
-
 
 SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1"
 
@@ -204,7 +201,6 @@ SWEP.IconOverride = "entities/arc9_eft_mp5k.png"
 SWEP.weight = 2.8
 SWEP.ScrappersSlot = "Primary"
 
-
 SWEP.RHandPos = Vector(0, -1, 0)
 SWEP.LHandPos = Vector(7, -2, -2)
 SWEP.Penetration = 9
@@ -222,7 +218,6 @@ SWEP.attAng = Angle(-0.02, 0, 0)
 SWEP.lengthSub = 25
 SWEP.handsAng = Angle(7, 2, 0)
 
--- tpik hand positions
 SWEP.RHPos = Vector(3, -7, 3.5)
 SWEP.RHAng = Angle(0, -8, 90)
 SWEP.LHPos = Vector(11, 1.6, -3)
@@ -568,10 +563,6 @@ if CLIENT then
 		self.HeldMagCSModel = nil
 	end
 end
-
---========================================================
--- FIRE ANIMATION
---========================================================
 
 SWEP.FireAnimTime = 0.07
 SWEP.FireAnimCandidates = {"fire", "fire1"}

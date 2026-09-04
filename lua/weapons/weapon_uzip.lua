@@ -1,3 +1,4 @@
+﻿--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -13,7 +14,6 @@ SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_uzi_pro.mdl"
-
 
 SWEP.ModularParts = {
 	magazine = {
@@ -141,7 +141,6 @@ end
 SWEP.ReloadHold = nil
 SWEP.FakeVPShouldUseHand = false
 
-
 SWEP.weaponInvCategory = 1
 SWEP.CustomEjectAngle = Angle(0, 0, 0)
 SWEP.Primary.ClipSize = 25
@@ -209,7 +208,6 @@ SWEP.lengthSub = 20
 SWEP.handsAng = Angle(7, 2, 0)
 SWEP.DistSound = path .. "uzipro_fire_close.ogg"
 
--- tpik hand positions
 SWEP.RHPos = Vector(6, -5, 3)
 SWEP.RHAng = Angle(0, -5, 90)
 SWEP.LHPos = Vector(6, -0.5, -2.5)
@@ -555,10 +553,6 @@ if CLIENT then
 		self.HeldMagCSModel = nil
 	end
 end
-
---========================================================
--- FIRE ANIMATION
---========================================================
 
 SWEP.FireAnimTime = 0.055
 SWEP.FireAnimCandidates = {"fire", "fire1"}

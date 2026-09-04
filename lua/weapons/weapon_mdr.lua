@@ -1,3 +1,4 @@
+--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -14,7 +15,6 @@ SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_mdr.mdl"
-
 
 SWEP.ModularParts = {
 	magazine = {
@@ -99,7 +99,6 @@ end
 SWEP.ReloadHold = nil
 SWEP.FakeVPShouldUseHand = false
 
-
 SWEP.FakeMagDropBone = 50
 SWEP.MagModel = "models/weapons/mods/mag_stanag_colt_ar15_std_556x45_30.mdl"
 
@@ -177,7 +176,6 @@ SWEP.weight = 3.5
 SWEP.ScrappersSlot = "Primary"
 
 SWEP.DistSound = "weapons/darsu_eft/mdr/mdr_dist.wav"
-
 
 SWEP.StartAtt = {"holo14"}
 SWEP.availableAttachments = {
@@ -565,10 +563,6 @@ if CLIENT then
 		self.HeldMagCSModel = nil
 	end
 end
-
---========================================================
--- FIRE ANIMATION
---========================================================
 
 SWEP.FireAnimTime = 0.15
 SWEP.FireAnimCandidates = {"fire", "fire1"}

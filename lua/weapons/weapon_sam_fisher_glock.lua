@@ -1,3 +1,4 @@
+--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "weapon_glock17"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -5,10 +6,10 @@ SWEP.PrintName = "Sam Fisher Glock"
 SWEP.Author = "Glock GmbH"
 SWEP.Instructions = "Sam Fisher's suppressed Glock."
 SWEP.Category = "Weapons - Pistols"
-SWEP.WorldModel = "models/weapons/w_pist_deagle.mdl"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 
+SWEP.WorldModel = "models/weapons/w_pist_deagle.mdl"
 SWEP.WorldModelFake = "models/weapons/c_glock.mdl"
 SWEP.GlockBodygroups = {1, 10, 4, 0, 0, 0, 0, 0, 0, 1}
 

@@ -1,3 +1,4 @@
+--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -10,22 +11,10 @@ SWEP.holsteredPos = Vector(4, 6, -6)
 SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Slot = 2
 SWEP.SlotPos = 10
+
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_kedr.mdl"
-
-
-SWEP.ModularParts = {
-	magazine = {
-		model = "models/weapons/mods/mag_kedr_20.mdl",
-		bonemerge = false,
-		bone = "mod_magazine",
-		pos = Vector(0, 0.7, 0),
-		ang = Angle(0, -90, 0)
-	},
-}
-SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
-SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
 
 SWEP.FakePos = Vector(-9, 2.0, 7)
 SWEP.FakeAng = Angle(0, 0, 0)
@@ -44,6 +33,32 @@ SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
 SWEP.ViewPunchDiv = 1
 
+SWEP.ReloadHold = nil
+SWEP.FakeVPShouldUseHand = false
+
+SWEP.ModularParts = {
+	magazine = {
+		model = "models/weapons/mods/mag_kedr_20.mdl",
+		bonemerge = false,
+		bone = "mod_magazine",
+		pos = Vector(0, 0.7, 0),
+		ang = Angle(0, -90, 0)
+	},
+}
+SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
+SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
+
+SWEP.FakeMagDropBone = 50
+SWEP.MagModel = "models/weapons/mods/mag_kedr_20.mdl"
+
+SWEP.AnimList = {
+	["fire"] = "fire",
+	["idle"] = "idle",
+	["reload"] = "reload0",
+	["reload_empty"] = "reload_empty0",
+	["inspect"] = "look",
+}
+
 local path = "weapons/darsu_eft/kedr/"
 
 SWEP.AnimsEvents = {
@@ -55,9 +70,8 @@ SWEP.AnimsEvents = {
 	["reload"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/kedr/kedr_magout.ogg") end,
 		[0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in3.ogg") end,
-		[0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,	
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,
 		[0.45] = function(self) self:EmitSound("weapons/darsu_eft/kedr/kedr_magin.ogg") end,
-
 	},
 	["reload_empty"] = {
 		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/kedr/kedr_magrelease_button.ogg") end,
@@ -68,80 +82,6 @@ SWEP.AnimsEvents = {
 		[0.75] = function(self) self:EmitSound("weapons/darsu_eft/kedr/kedr_slider_down.ogg") end,
 	},
 }
-
-SWEP.AnimList = {
-	["fire"] = "fire",
-	["idle"] = "idle",
-	["reload"] = "reload0",
-	["reload_empty"] = "reload_empty0",
-	["inspect"] = "look",
-}
-
-function SWEP:AllowedInspect()
-	if not self:CanUse() then return end
-	if self.isReloading then return end
-	if self:Clip1() < self.Primary.ClipSize then return end
-	if self.drawBullet == false then return end
-	return true
-end
-
-function SWEP:ModelCreated(model)
-	if not CLIENT then return end
-	if not IsValid(model) then return end
-	if not self.FakeBodyGroups then return end
-
-	model:SetBodyGroups(self.FakeBodyGroups)
-
-	for i = 0, #model:GetMaterials() - 1 do
-		model:SetSubMaterial(i, "")
-	end
-end
-
-SWEP.FakeMagDropBone = 50
-SWEP.MagModel = "models/weapons/mods/mag_kedr_20.mdl"
-
-if CLIENT then
-	local vector_full = Vector(1, 1, 1)
-	SWEP.FakeReloadEvents = {
-		[0.10] = function(self, timeMul)
-			self:GetWM():ManipulateBoneScale(38, vector_full)
-			self:GetWM():ManipulateBoneScale(39, vector_origin)
-			self:GetWM():ManipulateBoneScale(40, vector_origin)
-			self:GetWM():ManipulateBoneScale(41, vector_origin)
-		end,
-		[0.35] = function(self, timeMul)
-			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 0.5 * timeMul, nil, nil, function()
-				local wm = self:GetWM()
-				if IsValid(wm) then
-				wm:ManipulateBoneScale(38, vector_full)
-				wm:ManipulateBoneScale(39, vector_full)
-				end
-			end)
-		end,
-		[0.40] = function(self, timeMul)
-			if self:Clip1() < 1 then
-				hg.CreateMag( self, Vector(50,10,10), nil, true )
-			end
-		end,
-		[0.70] = function(self, timeMul)
-			self:GetWM():ManipulateBoneScale(38, vector_origin)
-			self:GetWM():ManipulateBoneScale(39, vector_origin)
-			self:GetWM():ManipulateBoneScale(40, vector_origin)
-			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 1 * timeMul, nil, nil, function()
-				local wm = self:GetWM()
-				if IsValid(wm) then
-				wm:ManipulateBoneScale(38, vector_origin)
-				wm:ManipulateBoneScale(39, vector_origin)
-				wm:ManipulateBoneScale(40, vector_origin)
-				end
-			end)
-		end,
-	}
-end
-
-SWEP.ReloadHold = nil
-SWEP.FakeVPShouldUseHand = false
-
 
 SWEP.weaponInvCategory = 1
 SWEP.CustomEjectAngle = Angle(0, 0, 0)
@@ -195,7 +135,6 @@ SWEP.lengthSub = 15
 SWEP.handsAng = Angle(7, 2, 0)
 SWEP.DistSound = path .. "kedr_fire_close.ogg"
 
--- tpik hand positions
 SWEP.RHPos = Vector(3, -6, 3)
 SWEP.RHAng = Angle(0, -8, 90)
 SWEP.LHPos = Vector(9, 1, -2)
@@ -203,7 +142,34 @@ SWEP.LHAng = Angle(-90, -180, 0)
 
 SWEP.ShootAnimMul = 2
 
+SWEP.WorldPartsOffsetPos = Vector(-20, 5, 10)
+SWEP.WorldPartsOffsetAng = Angle(0, 0, 0)
+
+SWEP.WorldMagazineBoneOverride = "weapon"
+SWEP.WorldMagazineOffsetPos = Vector(0, -17.3, -0.55)
+SWEP.WorldMagazineOffsetAng = Angle(0, 0, 0)
+
+function SWEP:AllowedInspect()
+	if not self:CanUse() then return end
+	if self.isReloading then return end
+	if self:Clip1() < self.Primary.ClipSize then return end
+	if self.drawBullet == false then return end
+	return true
+end
+
 function SWEP:AnimHoldPost(model)
+end
+
+function SWEP:ModelCreated(model)
+	if not CLIENT then return end
+	if not IsValid(model) then return end
+	if not self.FakeBodyGroups then return end
+
+	model:SetBodyGroups(self.FakeBodyGroups)
+
+	for i = 0, #model:GetMaterials() - 1 do
+		model:SetSubMaterial(i, "")
+	end
 end
 
 function SWEP:GetModularPartModel(partName, fallback, role)
@@ -298,12 +264,44 @@ function SWEP:DrawPost()
 	self:DrawModularParts()
 end
 
-SWEP.WorldPartsOffsetPos = Vector(-20, 5, 10)
-SWEP.WorldPartsOffsetAng = Angle(0, 0, 0)
-
-SWEP.WorldMagazineBoneOverride = "weapon"
-SWEP.WorldMagazineOffsetPos = Vector(0, -17.3, -0.55)
-SWEP.WorldMagazineOffsetAng = Angle(0, 0, 0)
+if CLIENT then
+	local vector_full = Vector(1, 1, 1)
+	SWEP.FakeReloadEvents = {
+		[0.10] = function(self, timeMul)
+			self:GetWM():ManipulateBoneScale(38, vector_full)
+			self:GetWM():ManipulateBoneScale(39, vector_origin)
+			self:GetWM():ManipulateBoneScale(40, vector_origin)
+			self:GetWM():ManipulateBoneScale(41, vector_origin)
+		end,
+		[0.35] = function(self, timeMul)
+			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 0.5 * timeMul, nil, nil, function()
+				local wm = self:GetWM()
+				if IsValid(wm) then
+				wm:ManipulateBoneScale(38, vector_full)
+				wm:ManipulateBoneScale(39, vector_full)
+				end
+			end)
+		end,
+		[0.40] = function(self, timeMul)
+			if self:Clip1() < 1 then
+				hg.CreateMag( self, Vector(50,10,10), nil, true )
+			end
+		end,
+		[0.70] = function(self, timeMul)
+			self:GetWM():ManipulateBoneScale(38, vector_origin)
+			self:GetWM():ManipulateBoneScale(39, vector_origin)
+			self:GetWM():ManipulateBoneScale(40, vector_origin)
+			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 1 * timeMul, nil, nil, function()
+				local wm = self:GetWM()
+				if IsValid(wm) then
+				wm:ManipulateBoneScale(38, vector_origin)
+				wm:ManipulateBoneScale(39, vector_origin)
+				wm:ManipulateBoneScale(40, vector_origin)
+				end
+			end)
+		end,
+	}
+end
 
 if CLIENT then
 	local MOD_VECTOR_ZERO = Vector(0, 0, 0)
@@ -541,10 +539,6 @@ if CLIENT then
 		self.HeldMagCSModel = nil
 	end
 end
-
---========================================================
--- FIRE ANIMATION
---========================================================
 
 SWEP.FireAnimTime = 0.067
 SWEP.FireAnimCandidates = {"fire", "fire1"}

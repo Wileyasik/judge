@@ -258,3 +258,45 @@ hook.Add("PlayerPostThink", "HMCD_SubRoles_Abilities", function(ply)
 		end
 	end
 end)
+
+local vector_up = Vector(0, 0, 1)
+
+hook.Add("Think", "HMCD_BrawlerChokeStruggle", function()
+	if not (hg and hg.realPhysNum and hg.ShadowControl) then return end
+
+	local time = CurTime()
+
+	for _, ply in player.Iterator() do
+		if not ply.BeingVictimOfChoke then continue end
+
+		local ragdoll = ply.FakeRagdoll
+		if not IsValid(ragdoll) then continue end
+
+		local org = ply.organism
+		if not istable(org) then continue end
+
+		ply.lastFake = 0
+
+		local strpower = ragdoll.power or 1
+
+		local headphys = ragdoll:GetPhysicsObjectNum(hg.realPhysNum(ragdoll, 10))
+		if IsValid(headphys) then
+			local neckpos = headphys:GetPos()
+			hg.ShadowControl(ragdoll, 5, 0.05, nil, nil, nil, neckpos, 160 * strpower, 25)
+			hg.ShadowControl(ragdoll, 7, 0.05, nil, nil, nil, neckpos, 160 * strpower, 25)
+		end
+
+		if (ragdoll.nextChokeTwitch or 0) < time then
+			ragdoll.nextChokeTwitch = time + math.Rand(0.25, 0.45)
+			local rightnow = math.floor(time / 0.3) % 2 == 0
+
+			for _, legnum in ipairs(rightnow and {9, 14} or {12, 13}) do
+				local legphys = ragdoll:GetPhysicsObjectNum(hg.realPhysNum(ragdoll, legnum))
+				if IsValid(legphys) then
+					local m = legphys:GetMass()
+					legphys:ApplyForceCenter(vector_up * m * math.Rand(120, 240) * strpower + VectorRand() * m * 50)
+				end
+			end
+		end
+	end
+end)

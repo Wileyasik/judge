@@ -170,10 +170,6 @@ function SWEP:AllowedInspect()
     return true
 end
 
---========================================================
--- FIRE ANIMATION
---========================================================
-
 SWEP.FireAnimTime = 0.15
 SWEP.FireAnimCandidates = {"fire", "fire1"}
 

@@ -1,3 +1,5 @@
+--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
+
 SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -5,27 +7,15 @@ SWEP.PrintName = "HK MP5"
 SWEP.Author = "Heckler & Koch"
 SWEP.Instructions = "Submachine gun chambered in 9x19 mm\n\nRate of fire 800 rounds per minute"
 SWEP.Category = "Weapons - Machine-Pistols"
-SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
-SWEP.holsteredPos = Vector(4, 6, -6)
-SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/arc9/darsu_eft/c_mp5.mdl"
 
-
-SWEP.ModularParts = {
-	magazine = {
-		model = "models/weapons/mods/mag_mp5_hk_std_curved_9x19_30.mdl",
-		bonemerge = false,
-		bone = "mod_magazine",
-		pos = Vector(0, 2.8, 0),
-		ang = Angle(0, -90, 0)
-	},
-}
-SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
-SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
 
 SWEP.FakePos = Vector(-12, 2.0, 7.5)
 SWEP.FakeAng = Angle(0, -0, 0)
@@ -39,11 +29,41 @@ SWEP.GunCamPos = Vector(4, -15, -6)
 SWEP.GunCamAng = Angle(190, -5, -100)
 
 SWEP.FakeEjectBrassATT = "2"
-
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
 SWEP.ViewPunchDiv = 1
 
+SWEP.FakeMagDropBone = 50
+SWEP.MagModel = "models/weapons/mods/mag_mp5_hk_std_curved_9x19_30.mdl"
+
+SWEP.ReloadHold = nil
+SWEP.FakeVPShouldUseHand = false
+
+SWEP.ModularParts = {
+	magazine = {
+		model = "models/weapons/mods/mag_mp5_hk_std_curved_9x19_30.mdl",
+		bonemerge = false,
+		bone = "mod_magazine",
+		pos = Vector(0, 2.8, 0),
+		ang = Angle(0, -90, 0)
+	},
+}
+SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
+SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
+
+SWEP.WorldPartsOffsetPos = Vector(-20, 5, 10)
+SWEP.WorldPartsOffsetAng = Angle(0, 0, 0)
+SWEP.WorldMagazineBoneOverride = "weapon"
+SWEP.WorldMagazineOffsetPos = Vector(0, -17.3, -0.55)
+SWEP.WorldMagazineOffsetAng = Angle(0, 0, 0)
+
+SWEP.AnimList = {
+	["fire"] = "fire",
+	["idle"] = "idle",
+	["reload"] = "reload0",
+	["reload_empty"] = "reload_empty0_0",
+	["inspect"] = "look",
+}
 
 local path = "weapons/darsu_eft/mp5/"
 
@@ -53,29 +73,92 @@ SWEP.AnimsEvents = {
 		[0.4] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin9.ogg") end,
 		[0.8] = function(self) self:EmitSound("arc9_eft_shared/weapon_generic_spin6.ogg") end,
 	},
-    ["reload"] = {
-        [0.10] = function(self) self:EmitSound("weapons/darsu_eft/mp5/mp5_weap_mag_out.ogg") end,
+	["reload"] = {
+		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/mp5/mp5_weap_mag_out.ogg") end,
 		[0.2] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_in3.ogg") end,
-		[0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,	
+		[0.4] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,
 		[0.40] = function(self) self:EmitSound("weapons/darsu_eft/mp5/mp5_weap_mag_in.ogg") end,
-
-    },
-    ["reload_empty"] = {
-        [0.10] = function(self) self:EmitSound("weapons/darsu_eft/mp5/mp5_weap_bolt_out.ogg") end,
+	},
+	["reload_empty"] = {
+		[0.10] = function(self) self:EmitSound("weapons/darsu_eft/mp5/mp5_weap_bolt_out.ogg") end,
 		[0.30] = function(self) self:EmitSound("weapons/darsu_eft/mp5/mp5_weap_mag_out.ogg") end,
 		[0.23] = function(self) self:EmitSound("arc9_eft_shared/generic_mag_pouch_out3.ogg") end,
 		[0.55] = function(self) self:EmitSound("weapons/darsu_eft/mp5/mp5_weap_mag_in.ogg") end,
 		[0.80] = function(self) self:EmitSound("weapons/darsu_eft/mp5/mp5_weap_bolt_in.ogg") end,
-    },
+	},
 }
 
-SWEP.AnimList = {
-	["fire"] = "fire",
-	["idle"] = "idle",
-	["reload"] = "reload0",
-	["reload_empty"] = "reload_empty0_0",
-	["inspect"] = "look",
+SWEP.weaponInvCategory = 1
+SWEP.CustomEjectAngle = Angle(0, 0, 90)
+SWEP.Primary.ClipSize = 30
+SWEP.Primary.DefaultClip = 30
+SWEP.Primary.Automatic = true
+SWEP.Primary.Ammo = "9x19 mm Parabellum"
+SWEP.Primary.Cone = 0
+SWEP.Primary.Damage = 24
+SWEP.Primary.Spread = 0
+SWEP.Primary.Force = 20
+SWEP.Primary.Wait = 0.06818
+SWEP.animposmul = 2
+
+SWEP.Primary.Sound = {"weapons/darsu_eft/mp5/fire_new/mp5_outdoor_close_loop1.wav", 75, 120, 130}
+SWEP.SupressedSound = {"weapons/darsu_eft/mp5/fire_new/mp5_outdoor_close_silenced_loop1.wav", 65, 90, 100}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+
+SWEP.ReloadTime = 3
+SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1"
+SWEP.CustomShell = "9x19"
+SWEP.ShellEject = "EjectBrass_9mm"
+SWEP.LocalMuzzlePos = Vector(12, -2.3, 3.8)
+SWEP.LocalMuzzleAng = Angle(0, 0, 0)
+SWEP.WeaponEyeAngles = Angle(0, 0, 0)
+SWEP.HoldType = "rpg"
+
+SWEP.weight = 2.5
+SWEP.ScrappersSlot = "Primary"
+SWEP.Penetration = 9
+SWEP.Ergonomics = 1.15
+SWEP.lengthSub = 25
+SWEP.handsAng = Angle(7, 2, 0)
+SWEP.ShootAnimMul = 2
+
+SWEP.WorldPos = Vector(4, -0.8, -0.5)
+SWEP.WorldAng = Angle(0, 0, 0)
+SWEP.UseCustomWorldModel = true
+SWEP.attPos = Vector(1, 0, 0)
+SWEP.attAng = Angle(-0.02, 0, 0)
+SWEP.RHandPos = Vector(0, -1, 0)
+SWEP.LHandPos = Vector(7, -2, -2)
+SWEP.RHPos = Vector(3, -7, 3.5)
+SWEP.RHAng = Angle(0, -8, 90)
+SWEP.LHPos = Vector(11, 1.6, -3)
+SWEP.LHAng = Angle(-110, -180, 5)
+
+SWEP.WepSelectIcon2 = Material("entities/arc9_eft_mp5.png")
+SWEP.IconOverride = "entities/arc9_eft_mp5.png"
+
+SWEP.DistSound = "weapons/darsu_eft/mp5/fire_new/mp5_outdoor_close_silenced_loop1.wav"
+
+SWEP.Spray = {}
+for i = 1, 30 do
+	SWEP.Spray[i] = Angle(-0.0, 0, 0) * 1
+end
+
+SWEP.availableAttachments = {
+	barrel = {
+		[1] = {"supressor2", Vector(0, 0, 0), {}},
+		[2] = {"supressor1", Vector(0, 0, 0), {}},
+		[3] = {"supressor15", Vector(1.5, 0, 0), {}},
+		["mount"] = Vector(-0.8, -0.05, 0),
+	},
+	sight = {
+		["mountType"] = {"picatinny"},
+		["mount"] = Vector(-10, 1.45, 0.05),
+	},
 }
+
+SWEP.FireAnimTime = 0.07
+SWEP.FireAnimCandidates = {"fire", "fire1"}
 
 function SWEP:AllowedInspect()
 	if not self:CanUse() then return end
@@ -96,142 +179,6 @@ function SWEP:ModelCreated(model)
 		model:SetSubMaterial(i, "")
 	end
 end
-
-SWEP.FakeMagDropBone = 50
-SWEP.MagModel = "models/weapons/mods/mag_mp5_hk_std_curved_9x19_30.mdl"
-
-if CLIENT then
-	local vector_full = Vector(1, 1, 1)
-	SWEP.FakeReloadEvents = {
-		[0.15] = function(self, timeMul)
-			self:GetWM():ManipulateBoneScale(53, vector_origin)
-			self:GetWM():ManipulateBoneScale(44, vector_full)
-			self:GetWM():ManipulateBoneScale(45, vector_origin)
-			self:GetWM():ManipulateBoneScale(46, vector_origin)
-			self:GetWM():ManipulateBoneScale(47, vector_origin)
-		end,
-		[0.25] = function(self, timeMul)
-			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 0.5 * timeMul, nil, nil, function()
-				local wm = self:GetWM()
-				if IsValid(wm) then
-				wm:ManipulateBoneScale(53, vector_full)
-				wm:ManipulateBoneScale(44, vector_full)
-				wm:ManipulateBoneScale(45, vector_full)
-				end
-			end)
-		end,
-		[0.40] = function(self, timeMul)
-			if self:Clip1() < 1 then
-				hg.CreateMag( self, Vector(50,10,10), nil, true )
-			end
-			self:GetWM():ManipulateBoneScale(53, vector_origin)
-		end,
-		[0.50] = function(self, timeMul)
-			if self:Clip1() < 1 then
-				self:GetWM():ManipulateBoneScale(44, vector_origin)
-				self:GetWM():ManipulateBoneScale(45, vector_origin)
-				self:GetWM():ManipulateBoneScale(46, vector_origin)
-			end
-		end,
-		[0.65] = function(self, timeMul)
-			if self:Clip1() > 0 then
-				self:GetWM():ManipulateBoneScale(44, vector_origin)
-				self:GetWM():ManipulateBoneScale(45, vector_origin)
-				self:GetWM():ManipulateBoneScale(46, vector_origin)
-				self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 1 * timeMul, nil, nil, function()
-					local wm = self:GetWM()
-					if IsValid(wm) then
-						wm:ManipulateBoneScale(44, vector_origin)
-						wm:ManipulateBoneScale(45, vector_origin)
-						wm:ManipulateBoneScale(46, vector_origin)
-					end
-				end)
-			end
-		end,
-		[0.85] = function(self, timeMul)
-			self:GetWM():ManipulateBoneScale(44, vector_origin)
-			self:GetWM():ManipulateBoneScale(45, vector_origin)
-			self:GetWM():ManipulateBoneScale(46, vector_origin)
-		end,
-	}
-end
-
-SWEP.ReloadHold = nil
-SWEP.FakeVPShouldUseHand = false
-
-
-SWEP.weaponInvCategory = 1
-SWEP.CustomEjectAngle = Angle(0, 0, 90)
-SWEP.Primary.ClipSize = 30
-SWEP.Primary.DefaultClip = 30
-SWEP.Primary.Automatic = true
-SWEP.Primary.Ammo = "9x19 mm Parabellum"
-SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 24
-SWEP.Primary.Spread = 0
-SWEP.Primary.Force = 20
-SWEP.animposmul = 2
-SWEP.Primary.Sound = {"weapons/darsu_eft/mp5/fire_new/mp5_outdoor_close_loop1.wav", 75, 120, 130}
-SWEP.SupressedSound = {"weapons/darsu_eft/mp5/fire_new/mp5_outdoor_close_silenced_loop1.wav", 65, 90, 100}
-SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
-SWEP.Primary.Wait = 0.06818
-SWEP.ReloadTime = 3
-
-SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1"
-
-SWEP.CustomShell = "9x19"
-SWEP.ShellEject = "EjectBrass_9mm"
-
-SWEP.LocalMuzzlePos = Vector(12, -2.3, 3.8)
-SWEP.LocalMuzzleAng = Angle(0, 0, 0)
-SWEP.WeaponEyeAngles = Angle(0, 0, 0)
-
-SWEP.HoldType = "rpg"
-
-SWEP.WepSelectIcon2 = Material("entities/arc9_eft_mp5.png")
-SWEP.IconOverride = "entities/arc9_eft_mp5.png"
-
-SWEP.weight = 2.5
-SWEP.ScrappersSlot = "Primary"
-
-SWEP.availableAttachments = {
-	barrel = {
-		[1] = {"supressor2", Vector(0, 0, 0), {}},
-		[2] = {"supressor1", Vector(0, 0, 0), {}},
-		[3] = {"supressor15", Vector(1.5, 0, 0), {}},
-		["mount"] = Vector(-0.8, -0.05, 0),
-	},
-	sight = {
-		["mountType"] = {"picatinny"},
-		["mount"] = Vector(-10, 1.45, 0.05),
-	},
-}
-
-SWEP.RHandPos = Vector(0, -1, 0)
-SWEP.LHandPos = Vector(7, -2, -2)
-SWEP.Penetration = 9
-SWEP.Spray = {}
-for i = 1, 30 do
-	SWEP.Spray[i] = Angle(-0.0, 0, 0) * 1
-end
-
-SWEP.Ergonomics = 1.15
-SWEP.WorldPos = Vector(4, -0.8, -0.5)
-SWEP.WorldAng = Angle(0, 0, 0)
-SWEP.UseCustomWorldModel = true
-SWEP.attPos = Vector(1, 0, 0)
-SWEP.attAng = Angle(-0.02, 0, 0)
-SWEP.lengthSub = 25
-SWEP.handsAng = Angle(7, 2, 0)
-SWEP.DistSound = "weapons/darsu_eft/mp5/fire_new/mp5_outdoor_close_silenced_loop1.wav"
-
--- tpik hand positions
-SWEP.RHPos = Vector(3, -7, 3.5)
-SWEP.RHAng = Angle(0, -8, 90)
-SWEP.LHPos = Vector(11, 1.6, -3)
-SWEP.LHAng = Angle(-110, -180, 5)
-
-SWEP.ShootAnimMul = 2
 
 function SWEP:AnimHoldPost(model)
 end
@@ -328,16 +275,63 @@ function SWEP:DrawPost()
 	self:DrawModularParts()
 end
 
-SWEP.WorldPartsOffsetPos = Vector(-20, 5, 10)
-SWEP.WorldPartsOffsetAng = Angle(0, 0, 0)
-
-SWEP.WorldMagazineBoneOverride = "weapon"
-SWEP.WorldMagazineOffsetPos = Vector(0, -17.3, -0.55)
-SWEP.WorldMagazineOffsetAng = Angle(0, 0, 0)
-
 if CLIENT then
 	local MOD_VECTOR_ZERO = Vector(0, 0, 0)
 	local MOD_ANGLE_ZERO = Angle(0, 0, 0)
+	local vector_full = Vector(1, 1, 1)
+
+	SWEP.FakeReloadEvents = {
+		[0.15] = function(self, timeMul)
+			self:GetWM():ManipulateBoneScale(53, vector_origin)
+			self:GetWM():ManipulateBoneScale(44, vector_full)
+			self:GetWM():ManipulateBoneScale(45, vector_origin)
+			self:GetWM():ManipulateBoneScale(46, vector_origin)
+			self:GetWM():ManipulateBoneScale(47, vector_origin)
+		end,
+		[0.25] = function(self, timeMul)
+			self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 0.5 * timeMul, nil, nil, function()
+				local wm = self:GetWM()
+				if IsValid(wm) then
+					wm:ManipulateBoneScale(53, vector_full)
+					wm:ManipulateBoneScale(44, vector_full)
+					wm:ManipulateBoneScale(45, vector_full)
+				end
+			end)
+		end,
+		[0.40] = function(self, timeMul)
+			if self:Clip1() < 1 then
+				hg.CreateMag( self, Vector(50,10,10), nil, true )
+			end
+			self:GetWM():ManipulateBoneScale(53, vector_origin)
+		end,
+		[0.50] = function(self, timeMul)
+			if self:Clip1() < 1 then
+				self:GetWM():ManipulateBoneScale(44, vector_origin)
+				self:GetWM():ManipulateBoneScale(45, vector_origin)
+				self:GetWM():ManipulateBoneScale(46, vector_origin)
+			end
+		end,
+		[0.65] = function(self, timeMul)
+			if self:Clip1() > 0 then
+				self:GetWM():ManipulateBoneScale(44, vector_origin)
+				self:GetWM():ManipulateBoneScale(45, vector_origin)
+				self:GetWM():ManipulateBoneScale(46, vector_origin)
+				self:GetOwner():PullLHTowards("ValveBiped.Bip01_Spine2", 1 * timeMul, nil, nil, function()
+					local wm = self:GetWM()
+					if IsValid(wm) then
+						wm:ManipulateBoneScale(44, vector_origin)
+						wm:ManipulateBoneScale(45, vector_origin)
+						wm:ManipulateBoneScale(46, vector_origin)
+					end
+				end)
+			end
+		end,
+		[0.85] = function(self, timeMul)
+			self:GetWM():ManipulateBoneScale(44, vector_origin)
+			self:GetWM():ManipulateBoneScale(45, vector_origin)
+			self:GetWM():ManipulateBoneScale(46, vector_origin)
+		end,
+	}
 
 	function SWEP:ModularCreateDroppedFakeModel()
 		if not self.WorldModelFake then return end
@@ -571,13 +565,6 @@ if CLIENT then
 		self.HeldMagCSModel = nil
 	end
 end
-
---========================================================
--- FIRE ANIMATION
---========================================================
-
-SWEP.FireAnimTime = 0.07
-SWEP.FireAnimCandidates = {"fire", "fire1"}
 
 function SWEP:PrimaryShootPost()
 	if not CLIENT then return end

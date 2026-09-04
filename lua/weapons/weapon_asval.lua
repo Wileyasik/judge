@@ -1,3 +1,4 @@
+﻿--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -14,7 +15,6 @@ SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_vss_val2.mdl"
-
 
 SWEP.ModularParts = {
 	magazine = {
@@ -108,7 +108,6 @@ end
 SWEP.ReloadHold = nil
 SWEP.FakeVPShouldUseHand = false
 
-
 if CLIENT then
 	SWEP.FakeReloadEvents = {
 		[0.40] = function(self, timeMul)
@@ -118,7 +117,6 @@ if CLIENT then
 		end,
 	}
 end
-
 
 SWEP.weaponInvCategory = 1
 SWEP.CustomEjectAngle = Angle(0, 0, 90)
@@ -534,10 +532,6 @@ if CLIENT then
 		self.HeldMagCSModel = nil
 	end
 end
-
---========================================================
--- FIRE ANIMATION
---========================================================
 
 SWEP.FireAnimTime = 0.15
 SWEP.FireAnimCandidates = {"fire", "fire1"}

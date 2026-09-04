@@ -1,3 +1,4 @@
+﻿--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -13,7 +14,6 @@ SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_ump.mdl"
-
 
 SWEP.ModularParts = {
 	magazine = {
@@ -143,7 +143,6 @@ end
 SWEP.ReloadHold = nil
 SWEP.FakeVPShouldUseHand = false
 
-
 SWEP.weaponInvCategory = 1
 SWEP.Primary.ClipSize = 25
 SWEP.Primary.DefaultClip = 25
@@ -214,7 +213,6 @@ SWEP.lengthSub = 30
 SWEP.handsAng = Angle(-15, 9, 0)
 SWEP.DistSound = "weapons/darsu_eft/ump45/ump45_fire_close.ogg"
 
--- tpik hand positions
 SWEP.RHPos = Vector(8, -7, 3)
 SWEP.RHAng = Angle(-5, 4, 90)
 SWEP.LHPos = Vector(9, -0.5, -3.3)
@@ -560,11 +558,6 @@ if CLIENT then
 		self.HeldMagCSModel = nil
 	end
 end
-
-
---========================================================
--- FIRE ANIMATION
---========================================================
 
 SWEP.FireAnimTime = 0.1
 SWEP.FireAnimCandidates = {"fire", "fire1"}

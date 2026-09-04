@@ -1,3 +1,4 @@
+﻿--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -15,7 +16,6 @@ SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_aug.mdl"
 
-
 SWEP.ModularParts = {
 	magazine = {
 		model = "models/weapons/mods/mag_aug_30.mdl",
@@ -27,7 +27,6 @@ SWEP.ModularParts = {
 }
 SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
 SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
-
 
 SWEP.FakePos = Vector(-13, 2.52, 7.5)
 SWEP.FakeAng = Angle(0, 0, 0)
@@ -99,7 +98,6 @@ end
 
 SWEP.ReloadHold = nil
 SWEP.FakeVPShouldUseHand = false
-
 
 SWEP.FakeMagDropBone = 50
 SWEP.MagModel = "models/weapons/mods/mag_stanag_colt_ar15_std_556x45_30.mdl"
@@ -560,10 +558,6 @@ if CLIENT then
 		self.HeldMagCSModel = nil
 	end
 end
-
---========================================================
--- FIRE ANIMATION
---========================================================
 
 SWEP.FireAnimTime = 0.15
 SWEP.FireAnimCandidates = {"fire", "fire1"}

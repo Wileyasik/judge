@@ -1,3 +1,4 @@
+﻿--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "homigrad_base"
 SWEP.ARC9ActionLHIKFadeOutTime = 0.1
 SWEP.ARC9ActionLHIKFadeInTime = 1
@@ -16,7 +17,6 @@ SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_spear.mdl"
-
 
 SWEP.ModularParts = {
 	magazine = {
@@ -125,7 +125,6 @@ end
 SWEP.ReloadHold = nil
 SWEP.FakeVPShouldUseHand = false
 
-
 SWEP.FakeMagDropBone = 50
 SWEP.MagModel = "models/weapons/mods/mag_ar10_lancer_l7_awm_762x51_25.mdl"
 
@@ -167,7 +166,6 @@ if CLIENT then
 		end,
 	}
 end
-
 
 SWEP.weaponInvCategory = 1
 SWEP.CustomEjectAngle = Angle(0, 0, 90)
@@ -591,10 +589,6 @@ if CLIENT then
 		self.HeldMagCSModel = nil
 	end
 end
-
---========================================================
--- FIRE ANIMATION
---========================================================
 
 SWEP.FireAnimTime = 0.15
 SWEP.FireAnimCandidates = {"fire", "fire1"}

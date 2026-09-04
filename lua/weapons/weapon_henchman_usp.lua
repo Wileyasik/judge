@@ -1,3 +1,4 @@
+--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = true
@@ -7,22 +8,10 @@ SWEP.Instructions = "Pistol chambered in 9x19 mm"
 SWEP.Category = "Weapons - Pistols"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
+
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_pist_deagle.mdl"
 SWEP.WorldModelFake = "models/weapons/c_usp.mdl"
-
-
-SWEP.ModularParts = {
-	magazine = {
-		model = "models/weapons/mods/mag_hk_usp_tactical.mdl",
-		bonemerge = false,
-		bone = "mod_magazine",
-		pos = Vector(0, -1.2, -1.25),
-		ang = Angle(0, -90, 0)
-	},
-}
-SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
-SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
 
 SWEP.FakePos = Vector(-21, 2, 3.22)
 SWEP.FakeAng = Angle(0, 0, 0)
@@ -36,6 +25,18 @@ SWEP.FakeVPShouldUseHand = true
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_Forearm"
 SWEP.ViewPunchDiv = 1
+
+SWEP.ModularParts = {
+	magazine = {
+		model = "models/weapons/mods/mag_hk_usp_tactical.mdl",
+		bonemerge = false,
+		bone = "mod_magazine",
+		pos = Vector(0, -1.2, -1.25),
+		ang = Angle(0, -90, 0)
+	},
+}
+SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
+SWEP.HeldMagOffsetAng = Angle(0, -90, 0)
 
 SWEP.AnimList = {
 	["idle"] = "base_idle",
@@ -66,149 +67,6 @@ SWEP.AnimsEvents = {
 	},
 }
 
-function SWEP:AllowedInspect()
-	if not self:CanUse() then return end
-	if self.isReloading then return end
-	if self:Clip1() < self.Primary.ClipSize then return end
-	if self.drawBullet == false then return end
-	return true
-end
-
-function SWEP:PrimaryShootPost()
-	if self:Clip1() > 0 then return end
-	self:PlayAnim("idle_empty", 1, true)
-end
-
-function SWEP:ModelCreated(model)
-	if not CLIENT then return end
-	if not IsValid(model) then return end
-	if not self.FakeBodyGroups then return end
-
-	model:SetBodyGroups(self.FakeBodyGroups)
-
-	for i = 0, #model:GetMaterials() - 1 do
-		model:SetSubMaterial(i, "")
-	end
-end
-
-SWEP.FakeMagDropBone = 50
-SWEP.MagModel = "models/weapons/mods/mag_hk_usp_tactical.mdl"
-
-SWEP.ReloadTime = 2
-
-
-SWEP.lmagpos = Vector(2, 0, 0)
-SWEP.lmagang = Angle(-10, 0, 0)
-SWEP.lmagpos2 = Vector(0, -1.5, 0.7)
-SWEP.lmagang2 = Angle(0, 0, 0)
-
-if CLIENT then
-	local vector_full = Vector(1, 1, 1)
-
-	SWEP.FakeReloadEvents = {
-		[0.15] = function(self, timeMul)
-			if self:Clip1() < 1 then
-				self:GetOwner():PullLHTowards("ValveBiped.Bip01_L_Thigh", 1.5 * timeMul)
-			else
-				self:GetWM():ManipulateBoneScale(49, vector_full)
-				self:GetWM():ManipulateBoneScale(50, vector_origin)
-				self:GetWM():ManipulateBoneScale(51, vector_origin)
-				self:GetOwner():PullLHTowards("ValveBiped.Bip01_L_Thigh", 0.5 * timeMul)
-			end
-		end,
-		[0.3] = function(self)
-			if self:Clip1() < 1 then
-				hg.CreateMag(self, Vector(0, 0, -50))
-				self:GetWM():ManipulateBoneScale(49, vector_origin)
-				self:GetWM():ManipulateBoneScale(50, vector_origin)
-				self:GetWM():ManipulateBoneScale(51, vector_origin)
-			else
-				self:GetWM():ManipulateBoneScale(50, vector_full)
-				self:GetWM():ManipulateBoneScale(51, vector_full)
-			end
-		end,
-		[0.45] = function(self)
-			if self:Clip1() < 1 then
-				self:GetWM():ManipulateBoneScale(50, vector_full)
-				self:GetWM():ManipulateBoneScale(51, vector_full)
-			end
-		end,
-		[0.8] = function(self, timeMul)
-			if self:Clip1() >= 1 then
-				self:GetOwner():PullLHTowards("ValveBiped.Bip01_L_Thigh", 1 * timeMul)
-			end
-		end,
-		[0.9] = function(self)
-			self:GetWM():ManipulateBoneScale(53, vector_origin)
-		end,
-	}
-end
-
-function SWEP:Deploy()
-	net.Start("HenchmanUSP_StopMusic")
-	net.Send(self:GetOwner())
-
-	local result = self.BaseClass.Deploy(self)
-
-	if SERVER then
-		timer.Simple(0.3, function()
-			if IsValid(self) and IsValid(self:GetOwner()) then
-				net.Start("HenchmanUSP_PlayMusic")
-				net.Send(self:GetOwner())
-			end
-		end)
-	end
-
-	if SERVER and IsValid(self:GetOwner()) then
-		local ply = self:GetOwner()
-		ply.posture = 8
-		net.Start("change_posture")
-		net.WriteEntity(ply)
-		net.WriteInt(8, 9)
-		net.Broadcast()
-	end
-
-	return result
-end
-
-function SWEP:StopHenchmanMusic()
-	if SERVER and IsValid(self:GetOwner()) then
-		net.Start("HenchmanUSP_StopMusic")
-		net.Send(self:GetOwner())
-	end
-end
-
-function SWEP:Holster()
-	self:StopHenchmanMusic()
-	return self.BaseClass.Holster(self)
-end
-
-function SWEP:Think()
-	self.BaseClass.Think(self)
-
-	if SERVER and IsValid(self:GetOwner()) then
-		local ply = self:GetOwner()
-		if ply.posture ~= 8 then
-			ply.posture = 8
-			net.Start("change_posture")
-			net.WriteEntity(ply)
-			net.WriteInt(8, 9)
-			net.Broadcast()
-		end
-	end
-end
-
-SWEP.WepSelectIcon2 = Material("entities/hACH.png")
-SWEP.IconOverride = "entities/hACH.png"
-
-SWEP.CustomShell = "9x19"
-SWEP.EjectPos = Vector(4.5, 3, -21.5)
-SWEP.EjectAng = Angle(0, 0, 0)
-
-SWEP.weight = 1
-SWEP.ScrappersSlot = "Secondary"
-SWEP.weaponInvCategory = 2
-SWEP.ShellEject = "EjectBrass_9mm"
 SWEP.Primary.ClipSize = 15
 SWEP.Primary.DefaultClip = 15
 SWEP.Primary.Automatic = false
@@ -236,6 +94,16 @@ SWEP.ShockMultiplier = 1
 SWEP.punchmul = 1.5
 SWEP.punchspeed = 3
 
+SWEP.weight = 1
+SWEP.ScrappersSlot = "Secondary"
+SWEP.weaponInvCategory = 2
+SWEP.ShellEject = "EjectBrass_9mm"
+SWEP.CustomShell = "9x19"
+SWEP.EjectPos = Vector(4.5, 3, -21.5)
+SWEP.EjectAng = Angle(0, 0, 0)
+
+SWEP.ReloadTime = 2
+
 SWEP.LocalMuzzlePos = Vector(5, -2.25, 0.6)
 SWEP.LocalMuzzleAng = Angle(0, 0, 0)
 SWEP.WeaponEyeAngles = Angle(0, 0, 0)
@@ -261,6 +129,17 @@ SWEP.AnimShootMul = 3
 
 SWEP.podkid = 1
 
+SWEP.WepSelectIcon2 = Material("entities/hACH.png")
+SWEP.IconOverride = "entities/hACH.png"
+
+SWEP.FakeMagDropBone = 50
+SWEP.MagModel = "models/weapons/mods/mag_hk_usp_tactical.mdl"
+
+SWEP.lmagpos = Vector(2, 0, 0)
+SWEP.lmagang = Angle(-10, 0, 0)
+SWEP.lmagpos2 = Vector(0, -1.5, 0.7)
+SWEP.lmagang2 = Angle(0, 0, 0)
+
 SWEP.StartAtt = {"holo16", "supressor2"}
 SWEP.availableAttachments = {
 	barrel = {
@@ -281,6 +160,38 @@ SWEP.availableAttachments = {
 		["mountType"] = "picatinny_small"
 	},
 }
+
+SWEP.WorldPartsOffsetPos = Vector(-20, 5, 10)
+SWEP.WorldPartsOffsetAng = Angle(0, 0, 0)
+
+SWEP.WorldMagazineBoneOverride = "weapon"
+SWEP.WorldMagazineOffsetPos = Vector(0, -17.3, -0.55)
+SWEP.WorldMagazineOffsetAng = Angle(0, 0, 0)
+
+function SWEP:AllowedInspect()
+	if not self:CanUse() then return end
+	if self.isReloading then return end
+	if self:Clip1() < self.Primary.ClipSize then return end
+	if self.drawBullet == false then return end
+	return true
+end
+
+function SWEP:PrimaryShootPost()
+	if self:Clip1() > 0 then return end
+	self:PlayAnim("idle_empty", 1, true)
+end
+
+function SWEP:ModelCreated(model)
+	if not CLIENT then return end
+	if not IsValid(model) then return end
+	if not self.FakeBodyGroups then return end
+
+	model:SetBodyGroups(self.FakeBodyGroups)
+
+	for i = 0, #model:GetMaterials() - 1 do
+		model:SetSubMaterial(i, "")
+	end
+end
 
 function SWEP:GetModularPartModel(partName, fallback, role)
 	if partName == "magazine" then
@@ -374,12 +285,101 @@ function SWEP:DrawPost()
 	self:DrawModularParts()
 end
 
-SWEP.WorldPartsOffsetPos = Vector(-20, 5, 10)
-SWEP.WorldPartsOffsetAng = Angle(0, 0, 0)
+function SWEP:Deploy()
+	net.Start("HenchmanUSP_StopMusic")
+	net.Send(self:GetOwner())
 
-SWEP.WorldMagazineBoneOverride = "weapon"
-SWEP.WorldMagazineOffsetPos = Vector(0, -17.3, -0.55)
-SWEP.WorldMagazineOffsetAng = Angle(0, 0, 0)
+	local result = self.BaseClass.Deploy(self)
+
+	if SERVER then
+		timer.Simple(0.3, function()
+			if IsValid(self) and IsValid(self:GetOwner()) then
+				net.Start("HenchmanUSP_PlayMusic")
+				net.Send(self:GetOwner())
+			end
+		end)
+	end
+
+	if SERVER and IsValid(self:GetOwner()) then
+		local ply = self:GetOwner()
+		ply.posture = 8
+		net.Start("change_posture")
+		net.WriteEntity(ply)
+		net.WriteInt(8, 9)
+		net.Broadcast()
+	end
+
+	return result
+end
+
+function SWEP:StopHenchmanMusic()
+	if SERVER and IsValid(self:GetOwner()) then
+		net.Start("HenchmanUSP_StopMusic")
+		net.Send(self:GetOwner())
+	end
+end
+
+function SWEP:Holster()
+	self:StopHenchmanMusic()
+	return self.BaseClass.Holster(self)
+end
+
+function SWEP:Think()
+	self.BaseClass.Think(self)
+
+	if SERVER and IsValid(self:GetOwner()) then
+		local ply = self:GetOwner()
+		if ply.posture ~= 8 then
+			ply.posture = 8
+			net.Start("change_posture")
+			net.WriteEntity(ply)
+			net.WriteInt(8, 9)
+			net.Broadcast()
+		end
+	end
+end
+
+if CLIENT then
+	local vector_full = Vector(1, 1, 1)
+
+	SWEP.FakeReloadEvents = {
+		[0.15] = function(self, timeMul)
+			if self:Clip1() < 1 then
+				self:GetOwner():PullLHTowards("ValveBiped.Bip01_L_Thigh", 1.5 * timeMul)
+			else
+				self:GetWM():ManipulateBoneScale(49, vector_full)
+				self:GetWM():ManipulateBoneScale(50, vector_origin)
+				self:GetWM():ManipulateBoneScale(51, vector_origin)
+				self:GetOwner():PullLHTowards("ValveBiped.Bip01_L_Thigh", 0.5 * timeMul)
+			end
+		end,
+		[0.3] = function(self)
+			if self:Clip1() < 1 then
+				hg.CreateMag(self, Vector(0, 0, -50))
+				self:GetWM():ManipulateBoneScale(49, vector_origin)
+				self:GetWM():ManipulateBoneScale(50, vector_origin)
+				self:GetWM():ManipulateBoneScale(51, vector_origin)
+			else
+				self:GetWM():ManipulateBoneScale(50, vector_full)
+				self:GetWM():ManipulateBoneScale(51, vector_full)
+			end
+		end,
+		[0.45] = function(self)
+			if self:Clip1() < 1 then
+				self:GetWM():ManipulateBoneScale(50, vector_full)
+				self:GetWM():ManipulateBoneScale(51, vector_full)
+			end
+		end,
+		[0.8] = function(self, timeMul)
+			if self:Clip1() >= 1 then
+				self:GetOwner():PullLHTowards("ValveBiped.Bip01_L_Thigh", 1 * timeMul)
+			end
+		end,
+		[0.9] = function(self)
+			self:GetWM():ManipulateBoneScale(53, vector_origin)
+		end,
+	}
+end
 
 if CLIENT then
 	local MOD_VECTOR_ZERO = Vector(0, 0, 0)

@@ -7,6 +7,10 @@ local ChokeVictimSounds = {
 }
 
 if(SERVER)then
+	for _, snd in ipairs(ChokeVictimSounds) do
+		util.PrecacheSound(snd)
+	end
+
 	-- во время удушения жертва не может встать сама (только выбраться борьбой)
 	hook.Add("Should Fake Up", "HMCD_ChokeBlockGetUp", function(ply)
 		if(ply.BeingVictimOfChoke)then return true end
@@ -203,34 +207,31 @@ hook.Add("HG_MovementCalc_2", "HMCD_SubRole_Abilities", function(mul, ply, cmd)
 end)
 --//
 
---\\Choke
+local BRAWLER_CHOKE_STAMINA_DRAIN = 7
+local BRAWLER_CHOKE_PAIN_RATE = 3
+local BRAWLER_CHOKE_ESCAPE_RATE = 40
+local BRAWLER_CHOKE_ESCAPE_DECAY = 60
+local BRAWLER_CHOKE_ESCAPE_THRESHOLD = 100
+local BRAWLER_CHOKE_PINNED_ESCAPE_MUL = 0.5
+local BRAWLER_CHOKE_TAPED_ESCAPE_MUL = 0.4
+
 function MODE.CanPlayerChokeOther(ply, aim_ent)
-	-- душить можно только вплотную: отойти чуть дальше — захват срывается
-	if(IsValid(ply) and IsValid(aim_ent) and ply:GetPos():DistToSqr(aim_ent:GetPos()) > 75 * 75)then
-		return false
-	end
-
-	-- уже в фэйке / без сознания (но жив) — можно душить с любой стороны
-	if(aim_ent:IsRagdoll() and IsValid(aim_ent.ply) and aim_ent.ply:Alive())then return true end
-
-	if(aim_ent:IsPlayer())then
+	if not IsValid(ply) or not IsValid(aim_ent) then return false end
+	if ply:GetPos():DistToSqr(aim_ent:GetPos()) > 75 * 75 then return false end
+	if aim_ent:IsRagdoll() and IsValid(aim_ent.ply) and aim_ent.ply:Alive() then return true end
+	if aim_ent:IsPlayer() then
 		local other_angle = aim_ent:EyeAngles()[2]
 		local ply_angle = (aim_ent:GetPos() - ply:GetPos()):Angle()[2]
 		local ang_diff = math.abs(math.AngleDifference(other_angle, ply_angle))
-
-		if(ang_diff < 120)then
-			return true
-		end
+		if ang_diff < 120 then return true end
 	end
-
 	return false
 end
 
 function MODE.StartChokingOther(ply, other_ply)
-	if(not other_ply.organism)then return false end
-	if(ply.Ability_Choke)then return false end
+	if not other_ply.organism then return false end
+	if ply.Ability_Choke then return false end
 
-	-- "прибит к полу" (уже лежит в рагдолле) / заклеен скотчем — выбраться будет тяжелее
 	local wasDown = IsValid(other_ply.FakeRagdoll)
 	local taped = other_ply:GetNetVar("ducttaped_hands", false) or other_ply:GetNetVar("ducttaped_legs", false)
 
@@ -238,24 +239,31 @@ function MODE.StartChokingOther(ply, other_ply)
 		Victim = other_ply,
 		Progress = 0,
 		Struggle = 0,
-		Pinned = wasDown or false,
-		Taped = taped or false,
+		Pinned = wasDown,
+		Taped = taped,
+		Weapon = ply:GetActiveWeapon(),
 	}
 	other_ply.BeingVictimOfChoke = true
 
-if(SERVER)then
-			if(not IsValid(other_ply.FakeRagdoll))then hg.Fake(other_ply) end
-			local rag = other_ply.FakeRagdoll
-			if(IsValid(rag))then
-				rag.StrangleLocked = true
-				rag._brawler_old_collision = rag._fiberwire_spawn_colgroup or rag:GetCollisionGroup()
-				rag:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
-				if(other_ply.organism and other_ply.organism.o2)then
-					other_ply._brawler_o2regen = other_ply.organism.o2.regen
-					other_ply.organism.o2.regen = 0
-					other_ply.organism.o2.curregen = 0
+	if SERVER then
+		if not IsValid(other_ply.FakeRagdoll) then hg.Fake(other_ply) end
+		local rag = other_ply.FakeRagdoll
+		if IsValid(rag) then
+			rag.StrangleLocked = true
+			rag._brawler_old_collision = rag._fiberwire_spawn_colgroup or rag:GetCollisionGroup()
+			rag:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+
+			local wep = ply:GetActiveWeapon()
+			if IsValid(wep) and wep.SetCarrying and not IsValid(wep.CarryEnt) then
+				local headPhysBone = hg.realPhysNum(rag, 10)
+				local headPhys = rag:GetPhysicsObjectNum(headPhysBone)
+				if IsValid(headPhys) then
+					wep:SetCarrying(rag, headPhysBone, headPhys:GetPos(), 28)
+					ply:SetNetVar("carrymass", 25)
 				end
 			end
+		end
+
 		hg.SetFreemove(other_ply, false)
 		other_ply:ViewPunch(Angle(0, -10, -10))
 
@@ -273,27 +281,29 @@ end
 
 function MODE.StopChokingOther(ply)
 	local data = ply.Ability_Choke
-	if(data and IsValid(data.Victim))then
+	if data and IsValid(data.Victim) then
 		local victim = data.Victim
 		victim.BeingVictimOfChoke = false
 
-		if(SERVER)then
+		if SERVER then
+			local wep = data.Weapon
+			if IsValid(wep) and wep.SetCarrying then
+				wep:SetCarrying()
+			end
+
 			local rag = victim.FakeRagdoll
-			if(IsValid(rag))then
+			if IsValid(rag) then
 				rag.StrangleLocked = nil
-				if(rag._brawler_old_collision)then
+				if rag._brawler_old_collision then
 					rag:SetCollisionGroup(rag._brawler_old_collision)
 					rag._brawler_old_collision = nil
 				end
+				if rag._hmcd_choke_sound_name then
+					rag:StopSound(rag._hmcd_choke_sound_name)
+					rag._hmcd_choke_sound_name = nil
+				end
 			end
-			if(victim.organism and victim.organism.o2)then
-				victim.organism.o2.regen = victim._brawler_o2regen or victim.organism.o2.regen
-				victim.organism.o2.curregen = victim.organism.o2.regen
-			end
-			victim._brawler_o2regen = nil
 			hg.SetFreemove(victim, true)
-			-- жертва остаётся лежать в регдолле: встаёт сама клавишей (FakeUp)
-			--if(victim:Alive())then hg.FakeUp(victim) end
 
 			net.Start("HMCD_BeingVictimOfChoke")
 				net.WriteBool(false)
@@ -313,79 +323,53 @@ function MODE.ContinueChokingOther(ply)
 	local ability_data = ply.Ability_Choke
 	local victim = ability_data.Victim
 
-	if(IsValid(victim) and victim:Alive() and IsValid(victim.FakeRagdoll) and ply:GetPos():DistToSqr(victim.FakeRagdoll:GetPos()) <= 85 * 85)then
-		if(SERVER)then
-			local org = victim.organism
-			if(org and org.o2)then
-				org.o2.regen = 0
-				org.o2.curregen = 0
+	if IsValid(victim) and victim:Alive() and IsValid(victim.FakeRagdoll) and ply:GetPos():DistToSqr(victim.FakeRagdoll:GetPos()) <= 85 * 85 then
+		local rag = victim.FakeRagdoll
+		local org = victim.organism
+		if org then
+			org.choking = true
+			org.beingchoked = CurTime()
+			org.painadd = (org.painadd or 0) + FrameTime() * BRAWLER_CHOKE_PAIN_RATE
+		end
 
-				-- удушение медленнее: кислород уходит дольше, но и выбраться сложнее
-				local drainMul = 0.5 + (ability_data.Pinned and 0.2 or 0) + (ability_data.Taped and 0.2 or 0)
-				org.o2[1] = math.max(org.o2[1] - FrameTime() * ((org.o2.range or 30) / 16) * drainMul, 0)
-				ability_data.Progress = 100 * (1 - math.Clamp(org.o2[1] / (org.o2.range or 30), 0, 1))
-			end
-
-			local rag = victim.FakeRagdoll
-			if(IsValid(rag))then
-				-- как в weapon_hg_wire: жёстко держим только голову у хвата,
-				-- а тело просто висит/обвисает — без паразитных вращений
-				local grip
-				if(ability_data.Pinned)then
-					grip = ply:GetPos() + ply:GetForward() * 20 + Vector(0, 0, 32)
-				else
-					grip = ply:GetPos() + ply:GetForward() * 8 + Vector(0, 0, 52)
-				end
-
-				local headPhysNum = hg.realPhysNum and hg.realPhysNum(rag, 10)
-				local headPhys = headPhysNum and rag:GetPhysicsObjectNum(headPhysNum)
-				if(IsValid(headPhys))then
-					local headAng = ply:EyeAngles()
-					headAng.pitch = headAng.pitch - 10
-					headPhys:SetPos(grip)
-					headPhys:SetAngles(headAng)
-					headPhys:SetVelocity(vector_origin)
-
-					-- изредка лёгкое подрагивание рук (борьба), как ShadowControl в wire
-					local strugg = ability_data.Progress < 85
-					local lh = hg.realPhysNum and hg.realPhysNum(rag, 5)
-					local rh = hg.realPhysNum and hg.realPhysNum(rag, 7)
-					local lHand = lh and rag:GetPhysicsObjectNum(lh)
-					local rHand = rh and rag:GetPhysicsObjectNum(rh)
-					if(IsValid(lHand) and IsValid(rHand))then
-						local sway = math.sin(CurTime() * 2) * 2
-						if(not strugg)then sway = 0 end
-						lHand:SetPos(headPhys:GetPos() + ply:GetRight() * -3 + Vector(0, 0, -6) + Vector(sway, -sway, 0))
-						rHand:SetPos(headPhys:GetPos() + ply:GetRight() * 3 + Vector(0, 0, -6) + Vector(-sway, sway, 0))
-						lHand:SetVelocity(vector_origin)
-						rHand:SetVelocity(vector_origin)
-				end
-
-				if(not rag._hmcd_choke_sound or rag._hmcd_choke_sound < CurTime())then
-					rag:EmitSound(ChokeVictimSounds[math.random(#ChokeVictimSounds)], 72, math.Clamp(victim.VoicePitch or 100, 85, 115), 0.9, CHAN_VOICE)
-					rag._hmcd_choke_sound = CurTime() + 1.5
-				end
-			end
-
-			-- выбраться тем сложнее, чем больше жертва не может сопротивляться
-			local escapeMul = 1
-			if(ability_data.Taped)then escapeMul = escapeMul * 0.4 end
-			if(ability_data.Pinned)then escapeMul = escapeMul * 0.5 end
-
-			if(victim:KeyDown(IN_USE) or victim:KeyDown(IN_JUMP))then
-				ability_data.Struggle = ability_data.Struggle + FrameTime() * 40 * escapeMul
-			else
-				ability_data.Struggle = math.max(ability_data.Struggle - FrameTime() * 60, 0)
-			end
-
-			net.Start("HMCD_ChokeProgress")
-				net.WriteFloat(ability_data.Progress)
-			net.Send(ply)
-
-			if(ability_data.Struggle >= 100)then
+		local porg = ply.organism
+		if istable(porg) and istable(porg.stamina) then
+			porg.stamina.subadd = (porg.stamina.subadd or 0) + FrameTime() * BRAWLER_CHOKE_STAMINA_DRAIN
+			if (porg.stamina[1] or 100) < 2 then
+				ply.HandsStun = CurTime() + 2
 				MODE.StopChokingOther(ply)
 				return
 			end
+		end
+
+		local t = CurTime()
+		if IsValid(rag) and (not rag._hmcd_choke_sound or rag._hmcd_choke_sound < t) then
+			local snd = ChokeVictimSounds[math.random(#ChokeVictimSounds)]
+			rag:EmitSound(snd, 72, math.Clamp(victim.VoicePitch or 100, 85, 115), 0.9, CHAN_VOICE)
+			rag._hmcd_choke_sound_name = snd
+			local dur = SoundDuration(snd)
+			if dur <= 0 then dur = 2.0 end
+			rag._hmcd_choke_sound = t + dur + 0.3
+		end
+
+		local escapeMul = 1
+		if ability_data.Taped then escapeMul = escapeMul * BRAWLER_CHOKE_TAPED_ESCAPE_MUL end
+		if ability_data.Pinned then escapeMul = escapeMul * BRAWLER_CHOKE_PINNED_ESCAPE_MUL end
+
+		if victim:KeyDown(IN_USE) or victim:KeyDown(IN_JUMP) then
+			ability_data.Struggle = ability_data.Struggle + FrameTime() * BRAWLER_CHOKE_ESCAPE_RATE * escapeMul
+		else
+			ability_data.Struggle = math.max(ability_data.Struggle - FrameTime() * BRAWLER_CHOKE_ESCAPE_DECAY, 0)
+		end
+
+		ability_data.Progress = math.Clamp(ability_data.Struggle, 0, BRAWLER_CHOKE_ESCAPE_THRESHOLD)
+
+		net.Start("HMCD_ChokeProgress")
+			net.WriteFloat(ability_data.Progress)
+		net.Send(ply)
+
+		if ability_data.Struggle >= BRAWLER_CHOKE_ESCAPE_THRESHOLD then
+			MODE.StopChokingOther(ply)
 		end
 	else
 		MODE.StopChokingOther(ply)

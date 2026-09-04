@@ -1,4 +1,4 @@
---ByLAZZY
+--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "homigrad_base"
 SWEP.ManualCycle = true
 SWEP.Spawnable = true
@@ -25,7 +25,6 @@ SWEP.AttachmentAng = Angle(0, 0, 0)
 SWEP.FakeBodyGroups = "0111111"
 SWEP.CantFireFromCollision = true
 
--- Пресет бодигрупп
 SWEP.FakeBodyGroupsPresets = {
     "0111111",
 }
@@ -102,12 +101,11 @@ SWEP.LHPos = Vector(15, -1, -3)
 SWEP.LHAng = Angle(-110, -90, -90)
 SWEP.UseCustomWorldModel = true
 
--- Характеристики
 SWEP.Primary.ClipSize = 5
 SWEP.Primary.DefaultClip = 5
 SWEP.Primary.Automatic = false
-SWEP.Primary.Ammo = ".366 TKM BP-M"  -- ИЗМЕНЕНО
-SWEP.Primary.Damage = 69 
+SWEP.Primary.Ammo = ".366 TKM BP-M"
+SWEP.Primary.Damage = 69
 SWEP.Primary.Force = 65
 SWEP.Primary.Cone = 0
 SWEP.Primary.Spread = 0
@@ -117,7 +115,6 @@ SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 10
 SWEP.Primary.Wait = 0.25
 SWEP.NumBullet = 1
 
--- АТТАЧМЕНТЫ (ИЗМЕНЕНО)
 SWEP.DisableMuzzleDevices = true
 SWEP.availableAttachments = {
     barrel = {
@@ -148,7 +145,6 @@ SWEP.attPos = Vector(0.4, -0.15, 0)
 SWEP.attAng = Angle(0, 0.2, 0)
 SWEP.lengthSub = 20
 
--- ИСПРАВЛЕННЫЙ СПИСОК АНИМАЦИЙ ДЛЯ VPO-215
 SWEP.AnimList = {
     ["idle"] = "idle",
     ["idle_empty"] = "idle_empty",
@@ -162,15 +158,14 @@ SWEP.AnimList = {
     ["dryfire"] = "fire_dry",
     ["dryfire_empty"] = "fire_dry",
     ["cycle"] = "bolt0",
-    ["reload"] = "reload0", -- Source = "reload0"
-    ["reload_empty"] = "reload_empty0", -- Source = "reload_empty0"
+    ["reload"] = "reload0",
+    ["reload_empty"] = "reload_empty0",
     ["inspect"] = "look",
     ["inspect_empty"] = "look_empty",
     ["toggle"] = "mod_switch",
     ["toggle_empty"] = "mod_switch_empty",
 }
 
--- ПУТЬ К ЗВУКАМ VPO-215
 local path = "weapons/darsu_eft/vpo215/"
 
 SWEP.AnimsSounds = {
@@ -333,11 +328,11 @@ function SWEP:Reload(time)
     if self.drawBullet == false and SERVER then
         -- СКОРОСТЬ БОЛТА: 1 = Нормальная
         self:PlayAnim(self.AnimList["cycle"] or "bolt0", 1, false, nil, false, true)
-        
+
         local boltTime = 1.2
         self.reloadCoolDown = CurTime() + boltTime
         cock(self, boltTime)
-        
+
         local wep = self
         -- Звуки болта (rem700, так как они в конфиге)
         timer.Simple(0.13, function() if IsValid(wep) then wep:EmitSound(path .. "rem700_bolt_1.ogg") end end)
@@ -352,46 +347,46 @@ function SWEP:Reload(time)
     if SERVER then
         local isEmpty = self:Clip1() == 0
         local animName = isEmpty and "reload_empty" or "reload"
-        
+
         -- СКОРОСТЬ ПЕРЕЗАРЯДКИ: 4 = Медленная (замедляет в 4 раза)
         local animSpeed = 4
-        
+
         -- Тайминги (примерно как в ARC9 конфиге, ~3-4 сек)
         local reloadTime = animSpeed + 0.1
-        
+
         self:SetNetVar("shootgunReload", CurTime() + reloadTime)
         self.reloadCoolDown = CurTime() + reloadTime
-        
+
         local wep = self
-        
+
         self:PlayAnim(self.AnimList[animName] or animName, animSpeed, false, function()
             if not IsValid(wep) or not IsValid(wep:GetOwner()) then return end
-            
+
             local ammoType = wep:GetPrimaryAmmoType()
             local currentClip = wep:Clip1()
             local maxClip = wep.Primary.ClipSize
             local neededAmmo = maxClip - currentClip
             local availableAmmo = wep:GetOwner():GetAmmoCount(ammoType)
             local ammoToLoad = math.min(neededAmmo, availableAmmo)
-            
+
             if ammoToLoad > 0 then
                 wep:GetOwner():RemoveAmmo(ammoToLoad, ammoType)
                 wep:SetClip1(currentClip + ammoToLoad)
             end
-            
+
             wep:SetNetVar("shootgunReload", 0)
-            
+
             -- Фикс первого выстрела
             if wep:Clip1() > 0 then
                 wep.drawBullet = true
                 net.Start("hgwep draw")
                     net.WriteEntity(wep)
                     net.WriteBool(true)
-                    net.WriteFloat(CurTime() - 10) 
+                    net.WriteFloat(CurTime() - 10)
                 net.Broadcast()
             end
         end, false, true)
-        
+
         -- Звуки перезарядки (rem700 по конфигу)
         if isEmpty then
             -- Полная: Out 0.36, In 2.0, BoltBack 2.6, BoltFwd 3.4

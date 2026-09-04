@@ -1,3 +1,4 @@
+﻿--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -10,7 +11,6 @@ SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_pist_deagle.mdl"
 SWEP.WorldModelFake = "models/weapons/c_usp.mdl"
-
 
 SWEP.ModularParts = {
 	magazine = {
@@ -95,7 +95,6 @@ SWEP.FakeMagDropBone = 50
 SWEP.MagModel = "models/weapons/mods/mag_hk_usp_tactical.mdl"
 
 SWEP.ReloadTime = 3
-
 
 SWEP.lmagpos = Vector(2, 0, 0)
 SWEP.lmagang = Angle(-10, 0, 0)

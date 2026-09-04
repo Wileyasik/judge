@@ -1,3 +1,4 @@
+--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "homigrad_base"
 SWEP.ARC9ActionLHIKFadeOutTime = 0.1
 SWEP.ARC9ActionLHIKFadeInTime = 1
@@ -16,7 +17,6 @@ SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_mk47.mdl"
-
 
 SWEP.ModularParts = {
 	magazine = {
@@ -173,13 +173,11 @@ if CLIENT then
 	}
 end
 
-
 SWEP.ReloadHold = nil
 SWEP.FakeVPShouldUseHand = false
 
 SWEP.FakeMagDropBone = 50
 SWEP.MagModel = "models/weapons/mods/mag_ak_magpul_pmag_30_ak_akm_gen_m3_762x39_30.mdl"
-
 
 SWEP.weaponInvCategory = 1
 SWEP.CustomEjectAngle = Angle(0, 0, 90)
@@ -216,7 +214,6 @@ SWEP.weight = 3.6
 SWEP.ScrappersSlot = "Primary"
 
 SWEP.DistSound = "weapons/darsu_eft/mk47/mk47_dist.wav"
-
 
 SWEP.StartAtt = {"holo4", "stock_ar15_fab_defense_gl_core_s"}
 SWEP.availableAttachments = {
@@ -610,10 +607,6 @@ if CLIENT then
 		self.HeldMagCSModel = nil
 	end
 end
-
---========================================================
--- FIRE ANIMATION
---========================================================
 
 SWEP.FireAnimTime = 0.15
 SWEP.FireAnimCandidates = {"fire", "fire1"}

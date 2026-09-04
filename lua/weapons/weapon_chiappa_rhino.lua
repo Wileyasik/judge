@@ -1,3 +1,4 @@
+--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -7,6 +8,7 @@ SWEP.Instructions = "A unique Italian revolver chambered in .357 Magnum"
 SWEP.Category = "Weapons - Pistols"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
+
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_pist_deagle.mdl"
 SWEP.WorldModelFake = "models/weapons/c_chiappa_rhino.mdl"
@@ -21,6 +23,12 @@ SWEP.FakeBodyGroups = "13112111111"
 SWEP.FakeBodyGroupsPresets = {
 	"13112111111",
 }
+
+SWEP.FakeVPShouldUseHand = false
+SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
+SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_Forearm"
+SWEP.ViewPunchDiv = 1
+SWEP.ReloadTime = 3
 
 SWEP.ModularParts = {
 	frontsight = {
@@ -38,12 +46,6 @@ SWEP.ModularParts = {
 		ang = Angle(0, -90, 0),
 	},
 }
-
-SWEP.FakeVPShouldUseHand = false
-SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
-SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_R_Forearm"
-SWEP.ViewPunchDiv = 1
-SWEP.ReloadTime = 3
 
 SWEP.AnimList = {
 	["idle"] = "idle",
@@ -77,27 +79,6 @@ SWEP.AnimsEvents = {
     },
 }
 
-function SWEP:AllowedInspect()
-	if not self:CanUse() then return end
-	if self.isReloading then return end
-	if self:Clip1() < self.Primary.ClipSize then return end
-	if self.drawBullet == false then return end
-	return true
-end
-
-SWEP.FakeMagDropBone = "magazine"
-SWEP.MagModel = "models/weapons/upgrades/w_magazine_m45_8.mdl"
-
-SWEP.WepSelectIcon2 = Material("entities/arc9_eft_cr50ds.png")
-SWEP.IconOverride = "entities/arc9_eft_cr50ds.png"
-SWEP.WepSelectIcon2box = true
-
-SWEP.CustomShell = "357"
-
-SWEP.weight = 1.2
-SWEP.ScrappersSlot = "Secondary"
-SWEP.weaponInvCategory = 2
-SWEP.ShellEject = "EjectBrass_357"
 SWEP.Primary.ClipSize = 6
 SWEP.Primary.DefaultClip = 6
 SWEP.Primary.Automatic = false
@@ -121,6 +102,11 @@ SWEP.Penetration = 13.5
 SWEP.ShockMultiplier = 2
 SWEP.punchmul = 4
 SWEP.punchspeed = 1
+SWEP.weight = 1.2
+SWEP.ScrappersSlot = "Secondary"
+SWEP.weaponInvCategory = 2
+SWEP.ShellEject = "EjectBrass_357"
+SWEP.CustomShell = "357"
 
 SWEP.LocalMuzzlePos = Vector(3.9, -2.35, 2.1)
 SWEP.LocalMuzzleAng = Angle(0.398, 0, 0)
@@ -146,6 +132,13 @@ SWEP.AnimShootMul = 4
 
 SWEP.podkid = 2
 
+SWEP.FakeMagDropBone = "magazine"
+SWEP.MagModel = "models/weapons/upgrades/w_magazine_m45_8.mdl"
+
+SWEP.WepSelectIcon2 = Material("entities/arc9_eft_cr50ds.png")
+SWEP.IconOverride = "entities/arc9_eft_cr50ds.png"
+SWEP.WepSelectIcon2box = true
+
 SWEP.availableAttachments = {
 	underbarrel = {
 		["mount"] = Vector(9, 1, -1),
@@ -153,6 +146,14 @@ SWEP.availableAttachments = {
 		["mountType"] = "picatinny_small"
 	},
 }
+
+function SWEP:AllowedInspect()
+	if not self:CanUse() then return end
+	if self.isReloading then return end
+	if self:Clip1() < self.Primary.ClipSize then return end
+	if self.drawBullet == false then return end
+	return true
+end
 
 function SWEP:DrawPost()
 	local wep = self:GetWM()

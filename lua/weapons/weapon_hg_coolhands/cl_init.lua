@@ -447,7 +447,7 @@ function SWEP:SetHandPos(noset)
 
 	local choke_data = ply.Ability_Choke
 
-	if(choke_data and IsValid(choke_data.Victim))then
+	if(choke_data and IsValid(choke_data.Victim) and choke_data.Victim.BeingVictimOfChoke)then
 		local victim = choke_data.Victim
 		local poseEnt = (IsValid(victim.FakeRagdoll) and victim.FakeRagdoll) or victim
 		local head, anga = poseEnt:GetBonePosition(poseEnt:LookupBone("ValveBiped.Bip01_Head1"))

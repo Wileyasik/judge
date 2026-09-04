@@ -1,3 +1,4 @@
+--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "homigrad_base"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -13,7 +14,6 @@ SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/c_mp9.mdl"
-
 
 SWEP.ModularParts = {
 	magazine = {
@@ -43,7 +43,6 @@ SWEP.FakeEjectBrassATT = "2"
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
 SWEP.ViewPunchDiv = 1
-
 
 local path = "weapons/darsu_eft/mp5/"
 
@@ -159,7 +158,6 @@ end
 SWEP.ReloadHold = nil
 SWEP.FakeVPShouldUseHand = false
 
-
 SWEP.weaponInvCategory = 1
 SWEP.CustomEjectAngle = Angle(0, 0, 90)
 SWEP.Primary.ClipSize = 25
@@ -193,7 +191,6 @@ SWEP.IconOverride = "entities/arc9_eft_mp9n.png"
 
 SWEP.weight = 1.4
 SWEP.ScrappersSlot = "Primary"
-
 
 SWEP.StartAtt = {"holo14"}
 SWEP.availableAttachments = {
@@ -232,7 +229,6 @@ SWEP.lengthSub = 25
 SWEP.handsAng = Angle(7, 2, 0)
 SWEP.DistSound = "weapons/darsu_eft/mp5/fire_new/mp5_outdoor_close_silenced_loop1.wav"
 
--- tpik hand positions
 SWEP.RHPos = Vector(3, -7, 3.5)
 SWEP.RHAng = Angle(0, -8, 90)
 SWEP.LHPos = Vector(11, 1.6, -3)
@@ -578,10 +574,6 @@ if CLIENT then
 		self.HeldMagCSModel = nil
 	end
 end
-
---========================================================
--- FIRE ANIMATION
---========================================================
 
 SWEP.FireAnimTime = 0.067
 SWEP.FireAnimCandidates = {"fire", "fire1"}

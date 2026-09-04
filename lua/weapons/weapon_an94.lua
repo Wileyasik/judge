@@ -1,22 +1,52 @@
+--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
+
 SWEP.Base = "homigrad_base"
-SWEP.ARC9ActionLHIKFadeOutTime = 0.1
-SWEP.ARC9ActionLHIKFadeInTime = 0.5
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.PrintName = "AN-94"
 SWEP.Author = "Izmash"
 SWEP.Instructions = "Experimental assault rifle chambered in 5.45x39 mm\n\nTwo-round burst hyperburst capability"
 SWEP.Category = "Weapons - Assault Rifles"
-SWEP.WeaponRecoilMul = 0.7
-SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
-SWEP.holsteredPos = Vector(4, 6, -6)
-SWEP.holsteredAng = Angle(220, 0, 180)
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_rif_m4a1.mdl"
 SWEP.WorldModelFake = "models/weapons/arc9/zwei/c_an94.mdl"
 
+SWEP.ARC9ActionLHIKFadeOutTime = 0.1
+SWEP.ARC9ActionLHIKFadeInTime = 0.5
+SWEP.ARC9DefaultLHIKPart = "weapon"
+SWEP.ARC9DefaultLHIKUseWorldModel = true
+
+SWEP.WepSelectIcon2 = Material("entities/arc9_eft_an94.png")
+SWEP.IconOverride = "entities/arc9_eft_an94.png"
+
+SWEP.WeaponRecoilMul = 0.7
+SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
+SWEP.holsteredPos = Vector(4, 6, -6)
+SWEP.holsteredAng = Angle(220, 0, 180)
+
+SWEP.FakePos = Vector(-13, 2.52, 7.5)
+SWEP.FakeAng = Angle(0, 0, 0)
+SWEP.AttachmentPos = Vector(-2.2, 0.5, 0.3)
+SWEP.AttachmentAng = Angle(0, 0, 0)
+SWEP.FakeAttachment = "1"
+SWEP.FakeBodyGroups = "111"
+SWEP.ZoomPos = Vector(0, -2.5104, 4.9776)
+
+SWEP.GunCamPos = Vector(4, -15, -6)
+SWEP.GunCamAng = Angle(190, -5, -100)
+
+SWEP.FakeEjectBrassATT = "2"
+SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
+SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
+SWEP.ViewPunchDiv = 150
+
+SWEP.FakeMagDropBone = 50
+SWEP.MagModel = "models/weapons/mods/mag_ak74_izhmash_6l26_545x39_45.mdl"
+
+SWEP.ReloadHold = nil
+SWEP.FakeVPShouldUseHand = false
 
 SWEP.ModularParts = {
 	magazine = {
@@ -37,32 +67,19 @@ SWEP.ModularParts = {
 SWEP.HeldMagOffsetPos = Vector(0, 0, 0)
 SWEP.HeldMagOffsetAng = Angle(0, 0, 0)
 
-SWEP.ARC9DefaultLHIKPart = "weapon"
-SWEP.ARC9DefaultLHIKUseWorldModel = true
+SWEP.WorldPartsOffsetPos = Vector(-20, 5, 10)
+SWEP.WorldPartsOffsetAng = Angle(0, 0, 0)
+SWEP.WorldMagazineBoneOverride = "weapon"
+SWEP.WorldMagazineOffsetPos = Vector(0, -17.3, -0.55)
+SWEP.WorldMagazineOffsetAng = Angle(0, 0, 0)
 
-SWEP.WepSelectIcon2 = Material("entities/arc9_eft_an94.png")
-SWEP.IconOverride = "entities/arc9_eft_an94.png"
-
-
-SWEP.FakePos = Vector(-13, 2.52, 7.5)
-SWEP.FakeAng = Angle(0, 0, 0)
-SWEP.AttachmentPos = Vector(-2.2, 0.5, 0.3)
-SWEP.AttachmentAng = Angle(0, 0, 0)
-SWEP.FakeAttachment = "1"
-SWEP.FakeBodyGroups = "111"
-SWEP.ZoomPos = Vector(0, -2.5104, 4.9776)
-
-SWEP.GunCamPos = Vector(4, -15, -6)
-SWEP.GunCamAng = Angle(190, -5, -100)
-
-SWEP.FakeEjectBrassATT = "2"
-
-SWEP.FakeViewBobBone = "ValveBiped.Bip01_R_Hand"
-SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_L_UpperArm"
-SWEP.ViewPunchDiv = 150
-
-SWEP.FakeMagDropBone = 50
-SWEP.MagModel = "models/weapons/mods/mag_ak74_izhmash_6l26_545x39_45.mdl"
+SWEP.AnimList = {
+	["fire"] = "fire",
+	["idle"] = "idle",
+	["reload"] = "reloadlong545",
+	["reload_empty"] = "reloadlong545_empty",
+	["inspect"] = "look0",
+}
 
 local path = "weapons/darsu_eft/ak/"
 
@@ -88,13 +105,77 @@ SWEP.AnimsEvents = {
 	},
 }
 
-SWEP.AnimList = {
-	["fire"] = "fire",
-	["idle"] = "idle",
-	["reload"] = "reloadlong545",
-	["reload_empty"] = "reloadlong545_empty",
-	["inspect"] = "look0",
+SWEP.weaponInvCategory = 1
+SWEP.CustomEjectAngle = Angle(0, 0, 90)
+SWEP.Primary.ClipSize = 45
+SWEP.Primary.DefaultClip = 45
+SWEP.Primary.Automatic = true
+SWEP.Primary.Ammo = "5.45x39 mm"
+SWEP.Primary.Cone = 0
+SWEP.Primary.Damage = 39
+SWEP.Primary.Spread = 0
+SWEP.Primary.Force = 32
+SWEP.Primary.Wait = 0.09091
+SWEP.animposmul = 2
+
+SWEP.Primary.Sound = {"weapons/darsu_eft/ak/fire_new/ak74_outdoor_close_loop_1.wav", 85, 90, 100}
+SWEP.SupressedSound = {"weapons/darsu_eft/ak/fire_new/ak74_loop_outdoor_close_silenced_4.wav", 65, 90, 100}
+SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
+
+SWEP.ReloadTime = 3.5
+SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1"
+SWEP.CustomShell = "762x39"
+SWEP.ShellEject = "EjectBrass_762"
+SWEP.LocalMuzzlePos = Vector(23.4, -2.5, 3.45)
+SWEP.LocalMuzzleAng = Angle(0, 0, 0)
+SWEP.WeaponEyeAngles = Angle(0, 0, 0)
+SWEP.HoldType = "rpg"
+
+SWEP.weight = 3.85
+SWEP.ScrappersSlot = "Primary"
+SWEP.Penetration = 19
+SWEP.Ergonomics = 0.85
+SWEP.lengthSub = 25
+SWEP.handsAng = Angle(7, 2, 0)
+SWEP.ShootAnimMul = 2
+
+SWEP.WorldPos = Vector(4, -0.8, -0.5)
+SWEP.WorldAng = Angle(0, 0, 0)
+SWEP.UseCustomWorldModel = true
+SWEP.attPos = Vector(1, 0, 0)
+SWEP.attAng = Angle(-0.02, 0, 0)
+SWEP.RHandPos = Vector(0, -1, 0)
+SWEP.LHandPos = Vector(7, -2, -2)
+SWEP.RHPos = Vector(3, -7, 3.5)
+SWEP.RHAng = Angle(0, -8, 90)
+SWEP.LHPos = Vector(11, 1.6, -3)
+SWEP.LHAng = Angle(-110, -180, 5)
+
+SWEP.DistSound = "weapons/newakm/akmm_dist.wav"
+
+SWEP.Spray = {}
+for i = 1, 45 do
+	SWEP.Spray[i] = Angle(-0.0, 0, 0) * 1
+end
+
+SWEP.availableAttachments = {
+	sight = {
+		["mountType"] = {"dovetail", "picatinny"},
+		["mount"] = {["dovetail"] = Vector(-22, -0.25, 1.8),  ["picatinny"] = Vector(-21, 0, 2.35)},
+		["mountAngle"] = Angle(0,0,90)
+	},
+	mount = {
+		mountAngle = Angle(0, 90, 0),
+		["picatinny"] = {"mount3", Vector(-22, 0.85, 0.3), {}, mountType = "picatinny"},
+		["dovetail"] = {"empty", Vector(0, 0, 0), {}, mountType = "dovetail"},
+	},
+	magwell = {
+		["mountType"] = "ak_545_60",
+	},
 }
+
+SWEP.FireAnimTime = 0.15
+SWEP.FireAnimCandidates = {"fire", "fire1"}
 
 function SWEP:AllowedInspect()
 	if not self:CanUse() then return end
@@ -115,86 +196,6 @@ function SWEP:ModelCreated(model)
 		model:SetSubMaterial(i, "")
 	end
 end
-
-
-SWEP.ReloadHold = nil
-SWEP.FakeVPShouldUseHand = false
-
-
-SWEP.weaponInvCategory = 1
-SWEP.CustomEjectAngle = Angle(0, 0, 90)
-SWEP.Primary.ClipSize = 45
-SWEP.Primary.DefaultClip = 45
-SWEP.Primary.Automatic = true
-SWEP.Primary.Ammo = "5.45x39 mm"
-SWEP.Primary.Cone = 0
-SWEP.Primary.Damage = 39
-SWEP.Primary.Spread = 0
-SWEP.Primary.Force = 32
-SWEP.animposmul = 2
-SWEP.Primary.Sound = {"weapons/darsu_eft/ak/fire_new/ak74_outdoor_close_loop_1.wav", 85, 90, 100}
-SWEP.SupressedSound = {"weapons/darsu_eft/ak/fire_new/ak74_loop_outdoor_close_silenced_4.wav", 65, 90, 100}
-SWEP.Primary.SoundEmpty = {"arc9_eft_shared/weap_trigger_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
-SWEP.Primary.Wait = 0.09091
-SWEP.ReloadTime = 3.5
-SWEP.ViewPunchDiv = 1
-
-
-SWEP.PPSMuzzleEffect = "pcf_jack_mf_mrifle1"
-
-SWEP.CustomShell = "762x39"
-SWEP.ShellEject = "EjectBrass_762"
-
-SWEP.LocalMuzzlePos = Vector(23.4, -2.5, 3.45)
-SWEP.LocalMuzzleAng = Angle(0, 0, 0)
-SWEP.WeaponEyeAngles = Angle(0, 0, 0)
-
-SWEP.HoldType = "rpg"
-
-SWEP.weight = 3.85
-SWEP.ScrappersSlot = "Primary"
-
-SWEP.DistSound = "weapons/newakm/akmm_dist.wav"
-
-SWEP.availableAttachments = {
-	sight = {
-		["mountType"] = {"dovetail", "picatinny"},
-		["mount"] = {["dovetail"] = Vector(-22, -0.25, 1.8),  ["picatinny"] = Vector(-21, 0, 2.35)},
-		["mountAngle"] = Angle(0,0,90)
-	},
-	mount = {
-		mountAngle = Angle(0, 90, 0),
-		["picatinny"] = {"mount3", Vector(-22, 0.85, 0.3), {}, mountType = "picatinny"},
-		["dovetail"] = {"empty", Vector(0, 0, 0), {}, mountType = "dovetail"},
-	},
-	magwell = {
-		["mountType"] = "ak_545_60",
-	},
-}
-
-SWEP.RHandPos = Vector(0, -1, 0)
-SWEP.LHandPos = Vector(7, -2, -2)
-SWEP.Penetration = 19
-SWEP.Spray = {}
-for i = 1, 45 do
-	SWEP.Spray[i] = Angle(-0.0, 0, 0) * 1
-end
-
-SWEP.Ergonomics = 0.85
-SWEP.WorldPos = Vector(4, -0.8, -0.5)
-SWEP.WorldAng = Angle(0, 0, 0)
-SWEP.UseCustomWorldModel = true
-SWEP.attPos = Vector(1, 0, 0)
-SWEP.attAng = Angle(-0.02, 0, 0)
-SWEP.lengthSub = 25
-SWEP.handsAng = Angle(7, 2, 0)
-
-SWEP.RHPos = Vector(3, -7, 3.5)
-SWEP.RHAng = Angle(0, -8, 90)
-SWEP.LHPos = Vector(11, 1.6, -3)
-SWEP.LHAng = Angle(-110, -180, 5)
-
-SWEP.ShootAnimMul = 2
 
 function SWEP:AnimHoldPost(model)
 end
@@ -290,13 +291,6 @@ function SWEP:DrawPost()
 
 	self:DrawModularParts()
 end
-
-SWEP.WorldPartsOffsetPos = Vector(-20, 5, 10)
-SWEP.WorldPartsOffsetAng = Angle(0, 0, 0)
-
-SWEP.WorldMagazineBoneOverride = "weapon"
-SWEP.WorldMagazineOffsetPos = Vector(0, -17.3, -0.55)
-SWEP.WorldMagazineOffsetAng = Angle(0, 0, 0)
 
 if CLIENT then
 	local MOD_VECTOR_ZERO = Vector(0, 0, 0)
@@ -534,11 +528,6 @@ if CLIENT then
 		self.HeldMagCSModel = nil
 	end
 end
-
---========================================================
-
-SWEP.FireAnimTime = 0.15
-SWEP.FireAnimCandidates = {"fire", "fire1"}
 
 function SWEP:PrimaryShootPost()
 	if not CLIENT then return end

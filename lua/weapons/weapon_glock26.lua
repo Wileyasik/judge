@@ -1,3 +1,4 @@
+--made by lazzy https://steamcommunity.com/id/TimeToFuckinDie
 SWEP.Base = "weapon_glock17"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
