@@ -176,7 +176,12 @@ function SWEP:StartModeSwitch(mode)
     self.attackwait = 0
     self:SetInAttack(false)
     self:ApplyModeAnimList(mode)
+    self.setlh = true
     self:PlayAnim(switchAnim, switchTime, false, nil, false, false)
+    timer.Create("pocketknife_lhik_" .. self:EntIndex(), switchTime, 1, function()
+        if not IsValid(self) then return end
+        self.setlh = false
+    end)
     self:FinishModeSwitch(mode, self.ModeSwitchToken)
 end
 

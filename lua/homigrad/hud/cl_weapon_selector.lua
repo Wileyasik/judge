@@ -25,6 +25,9 @@ WS.LastSelectedSlotPos = 0
 WS.SelectedSlot = 0
 WS.SelectedSlotPos = 0
 
+WS.InfoAlpha = 0
+WS.InfoWeapon = nil
+
 function WS.DrawText(text, font, posX, posY, color, textAlign)
     local t = tostring(text or "")
     draw.DrawText( t, font, posX + 1, posY + 1, Color(10, 10, 10, 200), textAlign )
@@ -168,6 +171,20 @@ surface.CreateFont("WS_SlotBadge", {
     antialias = true,
 })
 
+surface.CreateFont("WS_InfoLabel", {
+    font = WS_GetFontFace(),
+    size = ScreenScale(5.5),
+    weight = 700,
+    antialias = true,
+})
+
+surface.CreateFont("WS_InfoText", {
+    font = WS_GetFontFace(),
+    size = ScreenScale(5.5),
+    weight = 500,
+    antialias = true,
+})
+
 local SLOT_BADGE_TEXT_OFFSET_X = 0
 local SLOT_BADGE_TEXT_OFFSET_Y = -2
 local WS_ICON_INFO_CACHE = setmetatable({}, {__mode = "k"})
@@ -228,6 +245,130 @@ local function WS_DrawSlotBadge( slot, x, y, wide, alpha, accentColor )
     local textY = badgeY + badgeSize / 1.85 + SLOT_BADGE_TEXT_OFFSET_Y
     WS_BADGE_TEXT_COLOR.a = alpha * 255
     draw.SimpleText(slot, "WS_SlotBadge", textX, textY, WS_BADGE_TEXT_COLOR, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+end
+
+local function WS_WrapText(text, font, maxWide)
+    surface.SetFont(font)
+    local paragraphs = string.Explode("\n", text)
+    local lines = {}
+    for _, paragraph in ipairs(paragraphs) do
+        local words = string.Explode(" ", paragraph)
+        local currentLine = ""
+        for _, word in ipairs(words) do
+            local test = currentLine == "" and word or (currentLine .. " " .. word)
+            local tw = surface.GetTextSize(test)
+            if tw > maxWide and currentLine ~= "" then
+                lines[#lines + 1] = currentLine
+                currentLine = word
+            else
+                currentLine = test
+            end
+        end
+        if currentLine ~= "" then
+            lines[#lines + 1] = currentLine
+        end
+    end
+    if #lines == 0 then
+        lines[1] = ""
+    end
+    return lines
+end
+
+function WS.DrawInfoPanel(wep, x, y, wide, alpha)
+    if not IsValid(wep) then return 0 end
+
+    local author = wep.Author or ""
+    local instructions = wep.Instructions or ""
+
+    if author == "" and instructions == "" then return 0 end
+
+    local now = CurTime()
+    local target = IsValid(wep) and 1 or 0
+    WS.InfoAlpha = LerpFT(0.2, WS.InfoAlpha or 0, target)
+    if WS.InfoWeapon ~= wep then
+        WS.InfoWeapon = wep
+        WS.InfoAnimStart = now
+    end
+    local fade = WS.InfoAlpha * WS.InfoAlpha * (3 - 2 * WS.InfoAlpha)
+    if fade < 0.001 then return 0 end
+
+    local scrW, scrH = ScrW(), ScrH()
+    local accentColor = hg.theme and hg.theme.c.accent or WS_FALLBACK_ACCENT
+    local panelColor = hg.theme and hg.theme.c.panel or WS_FALLBACK_PANEL
+
+    local padX = math.max(8, math.floor(ScreenScale(5) + 0.5))
+    local padY = math.max(6, math.floor(ScreenScale(4) + 0.5))
+    local innerWide = wide - padX * 2
+
+    surface.SetFont("WS_InfoText")
+    local _, fontH = surface.GetTextSize("Wg")
+    local lineHeight = fontH + math.max(2, math.floor(ScreenScale(1) + 0.5))
+    local gap = math.floor(ScreenScale(3) + 0.5)
+
+    local authorLines = author ~= "" and WS_WrapText(author, "WS_InfoText", innerWide) or {}
+    local instLines = instructions ~= "" and WS_WrapText(instructions, "WS_InfoText", innerWide) or {}
+
+    local contentH = 0
+    if #authorLines > 0 then
+        contentH = contentH + lineHeight + #authorLines * lineHeight
+    end
+    if #instLines > 0 then
+        if contentH > 0 then contentH = contentH + gap end
+        contentH = contentH + lineHeight + #instLines * lineHeight
+    end
+    if contentH == 0 then return 0 end
+
+    local totalH = contentH + padY * 2
+
+    WS_BOX_COLOR.r = panelColor.r
+    WS_BOX_COLOR.g = panelColor.g
+    WS_BOX_COLOR.b = panelColor.b
+    WS_BOX_COLOR.a = alpha * fade * 212
+    draw.RoundedBox(0, x, y, wide, totalH, WS_BOX_COLOR)
+
+    local _, cornerLen, cornerInset = WS_GetCornerMetrics()
+    local cornerAlpha = alpha * fade * 180
+    local lineW = math.max(1, math.floor(ScreenScale(0.5) + 0.5))
+    local cl = math.min(cornerLen, math.floor(math.min(wide, totalH) / 2) - cornerInset)
+    if cl > lineW then
+        surface.SetDrawColor(accentColor.r, accentColor.g, accentColor.b, cornerAlpha)
+        local lx = math.floor(x + cornerInset + 0.5)
+        local ly = math.floor(y + cornerInset + 0.5)
+        local rx = math.floor(x + wide - cornerInset - lineW + 0.5)
+        local ry = math.floor(y + totalH - cornerInset - lineW + 0.5)
+        surface.DrawRect(lx, ly, cl, lineW)
+        surface.DrawRect(lx, ly, lineW, cl)
+        surface.DrawRect(rx - cl + lineW, ry, cl, lineW)
+        surface.DrawRect(rx, ry - cl + lineW, lineW, cl)
+    end
+
+    local textX = x + padX
+    local textY = y + padY
+    local textAlpha = alpha * fade * 255
+    local labelAlpha = alpha * fade * 200
+    local textColor = Color(180, 180, 180, textAlpha)
+    local labelColor = Color(accentColor.r, accentColor.g, accentColor.b, labelAlpha)
+
+    if #authorLines > 0 then
+        draw.DrawText("Manufacturer", "WS_InfoLabel", textX, textY, labelColor, TEXT_ALIGN_LEFT)
+        textY = textY + lineHeight
+        for _, line in ipairs(authorLines) do
+            draw.DrawText(line, "WS_InfoText", textX, textY, textColor, TEXT_ALIGN_LEFT)
+            textY = textY + lineHeight
+        end
+    end
+
+    if #instLines > 0 then
+        if #authorLines > 0 then textY = textY + gap end
+        draw.DrawText("Information", "WS_InfoLabel", textX, textY, labelColor, TEXT_ALIGN_LEFT)
+        textY = textY + lineHeight
+        for _, line in ipairs(instLines) do
+            draw.DrawText(line, "WS_InfoText", textX, textY, textColor, TEXT_ALIGN_LEFT)
+            textY = textY + lineHeight
+        end
+    end
+
+    return totalH
 end
 
 local function WS_GetUsableIcon( icon )
@@ -442,6 +583,8 @@ function WS.WeaponSelectorDraw( ply )
         WS.BoxAnim = nil
         WS.NameAnimWeapon = nil
         WS.CornerFlashWeapon = nil
+        WS.InfoWeapon = nil
+        WS.InfoAlpha = 0
         WS.SelectedSlot = WS.LastSelectedSlot 
         WS.SelectedSlotPos = -1
         WS.Transparent = 0
@@ -640,6 +783,11 @@ function WS.WeaponSelectorDraw( ply )
         end
         columnIndex = columnIndex + 1
     end
+
+    local infoWide = math.min(scrW * 0.22, 320)
+    local infoX = scrW - infoWide - math.floor(ScreenScale(8) + 0.5)
+    local infoY = math.floor(scrH * 0.055 + 0.5)
+    WS.DrawInfoPanel(SelectedWep, infoX, infoY, infoWide, WS.Transparent)
 end
 
 -- Changer
