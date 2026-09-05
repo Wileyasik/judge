@@ -583,14 +583,20 @@ SWEP.tries = 10
 if SERVER then
     util.AddNetworkString("melee_attack2")
 elseif CLIENT then
-	local function PlayNetworkedAnim(owner, class, tbl)
+	local function PlayNetworkedAnim(owner, class, tbl, tries)
 		if not IsValid(owner) or CurTime() >= (tbl.endTime or 0) then return end
 
 		local ent = owner:GetActiveWeapon()
 		if not IsValid(ent) or ent:GetClass() ~= class then
-			timer.Simple(0.05, function()
-				PlayNetworkedAnim(owner, class, tbl)
-			end)
+			ent = owner:GetWeapon(class)
+		end
+		if not IsValid(ent) or not isfunction(ent.PlayAnim) then
+			tries = (tries or 0) + 1
+			if tries < 20 then
+				timer.Simple(0.05, function()
+					PlayNetworkedAnim(owner, class, tbl, tries)
+				end)
+			end
 			return
 		end
 

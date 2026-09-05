@@ -1,13 +1,12 @@
 local hg_impact = CreateConVar("hg_euphoria_impact", "1", FCVAR_ARCHIVE + FCVAR_NOTIFY, "GTA/Ready-or-Not style impact reactions on fake ragdolls (knockback + trip)", 0, 1)
 
 local IMPACT_MIN_DMG = 10
-local IMPACT_KNOCKBACK = 120
-local IMPACT_KNOCKBACK_UP = 60
-local IMPACT_BONE_PUSH = 200
+local IMPACT_KNOCKBACK = 70
+local IMPACT_BONE_PUSH = 90
 local IMPACT_BONE_DIST = 150
-local IMPACT_TRIP_PUSH = 130
-local IMPACT_TRIP_DOWN = 160
-local IMPACT_TRIP_ROLL = 260
+local IMPACT_TRIP_PUSH = 90
+local IMPACT_TRIP_DOWN = 120
+local IMPACT_TRIP_ROLL = 180
 
 local function nearestImpactPhys(ragdoll, pos)
 	local best, bestDist
@@ -83,7 +82,7 @@ hook.Add("EntityTakeDamage", "HG_EuphoriaImpact", function(ent, dmgInfo)
 	local flatDir = Vector(dir.x, dir.y, 0)
 	if flatDir:LengthSqr() > 0.01 then flatDir = flatDir:GetNormalized() else flatDir = Vector(0, 0, 0) end
 
-	root:AddVelocity(flatDir * IMPACT_KNOCKBACK * strength + Vector(0, 0, math.max(dir.z, 0) * IMPACT_KNOCKBACK_UP * strength))
+	root:AddVelocity(flatDir * IMPACT_KNOCKBACK * strength)
 
 	if hitPos and hitPos:Distance(rootPos) < 200 then
 		local hitPhys, hitDist = nearestImpactPhys(ragdoll, hitPos)

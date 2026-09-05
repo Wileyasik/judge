@@ -3,7 +3,7 @@ local MODE = MODE
 MODE.name = "juggernaut"
 MODE.PrintName = "Juggernaut"
 MODE.Description = "One or more players become unstoppable Juggernauts with a hardened organism. Everyone else has to bring them down before the timer runs out."
-MODE.Chance = 0.05
+MODE.Chance = 0.006
 MODE.randomSpawns = true
 
 function MODE:IsJuggernaut(ply)

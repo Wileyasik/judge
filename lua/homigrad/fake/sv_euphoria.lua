@@ -21,8 +21,8 @@ local EUPHORIA_WALL_GRAB_TIME = 0.9
 local EUPHORIA_WALL_GRAB_PULL = 460
 local EUPHORIA_WALL_GRAB_COOLDOWN = 1.2
 local EUPHORIA_GETUP_TIME = 0.7
-local EUPHORIA_GETUP_PUSH = 320
-local EUPHORIA_GETUP_ROLL = 130
+local EUPHORIA_GETUP_PUSH = 160
+local EUPHORIA_GETUP_ROLL = 80
 local EUPHORIA_GETUP_MIN_CONSCIOUSNESS = 0.35
 local EUPHORIA_BERSERK_JERK = 160
 local EUPHORIA_AMPUTEE_ANGLE = 15
@@ -37,6 +37,53 @@ local EUPHORIA_CURL_TIME = 2.5
 local EUPHORIA_CURL_WINDOW = 1.2
 local EUPHORIA_CURL_TRIGGER = 2
 local EUPHORIA_CURL_EASE = 0.5
+
+local EUPHORIA_MAX_VELOCITY = 600
+local EUPHORIA_ROOT_MAX_VELOCITY = 450
+local EUPHORIA_MAX_ANGULAR = 1200
+local EUPHORIA_FALL_SKIP_SPEED = 250
+
+local function clampVec(vec, max)
+	local len = vec:Length()
+	if len > max then return vec * (max / len) end
+	return vec
+end
+
+hook.Add("Think", "HG_EuphoriaSafety", function()
+	local maxV = EUPHORIA_MAX_VELOCITY
+	local maxRootV = EUPHORIA_ROOT_MAX_VELOCITY
+	local maxAV = EUPHORIA_MAX_ANGULAR
+
+	for i, ply in player.Iterator() do
+		local ragdoll = ply.FakeRagdoll
+		if not IsValid(ragdoll) then continue end
+		if ragdoll.isSliding or ragdoll.isDropkicking then continue end
+		if ragdoll:IsPlayerHolding() then continue end
+
+		local root = ragdoll:GetPhysicsObject()
+		if IsValid(root) then
+			local v = root:GetVelocity()
+			if v.z >= -EUPHORIA_FALL_SKIP_SPEED and v:LengthSqr() > maxRootV * maxRootV then
+				root:SetVelocity(clampVec(v, maxRootV))
+			end
+		end
+
+		for j = 0, ragdoll:GetPhysicsObjectCount() - 1 do
+			local phys = ragdoll:GetPhysicsObjectNum(j)
+			if not IsValid(phys) then continue end
+
+			local v = phys:GetVelocity()
+			if v.z >= -EUPHORIA_FALL_SKIP_SPEED and v:LengthSqr() > maxV * maxV then
+				phys:SetVelocity(clampVec(v, maxV))
+			end
+
+			local av = phys:GetAngleVelocity()
+			if av:LengthSqr() > maxAV * maxAV then
+				phys:SetAngleVelocity(clampVec(av, maxAV))
+			end
+		end
+	end
+end)
 
 local function isFloppyBone(ragdoll, physNum)
 	local floppy = ragdoll.hg_floppy_bones
@@ -483,8 +530,8 @@ hook.Add("Think", "HG_EuphoriaCurl", function()
 		end
 		local chestPos = spine:GetPos()
 
-		local stiffness = 1200 * ease
-		local damping = 50
+		local stiffness = 700 * ease
+		local damping = 45
 
 		local dtime = (now - (ragdoll.hgCurlLast or now)) * game.GetTimeScale()
 		ragdoll.hgCurlLast = now

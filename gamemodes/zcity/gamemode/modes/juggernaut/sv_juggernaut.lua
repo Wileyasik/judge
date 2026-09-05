@@ -499,11 +499,17 @@ function MODE:PlayerDeath(victim, inflictor, attacker)
 		end
 		self.Juggernauts = newJuggs
 		victim.IsJuggernaut = nil
+		victim.juggClass = nil
+		victim.juggLoadout = nil
 		ClearJuggBuffs(victim)
 		if #newJuggs == 0 then self._huntersWon = true end
 		return
 	end
 end
+
+hook.Add("PlayerDeath", "juggernaut_elimination", function(victim, inflictor, attacker)
+	MODE:PlayerDeath(victim, inflictor, attacker)
+end)
 
 hook.Add("PlayerDisconnected", "juggernaut_disconnect", function(ply)
 	local newJuggs = {}
@@ -519,33 +525,37 @@ hook.Add("PlayerDisconnected", "juggernaut_disconnect", function(ply)
 	if count == 0 then MODE._huntersWon = true end
 end)
 
+local function IsOutOfCombat(ply)
+	return not IsValid(ply) or not ply:Alive() or (ply.organism and ply.organism.incapacitated)
+end
+
 function MODE:ShouldRoundEnd()
-	local anyAlive = false
+	local anyJuggAlive = false
 	for _, jugg in ipairs(self.Juggernauts or {}) do
-		if IsValid(jugg) and jugg:Alive() then
-			anyAlive = true
+		if not IsOutOfCombat(jugg) then
+			anyJuggAlive = true
 			break
 		end
 	end
-	if not anyAlive then
+
+	if not anyJuggAlive then
 		self._huntersWon = true
 		return true
 	end
 
-	if MODE.variant == 3 then
-		local gruntsAlive = false
-		for _, ply in player.Iterator() do
-			if ply:Team() == TEAM_SPECTATOR then continue end
-			if self:IsJuggernaut(ply) then continue end
-			if ply:Alive() then
-				gruntsAlive = true
-				break
-			end
+	local anyGruntAlive = false
+	for _, ply in player.Iterator() do
+		if ply:Team() == TEAM_SPECTATOR then continue end
+		if self:IsJuggernaut(ply) then continue end
+		if not IsOutOfCombat(ply) then
+			anyGruntAlive = true
+			break
 		end
-		if not gruntsAlive then
-			self._juggernautSurvived = true
-			return true
-		end
+	end
+
+	if not anyGruntAlive then
+		self._juggernautSurvived = true
+		return true
 	end
 
 	return nil

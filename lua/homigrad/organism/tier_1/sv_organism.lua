@@ -79,6 +79,7 @@ hook.Add("Org Clear", "Main", function(org)
 	org.rarmdislocation = false
 	org.larmdislocation = false
 	org.jawdislocation = false
+
 	org.llegamputated = false
 	org.rlegamputated = false
 	org.rarmamputated = false

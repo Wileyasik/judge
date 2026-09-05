@@ -253,7 +253,7 @@ function SWEP:Camera(eyePos, eyeAng, view, vellen, ply)
 	local sp3  = isnumber(organism.spine3) and organism.spine3 or 0
 
 	local shakeMul = (((larm > 0.75 and (larm - 0.75) * (ply.posture != 7 and ply.posture != 8 and 1 or 0)) or 0)
-		+ ((rarm > 0.1 and (rarm - 0.1)) or 0)) / 4
+		+ ((rarm > 0.1 and (rarm - 0.1)) or 0) + (organism.larmdislocation and 0.35 or 0) + (organism.rarmdislocation and 0.35 or 0)) / 4
 
 	local addview = AngleRand(-shakeMul - 0.01, shakeMul + 0.01) * (organism.holdingbreath and 0.1 or 1)
 	addview[3] = 0
