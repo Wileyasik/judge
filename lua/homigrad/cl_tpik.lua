@@ -633,6 +633,7 @@ function hg.MainTPIKFunction(ent, ply, wpn)
     
     //local systime = SysTime()
     local should = hg.ShouldTPIK(ply)
+    if not should and hg.DebugTPIK then hg.DebugTPIK(ply, "should_off", ply.shouldTPIKReason or "override") end
     //print("shouldtpik func: ", SysTime() - systime)
 
     if should then

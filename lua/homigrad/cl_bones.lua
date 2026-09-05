@@ -797,11 +797,27 @@
 
 		local hg_tpik_distance = ConVarExists("hg_tpik_distance") and GetConVar("hg_tpik_distance") or CreateClientConVar("hg_tpik_distance",1024,true,false,"The distance (in hammer units) at which the third person inverse kinematics enables, 0 = inf",0,2048)
 
+		local hg_debug_tpik = ConVarExists("hg_debug_tpik") and GetConVar("hg_debug_tpik") or CreateClientConVar("hg_debug_tpik",0,true,false,"Debug tpik hands",0,1)
+		local tpik_debug_last = {}
+
+		function hg.DebugTPIK(ply, category, details)
+			if not hg_debug_tpik:GetBool() then return end
+
+			local key = (IsValid(ply) and ply:IsPlayer() and (ply:SteamID64() or ply:Nick()) or tostring(ply and ply:EntIndex() or "?")) .. "|" .. category
+
+			local time = CurTime()
+			if (tpik_debug_last[key] or 0) + 1 > time then return end
+			tpik_debug_last[key] = time
+
+			print("[tpik] " .. (IsValid(ply) and ply:Nick() or "?") .. " " .. category .. " " .. (details or ""))
+		end
+
 		local render_GetViewSetup = render.GetViewSetup
 		function hg.ShouldTPIK(ply)
 			local time = CurTime()
 			if (ply.cachedtpik or 0) > time then return ply.cachedval end
 			ply.cachedtpik = time + 0.1
+			ply.shouldTPIKReason = nil
 
 			local int = hg_tpik_distance:GetInt()
 			if (int == 0 or ply == lply or ply == lply:GetNWEntity("spect")) then
@@ -812,6 +828,7 @@
 			local view = render.GetViewSetup(true)
 			if (ply:GetPos():DistToSqr(view.origin) > int * int) then
 				ply.cachedval = false 
+				ply.shouldTPIKReason = "dist " .. math.Round(math.sqrt(ply:GetPos():DistToSqr(view.origin)))
 				return false
 			end
 

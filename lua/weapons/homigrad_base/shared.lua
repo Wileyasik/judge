@@ -2357,8 +2357,12 @@ function SWEP:SetHandPos(noset)
 	
 	local ply = self:GetOwner()
 
-    if not IsValid(ply) or not IsValid(self.worldModel) then return end
-    if not ply.shouldTransmit or ply.NotSeen then return end
+    if not IsValid(ply) or not IsValid(self.worldModel) then
+		if hg.DebugTPIK then hg.DebugTPIK(ply, "setpos", "no_worldmodel") end
+		return end
+    if not ply.shouldTransmit or ply.NotSeen then
+		if hg.DebugTPIK then hg.DebugTPIK(ply, "setpos", "notransmit") end
+		return end
 
 	local ent = IsValid(ply.FakeRagdoll) and ply.FakeRagdoll or ply
 	ent = ply:GetNWBool("FakeGettingUp", false) and IsValid(ply.OldRagdoll) and ply.OldRagdoll:IsRagdoll() and ply.OldRagdoll or ent
@@ -2379,7 +2383,9 @@ function SWEP:SetHandPos(noset)
 	if not IsValid(ply) or not ply:IsPlayer() then return end
 	//ent:SetupBones()
 
-	if not self.handPos or not self.handAng then return end
+	if not self.handPos or not self.handAng then
+		if hg.DebugTPIK then hg.DebugTPIK(ply, "setpos", "nohandpos") end
+		return end
 
 	local should = self:ShouldUseFakeModel()
 
@@ -2450,6 +2456,18 @@ function SWEP:SetHandPos(noset)
 			end
 			
 			hg.set_hold(ent, hold)
+		else
+			if hg.DebugTPIK and self.setlhik ~= false then
+				local dbgreasons = {}
+				if not (hg.CanUseLeftHand(ply) and self.lhandik) then
+					dbgreasons[#dbgreasons + 1] = "canuseleft=" .. tostring(hg.CanUseLeftHand(ply)) .. "/lhandik=" .. tostring(self.lhandik)
+				end
+				if not self.attachments then dbgreasons[#dbgreasons + 1] = "noattachments" end
+				if not vec2 then dbgreasons[#dbgreasons + 1] = "novec2" end
+				if not addvec2 then dbgreasons[#dbgreasons + 1] = "noaddvec2" end
+				if not ang2 then dbgreasons[#dbgreasons + 1] = "noang2" end
+				hg.DebugTPIK(ply, "lh_skip", table.concat(dbgreasons, ", "))
+			end
 		end
 	else
 		local wpn = self
@@ -2460,6 +2478,13 @@ function SWEP:SetHandPos(noset)
 		local TPIKBonesRHDictTranslate = hg.TPIKBonesRHDictTranslate
 		local canuseright = hg.CanUseRightHand(ply) and wpn.rhandik
 		local canuseleft = hg.CanUseLeftHand(ply) and wpn.lhandik
+
+		if hg.DebugTPIK and not canuseleft and wpn.setlhik ~= false then
+			hg.DebugTPIK(ply, "lh_skip", "canuseleft=" .. tostring(hg.CanUseLeftHand(ply)) .. "/lhandik=" .. tostring(wpn.lhandik) .. "/setlhik=" .. tostring(wpn.setlhik))
+		end
+		if hg.DebugTPIK and not canuseright and wpn.setrhik ~= false then
+			hg.DebugTPIK(ply, "rh_skip", "canuseright=" .. tostring(hg.CanUseRightHand(ply)) .. "/rhandik=" .. tostring(wpn.rhandik) .. "/setrhik=" .. tostring(wpn.setrhik))
+		end
 
 		local addvec_fem = (ThatPlyIsFemale(ply) and ply:GetAimVector():Angle():Right() * 0.2 or ply:GetAimVector():Angle():Right() * 0)
 		if self.stupidgun then
