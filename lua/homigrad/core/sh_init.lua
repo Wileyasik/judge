@@ -1,6 +1,20 @@
 hg = hg or {}
 hg.ConVars = hg.ConVars or {}
 
+if SERVER then
+	function hg.EmitAISound(pos, vol, dur, typ)
+		local snd = ents.Create("ai_sound")
+		snd:SetPos(pos)
+		snd:SetKeyValue("volume", tostring(vol))
+		snd:SetKeyValue("duration", tostring(dur))
+		snd:SetKeyValue("soundtype", tostring(typ))
+		snd:Spawn()
+		snd:Activate()
+		snd:Fire("EmitAISound")
+		SafeRemoveEntityDelayed(snd, dur + .5)
+	end
+end
+
 function hg.GetCurrentCharacter(ply)
 	if not IsValid(ply) then return end
 	return (IsValid(ply.FakeRagdoll) and ply.FakeRagdoll) or ply
