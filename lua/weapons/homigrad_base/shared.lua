@@ -2517,13 +2517,7 @@ function SWEP:SetHandPos(noset)
 			if !ply_bonematrix then continue end
 			
 			wm_bonematrix:SetTranslation(wm_bonematrix:GetTranslation() + (TPIKBonesLHDict[name] and addvec_fem or vector_origin))
-			if name == "ValveBiped.Bip01_R_Finger12" then
-				local fa = wm_bonematrix:GetAngles()
-				fa:RotateAroundAxis(fa:Forward(), self.anglefinger[3])
-				fa:RotateAroundAxis(fa:Right(), self.anglefinger[1])
-				fa:RotateAroundAxis(fa:Up(), self.anglefinger[2])
-				wm_bonematrix:SetAngles(fa)
-			end
+			if name == "ValveBiped.Bip01_R_Finger12" then wm_bonematrix:SetAngles(wm_bonematrix:GetAngles() + self.anglefinger) end
 
 			--[[if ent.organism and ent.organism.rarmamputated then
 				local mirrormat = mdl:GetBoneMatrix(mdl:LookupBone("ValveBiped.Bip01_R_Hand"))

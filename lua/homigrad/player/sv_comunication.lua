@@ -292,7 +292,17 @@ hook.Add("PlayerCanHearPlayersVoice", "RealisticVoice", function(listener,speake
 end)
 
 concommand.Add("suicide", function(ply)
+	if not IsValid(ply) then return end
+
 	ply.suiciding = !ply.suiciding
+	ply:SetNWBool("suiciding", ply.suiciding)
+
+	if ply.suiciding then
+		ply.startsuicide = CurTime()
+	else
+		ply.startsuicide = nil
+		ply:SetNWFloat("willsuicide", 0)
+	end
 end)
 
 function hg.CanSuicide(ply)

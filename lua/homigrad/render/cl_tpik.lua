@@ -1102,9 +1102,7 @@ function hg.DoTPIK(ply, ent)
         local q = Quaternion()
         q = q * Quaternion():SetAngleAxis(angrr.y, vecUpZ)
         q = q * Quaternion():SetAngleAxis(angrr.p, vecUpY)
-        local pitchFactor = math.Clamp(math.NormalizeAngle(angrr.p) / 90, -1, 1)
-pitchFactor = pitchFactor * pitchFactor * (3 - 2 * pitchFactor)
-q = q * Quaternion():SetAngleAxis(-120 - angrr.r + eyeang.r - math.NormalizeAngle((eyeang.y - angrr.y)) * pitchFactor, vecUpX)
+        q = q * Quaternion():SetAngleAxis(-120 - angrr.r + eyeang.r - math.NormalizeAngle((eyeang.y - angrr.y)) * (math.NormalizeAngle(angrr.p)) / 90, vecUpX)
 
         local ang = q:Angle()
         ply_r_forearm_matrix:SetAngles(ang)
@@ -1125,9 +1123,7 @@ q = q * Quaternion():SetAngleAxis(-120 - angrr.r + eyeang.r - math.NormalizeAngl
             hg.bone_apply_matrix(ply, ply_r_hand_index, ply_r_hand_matrix)
         end
 
-        local handPitch = math.Clamp(math.NormalizeAngle(ply_r_hand_matrix:GetAngles().p) / 90, -1, 1)
-handPitch = handPitch * handPitch * (3 - 2 * handPitch)
-local angrotate = math.NormalizeAngle(-eyeang.r + ply_r_hand_matrix:GetAngles().r + math.NormalizeAngle((eyeang.y - ply_r_hand_matrix:GetAngles().y)) * handPitch + -90)
+        local angrotate = math.NormalizeAngle(-eyeang.r + ply_r_hand_matrix:GetAngles().r + math.NormalizeAngle((eyeang.y - ply_r_hand_matrix:GetAngles().y)) * (math.NormalizeAngle(ply_r_hand_matrix:GetAngles().p)) / 90 + -90)
         
         local wrst = ent:LookupBone("ValveBiped.Bip01_R_Ulna")
         local wmat = wrst and ent:GetBoneMatrix(wrst)
@@ -1240,9 +1236,7 @@ local angrotate = math.NormalizeAngle(-eyeang.r + ply_r_hand_matrix:GetAngles().
         local q = Quaternion()
         q = q * Quaternion():SetAngleAxis(angrr.y, vecUpZ)
         q = q * Quaternion():SetAngleAxis(angrr.p, vecUpY)
-        local pitchFactor = math.Clamp(math.NormalizeAngle(angrr.p) / 90, -1, 1)
-pitchFactor = pitchFactor * pitchFactor * (3 - 2 * pitchFactor)
-q = q * Quaternion():SetAngleAxis(-60 - angrr.r + eyeang.r - math.NormalizeAngle((eyeang.y - angrr.y)) * pitchFactor, Vector(1, 0, 0))
+        q = q * Quaternion():SetAngleAxis(-60 - angrr.r + eyeang.r - math.NormalizeAngle((eyeang.y - angrr.y)) * (math.NormalizeAngle(angrr.p)) / 90, Vector(1, 0, 0))
 
         local ang = q:Angle()
 
@@ -1264,9 +1258,7 @@ q = q * Quaternion():SetAngleAxis(-60 - angrr.r + eyeang.r - math.NormalizeAngle
             hg.bone_apply_matrix(ply, ply_l_hand_index, ply_l_hand_matrix)
         end
 
-        local handPitch = math.Clamp(math.NormalizeAngle(ply_l_hand_matrix:GetAngles().p) / 90, -1, 1)
-handPitch = handPitch * handPitch * (3 - 2 * handPitch)
-local angrotate = math.NormalizeAngle(-eyeang.r + ply_l_hand_matrix:GetAngles().r + math.NormalizeAngle((eyeang.y - ply_l_hand_matrix:GetAngles().y)) * handPitch - 45)
+        local angrotate = math.NormalizeAngle(-eyeang.r + ply_l_hand_matrix:GetAngles().r + math.NormalizeAngle((eyeang.y - ply_l_hand_matrix:GetAngles().y)) * (math.NormalizeAngle(ply_l_hand_matrix:GetAngles().p)) / 90 - 45)
 
         local wrst = ent:LookupBone("ValveBiped.Bip01_L_Ulna")
         local wmat = wrst and ent:GetBoneMatrix(wrst)
