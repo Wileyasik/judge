@@ -857,3 +857,65 @@ end )
 --hook.Add( "PreDrawOpaqueRenderables", "FPS_Fog", function( bDepth, bSkybox )
 --	--DrawFog(bDepth, bSkybox)
 --end )
+
+local hg_aimbeam = ConVarExists("hg_aimbeam") and GetConVar("hg_aimbeam") or CreateClientConVar("hg_aimbeam", "0", true, false, "Draw debug aim beams (eye aim vs camera view)", 0, 1)
+local hg_aimbeam_len = ConVarExists("hg_aimbeam_len") and GetConVar("hg_aimbeam_len") or CreateClientConVar("hg_aimbeam_len", "20000", true, false, "Aim beam length", 100, 100000)
+
+local aimbeam_eye = Color(0, 220, 0)
+local aimbeam_cam = Color(255, 40, 40)
+local aimbeam_mark = Color(255, 255, 0)
+
+local function DrawAimBeams()
+	local view = render.GetViewSetup()
+	if not view or not view.angles then return end
+
+	local len = hg_aimbeam_len:GetInt()
+	local eyeStart = LocalPlayer():EyePos()
+	local eyeEnd = eyeStart + LocalPlayer():GetAimVector() * len
+	local camStart = view.origin or eyeStart
+	local camEnd = camStart + view.angles:Forward() * len
+
+	render.DrawLine(eyeStart, eyeEnd, aimbeam_eye, true)
+	render.DrawLine(camStart, camEnd, aimbeam_cam, true)
+	render.DrawLine(eyeEnd, camEnd, aimbeam_mark, true)
+
+	local mark = 20
+	render.DrawLine(eyeEnd - Vector(mark, mark, mark), eyeEnd + Vector(mark, mark, mark), aimbeam_eye, true)
+	render.DrawLine(camEnd - Vector(mark, mark, mark), camEnd + Vector(mark, mark, mark), aimbeam_cam, true)
+end
+
+hook.Add("PostDrawTranslucentRenderables", "hg_aimbeam", function(bDepth, bSkybox)
+	if bSkybox or not hg_aimbeam:GetBool() then return end
+	DrawAimBeams()
+end)
+
+hook.Add("PostDrawOpaqueRenderables", "hg_aimbeam_opaque", function(bDepth, bSkybox)
+	if bSkybox or not hg_aimbeam:GetBool() then return end
+	DrawAimBeams()
+end)
+
+cvars.AddChangeCallback("hg_aimbeam", function(name, old, new)
+	if tonumber(new) == 1 then
+		LocalPlayer():PrintMessage(HUD_PRINTTALK, "[aimbeam] enabled, len " .. hg_aimbeam_len:GetInt() .. " | green=GetAimVector red=view.angles")
+	end
+end, "hg_aimbeam_cb")
+
+hook.Add("HUDPaint", "hg_aimbeam_measure", function()
+	if not hg_aimbeam:GetBool() then return end
+
+	local view = render.GetViewSetup()
+	if not view or not view.angles then return end
+
+	local diff = LocalPlayer():GetAimVector():Angle() - view.angles
+	diff.p = math.NormalizeAngle(diff.p)
+	diff.y = math.NormalizeAngle(diff.y)
+	diff.r = 0
+
+	draw.SimpleText(
+		"aim off: pitch " .. string.format("%.2f", diff.p) .. "  yaw " .. string.format("%.2f", diff.y) .. " deg   (green=GetAimVector, red=view.angles)",
+		"Default",
+		10,
+		ScrH() - 26,
+		Color(255, 255, 255)
+	)
+end)

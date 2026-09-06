@@ -1137,6 +1137,13 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 				effdata:SetMagnitude(dmg / 10)
 				effdata:SetScale(1)
 				util.Effect("BloodImpact", effdata)
+
+				net.Start("hg_bloodimpact")
+				net.WriteVector(outputHole[#outputHole])
+				net.WriteVector(-outputDir:GetNormalized() * 0.3)
+				net.WriteFloat(dmg)
+				net.WriteInt(math.Clamp(math.ceil(dmg / 60), 2, 24), 8)
+				net.SendPVS(outputHole[#outputHole])
 			end
 
 			--[[local ent = ents.Create("prop_physics")

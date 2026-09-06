@@ -2,14 +2,14 @@ local PANEL = {}
 
 local blur = Material("pp/blurscreen")
 local scale = 0.02
-local scalew = sw / 40
-local scaleh = sh / 40
 
 function PANEL:Init()
     self.grid = {}
 end
 
 function PANEL:Paint()
+    local sw, sh = ScrW(), ScrH()
+    local scalew, scaleh = sw / 40, sh / 40
     for i = 0, sw / 20 do
         self.grid[i] = self.grid[i] or {}
 

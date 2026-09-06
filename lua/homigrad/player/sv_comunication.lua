@@ -1,6 +1,70 @@
 local chat_dist_normal = 3000
 local chat_dist_whisper = 100
 
+util.AddNetworkString("LookAway")
+util.AddNetworkString("ZB_KeyDown2")
+util.AddNetworkString("send_tinnitus")
+util.AddNetworkString("send_custom_tinnitus")
+util.AddNetworkString("stop_custom_tinnitus")
+
+hook.Add("KeyPress", "huy-hg", function(ply, key)
+	net.Start("ZB_KeyDown2")
+		net.WriteInt(key, 26)
+		net.WriteBool(ply.organism and ply.organism.canmove or false)
+		net.WriteEntity(ply)
+	net.SendPVS(ply:GetPos())
+end)
+
+net.Receive("LookAway", function(len, ply)
+	if len > 64 or !IsValid(ply) then return end
+	if (ply.cooldown_lookaway or 0) > CurTime() then return end
+	ply.cooldown_lookaway = CurTime() + 0.1
+
+	local rf = RecipientFilter()
+	rf:AddPVS(ply:GetPos())
+	rf:RemovePlayer(ply)
+
+	local MaxLookX, MinLookX = hg.MaxLookX or MaxLookX, hg.MinLookX or MinLookX
+	local MaxLookY, MinLookY = hg.MaxLookY or MaxLookY, hg.MinLookY or MinLookY
+
+	local LookX = net.ReadFloat()
+	local LookY = net.ReadFloat()
+
+	if (LookX > MaxLookX or LookX < MinLookX) or (LookY > MaxLookY or LookY < MinLookY) then
+		hg.BreakNeck(ply)
+	end
+
+	net.Start("LookAway", true)
+		net.WriteEntity(ply)
+		net.WriteFloat(LookX)
+		net.WriteFloat(LookY)
+	net.Send(rf)
+end)
+
+local plymeta = FindMetaTable("Player")
+
+function plymeta:AddTinnitus(time, needSound)
+	needSound = needSound or false
+	net.Start("send_tinnitus")
+		net.WriteFloat(time)
+		net.WriteBool(needSound)
+	net.Send(self)
+end
+
+function plymeta:AddCustomTinnitus(soundFile)
+	net.Start("send_custom_tinnitus")
+		net.WriteString(soundFile)
+	net.Send(self)
+end
+
+plymeta.PlayCustomTinnitus = plymeta.AddCustomTinnitus
+
+function plymeta:StopCustomTinnitus()
+	if not IsValid(self) then return end
+	net.Start("stop_custom_tinnitus")
+	net.Send(self)
+end
+
 --\\Whisper
 	util.AddNetworkString("ChatWhisper")
 	

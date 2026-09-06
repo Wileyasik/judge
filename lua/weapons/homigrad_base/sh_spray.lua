@@ -146,6 +146,10 @@ function SWEP:PrimarySpread()
 
 		self.sprayAngles[3] = self.sprayAngles[3] + math.max(self.Primary.Damage / 100,1) * self.addSprayMul * (self.cameraShakeMul or 1) * ((((self.NumBullet or 1) - 1) / 2) + 1) * (((self.podkid or 1) - 1) / 3 + 1) / 40
 
+		if self.Primary.Automatic and sprayI > 1 then
+			ViewPunch2(Angle(0, 0, angrand2[2] * 0.6 * math.min(sprayI / math.max(max_clip1, 1), 1) * (self.cameraShakeMul or 1) * screenRecoilMul))
+		end
+
 		self:ApplyEyeSprayVel(sprayvel * 1)
 		--self:AnimApply_RecoilCameraZoom()
 	end

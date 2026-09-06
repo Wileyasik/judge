@@ -1,91 +1,4 @@
-hg.armor = {}
-local hg_gopro = ConVarExists("hg_gopro") and GetConVar("hg_gopro") or CreateClientConVar("hg_gopro", "0", true, false, "Toggle GoPro-like first-person camera view", 0, 1)
-
-local vecAdjust2 = Vector(0, -0, -0)
-local function DrawFirstPersonHelmet(ply, strModel, vecAdjust, fFov, setMat)
-	if ply:GetNetVar("headcrab") then return end
-	if not ply:Alive() then return end
-	if ply.organism and ply.organism.otrub then return end
-
-	if not IsValid(ply.FirstPersonHelmetModel) then
-		ply.FirstPersonHelmetModel = ClientsideModel(strModel)
-		ply.FirstPersonHelmetModel:SetNoDraw(true)
-		return
-	end
-
-	if not IsValid(ply.FirstPersonHelmetModel2) then
-		ply.FirstPersonHelmetModel2 = ClientsideModel(strModel)
-		ply.FirstPersonHelmetModel2:SetNoDraw(true)
-		ply.FirstPersonHelmetModel2:SetModelScale(1.05)
-		return
-	end
-
-	local mdl = ply.FirstPersonHelmetModel
-	local mdl2 = ply.FirstPersonHelmetModel2
-
-	if mdl:GetModel() != strModel then
-		mdl:SetModel(strModel)
-	end
-
-	if mdl2:GetModel() != strModel then
-		mdl2:SetModel(strModel)
-	end
-	
-	if setMat and !mdl.matseted1 then
-		mdl:SetSubMaterial(0,setMat)
-		mdl.matseted = false
-		mdl.matseted1 = true
-		--print('huy')
-	elseif !setMat and !mdl.matseted then
-		--print("huy")
-		mdl:SetSubMaterial(0,nil)
-		mdl.matseted = true
-		mdl.matseted1 = false
-	end
-
-	local gp = hg_gopro:GetBool()
-
-	local view = render.GetViewSetup()
-	cam.Start3D(view.origin,view.angles,view.fov + fFov,nil,nil,nil,nil,1,10)
-		--cam.IgnoreZ(true)
-		local viewpunching = GetViewPunchAngles() / 2
-		local ang = view.angles + viewpunching
-		mdl:SetRenderOrigin(view.origin + ang:Forward() * (vecAdjust.x + (gp and vecAdjust2.x or 0)) + ang:Right() * (vecAdjust.y + (gp and vecAdjust2.y or 0)) + ang:Up() * (vecAdjust.z + (gp and vecAdjust2.z or 0)))
-		mdl:SetRenderAngles(ang)
-		mdl2:SetRenderOrigin(view.origin + ang:Forward() * (vecAdjust.x + (gp and vecAdjust2.x or 0)) + ang:Right() * (vecAdjust.y + (gp and vecAdjust2.y or 0)) + ang:Up() * (vecAdjust.z + (gp and vecAdjust2.z or 0)))
-		mdl2:SetRenderAngles(ang)
-		mdl:SetParent(ply, ply:LookupBone("ValveBiped.Bip01_Head1"))
-		render.SetColorModulation(1,1,1)
-			render.SetStencilWriteMask( 0xFF )
-			render.SetStencilTestMask( 0xFF )
-			render.SetStencilReferenceValue( 0 )
-			render.SetStencilCompareFunction( STENCIL_ALWAYS )
-			render.SetStencilPassOperation( STENCIL_KEEP )
-			render.SetStencilFailOperation( STENCIL_KEEP )
-			render.SetStencilZFailOperation( STENCIL_KEEP )
-			render.ClearStencil()
-
-			-- Enable stencils
-			render.SetStencilEnable( true )
-			-- Set everything up everything draws to the stencil buffer instead of the screen
-			render.SetStencilReferenceValue( 1 )
-			render.SetStencilCompareFunction( STENCIL_NOTEQUAL )
-			render.SetStencilPassOperation( STENCIL_REPLACE )
-			render.SetBlend(0)
-				mdl2:DrawModel()
-			render.SetBlend(1)
-			render.SetStencilCompareFunction( STENCIL_EQUAL )
-			mdl:DrawModel()
-			if not hg.ConVars.potatopc:GetBool() then
-				DrawBokehDOF(8,0.9,15)
-			end
-			-- Let everything render normally again
-			render.SetStencilEnable( false )
-		render.SetColorModulation(1,1,1)
-		--cam.IgnoreZ(false)
-	cam.End3D()
-end
-
+﻿hg.armor = {}
 hg.armor.torso = {
 	["vest1"] = {
 		"torso",
@@ -176,7 +89,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/cr/cr_tt_plate_carrier.mdl",
 		Vector(-0.6, 3, 0),
 		Angle(0, 92, 90),
-		protection = 8, // бр 2
+		protection = 8, // Р±СЂ 2
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/cr/cr_tt_plate_carrier.mdl",
 		nobonemerge = true,
@@ -194,7 +107,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_6b23-1.mdl",
 		Vector(-1, 2.8, 0),
 		Angle(0, 90, 90),
-		protection = 10, // бр 3
+		protection = 10, // Р±СЂ 3
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_6b23-1.mdl",
 		nobonemerge = true,
@@ -222,7 +135,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/cr/cr_6b5_16.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 10, // бр 3
+		protection = 10, // Р±СЂ 3
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/cr/cr_6b5_16.mdl",
 		nobonemerge = true,
@@ -240,7 +153,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/cr/cr_mbss.mdl",
 		Vector(-0.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 10, // бр 3
+		protection = 10, // Р±СЂ 3
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/cr/cr_mbss.mdl",
 		nobonemerge = true,
@@ -258,7 +171,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_otv_ucp.mdl",
 		Vector(-1, 2.6, 0),
 		Angle(0, 92, 90),
-		protection = 10, // бр 3
+		protection = 10, // Р±СЂ 3
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_otv_ucp.mdl",
 		nobonemerge = true,
@@ -286,7 +199,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_6b13_digi.mdl",
 		Vector(-1, 2.7, 0),
 		Angle(0, 90, 90),
-		protection = 12, // бр 4
+		protection = 12, // Р±СЂ 4
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_6b13_digi.mdl",
 		nobonemerge = true,
@@ -314,7 +227,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/cr/cr_6b3.mdl",
 		Vector(-0.8, 2.9, 0),
 		Angle(0, 90, 90),
-		protection = 12, // бр 4
+		protection = 12, // Р±СЂ 4
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/cr/cr_6b3.mdl",
 		nobonemerge = true,
@@ -332,7 +245,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_thor_crv.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 12, // бр 4
+		protection = 12, // Р±СЂ 4
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_thor_crv.mdl",
 		nobonemerge = true,
@@ -360,7 +273,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/cr/cr_bae_rbav_af.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 12, // бр 4
+		protection = 12, // Р±СЂ 4
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/cr/cr_bae_rbav_af.mdl",
 		nobonemerge = true,
@@ -378,7 +291,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_6b43_body.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 15, // бр 5
+		protection = 15, // Р±СЂ 5
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_6b43_body.mdl",
 		nobonemerge = true,
@@ -428,7 +341,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_iotv.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 90, 90),
-		protection = 15, // бр 5
+		protection = 15, // Р±СЂ 5
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_iotv.mdl",
 		nobonemerge = true,
@@ -468,7 +381,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/cr/cr_bagarii.mdl",
 		Vector(-1.1, 2.8, 0),
 		Angle(0, 92, 90),
-		protection = 15, // бр 5
+		protection = 15, // Р±СЂ 5
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/cr/cr_bagarii.mdl",
 		nobonemerge = true,
@@ -486,8 +399,8 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/cr/cr_osprey_defence.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 15, // бр 5
-		shoulderProtection = 15.5, // бр 4
+		protection = 15, // Р±СЂ 5
+		shoulderProtection = 15.5, // Р±СЂ 4
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/cr/cr_osprey_defence.mdl",
 		nobonemerge = true,
@@ -535,7 +448,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_slick_b.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 17, // бр 6
+		protection = 17, // Р±СЂ 6
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_slick_b.mdl",
 		nobonemerge = true,
@@ -563,7 +476,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_beetle6a.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 17, // бр 6
+		protection = 17, // Р±СЂ 6
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_beetle6a.mdl",
 		nobonemerge = true,
@@ -591,7 +504,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/cr/cr_black_knight.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 17, // бр 6
+		protection = 17, // Р±СЂ 6
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/cr/cr_black_knight.mdl",
 		nobonemerge = true,
@@ -608,7 +521,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/cr/cr_tv110.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 17, // бр 6
+		protection = 17, // Р±СЂ 6
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/cr/cr_tv110.mdl",
 		nobonemerge = true,
@@ -625,8 +538,8 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_6b43_body.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 19, // бр 7
-		shoulderProtection = 20.5, // бр 6
+		protection = 19, // Р±СЂ 7
+		shoulderProtection = 20.5, // Р±СЂ 6
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_6b43_body.mdl",
 		nobonemerge = true,
@@ -651,8 +564,8 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_thor_intcar.mdl",
 		Vector(-1.3, 3, 0),
 		Angle(0, 92, 90),
-		protection = 19, // бр 7
-		shoulderProtection = 20.5, // бр 6
+		protection = 19, // Р±СЂ 7
+		shoulderProtection = 20.5, // Р±СЂ 6
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/eft_props/gear/armor/ar_thor_intcar.mdl",
 		nobonemerge = true,
@@ -723,7 +636,7 @@ hg.armor.torso = {
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/parts hl2/medic_kevlar.mdl",
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/parts hl2/medic_kevlar.mdl", Vector(2.35, 3.2, 0), 0)
+			hg.DrawFirstPersonHelmet(ply, "models/parts hl2/medic_kevlar.mdl", Vector(2.35, 3.2, 0), 0)
 		end,
 		femPos = Vector(-1.5, 0, 1),
 		scale = 0.95,
@@ -743,7 +656,7 @@ hg.armor.torso = {
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/parts hl2/hl2_kevlar.mdl",
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/parts hl2/hl2_kevlar.mdl", Vector(2.35, 3.2, 0), 0)
+			hg.DrawFirstPersonHelmet(ply, "models/parts hl2/hl2_kevlar.mdl", Vector(2.35, 3.2, 0), 0)
 		end,
 		femPos = Vector(-1.5, 0, 1),
 		scale = 0.95,
@@ -763,7 +676,7 @@ hg.armor.torso = {
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/gruchk/jmod_dayz/vest/vt_chestplate.mdl",
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/gruchk/jmod_dayz/vest/vt_chestplate.mdl", Vector(2.35, 3.2, 0), 0)
+			hg.DrawFirstPersonHelmet(ply, "models/gruchk/jmod_dayz/vest/vt_chestplate.mdl", Vector(2.35, 3.2, 0), 0)
 		end,
 		femPos = Vector(-1.1, 0, 1.2),
 		scale = 0.95,
@@ -779,7 +692,7 @@ hg.armor.torso = {
 		"models/eft_props/gear/armor/ar_6b13_killa.mdl",
 		Vector(-1, 2.7, 0),
 		Angle(0, 90, 90),
-		protection = 25, // бр 5
+		protection = 25, // Р±СЂ 5
 		healthDamageMul = 0.0005,
 		wornThreshold = 0,
 		breakShotRange = {100000, 100000},
@@ -927,7 +840,7 @@ hg.armor.torso = {
 		model = "models/gruchk/jmod_dayz/vest/vt_plate_carrier_tan.mdl",
 		skins = {"1","2","3","4","5"},
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/gruchk/jmod_dayz/vest/vt_plate_carrier_tan.mdl", Vector(2.35, 3.2, 0), 0)
+			hg.DrawFirstPersonHelmet(ply, "models/gruchk/jmod_dayz/vest/vt_plate_carrier_tan.mdl", Vector(2.35, 3.2, 0), 0)
 		end,
 		femPos = Vector(-1.5, 0, 1),
 		scale = 0.95,
@@ -1071,7 +984,7 @@ hg.armor.head = {
 		norender = true,
 		skins = {0,1,3,7,10,11,14},
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/dean/gtaiv/helmet.mdl", vectors[2], 20)
+			hg.DrawFirstPersonHelmet(ply, "models/dean/gtaiv/helmet.mdl", vectors[2], 20)
 		end,
 		viewmaterial = false,
 		effect = "Impact",
@@ -1097,7 +1010,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_un.mdl",
 		Vector(2, -0.37, 0.15),
 		Angle(180, 100, 90),
-		protection = 1.5, // бр 1
+		protection = 1.5, // Р±СЂ 1
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_un.mdl",
 		femPos = Vector(-0.5, 0, 0.4),
@@ -1105,7 +1018,7 @@ hg.armor.head = {
 		femscale = 0.93,
 		norender = true,
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_un.mdl", vectors[2], 24)
+			hg.DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_un.mdl", vectors[2], 24)
 		end,
 		viewmaterial = false,
 		effect = "Impact",
@@ -1119,7 +1032,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_hops_core_fast.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 1.5, // бр 1
+		protection = 1.5, // Р±СЂ 1
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_hops_core_fast.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1127,7 +1040,7 @@ hg.armor.head = {
 		femscale = 0.93,
 		norender = true,
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_hops_core_fast.mdl", vectors[4], 20)
+			hg.DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_hops_core_fast.mdl", vectors[4], 20)
 		end,
 		viewmaterial = false,
 		effect = "Impact",
@@ -1140,7 +1053,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_k1c.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 1.5, // бр 1
+		protection = 1.5, // Р±СЂ 1
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_k1c.mdl",
 		blocksHeadphones = true,
@@ -1150,7 +1063,7 @@ hg.armor.head = {
 		femscale = 0.93,
 		norender = true,
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_k1c.mdl", vectors[4], 20)
+			hg.DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_k1c.mdl", vectors[4], 20)
 		end,
 		viewmaterial = false,
 		effect = "Impact",
@@ -1163,7 +1076,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_s_sh_68.mdl",
 		Vector(2, -1, 0.15),
 		Angle(180, 100, 90),
-		protection = 1.5, // бр 1
+		protection = 1.5, // Р±СЂ 1
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_s_sh_68.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1171,7 +1084,7 @@ hg.armor.head = {
 		femscale = 0.93,
 		norender = true,
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_s_sh_68.mdl", vectors[4], 20)
+			hg.DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_s_sh_68.mdl", vectors[4], 20)
 		end,
 		viewmaterial = false,
 		effect = "Impact",
@@ -1184,7 +1097,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_6b47_cover.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 4.5, // бр 3
+		protection = 4.5, // Р±СЂ 3
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_6b47_cover.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1192,7 +1105,7 @@ hg.armor.head = {
 		femscale = 0.93,
 		norender = true,
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_6b47_cover.mdl", vectors[4], 13)
+			hg.DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_6b47_cover.mdl", vectors[4], 13)
 		end,
 		viewmaterial = false,
 		effect = "Impact",
@@ -1205,7 +1118,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_lshz.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 4.5, // бр 3
+		protection = 4.5, // Р±СЂ 3
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_lshz.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1213,7 +1126,7 @@ hg.armor.head = {
 		femscale = 0.93,
 		norender = true,
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_lshz.mdl", vectors[4], 13)
+			hg.DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_lshz.mdl", vectors[4], 13)
 		end,
 		viewmaterial = false,
 		effect = "Impact",
@@ -1226,7 +1139,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_mich2001.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 4.5, // бр 3
+		protection = 4.5, // Р±СЂ 3
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_mich2001.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1234,7 +1147,7 @@ hg.armor.head = {
 		femscale = 0.93,
 		norender = true,
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_mich2001.mdl", vectors[4], 13)
+			hg.DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_mich2001.mdl", vectors[4], 13)
 		end,
 		viewmaterial = false,
 		effect = "Impact",
@@ -1247,7 +1160,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_galvion_applique.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 4.5, // бр 3
+		protection = 4.5, // Р±СЂ 3
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_galvion_applique.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1255,7 +1168,7 @@ hg.armor.head = {
 		femscale = 0.93,
 		norender = true,
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_galvion_applique.mdl", vectors[4], 13)
+			hg.DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_galvion_applique.mdl", vectors[4], 13)
 		end,
 		viewmaterial = false,
 		effect = "Impact",
@@ -1268,7 +1181,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_zsh_1_2m_v1.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 6.5, // бр 4
+		protection = 6.5, // Р±СЂ 4
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_zsh_1_2m_v1.mdl",
 		blocksHeadphones = true,
@@ -1278,7 +1191,7 @@ hg.armor.head = {
 		femscale = 0.93,
 		norender = true,
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_zsh_1_2m_v1.mdl", vectors[4], 13)
+			hg.DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_zsh_1_2m_v1.mdl", vectors[4], 13)
 		end,
 		viewmaterial = false,
 		effect = "Impact",
@@ -1291,7 +1204,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_lshz2dtm_damper.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 6.5, // бр 4
+		protection = 6.5, // Р±СЂ 4
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_lshz2dtm_damper.mdl",
 		blocksHeadphones = true,
@@ -1301,7 +1214,7 @@ hg.armor.head = {
 		femscale = 0.93,
 		norender = true,
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_lshz2dtm_damper.mdl", vectors[4], 13)
+			hg.DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_lshz2dtm_damper.mdl", vectors[4], 13)
 		end,
 		viewmaterial = false,
 		effect = "Impact",
@@ -1314,7 +1227,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_team_wendy_exfil_black.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 6.5, // бр 4
+		protection = 6.5, // Р±СЂ 4
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_team_wendy_exfil_black.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1322,7 +1235,7 @@ hg.armor.head = {
 		femscale = 0.93,
 		norender = true,
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_team_wendy_exfil_black.mdl", vectors[4], 13)
+			hg.DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_team_wendy_exfil_black.mdl", vectors[4], 13)
 		end,
 		viewmaterial = false,
 		effect = "Impact",
@@ -1335,7 +1248,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_team_wendy_exfil_coyote.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 6.5, // бр 4
+		protection = 6.5, // Р±СЂ 4
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_team_wendy_exfil_coyote.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1343,7 +1256,7 @@ hg.armor.head = {
 		femscale = 0.93,
 		norender = true,
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_team_wendy_exfil_coyote.mdl", vectors[4], 13)
+			hg.DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_team_wendy_exfil_coyote.mdl", vectors[4], 13)
 		end,
 		viewmaterial = false,
 		effect = "Impact",
@@ -1356,7 +1269,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_galvion_caiman.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 6.5, // бр 4
+		protection = 6.5, // Р±СЂ 4
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_galvion_caiman.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1364,7 +1277,7 @@ hg.armor.head = {
 		femscale = 0.93,
 		norender = true,
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_galvion_caiman.mdl", vectors[4], 13)
+			hg.DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_galvion_caiman.mdl", vectors[4], 13)
 		end,
 		viewmaterial = false,
 		effect = "Impact",
@@ -1377,7 +1290,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_diamond_age_bastion_shield.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 7.5, // бр 5
+		protection = 7.5, // Р±СЂ 5
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_diamond_age_bastion_shield.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1385,7 +1298,7 @@ hg.armor.head = {
 		femscale = 0.93,
 		norender = true,
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_diamond_age_bastion_shield.mdl", vectors[4], 13)
+			hg.DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_diamond_age_bastion_shield.mdl", vectors[4], 13)
 		end,
 		viewmaterial = false,
 		effect = "Impact",
@@ -1398,7 +1311,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_ops_core_fast_black_slaap.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 7.5, // бр 5
+		protection = 7.5, // Р±СЂ 5
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_ops_core_fast_black_slaap.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1406,7 +1319,7 @@ hg.armor.head = {
 		femscale = 0.93,
 		norender = true,
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_ops_core_fast_black_slaap.mdl", vectors[4], 13)
+			hg.DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_ops_core_fast_black_slaap.mdl", vectors[4], 13)
 		end,
 		viewmaterial = false,
 		effect = "Impact",
@@ -1420,7 +1333,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_ops_core_fast_tan_slaap.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 7.5, // бр 5
+		protection = 7.5, // Р±СЂ 5
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_ops_core_fast_tan_slaap.mdl",
 		femPos = Vector(-1.2, 0, 0.5),
@@ -1428,7 +1341,7 @@ hg.armor.head = {
 		femscale = 0.93,
 		norender = true,
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_ops_core_fast_tan_slaap.mdl", vectors[4], 13)
+			hg.DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_ops_core_fast_tan_slaap.mdl", vectors[4], 13)
 		end,
 		viewmaterial = false,
 		effect = "Impact",
@@ -1441,7 +1354,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_rys_t.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 7.5, // бр 5
+		protection = 7.5, // Р±СЂ 5
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_rys_t.mdl",
 		blocksHeadphones = true,
@@ -1451,7 +1364,7 @@ hg.armor.head = {
 		femscale = 0.93,
 		norender = true,
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_rys_t.mdl", vectors[4], 13)
+			hg.DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_rys_t.mdl", vectors[4], 13)
 		end,
 		viewmaterial = false,
 		effect = "Impact",
@@ -1464,7 +1377,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_vulkan_5.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 7.5, // бр 5
+		protection = 7.5, // Р±СЂ 5
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_vulkan_5.mdl",
 		blocksHeadphones = true,
@@ -1474,7 +1387,7 @@ hg.armor.head = {
 		femscale = 0.93,
 		norender = true,
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_vulkan_5.mdl", vectors[4], 13)
+			hg.DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_vulkan_5.mdl", vectors[4], 13)
 		end,
 		viewmaterial = false,
 		effect = "Impact",
@@ -1487,7 +1400,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_maska_1sh.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 7.5, // бр 5
+		protection = 7.5, // Р±СЂ 5
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/eft_props/gear/helmets/helmet_maska_1sh.mdl",
 		blocksHeadphones = true,
@@ -1497,7 +1410,7 @@ hg.armor.head = {
 		femscale = 0.93,
 		norender = true,
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_maska_1sh.mdl", vectors[4], 13)
+			hg.DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_maska_1sh.mdl", vectors[4], 13)
 		end,
 		viewmaterial = false,
 		effect = "Impact",
@@ -1510,7 +1423,7 @@ hg.armor.head = {
 		"models/eft_props/gear/helmets/helmet_maska_1sh_killa.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 17.5, // бр 5
+		protection = 17.5, // Р±СЂ 5
 		durability = 10000,
 		breakThreshold = 10000,
 		durabilityDamageMul = 0.1,
@@ -1524,7 +1437,7 @@ hg.armor.head = {
 		femscale = 0.93,
 		norender = true,
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_maska_1sh_killa.mdl", vectors[4], 13)
+			hg.DrawFirstPersonHelmet(ply, "models/eft_props/gear/helmets/helmet_maska_1sh_killa.mdl", vectors[4], 13)
 		end,
 		viewmaterial = false,
 		effect = "Impact",
@@ -1544,7 +1457,7 @@ hg.armor.head = {
 		norender = true,
 		skins = {1,2,3,4,5,6},
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/gruchk/jmod_dayz/helmets/ht_great_helm.mdl", vectors[2], 0)
+			hg.DrawFirstPersonHelmet(ply, "models/gruchk/jmod_dayz/helmets/ht_great_helm.mdl", vectors[2], 0)
 		end,
 		viewmaterial = false,
 		scale = 1,
@@ -1586,7 +1499,7 @@ hg.armor.head = {
 		norender = true,
 		skins = {1,2,3,4,5,6},
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/gruchk/jmod_dayz/helmets/ht_enduro_helmet.mdl", vectors[1], 25)
+			hg.DrawFirstPersonHelmet(ply, "models/gruchk/jmod_dayz/helmets/ht_enduro_helmet.mdl", vectors[1], 25)
 		end,
 		viewmaterial = false,
 		scale = 0.95,
@@ -1620,7 +1533,7 @@ hg.armor.head = {
 		skins = {1},
 		femPos = Vector(-1, 0, 0.1),
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/gruchk/jmod_dayz/helmets/ht_ballistic_helmet.mdl", vectors[2], 25)
+			hg.DrawFirstPersonHelmet(ply, "models/gruchk/jmod_dayz/helmets/ht_ballistic_helmet.mdl", vectors[2], 25)
 		end,
 		viewmaterial = false,
 		norender = true,
@@ -1893,66 +1806,6 @@ hg.armor.helmet_jaw = {
 hg.armor.helmet_ears = {
 	["earcovers_exfil_black"] = HelmetAccessory("helmet_ears", "models/eft_props/gear/helmets/helmet_team_wendy_exfil_ear_covers_b.mdl", 13.5, {helmet13 = true, helmet14 = true}, 0.172, {ears = true})
 }
-
-function hg.GetArmorItemState(ent, armor, key, default)
-	if not IsValid(ent) then return default end
-	local states = SERVER and ent.armor_states or ent:GetNetVar("ArmorStates", ent.armor_states or {})
-	local state = states and states[armor]
-	if not state or state[key] == nil then return default end
-	return state[key]
-end
-
-function hg.IsVisorLowered(ent, armor, armorData)
-	return hg.GetArmorItemState(ent, armor, "lowered", armorData.defaultLowered ~= false)
-end
-
-local voiceMufflingArmor = {
-	mandible_caiman = true,
-	mask2 = true,
-	mask4 = true,
-	visor_exfil_black = true,
-	visor_fast_shield = true,
-	visor_heavy_trooper = true,
-	visor_kolpak = true,
-	visor_lshz2dtm = true,
-	visor_killa = true,
-	visor_maska = true,
-	visor_riot = true,
-	visor_rys_t = true,
-	visor_sobr1 = true,
-	visor_sobr2 = true,
-	visor_vulkan = true,
-	visor_zsh = true,
-}
-
-function hg.IsVoiceMuffled(ent)
-	if not IsValid(ent) or not ent.armors then return false end
-	for placement, armor in pairs(ent.armors) do
-		if not voiceMufflingArmor[armor] then continue end
-		local armorData = hg.armor[placement] and hg.armor[placement][armor]
-		if not armorData or not armorData.toggleableVisor or hg.IsVisorLowered(ent, armor, armorData) then return true end
-	end
-	return false
-end
-
-if CLIENT then
-	local hearingMufflingHelmets = {
-		helmet11 = true,
-		helmet12 = true,
-		helmet27 = true,
-		helmet28 = true,
-		helmet29 = true,
-		helmet_riot = true,
-	}
-
-	hook.Add("EntityEmitSound", "ArmorHelmetHearingMuffle", function(soundData)
-		local ply = LocalPlayer()
-		if not IsValid(ply) or not ply:Alive() or not ply.armors or not hearingMufflingHelmets[ply.armors.head] then return end
-		soundData.Volume = (soundData.Volume or 1) * 0.82
-		return true
-	end)
-end
-
 local function DrawNoise(amt, alpha)
 	local W, H = ScrW(), ScrH()
 
@@ -2016,14 +1869,13 @@ local colormodify02 = {
 	["$pp_colour_mulg"] = 0,
 	["$pp_colour_mulb"] = 0
 }
-
 hg.armor.face = {
 	["helmet31"] = {
 		"face",
 		"models/eft_props/gear/facecover/facecover_boss_welding_ubey.mdl",
 		Vector(2, -0.45, 0.15),
 		Angle(180, 100, 90),
-		protection = 17.5, // бр 5
+		protection = 17.5, // Р±СЂ 5
 		durability = 10000,
 		breakThreshold = 10000,
 		durabilityDamageMul = 0.1,
@@ -2119,7 +1971,7 @@ hg.armor.face = {
 		model = "models/gruchk/jmod_dayz/helmets/ht_enduro_helmet_mouth.mdl",
 		skins = {1,2,3,4,5},
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/gruchk/jmod_dayz/helmets/ht_enduro_helmet_mouth.mdl", vectors[4], 25)
+			hg.DrawFirstPersonHelmet(ply, "models/gruchk/jmod_dayz/helmets/ht_enduro_helmet_mouth.mdl", vectors[4], 25)
 		end,
 		viewmaterial = false,
 		norender = true,
@@ -2146,7 +1998,7 @@ hg.armor.face = {
 		model = "models/gruchk/jmod_dayz/face/fe_nbc_respirator.mdl",
 		femPos = Vector(-1,0,0),
 		customviewrender = function(ply)
-			DrawFirstPersonHelmet(ply, "models/gruchk/jmod_dayz/face/fe_nbc_respirator.mdl", vectors[1], 25)
+			hg.DrawFirstPersonHelmet(ply, "models/gruchk/jmod_dayz/face/fe_nbc_respirator.mdl", vectors[1], 25)
 		end,
 		norender = true,
 		scale = 0.9,
@@ -2215,7 +2067,7 @@ hg.armor.face = {
 		AfterPickup = function(ply)
 			--timer.Simple(1,function()
 			--	if IsValid(ply) and ply:IsPlayer() then
-			--		ply:Notify("Enable \\ Disable NVG - С + E",nil,nil,0)
+			--		ply:Notify("Enable \\ Disable NVG - РЎ + E",nil,nil,0)
 			--	end
 			--end)
 		end
@@ -2240,17 +2092,6 @@ hg.armor.back = {
 		ScrappersSlot = "Armor",
 	}
 }
-
-if CLIENT then
-	net.Receive("AddFlash", function()
-		local pos = net.ReadVector()
-		local time = net.ReadFloat()
-		local size = net.ReadInt(20)
-		if not IsValid(lply) then return end
-		hg.AddFlash(hg.eye(lply), 1, pos, time, size)
-	end)
-end
-
 local armorNames = {
 	["aqualung"] = "Scuba Suit",
 	["ego_equalizer"] = "[HE] Equalizer",
@@ -2440,9 +2281,6 @@ local armorIcons = {
 	["visor_zsh"] = "entities/ent_jack_gmod_ezarmor_zshface.png",
 }
 hg.armorIcons = armorIcons
-
--- Balance: give every armor piece durability/absorb suited to its protection
--- class, and give helmets/visors a material ricochet chance instead of pure absorption.
 do
 	local function clamp(v, a, b) return math.max(a, math.min(b, v)) end
 
@@ -2501,85 +2339,3 @@ do
 		end
 	end
 end
-
-local entityMeta = FindMetaTable("Entity")
-function entityMeta:SyncArmor()
-	if self.armors then
-		self:SetNetVar("Armor", self.armors)
-		self:SetNetVar("ArmorStates", table.Copy(self.armor_states or {}))
-		local rag = hg.GetCurrentCharacter(self)
-		if IsValid(rag) and rag:IsRagdoll() then
-			rag.armors = table.Copy(self.armors)
-			rag.armors_shots = table.Copy(self.armors_shots or {})
-			rag.armors_health = table.Copy(self.armors_health or {})
-			rag.armors_durability = table.Copy(self.armors_durability or {})
-			rag.armors_regions = table.Copy(self.armors_regions or {})
-			rag.armors_broken = table.Copy(self.armors_broken or {})
-			rag.armors_broken_mul = table.Copy(self.armors_broken_mul or {})
-			rag.armor_states = table.Copy(self.armor_states or {})
-			rag:SetNetVar("Armor", self.armors)
-			rag:SetNetVar("ArmorStates", table.Copy(self.armor_states or {}))
-			rag:SetNetVar("HideArmorRender", self:GetNetVar("HideArmorRender", false))
-		end
-	end
-end
-
-local function initArmor()
-	for possibleArmor, armors in pairs(hg.armor) do
-		for armorkey, armorData in pairs(armors) do
-			if CLIENT then language.Add(armorkey, armorNames[armorkey] or armorkey) end
-			if armorData.inbuilt then continue end
-			
-			local armor = {}
-			armor.Base = "armor_base"
-			armor.PrintName = CLIENT and language.GetPhrase(armorkey) or armorkey
-			armor.name = armorkey
-			armor.Category = "ZCity Armor"
-			armor.Spawnable = true
-			if armorData.Spawnable != nil then
-				armor.Spawnable = false
-			end
-			if armorData.AdminOnly then
-				armor.AdminOnly = true
-			end
-			armor.Model = armorData[2]
-			armor.WorldModel = armorData[2]
-			armor.SubMats = armorData[4]
-			armor.armor = armorData
-			armor.placement = armorData[1]
-			armor.IconOverride = armorIcons[armorkey]
-			armor.PhysModel = armorData.PhysModel or nil
-			armor.PhysPos = armorData.PhysPos or nil
-			armor.PhysAng = armorData.PhysAng or nil
-			armor.material = armorData.material or nil
-			armor.skins = armorData.skins or nil
-			scripted_ents.Register(armor, "ent_armor_" .. armorkey)
-		end
-	end
-end
-
-function hg.GetArmorPlacement(armor)
-	if istable(armor) then return end
-	armor = string.Replace(armor,"ent_armor_","")
-	
-	local found
-	for i,armplc in pairs(hg.armor) do
-		for i2,armor2 in pairs(armplc) do
-			if i2 == armor then found = i end
-		end
-	end
-	return found
-end
-
-local stringToNum = {
-	["torso"] = 1,
-	["head"] = 2,
-	["face"] = 3,
-}
-
-function hg.GetArmorPlacementNum(armor)
-	return stringToNum[hg.GetArmorPlacement(armor)]
-end
-
-initArmor()
-hook.Add("Initialize", "init-atts", initArmor)

@@ -1612,7 +1612,9 @@ hook.Add("PlayerFootstep", "CustomFootstep", function(ply) if IsValid(ply.FakeRa
 function hg.RagdollOwner(ragdoll)
 	if not IsValid(ragdoll) then return end
 	local ply = ragdoll.ply
-	return IsValid(ply) and ply.FakeRagdoll == ragdoll and ply
+	if not IsValid(ply) then return end
+	if ply.FakeRagdoll == ragdoll then return ply end
+	if ply:GetNWBool("FakeGettingUp", false) and ply.OldRagdoll == ragdoll then return ply end
 end
 
 hook.Add("PlayerDisconnected", "hg-killniers", function(ply)

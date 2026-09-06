@@ -708,7 +708,9 @@ end)
 function hg.RagdollOwner(ragdoll)
 	if not IsValid(ragdoll) then return end
 	local ply = ragdoll:GetNWEntity("ply")
-	return IsValid(ply) and ply:GetNWEntity("FakeRagdoll") == ragdoll and ply
+	if not IsValid(ply) then return end
+	if ply:GetNWEntity("FakeRagdoll") == ragdoll then return ply end
+	if ply:GetNWBool("FakeGettingUp", false) and ply.OldRagdoll == ragdoll then return ply end
 end
 
 hook.Add("Player_Death", "Fake", function(ply)		

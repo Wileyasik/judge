@@ -253,6 +253,14 @@ function hg.BreakArmor(ent, equipment, pos, dmgInfo)
 
 	local equipmentEnt = hg.DropArmorForce(ent, equipment, pos, nil, getArmorDropVelocity(dmgInfo), brokenMul)
 
+	if placement == "head" or placement == "face" then
+		sound.Play("physics/glass/glass_sheet_break1.wav", isvector(pos) and pos or ent:GetPos(), 120, 100)
+		if ent:IsPlayer() and ent:Alive() then
+			ent:ViewPunch(AngleRand(-6, 6))
+			ent:AddTinnitus(0.5, true)
+		end
+	end
+
 	ent.armors_shots[equipment] = nil
 	ent.armors_health[equipment] = nil
 	if ent.armors_broken then

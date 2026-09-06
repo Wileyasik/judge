@@ -1,5 +1,5 @@
 gs = {
-	random = include("minstd.lua") -- from https://github.com/Kefta/Lua-MINSTD
+	random = include("homigrad/config/minstd.lua") -- from https://github.com/Kefta/Lua-MINSTD
 }
 
 
