@@ -229,6 +229,33 @@ local function TraceShockwavePath(startPos, endPos, filter, target)
 	return tr, true
 end
 
+local blastWallDensity = {
+	[MAT_WOOD] = 0.5,
+	[MAT_CONCRETE] = 1,
+	[MAT_METAL] = 1,
+	[MAT_TILE] = 0.75,
+	[MAT_ROCK] = 1.2,
+	[MAT_DIRT] = 0.4,
+	[MAT_SAND] = 0.25,
+	[MAT_GRATE] = 0.1,
+	[MAT_GLASS] = 0.15,
+	[MAT_PLASTIC] = 0.35,
+	[MAT_COMPUTER] = 0.6,
+	[MAT_SLOSH] = 0.3,
+	[MAT_SNOW] = 0.25,
+	[MAT_FOLIAGE] = 0.1,
+	[MAT_FLESH] = 0.2,
+	[MAT_BLOODYFLESH] = 0.2,
+	[MAT_ALIENFLESH] = 0.2,
+	[MAT_ANTLION] = 0.5,
+}
+
+function hg.GetBlastWallAttenuation(tr)
+	if not tr or not tr.Fraction then return 1.5 end
+	local density = blastWallDensity[tr.MatType] or 0.75
+	return 1 + (1 - math.Clamp(tr.Fraction, 0, 1)) * (1 + density)
+end
+
 local function SchedulePhysicalShockwave(data, ent, initialDistance, wallDiv)
 	if ent:IsNPC() then return false end
 	if ent:IsPlayer() and not ent:Alive() then return false end
