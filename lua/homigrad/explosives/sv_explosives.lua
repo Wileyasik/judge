@@ -860,14 +860,14 @@ local function ConsumeIEDBonus(ent)
 end
 
 local expItems = {
-	["models/props_c17/oildrum001_explosive.mdl"] = {ExpType = "Fire", Force = 75, RangeMul = 11, MaxDistance = math.huge, MaxDamage = math.huge, ShrapnelMul = 10},
-	["models/props_junk/gascan001a.mdl"] = {ExpType = "Fire", Force = 40, RangeMul = 1.3},
-	["models/props_junk/propane_tank001a.mdl"] = {ExpType = "Sharpnel", Force = 30, RangeMul = 1.35},
-	["models/props_junk/metalgascan.mdl"] = {ExpType = "Fire", Force = 40, RangeMul = 1.3},
-	["models/props_junk/PropaneCanister001a.mdl"] = {ExpType = "Sharpnel", Force = 40, RangeMul = 1.3},
-	["models/props_c17/canister01a.mdl"] = {ExpType = "Sharpnel", Force = 45, RangeMul = 1.25},
-	["models/props_c17/canister02a.mdl"] = {ExpType = "Sharpnel", Force = 45, RangeMul = 1.25},
-	[PropaneModel] = {ExpType = "Fire", Force = 28, RangeMul = 0.5, DamageMul = 0.5, KnockbackMul = 0.85, MinForceFrac = 0.18, MinDamageFrac = 0.03, DamageExponent = 1.65}
+	["models/props_c17/oildrum001_explosive.mdl"] = {ExpType = "Fire", Force = 75},
+	["models/props_junk/gascan001a.mdl"] = {ExpType = "Fire", Force = 40},
+	["models/props_junk/propane_tank001a.mdl"] = {ExpType = "Sharpnel", Force = 30},
+	["models/props_junk/metalgascan.mdl"] = {ExpType = "Fire", Force = 40},
+	["models/props_junk/PropaneCanister001a.mdl"] = {ExpType = "Sharpnel", Force = 40},
+	["models/props_c17/canister01a.mdl"] = {ExpType = "Sharpnel", Force = 45},
+	["models/props_c17/canister02a.mdl"] = {ExpType = "Sharpnel", Force = 45},
+	[PropaneModel] = {ExpType = "Fire", Force = 50}
 }
 
 hg.expItems = expItems

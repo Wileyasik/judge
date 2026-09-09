@@ -62,6 +62,20 @@ function hg.ExplosionTrace(start, endpos, filter)
 	})
 end
 
+if SERVER then
+	if not hg.BlastDamageWithShockwave then
+		function hg.BlastDamageWithShockwave(inflictor, attacker, origin, radius, damage)
+			util.BlastDamage(IsValid(inflictor) and inflictor or game.GetWorld(), IsValid(attacker) and attacker or game.GetWorld(), origin, radius, damage)
+		end
+	end
+
+	if not hg.GetBlastWallAttenuation then
+		function hg.GetBlastWallAttenuation(tr)
+			return 1.5
+		end
+	end
+end
+
 hg.MaxLookX, hg.MinLookX = 55, -55
 hg.MaxLookY, hg.MinLookY = 45, -45
 

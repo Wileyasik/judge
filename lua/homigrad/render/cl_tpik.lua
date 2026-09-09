@@ -1030,7 +1030,8 @@ function hg.DoTPIK(ply, ent)
             if ply.lerpedsegmenthit > 0.01 and ply.oldhitnormal then
                 local hitnormal = ply.oldhitnormal:Forward()
                 local dist = 20--ply.segmentsl[2].Pos:Distance(ply.segmentsl[1].Pos)
-                local new = hitnormal * dist * ply.lerpedsegmenthit * (math.sin(math.acos(hitnormal:Dot(tr.Normal)))) + segments[2].Pos
+                local dot = math_Clamp(hitnormal:Dot(tr.Normal), -1, 1)
+                local new = hitnormal * dist * ply.lerpedsegmenthit * (math.sin(math.acos(dot))) + segments[2].Pos
 
                 segments[2].Pos = new
             end
@@ -1167,7 +1168,8 @@ function hg.DoTPIK(ply, ent)
             if ply.lerpedsegmenthit2 > 0.01 and ply.oldhitnormal2 then
                 local hitnormal = ply.oldhitnormal2:Forward()
                 local dist = 20--segments[2].Pos:Distance(segments[1].Pos)
-                local new = hitnormal * dist * ply.lerpedsegmenthit2 * (math.sin(math.acos(hitnormal:Dot(tr.Normal)))) + segments[2].Pos
+                local dot = math_Clamp(hitnormal:Dot(tr.Normal), -1, 1)
+                local new = hitnormal * dist * ply.lerpedsegmenthit2 * (math.sin(math.acos(dot))) + segments[2].Pos
 
                 segments[2].Pos = new
             end
@@ -1286,6 +1288,10 @@ hg.IKSolve = solve
 function hg.Solve2PartIK(start_p, end_p, length0, length1, mat0, mat1, sign, torsomat, angs, ang)
     local length2 = (start_p - end_p):Length()
 
+    if length2 <= 0.001 then
+        return start_p, start_p, mat0:GetAngles(), mat1:GetAngles()
+    end
+
     if length0 + length1 < length2 then
         local add = length2 - length1 - length0
         --length0 = length0 + add * length0 / (length2 - add)
@@ -1316,7 +1322,7 @@ function hg.Solve2PartIK(start_p, end_p, length0, length1, mat0, mat1, sign, tor
 
     local Joint0 = Angle(angle0 + angle2, angle3, 0)
 
-    local asdot = -vector_up:Dot(torsoang:Up())
+    local asdot = math_Clamp(-vector_up:Dot(torsoang:Up()), -1, 1)
     local diffa = math.deg(math.acos(asdot)) + (sign < 0 and -0 or 0)
     local diffa2 = 90 + (sign > 0 and -30 or 30)--math.deg(math.acos(asdot))
     
