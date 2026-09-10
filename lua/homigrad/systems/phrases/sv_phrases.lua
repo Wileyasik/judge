@@ -484,7 +484,7 @@ local function canPainScream(ply)
 	if silentCombatClasses[ply.PlayerClassName] then return false end
 
 	local org = ply.organism
-	if !org or org.otrub or ply:WaterLevel() >= 3 then return false end
+	if !org or org.otrub or (org.cotard or 0) > 0 or ply:WaterLevel() >= 3 then return false end
 
 	return true
 end
@@ -550,6 +550,7 @@ function hg.QueuePainScream(ply, amount)
 	if !canPainScream(ply) then return end
 
 	local org = ply.organism
+	if (org.cotard or 0) > 0 then return end
 	amount = mClamp(amount or 0, 0, 2)
 
 	if amount <= 0 then return end
@@ -664,8 +665,8 @@ end)
 hook.Add("PreHomigradDamage","BurnScream", function( ent, dmgInfo )
 	local ply = ent:IsRagdoll() and hg.RagdollOwner(ent) or ent
 
-		if dmgInfo:IsDamageType(DMG_BURN) and IsValid(ply) and ply:IsPlayer() 
-	and ply.organism and !ply.organism.otrub and ply:Alive() then
+	if dmgInfo:IsDamageType(DMG_BURN) and IsValid(ply) and ply:IsPlayer() 
+	and ply.organism and !ply.organism.otrub and (ply.organism.cotard or 0) <= 0 and ply:Alive() then
 		local phrase
 		if mRandom(1, 100) <= mClamp(burnScreamUniversalChance, 0, 1) * 100 then
 			phrase = burnScreamSounds[mRandom(#burnScreamSounds)]

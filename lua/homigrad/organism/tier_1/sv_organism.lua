@@ -59,6 +59,12 @@ hook.Add("Org Clear", "Main", function(org)
 	org.eyeR = 0
 	org.consciousness = 1
 	org.disorientation = 0
+	org.cotard = 0
+	org.cotardType = 0
+	org.cotardStarted = 0
+	org.cotardWasUnconscious = false
+	org.cotardUnconTimer = 0
+	org.cotardTest = false
 	org.jaw = 0
 	org.teethLost = 0
 	org.spine1 = 0
@@ -374,6 +380,9 @@ local function send_organism(org, ply, recipientForce, reliable)
 	sendtable.concussion = org.concussion
 	sendtable.nausea = org.nausea
 	sendtable.concussion_tinnitus = org.concussion_tinnitus
+	sendtable.cotard = org.cotard or 0
+	sendtable.cotardType = org.cotardType or 0
+	sendtable.cotardStarted = org.cotardStarted or 0
 	net.Start("organism_send", not reliable and hg_unreliable_nets:GetBool())
 	net.WriteTable(not hg_developer:GetBool() and sendtable or org)
 	net.WriteBool(recipientForce or org.owner.fullsend or false)  -- ORG_NET_FORCE

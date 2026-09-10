@@ -103,6 +103,16 @@ local seizureStopping
 
 local MUSIC_VOLUME = 0.75
 local BRAINROT_VOLUME = 0.45
+local lastConcussion = 0
+local lastConcussionSound = 0
+
+local function PlayLocalImpactSound(path, volume)
+	sound.PlayFile("sound/" .. path, "noblock noplay", function(station)
+		if not IsValid(station) then return end
+		station:SetVolume(volume or 1)
+		station:Play()
+	end)
+end
 
 local function PlayStationRandom(station, volume)
 	station:SetVolume(volume or 1)
@@ -275,6 +285,12 @@ hook.Add("Think", "RemCardiacSounds", function()
 	local ply = LocalPlayer()
 	if not IsValid(ply) then return end
 	local org = ply:Alive() and (ply.new_organism or ply.organism)
+	local concussion = org and org.concussion or 0
+	if concussion > lastConcussion + 0.1 and CurTime() >= lastConcussionSound then
+		PlayLocalImpactSound("concussion2.mp3", 1)
+		lastConcussionSound = CurTime() + 1.5
+	end
+	lastConcussion = concussion
 	local heartstop = org and org.heartstop or false
 	local fibrillation = org and org.fibrillation or false
 	if heartstop and not remHeartStopped then PlayRemHeartStopSound(org.otrub) end
@@ -692,6 +708,7 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 
 	if organism.owner == LocalPlayer() then
 		if new_organism.otrub and !old then
+			PlayLocalImpactSound("harmsting.ogg", 1)
 			hook.Run("HG_OnOtrub", new_organism.owner)
 		end
 		
@@ -730,6 +747,7 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 	local concussion = org.concussion or 0
 	local concussionNausea = org.nausea or 0
 	local concussionTinnitus = org.concussion_tinnitus or 0
+	local cotard = org.cotard or new_organism.cotard or 0
 	local deathStateEnd = new_organism.deathStateEnd or org.deathStateEnd
 	local seizureActive = org.seizureActive or new_organism.seizureActive or false
 	if deathStateEnd and deathStateEnd <= 0 then deathStateEnd = nil end
@@ -845,7 +863,7 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 
 
 	//pain = math.abs(math.cos(CurTime())) * 40
-	if (pain > 0) or (hurt > 0) or (immobilization > 0) or (brain > 0) then
+	if cotard <= 0 and ((pain > 0) or (hurt > 0) or (immobilization > 0) or (brain > 0)) then
 		local k = ((hurt + immobilization / 15) / 2)
 		--DrawToyTown(1, k * ScrH())
 		local newpain = pain - 10
