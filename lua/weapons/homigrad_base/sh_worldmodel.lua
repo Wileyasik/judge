@@ -99,7 +99,7 @@ function SWEP:UpdateWeaponReadiness(owner, dtime)
 	local dt = math.Clamp(dtime, 0, 0.05)
 	local sprinting = self:IsSprinting()
 	local deploying = isnumber(self.deploy) and self.deploy > CurTime()
-	local lowered = sprinting or deploying
+	local lowered = (sprinting and !self:CanSprintFire()) or deploying
 	local factor = self:GetWeaponInertiaFactor()
 	local raiseRate = math.Clamp((self.Ergonomics or 1) * 4 / math.sqrt(factor), 1.6, 8)
 

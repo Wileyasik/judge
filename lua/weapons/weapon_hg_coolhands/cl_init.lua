@@ -344,8 +344,8 @@ function SWEP:ModelAnim(model, pos, ang)
 end
 
 function SWEP:Camera(eyePos, eyeAng, view, vellen)
-	//self:SetHandPos()
 	self:DrawWorldModel()
+	self:SetHandPos()
 	local owner = self:GetOwner()
 	if not IsValid(owner) then return end
 

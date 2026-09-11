@@ -875,7 +875,7 @@ end
 local host_timescale = game.GetTimeScale
 
 function SWEP:Camera(eyePos, eyeAng, view, vellen)
-    //self:SetHandPos()
+    self:SetHandPos()
 
     local owner = self:GetOwner()
     if not owner.InVehicle then return end

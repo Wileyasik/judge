@@ -352,8 +352,8 @@ end
 SWEP.supportTPIK = true
 SWEP.ismelee = true
 function SWEP:Camera(eyePos, eyeAng, view, vellen)
-	//self:SetHandPos()
 	self:DrawWorldModel()
+	self:SetHandPos()
 	local owner = self:GetOwner()
 	if not IsValid(owner) then return end
 
