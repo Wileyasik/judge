@@ -395,9 +395,19 @@ function SWEP:DoRT()
 	//ang[3] = ang//lply:EyeAngles()[3] //+ self.AdditionalAng[3]
 	--ang[3] = view.angles[3]
 	
-	local mul = 4 * self.ZoomFOV / 7 * (self.scopedef and 400 / self.scope_blackout or 1)
-	angaddhuy[1] = scope_pos[3] * mul
-	angaddhuy[2] = -scope_pos[2] * mul
+	local zoomParallaxMul = math.Clamp(self.ZoomFOV / 10, 0.5, 1)
+	local mul = 4 * self.ZoomFOV / 7 * zoomParallaxMul * (self.scopedef and 400 / self.scope_blackout or 1)
+	local basePos = self.parallaxBasePos
+	if not basePos then
+		self.parallaxBasePos = scope_pos + vector_origin
+		basePos = self.parallaxBasePos
+	end
+	local baseLerp = math.min(1, FrameTime() * 0.4)
+	basePos = basePos + (scope_pos - basePos) * baseLerp
+	self.parallaxBasePos = basePos
+	local dynScope = scope_pos - basePos
+	angaddhuy[1] = dynScope[3] * mul
+	angaddhuy[2] = -dynScope[2] * mul
 	
 	local ang2 = ang + angaddhuy
 	local pos2 = pos-- + ang2:Right() * -scope_pos[2] + ang2:Up() * scope_pos[3]
@@ -488,7 +498,7 @@ function SWEP:DoRT()
 			--y = y - 0
 		end
 
-		local distMul = math.min(15, 1.2 * 2.5 * (15 / self.ZoomFOV))
+		local distMul = math.min(15, 1.2 * 2.5 * (15 / (self.FOVMax or 10)))
 		
 		local dist = math.sqrt(((x - scrw / 2) * distMul)^2 + ((y - scrh / 2) * distMul)^2)
 		
@@ -529,7 +539,7 @@ function SWEP:DoRT()
 			if hg_show_hitposmuzzle:GetBool() then
 				draw.RoundedBox(0, hitPos.x / (scrw / ScrW()) - 2, hitPos.y / (scrh / ScrH()) - 2, 4, 4, color_red)
 			end
-			local blackout = self.blackoutsize * 0.75
+			local blackout = self.blackoutsize * 0.9
 			surface.SetDrawColor(255, 255, 255, 255)
 			surface.SetMaterial(self.perekrestie)
 			local stableReticle = foundatt and foundatt.stableReticle
@@ -541,7 +551,7 @@ function SWEP:DoRT()
 				reticleX = x / (scrw / ScrW())
 				reticleY = y / (scrh / ScrH())
 			end
-			surface.DrawTexturedRectRotatedHuy(0, 0, (self.sizeperekrestie * rtsize / 512) / ((self.perekrestieSize and 4 ) or self.ZoomFOV / 3), (self.sizeperekrestie * rtsize / 512) / ((self.perekrestieSize and 4 ) or self.ZoomFOV / 3), 0, reticleY, reticleX, self.rot)
+			surface.DrawTexturedRectRotatedHuy(0, 0, (self.sizeperekrestie * rtsize / 512) / ((self.perekrestieSize and 4 ) or (self.FOVMax or 10) / 3), (self.sizeperekrestie * rtsize / 512) / ((self.perekrestieSize and 4 ) or (self.FOVMax or 10) / 3), 0, reticleY, reticleX, self.rot)
 
 			surface.SetDrawColor(100, 100, 100)
 			surface.SetMaterial(self.scopemat)

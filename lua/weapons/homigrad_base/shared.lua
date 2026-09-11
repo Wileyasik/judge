@@ -2385,7 +2385,7 @@ function SWEP:SetHandPos(noset)
 
 	if not self.handPos or not self.handAng then
 		if hg.DebugTPIK then hg.DebugTPIK(ply, "setpos", "nohandpos") end
-		return end
+	end
 
 	local should = self:ShouldUseFakeModel()
 
@@ -2403,6 +2403,9 @@ function SWEP:SetHandPos(noset)
 	ply.lhold = lhmat
 
 	if not rhmat or not lhmat then return end
+
+	self.handPos = self.handPos or rhmat:GetTranslation()
+	self.handAng = self.handAng or rhmat:GetAngles()
 
 	local atk = hg.KeyDown(ply, IN_ATTACK)
 	self.anglefinger[2] = LerpFT(atk and 1 or 0.1, self.anglefinger[2], self:CanUse() and !(self:KeyDown(IN_USE) and !IsValid(ply.FakeRagdoll)) and atk and 30 or 0)

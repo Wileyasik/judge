@@ -99,7 +99,7 @@ SWEP.RHAng = Angle(0, -5, 90)
 SWEP.LHPos = Vector(15, -1, -3)
 SWEP.LHAng = Angle(-110, -90, -90)
 SWEP.UseCustomWorldModel = true
-SWEP.ViewPunchDiv = 1
+SWEP.ViewPunchDiv = 150
 
 -- Характеристики
 SWEP.Primary.ClipSize = 10

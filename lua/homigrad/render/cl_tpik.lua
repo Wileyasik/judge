@@ -696,7 +696,8 @@ function hg.MainTPIKFunction(ent, ply, wpn)
         hg.DoZManip(ent, ply)
         //local systime = SysTime()
         hg.DoTPIK(ply, ent)
-        --hg._DeprecatedDoTPIK(ply, ent)
+
+		--hg._DeprecatedDoTPIK(ply, ent)
         //print("DoTPIK: ", SysTime() - systime)
     end
 

@@ -414,6 +414,12 @@ local function DrawWorldModel(self, force)
 			willdraw = true
 		end
 	else
+		if self.deploy then
+			self:WorldModel_Transform_Holstered()
+		end
+		
+		self:WorldModel_Transform()
+		
 		willdraw = true
 	end
 

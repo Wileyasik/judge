@@ -147,9 +147,6 @@ SWEP.SupressorOnly = true
 
 SWEP.DisableMuzzleDevices = true
 SWEP.availableAttachments = {
-    barrel = {
-        [1] = {"supressor8", Vector(7.3, 0.1, 0), {}},
-    },
     sight = {
         ["mountType"] = {"picatinny"},
         ["mount"] = {picatinny = Vector(-25, 1.45, 0.02)}
