@@ -599,8 +599,8 @@ function SWEP:SetHandPos(noset)
 	local vel = ply:GetVelocity()
 
 	if trace2.Hit and not (trace2.Entity:IsPlayer() or trace2.Entity:IsNPC()) then -- freaky
-		if trace2.HitNormal:Dot(vel) < -200 or self.laptime > CurTime() then
-			if self.laptime < CurTime() then
+		if trace2.HitNormal:Dot(vel) < -200 or (self.laptime or 0) > CurTime() then
+			if (self.laptime or 0) < CurTime() then
 				self.laptime = CurTime() + 1
 			end
 			hg.DragRightHand(ply, self, trace2.HitPos - ply:GetAimVector() * 5, ply:GetAimVector(), (trace2.Entity:IsWorld() and Lerp(1, trace2.HitNormal:Angle(), ply:EyeAngles() + ang180) or ply:EyeAngles() + ang180) + ang2 - ply:EyeAngles())
@@ -616,15 +616,15 @@ function SWEP:SetHandPos(noset)
 	if trace.Entity:IsPlayer() or trace.Entity:IsNPC() then return end -- freaky
 
 	if trace.Hit and not IsValid(ply:GetNetVar("carryent2")) then
-		if trace.HitNormal:Dot(vel) < -200 or self.laptime > CurTime() then
-			if self.laptime < CurTime() then
+		if trace.HitNormal:Dot(vel) < -200 or (self.laptime or 0) > CurTime() then
+			if (self.laptime or 0) < CurTime() then
 				self.laptime = CurTime() + 1
 			end
 			hg.DragLeftHand(ply, self, trace.HitPos - ply:GetAimVector() * 5, ply:GetAimVector(), (trace.Entity:IsWorld() and Lerp(1, trace.HitNormal:Angle(), ply:EyeAngles() + ang180) or ply:EyeAngles() + ang180) + ang1 - ply:EyeAngles())
 		end
 	end
 
-	if (trace.Hit and trace2.Hit and self.laptime > CurTime() or (trace2.Hit and self.laptime > CurTime())) and self:GetHoldType() ~= "slam" then
+	if (trace.Hit and trace2.Hit and (self.laptime or 0) > CurTime() or (trace2.Hit and (self.laptime or 0) > CurTime())) and self:GetHoldType() ~= "slam" then
 		self:SetHoldType("slam")
 	elseif not self:GetFists() and self:GetHoldType() ~= "normal" then
 		self:SetHoldType("normal")
@@ -677,7 +677,7 @@ function SWEP:Think()
         end
 
         local chargeHeld = owner:KeyDown(IN_USE) and owner:KeyDown(IN_ATTACK)
-        local wantsCharge = owner.PlayerClassName ~= "furry" and chargeHeld and (self:GetFists() or owner:KeyDown(IN_SPEED))
+        local wantsCharge = owner.PlayerClassName ~= "furry" and chargeHeld and (self:GetFists() and not owner:KeyDown(IN_SPEED))
         if self.Charging and self.ChargeComfort and wantsCharge then
                 self.Charging = nil
                 self.ChargeStarted = nil
@@ -750,7 +750,7 @@ function SWEP:PrimaryAttack(forcespecial)
 
 	if self:GetBlocking() then return end
 	if self.Charging and not forcespecial then return end
-	--if owner:KeyDown(IN_SPEED) then return end
+	if owner:KeyDown(IN_SPEED) then return end
 
         if not forcespecial and not isfur and owner:KeyDown(IN_USE) then
                 if not self.Charging then

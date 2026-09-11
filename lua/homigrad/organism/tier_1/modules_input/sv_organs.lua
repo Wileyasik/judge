@@ -343,6 +343,7 @@ input_list.eyeL = function(org, bone, dmg, dmgInfo)
 	local oldDmg = org.eyeL or 0
 	dmg = dmg * 0.75
 	org.eyeL = math.min((org.eyeL or 0) + dmg, 1)
+	if oldDmg < 1 and (org.eyeL or 0) >= 1 and hg.eyegore and hg.eyegore.PopEye then hg.eyegore.PopEye(org, "L") end
 
 	hg.AddHarmToAttacker(dmgInfo, dmg * 5, "Left eye damage harm")
 	org.painadd = org.painadd + dmg * 20
@@ -356,6 +357,7 @@ input_list.eyeR = function(org, bone, dmg, dmgInfo)
 	local oldDmg = org.eyeR or 0
 	dmg = dmg * 0.75
 	org.eyeR = math.min((org.eyeR or 0) + dmg, 1)
+	if oldDmg < 1 and (org.eyeR or 0) >= 1 and hg.eyegore and hg.eyegore.PopEye then hg.eyegore.PopEye(org, "R") end
 
 	hg.AddHarmToAttacker(dmgInfo, dmg * 5, "Right eye damage harm")
 	org.painadd = org.painadd + dmg * 20

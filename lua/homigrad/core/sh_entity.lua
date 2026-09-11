@@ -74,6 +74,18 @@ if SERVER then
 			return 1.5
 		end
 	end
+
+	if not hg.ApplyExplosionShockwave then
+		function hg.ApplyExplosionShockwave(options)
+			if not options or not options.Origin then return end
+			local origin = options.Origin
+			local radius = options.Radius or 100
+			local damage = options.Damage or 0
+			local filter = options.Filter or {}
+			local inflictor = IsValid(filter[1]) and filter[1] or game.GetWorld()
+			util.BlastDamage(inflictor, inflictor, origin, radius, damage)
+		end
+	end
 end
 
 hg.MaxLookX, hg.MinLookX = 55, -55

@@ -26,9 +26,9 @@ local shoveRange = 50
 local shoveForce = 165
 local shoveRagdollChance = 6
 local shoveStumbleChance = 1
-local specialDamageMul = 2
-local runningSpecialDamageMul = 2.5
-local incomingVelocityDamageMul = 2
+local specialDamageMul = 1.5
+local runningSpecialDamageMul = 2
+local incomingVelocityDamageMul = 1.5
 
 local function PlayPunchSound(pos, level, highPitch)
         local id = math_random(1, 11)
@@ -694,7 +694,7 @@ function SWEP:Think()
 	end
 
         local chargeHeld = owner:KeyDown(IN_USE) and owner:KeyDown(IN_ATTACK)
-        local wantsCharge = owner.PlayerClassName ~= "furry" and chargeHeld and (self:GetFists() or owner:KeyDown(IN_SPEED))
+        local wantsCharge = owner.PlayerClassName ~= "furry" and chargeHeld and self:GetFists() and not owner:KeyDown(IN_SPEED)
 		if self.Charging and self.ChargeComfort and wantsCharge then
 				self.Charging = nil
 				self.ChargeStarted = nil
@@ -823,9 +823,9 @@ function SWEP:PrimaryAttack(forcespecial)
 
 	if self:GetBlocking() then return end
 	if self.Charging and not forcespecial then return end
-	--if owner:KeyDown(IN_SPEED) then return end
+	if owner:KeyDown(IN_SPEED) then return end
 
-        if not forcespecial and not isfur and owner:KeyDown(IN_USE) then
+	if not forcespecial and not isfur and owner:KeyDown(IN_USE) then
                 if not self.Charging then
                         self.Charging = true
                         self.ChargeStarted = CurTime()
@@ -1029,7 +1029,7 @@ function SWEP:AttackFront(special_attack, rand)
 
                 local inv = owner:GetNetVar("Inventory",{})
                 local havekastet = inv["Weapons"] and inv["Weapons"]["hg_brassknuckles"]
-                local SelfForce, Mul = 150, 1 * (havekastet and 1.7 or 1)
+                local SelfForce, Mul = 110, 1 * (havekastet and 1.7 or 1)
                 if self:IsEntSoft(Ent) then
                         SelfForce = 25
                     if Ent:IsPlayer() and IsValid(Ent:GetActiveWeapon()) and Ent:GetActiveWeapon().GetBlocking and Ent:GetActiveWeapon():GetBlocking() and not hg.RagdollOwner(Ent) then
@@ -1087,7 +1087,7 @@ function SWEP:AttackFront(special_attack, rand)
 				local runningChargeMul = special_attack and (1 + math_Clamp((owner:GetVelocity():Length() - 100) / 200, 0, 1) * (runningSpecialDamageMul - 1)) or 1
 				local incomingSpeed = math.max(Ent:GetVelocity():Dot(-AimVec), 0)
 				local incomingDamageMul = 1 + math_Clamp((incomingSpeed - 150) / 450, 0, 1) * (incomingVelocityDamageMul - 1)
-				local DamageAmt = ((math_random(special_attack and 8 or 6, special_attack and 10 or 8) * (special_attack and specialDamageMul * runningChargeMul or 1) * incomingDamageMul) * ((isfur and (owner:IsBerserk() and 10 or 0.85)) or 1)) * (self.DamageMul or 1)
+				local DamageAmt = ((math_random(special_attack and 6 or 5, special_attack and 8 or 6) * (special_attack and specialDamageMul * runningChargeMul or 1) * incomingDamageMul) * ((isfur and (owner:IsBerserk() and 10 or 0.85)) or 1)) * (self.DamageMul or 1)
                 local ent = Ent
                 local vec = AimVec
 
@@ -1165,7 +1165,7 @@ function SWEP:AttackFront(special_attack, rand)
         end
 
         if SERVER then
-				owner.organism.stamina.subadd = owner.organism.stamina.subadd + (special_attack and owner:KeyDown(IN_SPEED) and 13 or 3)
+				owner.organism.stamina.subadd = owner.organism.stamina.subadd + (special_attack and owner:KeyDown(IN_SPEED) and 13 or 4)
         end
 
         owner:LagCompensation(false)

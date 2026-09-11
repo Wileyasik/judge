@@ -1802,3 +1802,66 @@ function meta:PullLHTowards(towards, timetopull, mdl, offsets, callback)
         //ply.pullingTowardsModel:SetPos(self:GetPos())
     end
 end
+
+local resetPlyTPIKFields = {
+	"last_rh",
+	"last_lh",
+	"segmentsr",
+	"segmentsl",
+	"lerp_rh",
+	"lerp_lh",
+	"cachedtpik",
+	"cachedval",
+	"BonesLength",
+	"nextrebuild",
+	"ply_r_upperarm_pos",
+	"ply_r_forearm_pos",
+	"ply_l_upperarm_pos",
+	"ply_l_forearm_pos",
+	"lerpedsegmenthit",
+	"lerpedsegmenthit2",
+	"oldhitnormal",
+	"oldhitnormal2"
+}
+
+local resetWpnTPIKFields = {
+	"walkLerped",
+	"walkTime",
+	"blockingR",
+	"blockingL",
+	"blockAngR",
+	"blockAngL",
+	"laptime",
+	"huytime",
+	"walkinglerp"
+}
+
+function hg.ResetTPIK(ply)
+	if not IsValid(ply) then return end
+
+	for i = 1, #resetPlyTPIKFields do
+		ply[resetPlyTPIKFields[i]] = nil
+	end
+
+	local wpn = ply:GetActiveWeapon()
+	if IsValid(wpn) then
+		for i = 1, #resetWpnTPIKFields do
+			wpn[resetWpnTPIKFields[i]] = nil
+		end
+	end
+
+	ply:SetupBones()
+	ply:InvalidateBoneCache()
+
+	hook.Run("HG_OnTPIKReset", ply)
+end
+
+concommand.Add("hg_reset_hands", function()
+	hg.ResetTPIK(LocalPlayer())
+end)
+
+hook.Add("PlayerSpawn", "hg_tpik_reset_spawn", function(ply)
+	if ply == LocalPlayer() then
+		hg.ResetTPIK(ply)
+	end
+end)

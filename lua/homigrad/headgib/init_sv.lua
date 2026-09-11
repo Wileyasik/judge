@@ -425,6 +425,7 @@ function Gib_Input(rag, bone, force, damage)
 		end
 
 		rag.noHead = true
+		rag:SetNW2Bool("hg_nohead", true)
 		rag:SetNWString("PlayerName", "Beheaded body")
 
 		rag:SetNW2Bool("hg_fountain", true)
