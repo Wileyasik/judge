@@ -364,6 +364,8 @@ local function send_organism(org, ply, recipientForce, reliable)
 	sendtable.panicattack = org.panicattack
 	sendtable.psycheAnger = org.psycheAnger or 0
 	sendtable.psycheApathy = org.psycheApathy or 0
+	sendtable.psycheSchizo = org.psycheSchizo or 0
+	sendtable.schizoEpisodeEnd = org.schizoEpisodeEnd or 0
 	sendtable.seizure = org.seizure
 	sendtable.seizureActive = org.seizureActive
 	sendtable.seizureStart = org.seizureStart

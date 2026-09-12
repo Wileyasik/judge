@@ -167,12 +167,16 @@ SWEP.LocalMuzzlePos = Vector(10, -2.3, 3.35)
 SWEP.LocalMuzzleAng = Angle(0, 0, 0)
 SWEP.WeaponEyeAngles = Angle(0, 0, 0)
 
-SWEP.HoldType = "rpg"
+SWEP.HoldType = "revolver"
 
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_uzi_pro.png")
 SWEP.IconOverride = "entities/arc9_eft_uzi_pro.png"
 
 SWEP.weight = 2.0
+SWEP.podkid = 0.5
+SWEP.RecoilMul = 0.6
+SWEP.ScreenRecoilMul = 0.5
+SWEP.WeaponRecoilMul = 1.0
 SWEP.ScrappersSlot = "Primary"
 
 SWEP.StartAtt = {}

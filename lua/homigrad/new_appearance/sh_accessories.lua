@@ -2039,6 +2039,16 @@ hg.Accessories = {
         placement = "head",
     },
 
+    ["Bear cap"] = {
+        model = "models/eft_props/gear/headwear/cap_bear_black.mdl",
+        bone = "ValveBiped.Bip01_Head1",
+        malepos = {Vector(2.7,-0.6,0.1),Angle(180,105,90),1},
+        fempos = {Vector(2,-1,0),Angle(180,105,90),1},
+        skin = 4,
+        norender = true,
+        placement = "head",
+    },
+
     ["pompon"] = {
         model = "models/eft_props/gear/headwear/head_pompon.mdl",
         bone = "ValveBiped.Bip01_Head1",

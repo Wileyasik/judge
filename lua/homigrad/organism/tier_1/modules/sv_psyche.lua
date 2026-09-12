@@ -10,14 +10,14 @@ local anger_decay = 60
 local anger_decay_fast = 18
 local anger_pain_resist = 0.25
 local apathy_pain_start = 35
-local apathy_pain_speed = 90
+local apathy_pain_speed = 25
 local apathy_blood_start = 3400
-local apathy_blood_speed = 150
-local apathy_otrub_speed = 220
+local apathy_blood_speed = 50
+local apathy_otrub_speed = 60
 local apathy_fear_start = 0.6
-local apathy_fear_speed = 150
-local apathy_decay = 180
-local apathy_decay_comfort = 60
+local apathy_fear_speed = 60
+local apathy_decay = 420
+local apathy_decay_comfort = 120
 local apathy_fear_cap = 0.4
 local apathy_witness_radius = 700
 local apathy_witness_gain = 0.25
@@ -127,9 +127,8 @@ module[2] = function(owner, org, timeValue)
 		apathy = min(apathy + timeValue / apathy_fear_speed * Clamp((fearLevel - apathy_fear_start) / (1 - apathy_fear_start), 0, 1), 1)
 	end
 
-	local comfort = (org.satiety or 0) > 500 and org.pain < 20 and (org.blood or 0) > 4500
+	local comfort = (org.satiety or 0) > 40 and org.pain < 20 and (org.blood or 0) > 4500
 	local apathyDecayTime = comfort and apathy_decay_comfort or apathy_decay
-	if anger > 0.5 then apathyDecayTime = min(apathyDecayTime, apathy_decay_comfort) end
 	apathy = Approach(apathy, 0, timeValue / apathyDecayTime)
 
 	org.psycheAnger = anger
