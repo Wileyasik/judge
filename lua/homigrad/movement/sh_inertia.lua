@@ -619,6 +619,10 @@ local Angle, Vector, AngleRand, VectorRand, math, hook, util, game = Angle, Vect
 			k = k * 0.25
 		end
 
+		if ply:GetNWBool("selfharming", false) then
+			k = k * 0.3
+		end
+
 		local ent = IsValid(ply:GetNetVar("carryent")) and ply:GetNetVar("carryent") or IsValid(ply:GetNetVar("carryent2")) and ply:GetNetVar("carryent2")
 
 		if SERVER and inertia_len > 5 and (ply.hg_isSprinting or ply.hg_isJogging) then

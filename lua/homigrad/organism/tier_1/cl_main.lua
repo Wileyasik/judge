@@ -1664,7 +1664,10 @@ function hg.GoreCalc(ent, ply)
 	local org = ent.new_organism or ent.organism
 	if !org then return end
 
+	local torsoSevered = ent:GetNWBool("hgTorsoSevered", false)
+
 	for bone, nam in pairs(limbs) do
+		if torsoSevered and (bone == "lleg" or bone == "rleg") then continue end
 		local amputated = org[bone.."amputated"] or (bone == "head" and ent.headexploded)
 		if !amputated then
 			local bon = ent:LookupBone(nam)

@@ -53,6 +53,7 @@ else
 	net.Receive("unload_ammo", function(len, ply)
 		local wep = net.ReadEntity()
         if ply:GetNWFloat("willsuicide", 0) > 0 then return end -- you cant escape.
+        if ply:GetNWFloat("rem_urges_end", 0) > CurTime() then return end
         wep.drawBullet = nil
         if wep and wep:GetOwner() == ply and ishgweapon(wep) and wep:Clip1() > 0 and wep:CanUse() then
 			ply:GiveAmmo(wep:Clip1(), wep:GetPrimaryAmmoType(), true)

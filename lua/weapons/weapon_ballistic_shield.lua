@@ -114,6 +114,15 @@ SWEP.ShieldMeleeBlockSizeAdd = Vector(0, 6, 6)
 SWEP.ShieldMeleeFrontDot = 0.5
 SWEP.ShieldMeleeBackDot = -0.3
 
+SWEP.ShieldBashDamage = 18
+SWEP.ShieldBashStaminaCost = 14
+SWEP.ShieldBashCooldown = 0.65
+SWEP.ShieldBashMinSpeed = 185
+SWEP.ShieldBashPushForce = 380
+SWEP.ShieldBashRagdollChance = 0.65
+SWEP.ShieldBashHitSound = "physics/body/body_medium_impact_soft7.wav"
+SWEP.ShieldBashPadding = Vector(6, 6, 6)
+
 local shieldClass = "weapon_ballistic_shield"
 
 local BackBone = "ValveBiped.Bip01_Spine2"
@@ -514,6 +523,163 @@ hook.Add("hg_ShieldKickBlock", "hg_shield_kick_block", function(defender, attack
 
 	return true
 end)
+
+local function ShieldBashPushRagdoll(rag, physbone, pushVel, hitPos)
+	if not IsValid(rag) then return end
+	local torsoBone = rag:LookupBone("ValveBiped.Bip01_Spine2")
+	torsoBone = torsoBone and rag:TranslateBoneToPhysBone(torsoBone) or 0
+	local hitPhys = rag:GetPhysicsObjectNum(physbone or 0)
+	local torsoPhys = rag:GetPhysicsObjectNum(torsoBone)
+	if not IsValid(hitPhys) then hitPhys = rag:GetPhysicsObjectNum(0) end
+	if IsValid(hitPhys) then
+		hitPhys:Wake()
+		hitPhys:ApplyForceOffset(pushVel * hitPhys:GetMass() * 3, hitPos)
+		hitPhys:ApplyForceCenter(pushVel * hitPhys:GetMass() * 1.75)
+	end
+	if IsValid(torsoPhys) then
+		torsoPhys:Wake()
+		torsoPhys:ApplyForceCenter(pushVel * torsoPhys:GetMass() * 2.25)
+	end
+end
+
+local function ShieldBashDoDamage(ply, target, wep, dmg)
+	local realTarget = hg.RagdollOwner(target) or target
+	if not IsValid(ply) or not IsValid(realTarget) or not realTarget:IsPlayer() or realTarget == ply then return end
+	local dmginfo = DamageInfo()
+	dmginfo:SetAttacker(ply)
+	dmginfo:SetInflictor(wep)
+	dmginfo:SetDamage(dmg)
+	dmginfo:SetDamageType(DMG_CLUB)
+	dmginfo:SetDamagePosition(realTarget:GetPos())
+	hook.Run("HomigradDamage", realTarget, dmginfo, HITGROUP_CHEST, realTarget, dmg / 10)
+end
+
+function SWEP:ThinkAdd()
+	if CLIENT then return end
+	local ply = self:GetOwner()
+	if not IsValid(ply) or not ply:Alive() then return end
+	if ply:GetActiveWeapon() ~= self then return end
+	if IsValid(ply.FakeRagdoll) then return end
+	if ply:InVehicle() then return end
+	if not ply:KeyDown(IN_SPEED) then return end
+	local vel = ply:GetVelocity()
+	local speed2d = vel:Length2D()
+	if speed2d < (self.ShieldBashMinSpeed or 185) then return end
+	if not ply:OnGround() then return end
+	if (self.NextShieldBash or 0) > CurTime() then return end
+	local org = ply.organism
+	if not org or not org.stamina then return end
+	local cost = self.ShieldBashStaminaCost or 14
+	if org.stamina[1] < cost then return end
+	local pos, ang, size = GetShieldHitbox(self, ply)
+	if not pos then return end
+	local pad = self.ShieldBashPadding or Vector(6, 6, 6)
+	size = size + pad
+	local candidates = ents.FindInSphere(pos, size:Length() + 40)
+	local hitList = {}
+	for _, ent in ipairs(candidates) do
+		if ent ~= ply and ent ~= ply.FakeRagdoll then
+			local isTarget = false
+			if ent:IsPlayer() then isTarget = true end
+			if ent:IsRagdoll() then isTarget = true end
+			if hg.RagdollOwner(ent) then isTarget = true end
+			if ent:GetClass() == "prop_physics" or ent:GetClass() == "prop_physics_multiplayer" then isTarget = true end
+			if isTarget then
+				local entPos = ent:WorldSpaceCenter()
+				if not entPos or entPos == vector_origin then entPos = ent:GetPos() end
+				local localPos = WorldToLocal(entPos, Angle(0,0,0), pos, ang)
+				if math.abs(localPos.x) <= size.x + 16 and math.abs(localPos.y) <= size.y + 16 and math.abs(localPos.z) <= size.z + 16 then
+					local toEnt = entPos - ply:WorldSpaceCenter()
+					toEnt.z = 0
+					local checkFront = true
+					if toEnt:LengthSqr() > 0.001 then
+						toEnt:Normalize()
+						local fwd = ply:EyeAngles():Forward()
+						fwd.z = 0
+						fwd:Normalize()
+						if fwd:Dot(toEnt) < 0 then checkFront = false end
+					end
+					if checkFront then
+						hitList[#hitList + 1] = ent
+					end
+				end
+			end
+		end
+	end
+	if #hitList == 0 then return end
+	self.NextShieldBash = CurTime() + (self.ShieldBashCooldown or 0.65)
+	org.stamina[1] = math.max(0, org.stamina[1] - cost)
+	org.stamina.subadd = (org.stamina.subadd or 0) + 4
+	org.stamina.regenMul = math.min(org.stamina.regenMul or 1, 0.7)
+	local pushDir = vel:LengthSqr() > 1 and vel:GetNormalized() or ply:GetAimVector()
+	pushDir.z = math.max(pushDir.z, 0.08)
+	pushDir:Normalize()
+	local pushVel = pushDir * (self.ShieldBashPushForce or 380)
+	local dmg = self.ShieldBashDamage or 18
+	dmg = dmg * math.Clamp(speed2d / 250, 0.9, 1.35)
+	for _, ent in ipairs(hitList) do
+		local hitPos = ent:WorldSpaceCenter()
+		if not hitPos or hitPos == vector_origin then hitPos = ent:GetPos() end
+		sound.Play(self.ShieldBashHitSound or "physics/body/body_medium_impact_soft7.wav", hitPos, 75, math.random(95, 110))
+		local realOwner = hg.RagdollOwner(ent) or ent
+		local isPlayer = IsValid(realOwner) and realOwner:IsPlayer()
+		if isPlayer and realOwner ~= ply then
+			ShieldBashDoDamage(ply, ent, self, dmg)
+			if hg.ApplyBruiseTo then
+				if ent:IsPlayer() then
+					hg.ApplyBruiseTo(ent, ent, hitPos, -pushDir)
+				elseif ent:GetClass() == "prop_ragdoll" then
+					local ragOwner = hg.RagdollOwner(ent)
+					if IsValid(ragOwner) and ragOwner:IsPlayer() then
+						hg.ApplyBruiseTo(ent, ragOwner, hitPos, -pushDir)
+					end
+				end
+			end
+		end
+		if ent:IsRagdoll() then
+			ShieldBashPushRagdoll(ent, 0, pushVel * 0.45, hitPos)
+		else
+			if IsValid(realOwner) and realOwner:IsPlayer() and realOwner ~= ply then
+				local target = realOwner
+				local shouldRagdoll = math.random() < (self.ShieldBashRagdollChance or 0.65)
+				if shouldRagdoll then
+					if hg.TriggerSprintCollisionRagdoll then
+						local tr = { Entity = target, HitPos = hitPos, HitNormal = -pushDir, PhysicsBone = 0 }
+						hg.TriggerSprintCollisionRagdoll(target, tr, pushVel, pushVel:Length() * 0.45)
+						timer.Simple(0, function()
+							if not IsValid(target) then return end
+							local rag = hg.GetCurrentCharacter(target)
+							if not IsValid(rag) or rag == target then return end
+							ShieldBashPushRagdoll(rag, 0, pushVel * 0.55, hitPos)
+						end)
+					elseif hg.Fake then
+						hg.Fake(target)
+						timer.Simple(0, function()
+							if not IsValid(target) then return end
+							local rag = hg.GetCurrentCharacter(target)
+							if not IsValid(rag) or rag == target then return end
+							ShieldBashPushRagdoll(rag, 0, pushVel * 0.55, hitPos)
+						end)
+					else
+						target:SetVelocity(pushVel * 1.1)
+					end
+				else
+					target:SetVelocity(pushVel * 0.9)
+					target:ViewPunch(Angle(6, 0, 0))
+					if hg.TriggerSprintCollisionStumble and math.random(2) == 1 then
+						hg.TriggerSprintCollisionStumble(target)
+					end
+				end
+			else
+				local phys = ent:GetPhysicsObject()
+				if IsValid(phys) then
+					phys:Wake()
+					phys:ApplyForceOffset(pushVel * math.min(phys:GetMass(), 12) * 0.7, hitPos)
+				end
+			end
+		end
+	end
+end
 
 if CLIENT then
 	local backModels = {}

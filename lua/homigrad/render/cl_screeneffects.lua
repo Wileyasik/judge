@@ -56,6 +56,9 @@ local tab = {
 }
 
 --local potatopc = GetConVar("hg_potatopc") or CreateClientConVar("hg_potatopc", "0", true, false, "enable this if you are noob", 0, 1)
+local hg_reduce_screeneffects = ConVarExists("hg_reduce_screeneffects") and GetConVar("hg_reduce_screeneffects") or CreateClientConVar("hg_reduce_screeneffects", "0", true, false, "Reduce screen shader effects by 50%", 0, 1)
+local screenEffectMul = hg_reduce_screeneffects:GetBool() and 0.5 or 1
+cvars.AddChangeCallback("hg_reduce_screeneffects", function(_, _, newValue) screenEffectMul = tonumber(newValue) == 1 and 0.5 or 1 end, "rem_reduce_screeneffects")
 local hook_Run = hook.Run
 hook.Add("RenderScreenspaceEffects", "homigrad", function()
 	//if potatopc:GetInt() >= 1 then return end
@@ -232,6 +235,196 @@ local coldMat = Material("effects/shaders/zb_colda")
 local grainMat = Material("effects/shaders/zb_grain2")
 local heatMat = Material("effects/shaders/zb_heat")
 local blindMat = Material("effects/shaders/zb_blind")
+
+REM_DepressionState = REM_DepressionState or {
+	overlayPath = "casunknown-images/screen/depressionoverlay",
+	mat = nil,
+	bound = false,
+	lerp = 0,
+	greyscaleLerp = 0,
+	motionLerp = 0,
+	letItGoLerp = 0,
+	depressionPulseLerp = 0,
+	phase = {0, 0},
+	_greyTab = {
+		["$pp_colour_addr"] = 0,
+		["$pp_colour_addg"] = 0,
+		["$pp_colour_addb"] = 0,
+		["$pp_colour_brightness"] = 0,
+		["$pp_colour_contrast"] = 1,
+		["$pp_colour_colour"] = 1,
+		["$pp_colour_mulr"] = 0,
+		["$pp_colour_mulg"] = 0,
+		["$pp_colour_mulb"] = 0
+	},
+}
+function REM_GetDepressionShaderMaterial(state)
+	if state.mat == false then return nil end
+
+	if not state.mat then
+		state.mat = CreateMaterial("remorseism_depression_composite_runtime", "screenspace_general", {
+			["$pixshader"] = "woundsystem_condition_ps20b",
+			["$basetexture"] = "_rt_FullFrameFB",
+			["$texture1"] = state.overlayPath,
+			["$ignorez"] = 1,
+			["$vertexcolor"] = 1,
+			["$vertextransform"] = 1,
+			["$copyalpha"] = 1,
+			["$alpha_blend_color_overlay"] = 0,
+			["$alpha_blend"] = 1,
+			["$linearwrite"] = 1,
+			["$linearread_basetexture"] = 1,
+			["$linearread_texture1"] = 1
+		})
+	end
+
+	local mat = state.mat
+	if not mat or mat:IsError() then
+		state.mat = false
+		return nil
+	end
+
+	if not state.bound then
+		local sourceMat = Material(state.overlayPath, "smooth")
+		if sourceMat and not sourceMat:IsError() and sourceMat.GetTexture then
+			local tex = sourceMat:GetTexture("$basetexture")
+			if tex then
+				mat:SetTexture("$texture1", tex)
+			end
+		end
+		state.bound = true
+	end
+
+	return mat
+end
+
+local remLetItGoPath = "sound/rem_despair.mp3"
+local depressionAudioGeneration = 0
+local RemLetItGoStation = nil
+local RemLetItGoLoading = false
+local remDepressionAudioThreshold = 0.5
+local remLetItGoVolumeMul = 1
+local remLetItGoFadeLerp = 0.04
+
+local function ensureRemLetItGoStation()
+	if IsValid(RemLetItGoStation) or RemLetItGoLoading then return end
+	local generation = depressionAudioGeneration
+	RemLetItGoLoading = true
+	sound.PlayFile(remLetItGoPath, "noblock noplay", function(station)
+		RemLetItGoLoading = false
+		if generation != depressionAudioGeneration then
+			if IsValid(station) then station:Stop() end
+			return
+		end
+		if IsValid(station) then
+			station:SetVolume(0)
+			station:Play()
+			station:EnableLooping(true)
+			RemLetItGoStation = station
+		end
+	end)
+end
+
+local function REM_UpdateDepressionAudio(state, rawDepression, otrub)
+	local letItGoTarget = not otrub and rawDepression >= remDepressionAudioThreshold and math.Clamp(math.Remap(rawDepression, remDepressionAudioThreshold, 1, 0, remLetItGoVolumeMul), 0, remLetItGoVolumeMul) or 0
+	state.letItGoLerp = LerpFT(remLetItGoFadeLerp, state.letItGoLerp or 0, letItGoTarget)
+	if letItGoTarget > 0.001 then
+		ensureRemLetItGoStation()
+	end
+	if IsValid(RemLetItGoStation) then
+		RemLetItGoStation:SetVolume(state.letItGoLerp)
+	end
+	if letItGoTarget <= 0.001 and state.letItGoLerp <= 0.01 then
+		if IsValid(RemLetItGoStation) then
+			RemLetItGoStation:Stop()
+			RemLetItGoStation = nil
+		end
+	end
+end
+
+function REM_DrawDepressionEffect(org)
+	local state = REM_DepressionState
+	state.greyscaleLerp = state.greyscaleLerp or 0
+	state.motionLerp = state.motionLerp or 0
+	state.vignetteLerp = state.vignetteLerp or 0
+	state.depressionPulseLerp = state.depressionPulseLerp or 0
+	state.phase = state.phase or {0, 0}
+	state._greyTab = state._greyTab or {
+		["$pp_colour_addr"] = 0,
+		["$pp_colour_addg"] = 0,
+		["$pp_colour_addb"] = 0,
+		["$pp_colour_brightness"] = 0,
+		["$pp_colour_contrast"] = 1,
+		["$pp_colour_colour"] = 1,
+		["$pp_colour_mulr"] = 0,
+		["$pp_colour_mulg"] = 0,
+		["$pp_colour_mulb"] = 0
+	}
+
+	local depressionValue = math.Clamp(org.depression or 0, 0, 1) * screenEffectMul
+	state.lerp = LerpFT(0.01, state.lerp or 0, depressionValue)
+
+	if state.lerp > 0.00005 then
+		local mat = REM_GetDepressionShaderMaterial(state)
+		if mat then
+			local ct = CurTime()
+
+			local phase = state.phase
+			phase[1] = ct * 0.9
+			phase[2] = ct * 0.55
+			local wobbleX = math.sin(phase[1]) * 0.042 + math.sin(phase[2] * 1.7) * 0.028
+			local wobbleY = math.cos(phase[1] * 0.8) * 0.042 + math.cos(phase[2] * 1.3) * 0.028
+
+			local pulse = math.sin(ct * 1.4) * 0.5 + 0.5
+			local motionTarget = state.lerp * (0.25 + pulse * 0.4)
+			state.motionLerp = LerpFT(0.04, state.motionLerp, motionTarget)
+
+			local greyTarget = math.Clamp(state.lerp * 1.18, 0, 1)
+			state.greyscaleLerp = LerpFT(0.012, state.greyscaleLerp, greyTarget)
+
+			local vignetteTarget = state.lerp * 11.67
+			state.vignetteLerp = LerpFT(0.01, state.vignetteLerp, vignetteTarget)
+
+			local pulseSin = math.sin(ct * math.pi / 0.93) * 0.5 + 0.5
+			local pulseScale = pulseSin * 1.1 * state.lerp
+			local wobbleBoost = pulseSin * 0.022 * state.lerp
+
+			render.UpdateScreenEffectTexture()
+
+			local motionWobble = state.motionLerp * (math.sin(ct * 1.4) * 0.5 + 0.5)
+
+			mat:SetFloat("$c0_x", state.lerp)
+			mat:SetFloat("$c0_y", 0)
+			mat:SetFloat("$c0_z", ct + wobbleX * 85 + motionWobble * 14)
+			mat:SetFloat("$c0_w", 0)
+			mat:SetFloat("$c1_x", 1 + wobbleX * 3.2 + motionWobble * 0.65 + pulseScale + wobbleBoost)
+			mat:SetFloat("$c1_y", 1 + wobbleY * 3.2 + motionWobble * 0.65 + pulseScale + wobbleBoost)
+			mat:SetFloat("$c1_z", 0.82661 + state.greyscaleLerp * 0.38)
+
+			render.SetMaterial(mat)
+			render.DrawScreenQuad()
+
+			if state.vignetteLerp > 0.001 then
+				render.UpdateScreenEffectTexture()
+
+				vignetteMat:SetFloat("$c2_x", ct + 10000)
+				vignetteMat:SetFloat("$c0_z", state.vignetteLerp)
+				vignetteMat:SetFloat("$c1_y", state.vignetteLerp)
+
+				render.SetMaterial(vignetteMat)
+				render.DrawScreenQuad()
+			end
+
+			local tab = state._greyTab
+			tab["$pp_colour_brightness"] = -state.greyscaleLerp * 0.07
+			tab["$pp_colour_contrast"] = 1 - state.greyscaleLerp * 0.16
+			tab["$pp_colour_colour"] = 1 - state.greyscaleLerp * 0.98
+			DrawColorModify(tab)
+		end
+	end
+
+	REM_UpdateDepressionAudio(state, math.Clamp(org.depression or 0, 0, 1), org.otrub)
+end
 
 local PainLerp = 0
 local PanicAttackLerp = 0
@@ -506,6 +699,14 @@ local function stopthings()
 	brainTemporalLerp = 0
 	brainOccipitalLerp = 0
 	brainHemorrhageLerp = 0
+	REM_DepressionState.lerp = 0
+	REM_DepressionState.greyscaleLerp = 0
+	REM_DepressionState.motionLerp = 0
+	REM_DepressionState.vignetteLerp = 0
+	REM_DepressionState.depressionPulseLerp = 0
+	REM_DepressionState.letItGoLerp = 0
+	depressionAudioGeneration = depressionAudioGeneration + 1
+	RemLetItGoLoading = false
 
 	lply.tinnitus = 0
 	nextPanicAttackShake = 0
@@ -585,6 +786,11 @@ local function stopthings()
 		AssimilationStation:Stop()
 		AssimilationStation = nil
 	end
+
+	if IsValid(RemLetItGoStation) then
+		RemLetItGoStation:Stop()
+		RemLetItGoStation = nil
+	end
 end
 
 local stations = {
@@ -646,7 +852,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	end
 
 	if (org.consciousness < 0.7) then
-		lerpblood = LerpFT(0.01, lerpblood or 0, math.Clamp((0.7 - org.consciousness) * 5, 0, 1) * 45)
+		lerpblood = LerpFT(0.01, lerpblood or 0, math.Clamp((0.7 - org.consciousness) * 5, 0, 1) * 45 * screenEffectMul)
 		surface.SetDrawColor(0, 0, 0, lerpblood)
 		surface.DrawRect(0, 0, ScrW(), ScrH())
 		//ViewPunch(Angle(-amt * 1, amt2 * 1,0))
@@ -715,7 +921,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	PanicAttackLerp = LerpFT(0.03, PanicAttackLerp, panicattackVisual ^ panicattackVisualExponent)
 
 	if tempLerp > 38 then
-		local heat = tempLerp - 38
+		local heat = (tempLerp - 38) * screenEffectMul
 
 		render.UpdateScreenEffectTexture()
 
@@ -740,7 +946,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		render.UpdateScreenEffectTexture()
 
 		assimilationMat:SetFloat("$c0_x", -CurTime())//math.sin(CurTime() * 0.1) * CurTime() * 0.01) //time
-		assimilationMat:SetFloat("$c0_y", assimilatedLerp * 3)//(math.sin(CurTime()) + 1) * 2) //intensity (strict)
+		assimilationMat:SetFloat("$c0_y", assimilatedLerp * 3 * screenEffectMul)//(math.sin(CurTime()) + 1) * 2) //intensity (strict)
 		local ctime = CurTime() * 2
 		local val = math.Clamp(3 - 1 / 3 * (math.sin(ctime * 2.8862) + math.cos(ctime * 1.115) - math.sin(ctime * 0.6215) + 3), 0, 5)
 		local val2 = math.Clamp(1 - 1 / 6 * (math.sin(ctime * 1.1862) + math.cos(ctime * 2.315) - math.sin(ctime * 0.9215) + 3), 0, 1)
@@ -773,7 +979,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	end
 
 	if (org.consciousness or 0) < 1 then
-		local consciousness = 1 - consciousnessLerp
+		local consciousness = (1 - consciousnessLerp) * screenEffectMul
 		render.UpdateScreenEffectTexture()
 		render.UpdateFullScreenDepthTexture()
 		
@@ -793,7 +999,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	end
 
 	if PanicAttackLerp * lsMul > 0.001 then
-		local panicBase = PanicAttackLerp * lsMul
+		local panicBase = PanicAttackLerp * lsMul * screenEffectMul
 		local panicPulse = panicBase * (panicattackPulseFloor + math.ease.InOutSine(math.abs(math.cos(CurTime() * 2))) * panicattackPulseIntensity)
 
 		render.UpdateScreenEffectTexture()
@@ -838,7 +1044,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	if (tempolerp > 0) then
 		render.UpdateScreenEffectTexture()
 
-		coldMat:SetFloat("$c0_y", tempolerp)
+		coldMat:SetFloat("$c0_y", tempolerp * screenEffectMul)
 		
 		render.SetMaterial(coldMat)
 		render.DrawScreenQuad()
@@ -1058,6 +1264,8 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	end
 	
 
+	REM_DrawDepressionEffect(org)
+
 	if O2Lerp > 1 then
 		render.UpdateScreenEffectTexture()
 		
@@ -1065,8 +1273,8 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		
 		noiseMat:SetFloat("$c0_y", 1 - o2 / 200) //Gate
 		noiseMat:SetFloat("$c0_z", 1) //ColorIntensity
-		noiseMat:SetFloat("$c1_x", math.Clamp(o2 / 200, 0, 2)) //Lerp
-		noiseMat:SetFloat("$c1_y", o2 * (!org.otrub and 0.05 or 1)) //Vignette
+		noiseMat:SetFloat("$c1_x", math.Clamp(o2 / 200, 0, 2) * screenEffectMul) //Lerp
+		noiseMat:SetFloat("$c1_y", o2 * (!org.otrub and 0.05 or 1) * screenEffectMul) //Vignette
 		noiseMat:SetFloat("$c2_x", CurTime() + 10000) //Time
 
 		render.SetMaterial(noiseMat)
@@ -1155,11 +1363,11 @@ hook.Add("Post Post Pre Post Processing", "BrainLobeEffects", function()
 	local org = lply:Alive() and lply.organism or (IsValid(spect) and spect.organism)
 	if not org or org.otrub then return end
 
-	local frontal = math.Clamp(brainFrontalLerp, 0, 1)
-	local parietal = math.Clamp(brainParietalLerp, 0, 1)
-	local temporal = math.Clamp(brainTemporalLerp, 0, 1)
-	local occipital = math.Clamp(brainOccipitalLerp, 0, 1)
-	local hemorrhage = math.Clamp(brainHemorrhageLerp, 0, 1)
+	local frontal = math.Clamp(brainFrontalLerp, 0, 1) * screenEffectMul
+	local parietal = math.Clamp(brainParietalLerp, 0, 1) * screenEffectMul
+	local temporal = math.Clamp(brainTemporalLerp, 0, 1) * screenEffectMul
+	local occipital = math.Clamp(brainOccipitalLerp, 0, 1) * screenEffectMul
+	local hemorrhage = math.Clamp(brainHemorrhageLerp, 0, 1) * screenEffectMul
 
 	if frontal > 0.01 then
 		brainFrontalColor["$pp_colour_brightness"] = -frontal * 0.035

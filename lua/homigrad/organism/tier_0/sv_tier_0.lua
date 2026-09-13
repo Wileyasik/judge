@@ -2,6 +2,30 @@ hg.organism = hg.organism or {}
 --local Organism = hg.organism
 hg.organism.list = hg.organism.list or {}
 local hook_Run = hook.Run
+function hg.organism.EnsureO2(org)
+	if not istable(org) then return end
+
+	local o2 = org.o2
+	if istable(o2) then
+		if not isnumber(o2.range) then o2.range = 30 end
+		if not isnumber(o2.regen) then o2.regen = 4 end
+		if not isnumber(o2.k) then o2.k = 0.5 end
+		if not isnumber(o2[1]) then o2[1] = o2.range end
+		if not isnumber(o2.curregen) then o2.curregen = o2.regen end
+		return o2
+	end
+
+	o2 = {
+		[1] = isnumber(o2) and o2 or 30,
+		range = 30,
+		regen = 4,
+		k = 0.5,
+		curregen = 4
+	}
+	org.o2 = o2
+	return o2
+end
+
 function hg.organism.Add(ent)
 	ent.organism = {
 		owner = ent
@@ -86,6 +110,7 @@ hook.Add("Think", "homigrad-organism", function()
 			hg.organism.list[owner] = nil
 			continue
 		end
+		if not istable(org.o2) then hg.organism.EnsureO2(org) end
 		if org.godmode then continue end
 		hook_Run("Org Think", owner, org, mulTime)
 	end
@@ -95,6 +120,7 @@ local lastcall = SysTime()
 hook.Add("Org Think Call", "homigrad-organism", function(owner, org)
 	if (SysTime() - lastcall) < tickrate then return end
 	lastcall = SysTime()
+	if not istable(org.o2) then hg.organism.EnsureO2(org) end
 	hook_Run("Org Think", owner, org, 0.00001)
 end)
 

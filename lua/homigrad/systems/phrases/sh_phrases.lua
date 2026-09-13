@@ -313,14 +313,14 @@ if CLIENT then
 			--hg.radialOptions[#hg.radialOptions + 1] = {randomPhrase, (LocalPlayer().PlayerClassName == "Slugcat" and "Wáaaaǎa\nWāaaàaâ") or (LocalPlayer().PlayerClassName == "Gordon" and "...") or "Say something"}
 			hg.radialOptions[#hg.radialOptions + 1] = {
 				[1] = function(mouseClick)
-					if mouseClick == 1 or organism.pain > 60 then
+					if mouseClick == 1 or (organism.pain or 0) > 60 then
 						randomPhrase()
 					else
 						--print(lply:GetPlayerClass())
 						if lply.PlayerClassName and lply:GetPlayerClass() and !lply:GetPlayerClass().CanUseDefaultPhrase then return end
 						local tbl = {}
 						for context, phrases in pairs(contextPhrases[1]) do
-							if lply.organism.pain > 30 and (context == "Satisfied" or context == "Cheer") then continue end
+							if (lply.organism.pain or 0) > 30 and (context == "Satisfied" or context == "Cheer") then continue end
 							
 							tbl[#tbl + 1] = {
 								[1] = function()
@@ -333,7 +333,7 @@ if CLIENT then
 						return -1
 					end
 				end,
-				[2] = organism.pain > 60 and (organism.pain <= 100 and "Yell in pain" or "Moan in pain") or (lply.PlayerClassName == "furry" and "Meow") or "Do Phrase\nRMB - Menu"
+				[2] = (organism.pain or 0) > 60 and ((organism.pain or 0) <= 100 and "Yell in pain" or "Moan in pain") or (lply.PlayerClassName == "furry" and "Meow") or "Do Phrase\nRMB - Menu"
 			}
 		end
 	end)

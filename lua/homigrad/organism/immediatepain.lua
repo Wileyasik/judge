@@ -5,6 +5,14 @@ if SERVER then
     local adrenalinePainaddPassiveMin = 15
 
     hook.Add("Org Think", "ImmediatePainApply", function(owner, org, timeValue)
+        local isHero = IsValid(owner) and owner:IsPlayer() and owner.RealishIsHero
+        if isHero then
+            org.avgpain = 0
+            org.painadd = 0
+            org.pain = 0
+            org.shock = 0
+            return
+        end
         if not org.painadd or org.painadd <= 0 then
             if org.avgpain > 0 then
                 local extraSub = timeValue * ( (org.painkiller or 0) * 2 + (org.analgesia or 0) * 4 ) * 2

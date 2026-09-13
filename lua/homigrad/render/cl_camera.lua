@@ -242,6 +242,7 @@ local lerpaim = 1
 local hg_leancam_mul = ConVarExists("hg_leancam_mul") and GetConVar("hg_leancam_mul") or CreateClientConVar("hg_leancam_mul", "7", true, false, "Multiply first-person camera view leaning angle", -10, 10)
 zooming = false
 lerpfovadd2 = 0
+local depFovPulseLerp = 0
 
 concommand.Add("+hg_zoom",function()
 	zooming = true
@@ -326,6 +327,17 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 	local rlEnt = hg.GetCurrentCharacter(ply)
 	lerpfovadd = LerpFT(0.01, lerpfovadd, (ply:IsSprinting() and rlEnt == ply and rlEnt:GetVelocity():LengthSqr() > 1500 and 10 or 0) - ( ply.organism and (ply.organism and (((ply.organism.immobilization or 0) / 4) - (ply.organism.adrenaline or 0) * 5 - (ply.organism.noradrenaline or 0) * 15)) or 0) / 2 - (ply.suiciding and (ply:GetNetVar("suicide_time",CurTime()) < CurTime()) and (1 - math.max(ply:GetNetVar("suicide_time",CurTime()) + 8 - CurTime(),0) / 8) * 20 or 0))
 	lerpfovadd2 = LerpFT(0.1, lerpfovadd2, zooming and -25 or 0)
+	local depVal = 0
+	if IsValid(ply) and ply.organism and ply.organism.depression then
+		depVal = math.Clamp(ply.organism.depression, 0, 1)
+	else
+		local spec = IsValid(lply) and lply:GetNWEntity("spect") or nil
+		if IsValid(spec) and spec.organism and spec.organism.depression then
+			depVal = math.Clamp(spec.organism.depression, 0, 1)
+		end
+	end
+	local pulseSin = math.sin(CurTime() * math.pi / 0.93) * 0.5 + 0.5
+	local depFovAdd = pulseSin * 7 * depVal
 
 	fov = hg_fov:GetInt()
 	
@@ -487,13 +499,13 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 		view.origin = util.TraceLine(tr).HitPos + ((tr.endpos - tr.start):GetNormalized() * -5)
 		view.angles = angles
 		view.drawviewer = true
-		view.fov = 95 + lerpfovadd + lerpfovadd2
+		view.fov = 95 + lerpfovadd + lerpfovadd2 - depFovAdd
 		return view
 	end
 
 	view.znear = 1 -- 3
 	view.zfar = zfar
-	view.fov = math.Clamp(hg_fov:GetFloat(),75,115) + fova[1] + lerpfovadd + lerpfovadd2
+	view.fov = math.Clamp(hg_fov:GetFloat(),75,115) + fova[1] + lerpfovadd + lerpfovadd2 - depFovAdd
 	view.drawviewer = true--not hullcheck.Hit
 	view.origin = origin
 	view.angles = angles

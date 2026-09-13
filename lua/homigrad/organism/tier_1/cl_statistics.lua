@@ -77,6 +77,7 @@ local list = {
 	"berserk",
 	"noradrenaline",
 	"fearadd",
+	{"depression", 1, true},
 	{"blood", 5000}, 
 	{"bleed", 100, true}, 
 	"bloodtype",

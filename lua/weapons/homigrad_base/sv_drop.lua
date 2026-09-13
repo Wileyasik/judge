@@ -5,6 +5,8 @@ local function drop(ply, wep, newWeapon, vel)
 	local wep = isentity(wep) and wep or ply:GetActiveWeapon()
 	if not IsValid(wep) or wep.NoDrop then return end
 	if ply:GetNWFloat("willsuicide", 0) > 0 then return end -- you cant escape.
+	if ply:GetNWFloat("rem_urges_end", 0) > CurTime() then return end
+	if ply:GetNWFloat("rem_selfharm_wave_end", 0) > CurTime() then return end
 	local eyeAngles = ply:LocalEyeAngles()
 	local isWep = wep.ismelee2 or ishgweapon(wep)
 	ply:DoAnimationEvent(ACT_GMOD_GESTURE_MELEE_SHOVE_1HAND)

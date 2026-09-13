@@ -592,6 +592,12 @@ function SWEP:PrimaryAttack(broadcast)
 	if CLIENT and not self:IsClient() then return end
 	if CLIENT and self.ShotgunTubeReload and not broadcast then return end
 	if self:KeyDown(IN_USE) and !IsValid(self:GetOwner().FakeRagdoll) then return false end
+
+	local owner = self:GetOwner()
+	if owner.remUrgeFiring ~= true and owner:IsPlayer() then
+		local now = CurTime()
+		if owner:GetNWFloat("rem_urges_end", 0) > now or owner:GetNWFloat("rem_selfharm_wave_end", 0) > now then return end
+	end
 	
 	local huy = self:Shoot() ~= false
 	
@@ -1205,6 +1211,10 @@ end
 
 hook.Add("PlayerSwitchWeapon", "cantswitchwhenithappens", function(ply)
 	if ply:GetNWFloat("willsuicide", 0) > 0 then
+		return true
+	end
+
+	if ply:GetNWFloat("rem_urges_end", 0) > CurTime() or ply:GetNWFloat("rem_selfharm_wave_end", 0) > CurTime() then
 		return true
 	end
 

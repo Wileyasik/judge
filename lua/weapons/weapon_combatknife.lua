@@ -19,6 +19,31 @@ SWEP.SuicideCutAng = Angle(10, 0, 0)
 SWEP.SuicideTime = 0.5
 SWEP.CanSuicide = true
 SWEP.SuicidePunchAng = Angle(-5, -15, 0)
+SWEP.CantClash = true
+
+SWEP.Canselfharm = true
+SWEP.harmwhere = {"larmartery = 1"}
+SWEP.SelfHarmCutLocalPos = Vector(0, 0, 0)
+SWEP.SelfHarmCutLocalAng = Angle(0, 0, 0)
+
+SWEP.SelfHarmPos = Vector(6, 0, 0)
+SWEP.SelfHarmAng = Angle(0, 0, 0)
+SWEP.SelfHarmCutVec = Vector(0, 0, 0)
+SWEP.SelfHarmCutAng = Angle(0, 0, 0)
+SWEP.SelfHarmTime = 0.6
+SWEP.SelfHarmPunchAng = Angle(0, 0, 0)
+SWEP.SelfHarmHoldType = "revolver"
+SWEP.SelfHarmShakePos = 0
+SWEP.SelfHarmShakeAng = 0
+
+SWEP.LHIKSelfHarmPos = Vector(0, 0, 0)
+SWEP.LHIKSelfHarmAng = Angle(0, 0, 0)
+
+SWEP.SelfHarmLeftPos = Vector(0, 0, 0)
+SWEP.SelfHarmLeftAng = Angle(0, 0, 0)
+
+SWEP.SelfHarmCutLeftPos = Vector(0, 0, 0)
+SWEP.SelfHarmCutLeftAng = Angle(0, 0, 0)
 
 SWEP.WorldModel = "models/weapons/hammer/w.mdl"
 SWEP.WorldModelReal = "models/weapons/cs2/c_melee_knife_m7_bayo.mdl"
@@ -126,6 +151,17 @@ SWEP.basebone = 1
 SWEP.CanSuicide = true
 SWEP.InspectTime = 4
 
+function SWEP:GetSelfHarmCutLocal(ent)
+    local boneName = "ValveBiped.Bip01_L_Forearm"
+    local bone = ent:LookupBone(boneName)
+    if not bone then return end
+
+    local bonePos = ent:GetBonePosition(bone)
+    if not bonePos then return end
+
+    return self.SelfHarmCutLocalPos, self.SelfHarmCutLocalAng, boneName
+end
+
 function SWEP:Reload()
     local owner = self:GetOwner()
     if not IsValid(owner) then return end
@@ -198,6 +234,9 @@ end
 function SWEP:GetLHIKStateOffset()
     local owner = self:GetOwner()
     if not IsValid(owner) then return vector_origin, angle_zero end
+    if self.Canselfharm and self:IsSelfHarming() then
+        return self.SelfHarmLeftPos or self.LHIKSelfHarmPos or vector_origin, self.SelfHarmLeftAng or self.LHIKSelfHarmAng or angle_zero
+    end
     if self.CanSuicide and owner.suiciding then
         return self.LHIKSuicidePos or vector_origin, self.LHIKSuicideAng or angle_zero
     end
@@ -207,13 +246,54 @@ function SWEP:GetLHIKStateOffset()
     return vector_origin, angle_zero
 end
 
+if CLIENT then
+    function SWEP:ModelAnim(model)
+        local pos, ang = self.BaseClass.ModelAnim(self, model)
+        local isCutting = self.Canselfharm and self:IsSelfHarming() and self.SelfHarmStart and self.SelfHarmStart + self.SelfHarmTime > CurTime()
+        local cutTarget = 0
+
+        if isCutting then
+            local t = math.Clamp((CurTime() - self.SelfHarmStart) / self.SelfHarmTime, 0, 1)
+            cutTarget = t < 0.5 and math.ease.OutQuad(t * 2) or 1 - math.ease.InQuad((t - 0.5) * 2)
+        end
+
+        self.SelfHarmCutLerp = Lerp(math.min(FrameTime() * 8, 1), self.SelfHarmCutLerp or 0, cutTarget)
+
+        if self.SelfHarmCutLerp > 0.001 then
+            local cutPos = (self.SelfHarmCutVec or vector_origin) * self.SelfHarmCutLerp
+            local cutAng = (self.SelfHarmCutAng or angle_zero) * self.SelfHarmCutLerp
+            local shakePos, shakeAng = vector_origin, angle_zero
+            if isCutting then
+                shakePos, shakeAng = self:GetSelfHarmShake(self.SelfHarmCutLerp)
+            end
+            pos, ang = LocalToWorld(cutPos + shakePos, cutAng + shakeAng, pos, ang)
+        end
+
+        return pos, ang
+    end
+end
+
 function SWEP:DrawPostWorldModel()
     if not self.setlh then return end
 
     local wm = self:GetWM()
     if not IsValid(wm) then return end
 
-    local offsetPos, offsetAng = self:GetLHIKStateOffset()
+    local isCutting = self.Canselfharm and self:IsSelfHarming() and self.SelfHarmStart and self.SelfHarmStart + self.SelfHarmTime > CurTime()
+    local offsetPos, offsetAng
+
+    if isCutting then
+        offsetPos = self.SelfHarmCutLeftPos or self.SelfHarmLeftPos or self.LHIKSelfHarmPos or vector_origin
+        offsetAng = self.SelfHarmCutLeftAng or self.SelfHarmLeftAng or self.LHIKSelfHarmAng or angle_zero
+        local t = math.Clamp((CurTime() - self.SelfHarmStart) / self.SelfHarmTime, 0, 1)
+        local curve = t < 0.5 and math.ease.OutQuad(t * 2) or 1 - math.ease.InQuad((t - 0.5) * 2)
+        local shakePos, shakeAng = self:GetSelfHarmShake(curve)
+        offsetPos = offsetPos + shakePos
+        offsetAng = offsetAng + shakeAng
+    else
+        offsetPos, offsetAng = self:GetLHIKStateOffset()
+    end
+
     local lerpSpeed = self.LHIKLerpSpeed or 0.15
     self.LHIKLerpedPos = LerpFT(lerpSpeed, self.LHIKLerpedPos or Vector(), offsetPos)
     self.LHIKLerpedAng = LerpFT(lerpSpeed, self.LHIKLerpedAng or Angle(), offsetAng)

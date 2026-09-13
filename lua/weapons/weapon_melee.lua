@@ -520,6 +520,48 @@ if CLIENT then
                 mata = invmat * mata
                 WorldModel:SetBoneMatrix(i, mata)
             end
+
+            local isCutting = self.Canselfharm and self:IsSelfHarming() and self.SelfHarmStart and self.SelfHarmStart + self.SelfHarmTime > CurTime()
+            if isCutting then
+                local t = math.Clamp((CurTime() - self.SelfHarmStart) / self.SelfHarmTime, 0, 1)
+                local curve = t < 0.5 and math.ease.OutQuad(t * 2) or 1 - math.ease.InQuad((t - 0.5) * 2)
+                local cutPos = (self.SelfHarmCutVec or vector_origin) * curve
+                local cutAng = (self.SelfHarmCutAng or angle_zero) * curve
+                local shakePos, shakeAng = self:GetSelfHarmShake(curve)
+                local handBone = WorldModel:LookupBone("ValveBiped.Bip01_R_Hand")
+                local handMatrix = handBone and WorldModel:GetBoneMatrix(handBone)
+
+                if handMatrix then
+                    local basePos = handMatrix:GetTranslation()
+                    local baseAng = handMatrix:GetAngles()
+                    local movedPos, movedAng = LocalToWorld(cutPos + shakePos, cutAng + shakeAng, basePos, baseAng)
+
+                    for _, boneName in ipairs(hg.TPIKBonesRH or {}) do
+                        local boneIndex = WorldModel:LookupBone(boneName)
+                        if not boneIndex then continue end
+
+                        local boneMatrix = WorldModel:GetBoneMatrix(boneIndex)
+                        if not boneMatrix then continue end
+
+                        local relPos, relAng = WorldToLocal(boneMatrix:GetTranslation(), boneMatrix:GetAngles(), basePos, baseAng)
+                        local newPos, newAng = LocalToWorld(relPos, relAng, movedPos, movedAng)
+                        boneMatrix:SetTranslation(newPos)
+                        boneMatrix:SetAngles(newAng)
+                        WorldModel:SetBoneMatrix(boneIndex, boneMatrix)
+                    end
+
+                    for _, boneIndex in ipairs(self.SelfHarmRightBones or {}) do
+                        local boneMatrix = WorldModel:GetBoneMatrix(boneIndex)
+                        if not boneMatrix then continue end
+
+                        local relPos, relAng = WorldToLocal(boneMatrix:GetTranslation(), boneMatrix:GetAngles(), basePos, baseAng)
+                        local newPos, newAng = LocalToWorld(relPos, relAng, movedPos, movedAng)
+                        boneMatrix:SetTranslation(newPos)
+                        boneMatrix:SetAngles(newAng)
+                        WorldModel:SetBoneMatrix(boneIndex, boneMatrix)
+                    end
+                end
+            end
         end
 
         if updatePose and self.CustomWorldModelBones then
@@ -591,6 +633,82 @@ local addAngLerp = Angle()
 
 function SWEP:CustomBlockAnim(addPosLerp, addAngLerp)
     return false
+end
+
+function SWEP:GetLHIKStateOffset()
+    local owner = self:GetOwner()
+    if not IsValid(owner) then return vector_origin, angle_zero end
+    if self.Canselfharm and self:IsSelfHarming() then
+        return self.SelfHarmLeftPos or self.LHIKSelfHarmPos or vector_origin, self.SelfHarmLeftAng or self.LHIKSelfHarmAng or angle_zero
+    end
+    if self.CanSuicide and owner.suiciding then
+        return self.LHIKSuicidePos or vector_origin, self.LHIKSuicideAng or angle_zero
+    end
+    if self.GetBlocking and self:GetBlocking() then
+        return self.LHIKBlockPos or vector_origin, self.LHIKBlockAng or angle_zero
+    end
+    return vector_origin, angle_zero
+end
+
+function SWEP:GetSelfHarmShake(curve)
+    local time = CurTime() * 38
+    local posAmount = (self.SelfHarmShakePos or 0.35) * curve
+    local angAmount = (self.SelfHarmShakeAng or 5) * curve
+    local shakePos = Vector(math.sin(time * 1.17), math.cos(time * 1.43), math.sin(time * 1.71)) * posAmount
+    local shakeAng = Angle(math.sin(time * 1.31), math.cos(time * 1.57), math.sin(time * 1.89)) * angAmount
+
+    return shakePos, shakeAng
+end
+
+function SWEP:DrawPostWorldModel()
+    if not self.setlh then return end
+
+    local wm = self:GetWM()
+    if not IsValid(wm) then return end
+
+    local isCutting = self.Canselfharm and self:IsSelfHarming() and self.SelfHarmStart and self.SelfHarmStart + self.SelfHarmTime > CurTime()
+    local offsetPos, offsetAng = self:GetLHIKStateOffset()
+
+    if isCutting then
+        local t = math.Clamp((CurTime() - self.SelfHarmStart) / self.SelfHarmTime, 0, 1)
+        local curve = t < 0.5 and math.ease.OutQuad(t * 2) or 1 - math.ease.InQuad((t - 0.5) * 2)
+        local shakePos, shakeAng = self:GetSelfHarmShake(curve)
+        offsetPos = offsetPos + shakePos
+        offsetAng = offsetAng + shakeAng
+    end
+
+    local lerpSpeed = self.LHIKLerpSpeed or 0.15
+    self.LHIKLerpedPos = LerpFT(lerpSpeed, self.LHIKLerpedPos or Vector(), offsetPos)
+    self.LHIKLerpedAng = LerpFT(lerpSpeed, self.LHIKLerpedAng or Angle(), offsetAng)
+    offsetPos = self.LHIKLerpedPos or vector_origin
+    offsetAng = self.LHIKLerpedAng or angle_zero
+
+    if offsetPos:LengthSqr() <= 0.0001 and math.abs(offsetAng.p) <= 0.001 and math.abs(offsetAng.y) <= 0.001 and math.abs(offsetAng.r) <= 0.001 then return end
+
+    local handBone = wm:LookupBone("ValveBiped.Bip01_L_Hand")
+    if not handBone then return end
+
+    local handMatrix = wm:GetBoneMatrix(handBone)
+    if not handMatrix then return end
+
+    local basePos = handMatrix:GetTranslation()
+    local baseAng = handMatrix:GetAngles()
+    local movedPos, movedAng = LocalToWorld(offsetPos, offsetAng, basePos, baseAng)
+
+    for _, boneName in ipairs(hg.TPIKBonesLH or {}) do
+        local boneIndex = wm:LookupBone(boneName)
+        if not boneIndex then continue end
+
+        local boneMatrix = wm:GetBoneMatrix(boneIndex)
+        if not boneMatrix then continue end
+
+        local relPos, relAng = WorldToLocal(boneMatrix:GetTranslation(), boneMatrix:GetAngles(), basePos, baseAng)
+        local newPos, newAng = LocalToWorld(relPos, relAng, movedPos, movedAng)
+
+        boneMatrix:SetTranslation(newPos)
+        boneMatrix:SetAngles(newAng)
+        wm:SetBoneMatrix(boneIndex, boneMatrix)
+    end
 end
 
 SWEP.BlockPushPos = Vector(0,0,0)
@@ -712,6 +830,30 @@ SWEP.SuicideTime = 0.5
 
 SWEP.CanSuicide = false -- for weapon_melee its configured in Initialize
 
+SWEP.Canselfharm = false
+
+SWEP.SelfHarmPos = Vector(16, -1, -3)
+SWEP.SelfHarmAng = Angle(-40, 180, 0)
+SWEP.SelfHarmCutVec = Vector(1, -5, 4)
+SWEP.SelfHarmCutAng = Angle(10, 0, 0)
+SWEP.SelfHarmTime = 0.5
+SWEP.SelfHarmPunchAng = Angle(-5, -15, 0)
+
+SWEP.LHIKSelfHarmPos = Vector(-4, 1, 14)
+SWEP.LHIKSelfHarmAng = Angle(75, 155, -245)
+
+SWEP.SelfHarmLeftPos = Vector(-4, 1, 14)
+SWEP.SelfHarmLeftAng = Angle(75, 155, -245)
+
+function SWEP:IsSelfHarming()
+    local owner = self:GetOwner()
+    if not IsValid(owner) then return false end
+
+    if SERVER then return owner.selfharming == true end
+
+    return owner:GetNWBool("selfharming", false)
+end
+
 function SWEP:ModelAnim(model, pos, ang)
     local owner = self:GetOwner()
 
@@ -795,8 +937,14 @@ function SWEP:ModelAnim(model, pos, ang)
         addAngLerp:Set(self.SuicideAng)
     end
 
-    self.lerpedAddPos = LerpFT(0.06, self.lerpedAddPos or Vector(), addPosLerp)
-    self.lerpedAddAng = LerpFT(0.06, self.lerpedAddAng or Angle(), addAngLerp)
+    if self.Canselfharm and self:IsSelfHarming() then
+        addPosLerp:Set(self.SelfHarmPos)
+        addAngLerp:Set(self.SelfHarmAng)
+    end
+
+    local holdLerp = self:IsSelfHarming() and 0.14 or 0.06
+    self.lerpedAddPos = LerpFT(holdLerp, self.lerpedAddPos or Vector(), addPosLerp)
+    self.lerpedAddAng = LerpFT(holdLerp, self.lerpedAddAng or Angle(), addAngLerp)
 
     if self:IsLocal() then
         addPos.z = x * 2 * vellenlerp * 0.3 - vellenlerp * 1
@@ -832,7 +980,7 @@ function SWEP:ModelAnim(model, pos, ang)
     
     if self.SuicideStart and self.SuicideStart + self.SuicideTime > CurTime() then
         local animpos = (1 - math.Clamp((self.SuicideStart + self.SuicideTime - CurTime()) / self.SuicideTime, 0, 1))
-        animpos = math.ease.OutElastic(animpos)
+        animpos = math.ease.InOutCubic(animpos)
         
         addPos:Add(self.SuicideCutVec * animpos)
         addAng:Add(self.SuicideCutAng * animpos)
@@ -2885,6 +3033,145 @@ local function QueueMeleeHitStop(self, speedMul, pause, reverse, stopanim)
     end)
 end
 
+local selfharm_part_alias = {
+    leye = "eyeL",
+    reye = "eyeR",
+    larm = "larmdown",
+    rarm = "rarmdown",
+    lleg = "llegdown",
+    rleg = "rlegdown",
+}
+
+function SWEP:GetSelfHarmParts()
+    local harmwhere = self.harmwhere
+    if not harmwhere then return end
+
+    if isstring(harmwhere) then
+        harmwhere = {harmwhere}
+    end
+
+    if not istable(harmwhere) then return end
+
+    local parts = {}
+
+    for key, value in pairs(harmwhere) do
+        local part, weight
+
+        if isnumber(key) then
+            part = value
+            weight = 1
+        else
+            part = key
+            weight = isnumber(value) and value or 1
+        end
+
+        if isstring(part) then
+            part = selfharm_part_alias[string.lower(part)] or part
+            parts[part] = math.max((parts[part] or 0) + weight, 0)
+        end
+    end
+
+    if table.IsEmpty(parts) then return end
+
+    return parts
+end
+
+function SWEP:GetSelfHarmCutLocal(ent)
+    local forearm = ent:LookupBone("ValveBiped.Bip01_L_Forearm")
+    if not forearm then return end
+
+    local bonePos, boneAng = ent:GetBonePosition(forearm)
+    if not bonePos then return end
+
+    local hand = ent:LookupBone("ValveBiped.Bip01_L_Hand")
+    local wristPos = hand and ent:GetBonePosition(hand) or bonePos + boneAng:Forward() * 12
+
+    local cutPos = wristPos
+    local weaponHand = ent:LookupBone("ValveBiped.Bip01_R_Hand")
+
+    if weaponHand then
+        local handPos = ent:GetBonePosition(weaponHand)
+        local dir = wristPos - bonePos
+        local len = dir:Length()
+
+        if handPos and len > 1 then
+            dir:Div(len)
+            local frac = math.Clamp((handPos - bonePos):Dot(dir) / len, 0, 1)
+            cutPos = bonePos + dir * (len * math.max(frac, 0.75))
+        end
+    end
+
+    cutPos = cutPos + VectorRand(-1, 1)
+
+    local localPos, localAng = WorldToLocal(cutPos, angle_zero, bonePos, boneAng)
+
+    return localPos, localAng, "ValveBiped.Bip01_L_Forearm"
+end
+
+function SWEP:DoSelfHarmCut()
+    local owner = self:GetOwner()
+    if not IsValid(owner) or not owner.organism then return end
+
+    local org = owner.organism
+    if not org.alive or org.otrub or org.heartstop then return end
+
+    local ent = hg.GetCurrentCharacter(owner)
+    if not IsValid(ent) then return end
+
+    local localPos, localAng, boneName = self:GetSelfHarmCutLocal(ent)
+    if not localPos then return end
+
+    local dmgInfo = DamageInfo()
+    dmgInfo:SetAttacker(owner)
+    dmgInfo:SetInflictor(self)
+    dmgInfo:SetDamageType(DMG_SLASH)
+
+    local totalDmg = 0
+    local parts = self:GetSelfHarmParts()
+
+    if parts then
+        local input_list = hg.organism.input_list
+
+        for part, weight in pairs(parts) do
+            local func = input_list[part]
+            if func then
+                local dmg = math.Rand(0.25, 1) * weight
+                totalDmg = totalDmg + dmg
+
+                func(org, 1, dmg, dmgInfo)
+            end
+        end
+    end
+
+    org.painadd = org.painadd + 3 + totalDmg * 3
+    owner:AddNaturalAdrenaline(math.max(0.3 - (org.adrenaline or 0), 0))
+
+    hg.organism.AddWoundManual(owner, 15 + totalDmg * 35, localPos + VectorRand(-1, 1), localAng, boneName, CurTime() + math.Rand(0, 2))
+
+    if (org.larmartery or 0) < 1 and not org.larmamputated then
+        local chance = math.Clamp(0.3 + math.max((self.ArteryChance or 1) - 1, 0) * 0.4, 0.1, 0.9)
+
+        if math.Rand(0, 1) <= chance then
+            org.larmartery = math.min((org.larmartery or 0) + 1, 1)
+            org.painadd = org.painadd + 5
+
+            local squirtDir = localPos:LengthSqr() > 0.01 and -localPos:GetNormalized() * 100 or Vector(0, 0, 100)
+
+            table.insert(org.arterialwounds, {6, localPos, localAng, boneName, CurTime(), squirtDir, "larmartery"})
+            owner:SetNetVar("arterialwounds", org.arterialwounds)
+        end
+    end
+
+    org.depression = math.max((org.depression or 0) - totalDmg * 0.05, 0)
+
+    owner:EmitSound(self.SelfHarmSound or self.Attack2HitFlesh or self.AttackHitFlesh, 50)
+    owner:ViewPunch(self.SelfHarmPunchAng or Angle(5, 10, 0))
+
+    if SERVER then
+        owner:SetNWFloat("rem_selfharm_cut", CurTime())
+    end
+end
+
 function SWEP:CustomThink()
     local owner = self:GetOwner()
     local actwep = owner.GetActiveWeapon and owner:GetActiveWeapon()
@@ -2923,7 +3210,7 @@ function SWEP:CustomThink()
 		return
 	end
 
-    if self.CanSuicide and hg.KeyDown(owner, IN_ATTACK) and owner.suiciding and !self.SuicideStart then
+    if self.CanSuicide and hg.KeyDown(owner, IN_ATTACK) and owner.suiciding and !self.SuicideStart and owner:GetNWFloat("rem_urges_end", 0) < CurTime() then
         self.SuicideStart = CurTime()
 
         if SERVER then
@@ -2967,7 +3254,31 @@ function SWEP:CustomThink()
         self.SuicideStart = nil
     end
 
-    self:SetHold(owner.suiciding and self.SuicideHoldType or self.HoldType)
+    if self.Canselfharm and self:IsSelfHarming() and not self.SelfHarmStart and (self.NextSelfHarmCut or 0) < CurTime() and hg.KeyDown(owner, IN_ATTACK) and owner:GetNWFloat("rem_urges_end", 0) < CurTime() and owner:GetNWFloat("rem_selfharm_wave_end", 0) < CurTime() then
+        self.SelfHarmStart = CurTime()
+        self.NextSelfHarmCut = CurTime() + self.SelfHarmTime + 0.4
+
+        if SERVER then
+            self:DoSelfHarmCut()
+        end
+    end
+
+    if self.SelfHarmStart and self.SelfHarmStart + self.SelfHarmTime < CurTime() then
+        self.SelfHarmStart = nil
+    end
+
+    if CLIENT and self.Canselfharm then
+        local cutSig = owner:GetNWFloat("rem_selfharm_cut", 0)
+        if cutSig ~= (self.lastSelfHarmCutSig or -1) then
+            self.lastSelfHarmCutSig = cutSig
+            if cutSig > 0 and self:IsSelfHarming() and (not self.SelfHarmStart or self.SelfHarmStart + (self.SelfHarmTime or 0.5) < CurTime()) then
+                self.SelfHarmStart = CurTime()
+                self.NextSelfHarmCut = CurTime() + (self.SelfHarmTime or 0.5) + 0.4
+            end
+        end
+    end
+
+    self:SetHold((self.Canselfharm and self:IsSelfHarming() and self.SelfHarmHoldType) or (owner.suiciding and self.SuicideHoldType) or self.HoldType)
 
     if SERVER and owner.organism and owner.organism.rarmamputated then
         self:RemoveFake()
@@ -2985,7 +3296,7 @@ function SWEP:CustomThink()
 
     //if SERVER then
         local oldblocking = self:GetBlocking()
-        local blocking = self:GetBlockDisabledUntil() < CurTime() and owner.organism and owner.organism.stamina[1] >= (self.BlockMinStamina or 90) and !self:GetInAttack() and (self:GetAttackTime() - CurTime() - 0) < 0 and self:CanBlock() and hg.KeyDown(owner, IN_ATTACK2)
+        local blocking = self:GetBlockDisabledUntil() < CurTime() and owner.organism and owner.organism.stamina[1] >= (self.BlockMinStamina or 90) and !self:GetInAttack() and (self:GetAttackTime() - CurTime() - 0) < 0 and self:CanBlock() and hg.KeyDown(owner, IN_ATTACK2) and not (self.Canselfharm and self:IsSelfHarming())
         --if self:CutDuct() then return end
         self:SetBlocking(blocking)
 
@@ -3058,6 +3369,10 @@ function SWEP:CustomThink()
         local mul = self:MultiplyDMG(owner, ent, vellen, 1)
         
         if self:GetAttackType() == 1 and inattack1 == 0 then
+            if CLIENT and not self.FirstAttackTick then
+                SyncMeleeAnimToCooldown(self, GetMeleeAnimTiming(self))
+            end
+
             owner:LagCompensation(true)
             
             local trace = self:Attack(owner, ent, vellen, false, inattackL1)
@@ -3233,6 +3548,10 @@ function SWEP:CustomThink()
                 self.ComboAppliedThisAttack = nil
             end
         elseif self:GetAttackType() == 2 and inattack2 == 0 then
+            if CLIENT and not self.FirstAttackTick then
+                SyncMeleeAnimToCooldown(self, GetMeleeAnimTiming(self))
+            end
+
             owner:LagCompensation(true)
             
             local trace = self:Attack(owner, ent, vellen, true, inattackL2)
@@ -3403,6 +3722,10 @@ function SWEP:CustomThink()
                 self.ComboAppliedThisAttack = nil
             end
         elseif self:GetAttackType() == 3 and inattack3 == 0 then
+            if CLIENT and not self.FirstAttackTick then
+                SyncMeleeAnimToCooldown(self, GetMeleeAnimTiming(self))
+            end
+
             owner:LagCompensation(true)
             
             local trace = self:Attack(owner, ent, vellen, 3, inattackL3)
@@ -3675,6 +3998,7 @@ function SWEP:PrimaryAttack()
 
     if self.cutthroat and self.cutthroat + 1 > CurTime() then return end
     if self.CanSuicide and ply.suiciding then return end
+    if self.Canselfharm and self:IsSelfHarming() then return end
     if self.Charging then return end
 
     if ply:GetNetVar("ducttaped_hands", false) then return end
@@ -3805,6 +4129,8 @@ end
 function SWEP:SecondaryAttack(override)
     local ply = self:GetOwner()
     if ply.organism and ply.organism.larmamputated and self.TwoHanded then return end
+
+    if self.Canselfharm and self:IsSelfHarming() then return end
 
     if self:CutDuct() then
         return

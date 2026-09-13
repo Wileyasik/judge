@@ -550,6 +550,7 @@ function SWEP:PrimaryAttack()
 	local target, ply = TraceDefibTarget(owner, self.DefibRange)
 	if not IsValid(target) or target == owner or ply == owner then return end
 	if IsValid(target.DefibModelEnt) or target.DefibInProgress then return end
+	if hook.Run("DefibCanTarget", owner, target, ply) == false then return end
 
 	self.DefibApplying = {
 		target = target,

@@ -10,6 +10,7 @@ local hg_font_default = "Lora"
 local hg_font = ConVarExists("hg_font") and GetConVar("hg_font") or CreateClientConVar("hg_font", hg_font_default, true, false, "change every text font to selected because ui customization is cool")
 local hg_oldradialmenu = CreateClientConVar("hg_oldradialmenu", "0", true, false, "use the old radial menu style", 0, 1)
 local hg_hold_shift_sprint = ConVarExists("hg_hold_shift_sprint") and GetConVar("hg_hold_shift_sprint") or CreateClientConVar("hg_hold_shift_sprint", "0", true, true, "Disable jogging, holding shift will make you sprint.", 0, 1)
+local hg_reduce_screeneffects = ConVarExists("hg_reduce_screeneffects") and GetConVar("hg_reduce_screeneffects") or CreateClientConVar("hg_reduce_screeneffects", "0", true, false, "Reduce screen shader effects by 50%", 0, 1)
 
 local function ForceHGFirstPersonDeath()
 	if hg_firstperson_death:GetBool() then
@@ -150,6 +151,7 @@ hg.settings:AddOpt("Debug","hg_setzoompos", "Edit weapon zoompos, check console 
 hg.settings:AddOpt("Debug","hg_show_hitbox", "Show hitboxes")
 
 hg.settings:AddOpt("Optimization","hg_potatopc", "Potato PC Mode")
+hg.settings:AddOpt("Optimization","hg_reduce_screeneffects", "Reduce screen effects 50%")
 hg.settings:AddOpt("Optimization","hg_anims_draw_distance", "Animations Draw Distance", true, nil, "int")
 hg.settings:AddOpt("Optimization","hg_anim_fps", "Animations FPS", nil, nil, "int")
 hg.settings:AddOpt("Optimization","hg_attachment_draw_distance", "Attachment Draw Distance", true, nil, "int")
@@ -612,6 +614,7 @@ function SettingsRefreshContent()
     local entryWidth = settings_sw - sidebarWidth
 
     for convarName, settingData in SortedPairs(hg.settings.tbl[settings_active_category]) do
+        if convarName == "hg_reduce_screeneffects" and not GetConVar("hg_potatopc"):GetBool() then continue end
         local convar = GetConVar(settingData[2])
         if not convar then continue end
 

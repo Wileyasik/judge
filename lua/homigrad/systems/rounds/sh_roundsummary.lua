@@ -580,6 +580,28 @@ if SERVER then
 		return tAlive and not iAlive
 	end
 
+	local function RealishWinnerName()
+		local round = CurrentRound()
+		if not round or round.name ~= "realish" then return "" end
+
+		local alive = {}
+		for teamID = 0, 1 do
+			local n = 0
+			for _, ply in player.Iterator() do
+				if ply:Team() == teamID and ply:Alive() and ply.RealishDeployed then n = n + 1 end
+			end
+			alive[teamID] = n
+		end
+
+		local atlasDead = round:GetLives(0) <= 0 and alive[0] <= 0
+		local revenantDead = round:GetLives(1) <= 0 and alive[1] <= 0
+		local teamID = (atlasDead and not revenantDead and 1) or (revenantDead and not atlasDead and 0) or nil
+		if teamID == nil then return "" end
+
+		local info = RealishTeams and RealishTeams[teamID]
+		return info and info.name or ""
+	end
+
 	local function ComputeFeatured()
 		local plys = ActivePlayers()
 		local featured, used = {}, {}
@@ -742,6 +764,7 @@ if SERVER then
 				net.WriteBool(hasAppearance)
 			end
 				net.WriteBool(MapHasWindows())
+				net.WriteString(RealishWinnerName())
 				WriteStats(receiver)
 
 			net.Send(receiver)
@@ -1285,7 +1308,7 @@ local function IsRTVActive()
 	return zb and zb.IsRTVActive and zb.IsRTVActive()
 end
 
-local function ShowSummary(featured)
+local function ShowSummary(featured, winnerTeam)
 	if IsRTVActive() then return end
 
 	if IsValid(RS_Container) then RS_Container:Remove() end
@@ -1429,6 +1452,38 @@ local function ShowSummary(featured)
 		surface.PlaySound(hg.GetSuccessSound())
 	end)
 
+	if winnerTeam and winnerTeam ~= "" then
+		timer.Simple(6.5, function()
+			if not IsValid(container) then return end
+			container.RSWinnerStart = CurTime()
+			surface.PlaySound("rem_newroundreveal.wav")
+		end)
+
+		local winnerPanel = vgui.Create("DPanel", container)
+		winnerPanel:SetSize(sw, math.floor(sh * 0.07))
+		winnerPanel:SetPos(0, 0)
+		winnerPanel:SetPaintBackground(false)
+		winnerPanel.Paint = function(self, w2, h2)
+			if not container.RSWinnerStart then return end
+			local t = CurTime() - container.RSWinnerStart
+			local p = math.Clamp(t / 0.5, 0, 1)
+			local ease = p * p * (3 - 2 * p)
+			local a = 255 * ease
+			local col = Color(255, 240, 90, a)
+			local teamInfo
+			if RealishTeams then
+				for _, info in pairs(RealishTeams) do
+					if string.upper(info.name or "") == string.upper(winnerTeam) then teamInfo = info break end
+				end
+			end
+			if teamInfo and teamInfo.color then col = Color(teamInfo.color.r, teamInfo.color.g, teamInfo.color.b, a) end
+			draw.SimpleTextOutlined("TEAM WON: " .. string.upper(winnerTeam), "Rem_Sum_Countdown", w2 / 2, h2 / 2, col, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, Color(0, 0, 0, math.min(230, a)))
+		end
+		timer.Simple(SUMMARY_LIFETIME - 1, function()
+			if IsValid(winnerPanel) then winnerPanel:Remove() end
+		end)
+	end
+
 	local endFade = vgui.Create("DPanel", container)
 	endFade:SetSize(sw, sh)
 	endFade:SetPos(0, 0)
@@ -1475,6 +1530,7 @@ net.Receive("rem_roundsummary", function()
 		featured[i] = { ply = ply, model = model, name = name, steamid = steamid, key = key, value = value, spec = spec, appearance = appearance, playerclass = playerclass, exp = exp, skill = skill, xpbonus = xpbonus, hasAppearance = hasAppearance }
 	end
 	local mapHasWindows = net.ReadBool()
+	local winnerTeam = net.ReadString()
 	local stats = {
 		killedBy = net.ReadString(),
 		kills = net.ReadUInt(16),
@@ -1501,7 +1557,7 @@ net.Receive("rem_roundsummary", function()
 
 	timer.Create("rem_roundsummary_show", SUMMARY_CLEAR_DELAY, 1, function()
 		if IsRTVActive() then return end
-		ShowSummary(featured)
+		ShowSummary(featured, winnerTeam)
 	end)
 end)
 

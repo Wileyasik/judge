@@ -22,8 +22,11 @@ local gordon_hide = {
 }
 
 hook.Add("HUDShouldDraw", "homigrad", function(name)
-	if hide[name] then return false end
-	if lply and lply.PlayerClassName == "Gordon" and gordon_hide[name] then
+	if hide[name] then
+		return false
+	end
+	local ply = IsValid(lply) and lply or LocalPlayer()
+	if IsValid(ply) and ply.PlayerClassName == "Gordon" and gordon_hide[name] then
 		return false
 	end
 end)

@@ -895,22 +895,21 @@ function SWEP:FireBullet()
 
 		if mul > 0 then
 			if not reducedMuzzleFlash then
-				ParticleEffect(self.PPSMuzzleEffect, pos, ang, self)
+				local effect = self.PPSMuzzleEffect
+				ParticleEffect(effect, pos, ang, self)
+				if effect ~= "muzzleflash_pistol_rbull" then ParticleEffect("muzzleflash_pistol_rbull", pos, ang, self) end
 			else
 				ParticleEffect(self.PPSMuzzleEffectSuppress, pos, ang, self)
 			end
-			hg_potatopc = hg_potatopc or hg.ConVars.potatopc
-			if not hg_potatopc:GetBool() then
-				local dlight = DynamicLight(self:EntIndex())
-				dlight.pos = pos
-				dlight.r = math_random(245, 255)
-				dlight.g = math_random(245, 255)
-				dlight.b = math_random(150, 200)
-				dlight.brightness = math_Rand(7, 8)
-				dlight.Decay = 4000
-				dlight.Size = math_Rand(60, 75) * mul
-				dlight.DieTime = CurTime() + 1 / 60
-			end
+			local dlight = DynamicLight(self:EntIndex())
+			dlight.pos = pos
+			dlight.r = math_random(245, 255)
+			dlight.g = math_random(245, 255)
+			dlight.b = math_random(150, 200)
+			dlight.brightness = math_Rand(7, 8)
+			dlight.Decay = 4000
+			dlight.Size = math_Rand(60, 75) * mul
+			dlight.DieTime = CurTime() + 1 / 60
 		end
 	end
 

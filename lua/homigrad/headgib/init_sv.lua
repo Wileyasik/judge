@@ -248,6 +248,8 @@ local headModels = {
 	Model("models/headpartial/headpartial4.mdl"),
 	Model("models/headpartial/headpartial5.mdl"),
 }
+local eyeRModel = Model("models/gore/head_eye01.mdl")
+local eyeLModel = Model("models/gore/head_eye02.mdl")
 local headGibModels = {
 	Model("models/gore/head_headbitfrontleft.mdl"),
 	Model("models/gore/head_headbitfrontright.mdl"),
@@ -255,10 +257,21 @@ local headGibModels = {
 	Model("models/gore/head_headbitbackright.mdl"),
 	Model("models/gore/head_headbittopleft.mdl"),
 	Model("models/gore/head_headbittopright.mdl"),
-	Model("models/gore/head_eye01.mdl"),
-	Model("models/gore/head_eye02.mdl"),
+	eyeRModel,
+	eyeLModel,
 	Model("models/gore/head_jawlo.mdl"),
 }
+
+function hg.HeadGibModels(org)
+	if not org or not (org.eyePoppedL or org.eyePoppedR) then return headGibModels end
+	local models = {}
+	for i, mdl in ipairs(headGibModels) do
+		if mdl == eyeRModel and org.eyePoppedR then continue end
+		if mdl == eyeLModel and org.eyePoppedL then continue end
+		models[#models + 1] = mdl
+	end
+	return models
+end
 local fullBodySounds = {
 	Sound("fullbodyexplode/rem_fullbodygib1.wav"),
 	Sound("fullbodyexplode/rem_fullbodygib2.wav"),
@@ -345,7 +358,7 @@ function Gib_UpdateHeadGoreStage(rag, damage)
 	if IsValid(rag.headGore) then
 		rag.headGore:SetModel(headModels[stage])
 		sendGibBloodSpill(rag.headGore, true)
-		SpawnMeatGore(rag.headGore, rag.headGore:GetPos(), 3, VectorRand(-120, 120), 0.45, false, headGibModels)
+		SpawnMeatGore(rag.headGore, rag.headGore:GetPos(), 3, VectorRand(-120, 120), 0.45, false, hg.HeadGibModels(rag.organism))
 		return
 	end
 
@@ -356,7 +369,7 @@ function Gib_UpdateHeadGoreStage(rag, damage)
 	gore:Spawn()
 	rag.headGore = gore
 	sendGibBloodSpill(gore, true)
-	SpawnMeatGore(gore, pos, 3, VectorRand(-120, 120), 0.45, false, headGibModels)
+	SpawnMeatGore(gore, pos, 3, VectorRand(-120, 120), 0.45, false, hg.HeadGibModels(rag.organism))
 	rag:CallOnRemove("remove_head_gore", function()
 		if IsValid(gore) then gore:Remove() end
 	end)
@@ -407,7 +420,7 @@ function Gib_Input(rag, bone, force, damage)
 		rag.headGoreStage = stage
 		sendGibBloodSpill(headVis, true)
 
-		SpawnMeatGore(headVis, pos, nil, force, nil, false, headGibModels)
+		SpawnMeatGore(headVis, pos, nil, force, nil, false, hg.HeadGibModels(rag.organism))
 		rag:CallOnRemove("remove_head_gore", function()
 			if IsValid(headVis) then headVis:Remove() end
 		end)
