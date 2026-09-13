@@ -8,6 +8,7 @@ local stress_gain = 0.004
 local brain_gain = 0.0025
 local drug_gain = 0.006
 local decay_time = 1200
+local schizo_ramp_speed = 0.01
 
 local schizo_phrases = {
 	"Someone is watching you.",
@@ -69,6 +70,7 @@ hook.Add("Org Clear", "SchizoInit", function(org)
 	org.schizoLastPhrase = 0
 	org.schizoVoiceAt = 0
 	org.schizoRelapseAt = CurTime() + math.Rand(480, 900)
+	org.schizoRampTarget = nil
 end)
 
 local function stressFactor(org)
@@ -100,6 +102,7 @@ end
 
 hook.Add("Org Think", "SchizoThink", function(owner, org, timeValue)
 	if not org.isPly then return end
+	if org.lastStand then return end
 
 	local schizo = org.psycheSchizo or 0
 	local gain = timeValue * (stressFactor(org) * stress_gain + brainFactor(org) * brain_gain + drugFactor(org) * drug_gain)
@@ -108,6 +111,12 @@ hook.Add("Org Think", "SchizoThink", function(owner, org, timeValue)
 	local active = (org.fear or 0) > 0.6 or (org.panicattack or 0) > 0.4 or (org.pain or 0) > 40 or (org.brain or 0) > 0.1 or (org.concussion or 0) > 0.5 or (org.o2 and org.o2[1] < org.o2.range * 0.75) or (org.analgesia or 0) > 1.5 or (org.painkiller or 0) > 2.4
 	if not active then
 		schizo = max(schizo - timeValue / decay_time, 0)
+	end
+
+	local rampTarget = org.schizoRampTarget
+	if rampTarget then
+		schizo = min(schizo + timeValue * schizo_ramp_speed, rampTarget)
+		if schizo >= rampTarget then org.schizoRampTarget = nil end
 	end
 	org.psycheSchizo = schizo
 
@@ -124,7 +133,7 @@ hook.Add("Org Think", "SchizoThink", function(owner, org, timeValue)
 	if schizo <= 0.35 then
 		if CurTime() >= (org.schizoRelapseAt or 0) then
 			org.schizoEpisodeEnd = CurTime() + math.Rand(8, 14)
-			org.psycheSchizo = 0.5 + math.random() * 0.25
+			org.schizoRampTarget = 0.5 + math.random() * 0.25
 			org.schizoTimer = 0
 			org.schizoRelapseAt = CurTime() + math.Rand(300, 700)
 			schizoThought(owner, "It never really left.", math.Rand(10, 15), "psyche_schizo", schizo_color)

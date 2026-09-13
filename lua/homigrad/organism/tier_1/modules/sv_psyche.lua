@@ -113,17 +113,17 @@ module[2] = function(owner, org, timeValue)
 		anger = Approach(anger, 0, timeValue / anger_decay)
 	end
 
-	if org.pain > apathy_pain_start then
+	if org.pain > apathy_pain_start and not org.lastStand then
 		apathy = min(apathy + timeValue / apathy_pain_speed * Clamp((org.pain - apathy_pain_start) / 60, 0, 1), 1)
 	end
-	if (org.blood or 5000) < apathy_blood_start then
+	if (org.blood or 5000) < apathy_blood_start and not org.lastStand then
 		apathy = min(apathy + timeValue / apathy_blood_speed, 1)
 	end
-	if org.otrub then
+	if org.otrub and not org.lastStand then
 		apathy = min(apathy + timeValue / apathy_otrub_speed, 1)
 	end
 	local fearLevel = Clamp(org.fear or 0, 0, 1)
-	if fearLevel > apathy_fear_start then
+	if fearLevel > apathy_fear_start and not org.lastStand then
 		apathy = min(apathy + timeValue / apathy_fear_speed * Clamp((fearLevel - apathy_fear_start) / (1 - apathy_fear_start), 0, 1), 1)
 	end
 
@@ -136,7 +136,7 @@ module[2] = function(owner, org, timeValue)
 	org.psychePainMul = 1 - anger_pain_resist * anger
 	org.fear = min(org.fear, 1 - apathy_fear_cap * apathy)
 
-	if org.isPly and owner:Alive() then
+	if org.isPly and owner:Alive() and not org.lastStand then
 		local panic = org.panicattack or 0
 		if panic >= 0.55 then
 			psycheThought(owner, derealization_phrases[math.random(#derealization_phrases)], math.Rand(18, 28), "psyche_derealization", derealization_color)

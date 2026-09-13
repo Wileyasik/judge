@@ -180,10 +180,15 @@ module[2] = function(owner, org, timeValue)
 		org.fibrillation = false
 		org.arrhythmia = 0
 	end
-	org.fear = math.Approach(org.fear, (org.otrub and 0 or (org.fearadd > 0 and 1 or -1)), org.otrub and timeValue * 0.5 or (org.fearadd > 0 and (org.fear < 0 and timeValue * 5 * org.fearadd or timeValue / 5 * org.fearadd) or (org.fear <= 0 and timeValue / 240 or timeValue / 50)))
-	local gainfear = hg.organism.should_gain_fear(org)
-	org.fearadd = math.Approach(org.fearadd, 0, gainfear and timeValue or timeValue / 4.9)
-	org.fearadd = math.Approach(org.fearadd, 1, gainfear and timeValue / 5 or 0)
+	if org.lastStand then
+		org.fear = 0
+		org.fearadd = 0
+	else
+		local gainfear = hg.organism.should_gain_fear(org)
+		org.fear = math.Approach(org.fear, (org.otrub and 0 or (org.fearadd > 0 and 1 or -1)), org.otrub and timeValue * 0.5 or (org.fearadd > 0 and (org.fear < 0 and timeValue * 5 * org.fearadd or timeValue / 5 * org.fearadd) or (org.fear <= 0 and timeValue / 240 or timeValue / 50)))
+		org.fearadd = math.Approach(org.fearadd, 0, gainfear and timeValue or timeValue / 4.9)
+		org.fearadd = math.Approach(org.fearadd, 1, gainfear and timeValue / 5 or 0)
+	end
 	local adrenK = max(1 + org.adrenaline, 1)
 	local adren = org.adrenaline
 	if org.pulse < 10 or org.brain >= 0.6 then org.heartstop = true end

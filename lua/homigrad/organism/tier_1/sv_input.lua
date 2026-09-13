@@ -1255,7 +1255,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 		attacker.harm = (attacker.harm or 0) + bleed_add / 50
 		local hurt_add = dmgHurt * 0.5 * hurtMul
 		org.hurtadd = org.hurtadd + hurt_add
-		local painadd = dmgHurt * painMul * 0.75 * (org.painresist or 1)
+		local painadd = dmgHurt * painMul * 0.75 * (org.painresist or 1) * (org.lastStand and 0.2 or 1)
 		local instantPainMul = 0.2
 		local instant_pain = (instantPainMul or 0) * painadd
 		local slow_pain = (1 - (instantPainMul or 0)) * painadd
@@ -1266,7 +1266,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 		if dmgInfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT) then
 			org.avgpain = math.min((org.avgpain or 0) + instant_pain * 0.5, 150)
 		end
-		org.shock = math.min(org.shock + instaPain * shockMul * 4.5 * instant_pain_shock_scale * math.Clamp(pen / 5,1,2), 70)
+		org.shock = math.min(org.shock + instaPain * shockMul * 4.5 * instant_pain_shock_scale * math.Clamp(pen / 5,1,2) * (org.lastStand and 0.2 or 1), 70)
 		org.immobilization = math.min(org.immobilization + immobilization * immobilizationMul, 30)
 		org.lasthit = CurTime()
 		
@@ -1278,7 +1278,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 		org.shock_turn = 10 * (!org.otrub and 1 or 0.1)
 		local collapseThreshold = org.shock_turn * 1.5 * analgesiaMul * painkillerMul
 
-		if org.shock > collapseThreshold then
+		if org.shock > collapseThreshold and not org.lastStand then
 			timer.Simple(0, function() hg.Fake(org.owner) end)
 		end
 

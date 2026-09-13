@@ -48,7 +48,7 @@ hook.Add("Think", "hg_psyche_effects", function()
 		return
 	end
 	local org = lply.organism
-	local fear = Clamp(org.fear or 0, 0, 1)
+	local fear = org.lastStand and 0 or Clamp(org.fear or 0, 0, 1)
 	local apathy = Clamp(org.psycheApathy or 0, 0, 1)
 
 	local fearVol = fear > FEAR_THRESHOLD and Clamp((fear - FEAR_THRESHOLD) / (1 - FEAR_THRESHOLD), 0, 1) * FEAR_VOLUME or 0
@@ -93,7 +93,7 @@ hook.Add("RenderScreenspaceEffects", "hg_psyche_color", function()
 	local org = lply.organism
 	local apathy = Clamp(org.psycheApathy or 0, 0, 1)
 	local anger = Clamp(org.psycheAnger or 0, 0, 1)
-	local fear = Clamp(org.fear or 0, 0, 1)
+	local fear = org.lastStand and 0 or Clamp(org.fear or 0, 0, 1)
 	local panic = Clamp(org.panicattack or 0, 0, 1)
 	local angerFrac = Clamp((anger - 0.5) / 0.5, 0, 1)
 	local fearFrac = Clamp((fear - 0.3) / 0.7, 0, 1)

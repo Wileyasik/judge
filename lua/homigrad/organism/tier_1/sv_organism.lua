@@ -182,6 +182,7 @@ hook.Add("Org Clear", "Main", function(org)
 end)
 hook.Add("Should Fake Up", "organism", function(ply)
 	local org = ply.organism
+	if org.lastStand then return end
 	if org.seizureActive or org.otrub or org.fake or org.nearpainlimit or org.shock > 40 or org.spine1 >= hg.organism.fake_spine1 or org.spine2 >= hg.organism.fake_spine2 or org.spine3 >= hg.organism.fake_spine3 or (org.lleg == 1 and org.rleg == 1) and org.berserk <= 0.3 or (org.blood < 2900) or org.consciousness <= 0.4 then
 		return false
 	end
@@ -597,6 +598,7 @@ end
 function hg.organism.AddPanicAttack(org, amount, silent)
 	if not org then return 0 end
 	if not isnumber(amount) or amount <= 0 then return org.panicattackadd or 0 end
+	if org.lastStand then return org.panicattackadd or 0 end
 	if silent and IsValid(org.owner) and org.owner:IsPlayer() and (org.owner.lastKillTime or 0) > CurTime() - 4 then
 		return org.panicattackadd or 0
 	end
@@ -898,10 +900,10 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	elseif org.noradrenaline <= 0 then
 		org.noradrenalineActive = false
 	end
-	if oldPanicAttack < panicattack_threshold and org.panicattack >= panicattack_threshold and isPly and owner:Alive() then
+	if oldPanicAttack < panicattack_threshold and org.panicattack >= panicattack_threshold and isPly and owner:Alive() and not org.lastStand then
 		owner:Notify("I can't calm down.", 2, "panicattack_start", 2, nil, Color(255, 140, 140))
 	end
-	if org.panicattack >= panicattack_threshold then
+	if org.panicattack >= panicattack_threshold and not org.lastStand then
 		org.panicattackActive = true
 		org.disorientation = math.max(org.disorientation, 0.6 + panicattack_disorientation * org.panicattack)
 		org.adrenalineAdd = math.Approach(org.adrenalineAdd or 0, math.Remap(org.panicattack, panicattack_threshold, 1, panicattack_adrenaline_add_target * 0.5, panicattack_adrenaline_add_target), timeValue / panicattack_adrenaline_add_rise_time)
@@ -993,8 +995,8 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		org.canmove = true
 		org.canmovehead = true
 	else
-		org.canmove = (org.spine2 < hg.organism.fake_spine2 and org.spine3 < hg.organism.fake_spine3) and not org.otrub
-		org.canmovehead = (org.spine3 < hg.organism.fake_spine3) and not org.otrub
+		org.canmove = (org.lastStand or (org.spine2 < hg.organism.fake_spine2 and org.spine3 < hg.organism.fake_spine3)) and not org.otrub
+		org.canmovehead = (org.lastStand or org.spine3 < hg.organism.fake_spine3) and not org.otrub
 		if not (org.canmove and org.canmovehead and (org.stun - CurTime()) < 0) then org.needfake = true end
 		if (org.blood < 2700) then org.needfake = true end
 		if org.neckslit and not org.otrub then org.needfake = true end
@@ -1062,7 +1064,7 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 			org.needfake = true
 		end
 	end
-	if org.NoKnockdown then
+	if org.NoKnockdown or org.lastStand then
 		org.otrub = false
 		org.needotrub = false
 		org.fake = false

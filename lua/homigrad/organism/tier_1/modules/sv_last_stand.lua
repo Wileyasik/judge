@@ -23,7 +23,16 @@ local function StartLastStand(org)
 	org.lastStand = true
 	org.lastStandEnd = CurTime() + last_stand_time
 	org.lastStandAcc = 0
-	org.adrenalineAdd = max(org.adrenalineAdd or 0, 4)
+	org.adrenalineAdd = max(org.adrenalineAdd or 0, 5)
+	org.fearadd = 0
+	org.fear = 0
+	org.psycheApathy = 0
+	org.psycheAnger = 0
+	org.psycheSchizo = 0
+	org.panicattack = 0
+	org.panicattackadd = 0
+	org.disorientation = 0
+	org.nausea = 0
 	sendLastStand(org, true)
 end
 
@@ -64,15 +73,29 @@ hook.Add("Org Think", "LastStandThink", function(owner, org, timeValue)
 	if not org.isPly then return end
 
 	if org.lastStand then
-		if not owner:Alive() or CurTime() >= org.lastStandEnd then
+		if org.otrub or not owner:Alive() or CurTime() >= org.lastStandEnd then
 			StopLastStand(org)
 			return
 		end
-		org.adrenalineAdd = max(org.adrenalineAdd or 0, 4)
+		org.adrenalineAdd = max(org.adrenalineAdd or 0, 5)
 		return
 	end
 
 	org.lastStandAcc = max((org.lastStandAcc or 0) - timeValue * 10, 0)
+end)
+
+hook.Add("Org Think", "LastStandClearPsyche", function(owner, org, timeValue)
+	if not org.lastStand then return end
+	local clear = timeValue * 3
+	org.psycheApathy = max((org.psycheApathy or 0) - clear, 0)
+	org.psycheAnger = max((org.psycheAnger or 0) - clear, 0)
+	org.psycheDesens = max((org.psycheDesens or 0) - clear, 0)
+	org.psycheSchizo = max((org.psycheSchizo or 0) - clear, 0)
+	org.panicattack = max((org.panicattack or 0) - clear, 0)
+	org.panicattackadd = max((org.panicattackadd or 0) - clear, 0)
+	org.fearadd = max((org.fearadd or 0) - clear, 0)
+	org.disorientation = max((org.disorientation or 0) - clear, 0)
+	org.nausea = max((org.nausea or 0) - clear, 0)
 end)
 
 concommand.Add("hg_last_stand", function(ply, cmd, args)

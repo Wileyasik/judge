@@ -1336,6 +1336,7 @@ local tr = {
 }
 
 hook.Add("Should Fake Up","speedhuy",function(ply)
+	if ply.organism and ply.organism.lastStand then return end
 	if IsValid(ply.FakeRagdoll) then
 		if ply.FakeRagdoll:GetVelocity():Length() > 200 then return false end
 		if (ply.organism.stun - CurTime()) > 0 then return false end

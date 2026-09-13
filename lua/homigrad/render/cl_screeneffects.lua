@@ -600,6 +600,7 @@ local tempolerp = 0
 local lerpblood = 0
 local addtime = CurTime()
 local nextPanicAttackShake = 0
+local lastStandFade = 0
 local hurtoverlay = Material("zcity/neurotrauma/damageOverlay.png", "smooth")
 hook.Add("Post Post Processing", "ItHurts", function()
 	local spect = IsValid(lply:GetNWEntity("spect")) and lply:GetNWEntity("spect")
@@ -625,6 +626,9 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	if not organism then stopthings() return end
 	if not organism.brain then stopthings() return end
 	local org = organism
+
+	lastStandFade = math.Approach(lastStandFade, org.lastStand and 1 or 0, FrameTime() / 0.5)
+	local lsMul = 1 - lastStandFade
 
 	updateSeizureEffects(org)
 	
@@ -788,8 +792,8 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		render.DrawScreenQuad()
 	end
 
-	if PanicAttackLerp > 0.001 then
-		local panicBase = PanicAttackLerp
+	if PanicAttackLerp * lsMul > 0.001 then
+		local panicBase = PanicAttackLerp * lsMul
 		local panicPulse = panicBase * (panicattackPulseFloor + math.ease.InOutSine(math.abs(math.cos(CurTime() * 2))) * panicattackPulseIntensity)
 
 		render.UpdateScreenEffectTexture()
@@ -840,10 +844,10 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		render.DrawScreenQuad()
 	end
 
-	if (PainLerp > 0.001 or shockLerp > 5) or org.otrub then
+	if ((PainLerp > 0.001 or shockLerp > 5) or org.otrub) then
 		local strobe = math.ease.InOutSine(math.abs(math.cos(CurTime() * 2))) * PainLerp * painPulseIntensity
-		pain = PainLerp + strobe
-		shock = shockLerp
+		pain = (PainLerp + strobe) * lsMul
+		shock = shockLerp * lsMul
 		render.UpdateScreenEffectTexture()
 
 		vignetteMat:SetFloat("$c2_x", CurTime() + 10000) //Time
@@ -872,7 +876,6 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		//if pain > 10 then
 			painVolume = math.Clamp(math.Remap(pain, 0, painThresholdMax, 0, 2), 0, 2)
 			normalizedPain = math.Clamp(pain / painThresholdMax, 0, 1)
-			if org.lastStand then painVolume = 0 end
 			if IsValid(PainStation) then
 				PainStation:SetVolume(painVolume)
 			end
@@ -893,10 +896,46 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		//end
 	end
 
+	if lastStandFade > 0.01 then
+		DrawBloom(0.55, 1.2 * lastStandFade, 2, 2, 3, lastStandFade, 1.0, 0.78, 0.35)
+
+		local puls = 0.5 + 0.5 * math.sin(CurTime() * 2)
+		DrawMotionBlur(0.12, puls * 0.5 * lastStandFade, 0.03)
+
+		local left = (org.lastStandEnd or 0) - CurTime()
+		if left > 0 and left < 8 then
+			local ap = (1 - left / 8) * lastStandFade
+			render.UpdateScreenEffectTexture()
+
+			vignetteMat:SetFloat("$c2_x", CurTime() + 10000) //time
+			vignetteMat:SetFloat("$c0_z", ap * 0.9 + 0.5 * math.sin(CurTime() * 6)) //colorintensity
+			vignetteMat:SetFloat("$c1_y", ap * 1.7 + 0.9 * math.sin(CurTime() * 6)) //vignette
+
+			render.SetMaterial(vignetteMat)
+			render.DrawScreenQuad()
+		end
+
+		render.UpdateScreenEffectTexture()
+
+		grainMat:SetFloat("$c0_x", CurTime())
+		grainMat:SetFloat("$c0_y", -1)
+		grainMat:SetFloat("$c0_z", (0.4 + 0.5 * puls) * lastStandFade)
+		grainMat:SetFloat("$c1_x", (1.4 + 1.6 * puls) * lastStandFade)
+		grainMat:SetFloat("$c1_y", 0.12)
+		grainMat:SetFloat("$c1_z", 0.12)
+		grainMat:SetFloat("$c2_x", 0.2)
+		grainMat:SetFloat("$c2_y", 0.16)
+		grainMat:SetFloat("$c2_z", 0.05)
+		grainMat:SetFloat("$c3_x", 0)
+
+		render.SetMaterial(grainMat)
+		render.DrawScreenQuad()
+	end
+
 	updatePainLayer(painLayers.agony, normalizedPain, painVolume)
 	updatePainLayer(painLayers.excruciating, normalizedPain, painVolume)
 
-	if PanicAttackLerp > 0.001 and not org.otrub then
+	if PanicAttackLerp * lsMul > 0.001 and not org.otrub then
 		if (!IsValid(PanicStation) or PanicStation:GetState() != GMOD_CHANNEL_PLAYING) and not PanicStationLoading then
 			PanicStationLoading = true
 			sound.PlayFile(panicattackOverlayPath, "noblock noplay", function(station)
@@ -910,7 +949,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 			end)
 		end
 
-		panicVolume = math.Clamp(PanicAttackLerp * panicattackVolumeMul, 0, 1)
+		panicVolume = math.Clamp(PanicAttackLerp * panicattackVolumeMul * lsMul, 0, 1)
 		if IsValid(PanicStation) then
 			PanicStation:SetVolume(panicVolume)
 		end
