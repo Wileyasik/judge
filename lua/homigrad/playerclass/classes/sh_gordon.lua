@@ -532,6 +532,7 @@ end
 if CLIENT then
     local queen = {}
     net.Receive("HEV_DAMAGE",function()
+        local lply = LocalPlayer()
         local armors = lply.armors
         if not armors then return end
         if armors["head"] ~= "gordon_helmet" then return end
@@ -539,6 +540,7 @@ if CLIENT then
     end)
     local inPlaying = 0
     hook.Add("Think","HEV_Notify",function()
+        local lply = LocalPlayer()
         local armors = lply.armors
         if !lply:Alive() and #queen > 0 then queen = {} return end
         if not armors then return end

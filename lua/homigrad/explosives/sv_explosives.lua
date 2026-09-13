@@ -234,7 +234,6 @@ local blastWallDensity = {
 	[MAT_CONCRETE] = 1,
 	[MAT_METAL] = 1,
 	[MAT_TILE] = 0.75,
-	[MAT_ROCK] = 1.2,
 	[MAT_DIRT] = 0.4,
 	[MAT_SAND] = 0.25,
 	[MAT_GRATE] = 0.1,

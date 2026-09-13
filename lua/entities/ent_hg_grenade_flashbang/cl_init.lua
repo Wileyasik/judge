@@ -12,6 +12,7 @@ local function IsLookingAt(ply, targetVec)
 end
 
 net.Receive("flashbang",function()
+	local lply = LocalPlayer()
 	local pos = net.ReadVector()
 	 
 

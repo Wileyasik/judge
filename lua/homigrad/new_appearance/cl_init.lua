@@ -90,6 +90,7 @@ end
 
 -- Send from client...
 net.Receive("Get_Appearance", function()
+	local lply = LocalPlayer()
 	local forced_random = hg.Appearance.ForcedRandom:GetBool()
     net.Start("Get_Appearance")
 		local tbl,reason
@@ -106,6 +107,7 @@ net.Receive("Get_Appearance", function()
 end)
 
 local function OnlyGetAppearance()
+	local lply = LocalPlayer()
 	local forced_random = hg.Appearance.ForcedRandom:GetBool()
     net.Start("OnlyGet_Appearance")
 		local tbl,reason

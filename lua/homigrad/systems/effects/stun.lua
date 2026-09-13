@@ -87,8 +87,10 @@ function entMeta.EmitSound(self, soundName, soundLevel, pitch, volume, channel, 
 	end
 end
 
-util.AddNetworkString("add_supression")
-util.AddNetworkString("hg_bullet_nearmiss")
+if SERVER then
+	util.AddNetworkString("add_supression")
+	util.AddNetworkString("hg_bullet_nearmiss")
+end
 
 function hg.ExplosionEffect(pos, dis, dmg)
 	net.Start("add_supression")
