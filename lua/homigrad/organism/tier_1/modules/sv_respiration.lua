@@ -441,7 +441,7 @@ module[2] = function(owner, org, timeValue)
         org.hungry = min(max(org.hungry - timeValue * 2, 0),100)
     end
     org.hungry = Round(org.hungry or 0,3)
-	if (org.intestines > 0.5 or org.stomach > 0.5) and not org.otrub and (org.cotard or 0) <= 0 and owner:IsPlayer() and org.satiety > 1 then
+	if (org.intestines > 0.5 or org.stomach > 0.5) and not org.otrub and not org.lastStand and (org.cotard or 0) <= 0 and owner:IsPlayer() and org.satiety > 1 then
         if not org.randomPainSound or org.randomPainSound < CurTime() then
             org.randomPainSound = CurTime() + math.random(20,45)
             owner:EmitSound("zcitysnd/"..(ThatPlyIsFemale(owner) and "female" or "male").."/pain_"..math.random(1,8)..".mp3")

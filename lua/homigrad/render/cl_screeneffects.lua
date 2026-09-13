@@ -872,6 +872,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		//if pain > 10 then
 			painVolume = math.Clamp(math.Remap(pain, 0, painThresholdMax, 0, 2), 0, 2)
 			normalizedPain = math.Clamp(pain / painThresholdMax, 0, 1)
+			if org.lastStand then painVolume = 0 end
 			if IsValid(PainStation) then
 				PainStation:SetVolume(painVolume)
 			end

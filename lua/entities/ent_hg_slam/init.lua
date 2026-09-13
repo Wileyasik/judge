@@ -130,6 +130,9 @@ function ENT:ActivateExplosive()
 		net.WriteString(self.SoundWater)
 	net.Broadcast()
 
+	timer.Simple(0.1, function()
+		ParticleEffect("pcf_jack_airsplode_small", selfPos - vector_up * 5, vector_up:Angle())
+	end)
 	hg.ExplosionEffect(selfPos, self.BlastDis, 5)
 
 	timer.Simple(0, function()

@@ -320,6 +320,7 @@ function SWEP:DetonateC4()
 
 	charge:SetNoDraw(true)
 	charge:SetNotSolid(true)
+	ParticleEffect("pcf_jack_groundsplode_medium", pos, -vector_up:Angle())
 	hgBlastDoors(charge, pos, self.BlastDamage / 400, self.DoorBlastRange, false)
 	util.ScreenShake(pos, 45, 225, 2.5, 3000)
 	net.Start("projectileFarSound")

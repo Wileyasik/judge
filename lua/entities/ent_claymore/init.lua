@@ -139,6 +139,9 @@ function ENT:ActivateExplosive()
 	net.Broadcast()
 	local normal = self:GetAngles():Right()
 	local blastdist = self.BlastDis
+	timer.Simple(0.3, function()
+		ParticleEffect("pcf_jack_groundsplode_medium", selfPos + vector_up, -normal:Angle())
+	end)
 	local attacker = IsValid(self.owner) and self.owner or Entity(0)
 	
 	for _, ply in ipairs(ents.FindInSphere(selfPos,self.ConcussionDis)) do

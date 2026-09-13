@@ -285,6 +285,13 @@ hook.Add("Think", "RemCardiacSounds", function()
 	local ply = LocalPlayer()
 	if not IsValid(ply) then return end
 	local org = ply:Alive() and (ply.new_organism or ply.organism)
+	local lastStand = org and org.lastStand and not org.otrub
+	if lastStand then
+		StopRemFibrillationSound()
+		StopSeizureSound()
+		if IsValid(brainRotStation) then brainRotStation:Stop() brainRotStation = nil brainRotEnd = 0 end
+		return
+	end
 	local concussion = org and org.concussion or 0
 	if concussion > lastConcussion + 0.1 and CurTime() >= lastConcussionSound then
 		PlayLocalImpactSound("concussion2.mp3", 1)
@@ -393,6 +400,10 @@ local disorientationVignetteMat = Material("effects/shaders/zb_vignette")
 local concLerp = 0
 local nauseaLerp = 0
 local tinnitusConcLerp = 0
+local lastStandSway = 0
+local lastStandSwayT = 0
+local lastStandYaw
+local lastStandRoll
 
 hook.Add("Player Spawn", "screenshot_game", function(ply)
 	if OverrideSpawn then return end
@@ -756,6 +767,20 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 	tinnitusSoundFactor = Lerp(FrameTime()*2.5,tinnitusSoundFactor or 0, math.min(math.max( lply.tinnitus and (lply.tinnitus - CurTime()) or 0, 0)*7.5,120))
 	local tinnitusSoundFactor2 = tinnitusSoundFactor + (hook.Run("ModifyTinnitusFactor", tinnitusSoundFactor) or 0)
 
+	local lastStand = lply:Alive() and (org.lastStand or new_organism.lastStand) and not otrub
+
+	if lastStand then
+		pain = 0
+		hurt = 0
+		disorientation = 0
+		blood = 5000
+		o2 = 30
+		brain = 0
+		concussion = 0
+		concussionNausea = 0
+		concussionTinnitus = 0
+	end
+
 	if lply:Alive() and (otrub or new_organism.otrub) and incapacitated and deathStateEnd then
 		local seconds = math.max(math.ceil(deathStateEnd - CurTime()), 0)
 		remDeathStateColor.a = math.Clamp((25 - (deathStateEnd - CurTime())) / 2, 0, 1) * 255
@@ -814,6 +839,10 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 
 	local stamina = org.stamina and org.stamina[1] or 180
 	local k4 = math.Clamp((EXHAUSTED_THRESHOLD - stamina) / EXHAUSTED_THRESHOLD, 0, 1)
+
+	if lastStand then
+		k1 = 0
+	end
 
 	DrawSharpen(k1 * 2, k1 * 1)
 	local lowpulse = math.max((70 - pulse) / 70, 0) + math.max(3000 * ((math.cos(CurTime()/2) + 1) / 2 * 0.1 + 1) - (blood * adrenK - 300),0) / 400
@@ -924,6 +953,36 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 	//DrawColorModify(tab)
 	
 	DrawColorModify(tabblood)
+
+	if lastStand then
+		DrawColorModify({
+			["$pp_colour_addr"] = 0.03,
+			["$pp_colour_addg"] = 0.03,
+			["$pp_colour_addb"] = 0.03,
+			["$pp_colour_brightness"] = 0.02,
+			["$pp_colour_contrast"] = 1.12,
+			["$pp_colour_colour"] = 1.02,
+			["$pp_colour_mulr"] = 1,
+			["$pp_colour_mulg"] = 1,
+			["$pp_colour_mulb"] = 1,
+		})
+		lastStandSwayT = math.min(lastStandSwayT + FrameTime() * 5.5, 1)
+		lastStandSway = Lerp(lastStandSwayT, lastStandSway, 0.9)
+		local sway = lastStandSway * 0.15
+		local ang = lply:EyeAngles()
+		local yawDelta = ang.y - (lastStandYaw or ang.y)
+		lastStandYaw = ang.y
+		while yawDelta > 180 do yawDelta = yawDelta - 360 end
+		while yawDelta < -180 do yawDelta = yawDelta + 360 end
+		lastStandRoll = Lerp(FrameTime() * 8, lastStandRoll or 0, math.Clamp(-yawDelta * 2.5, -4, 4) * sway)
+		if math.abs(lastStandRoll) > 0.01 then
+			ViewPunch(Angle(0, 0, lastStandRoll))
+		end
+	elseif lastStandSway > 0 or lastStandSwayT > 0 then
+		lastStandSwayT = math.max(lastStandSwayT - FrameTime() * 2.5, 0)
+		lastStandSway = Lerp(lastStandSwayT, lastStandSway, 0)
+		if lastStandSwayT <= 0 then lastStandYaw = nil lastStandRoll = nil end
+	end
 
 	if concussion > 0 and lply:Alive() then
 		concLerp = LerpFT(0.03, concLerp, concussion)
@@ -1344,7 +1403,7 @@ hook.Add("Player-Ragdoll think", "organism-think-client-blood", function(ply, en
 	if org.pulse and org.heartbeat > 30 and (org.lastpulse or 0) + (1 / math.Clamp(org.heartbeat, 1, 600)) * 60 < CurTime() then
 		org.lastpulse = CurTime()
 		local pulse = org.heartbeat or 0
-		local pain = org.pain or 0
+		local pain = (ply == lply and org.lastStand) and 0 or org.pain or 0
 		
 		local dist = owner:GetPos():DistToSqr(lply:GetPos())
 		local carryent = lply:GetNetVar("carryent")
@@ -1370,9 +1429,10 @@ hook.Add("Player-Ragdoll think", "organism-think-client-blood", function(ply, en
 	--why? because
 	if org.pulse and (ent.pulse_breathe.lastbreathe or 0) < CurTime() and org.lastbreathed and org.lastbreathed + 5 < CurTime() then
 		local heartbeat = org.heartbeat or 0
+		local lastStand = ply == lply and org.lastStand
 		ent.pulse_breathe.lastbreathe = CurTime() + (1 / math.Clamp(org.heartbeat + (org.o2[1] - 30) * 1, 1, 120)) * 90 + ( org.o2[1] < 20 and 5 or 0)
 		
-		if org.analgesia <= 1.5 and org.heartbeat > 1 then
+		if org.analgesia <= 1.5 and org.heartbeat > 1 and not lastStand then
 			if (ent:WaterLevel() < 3) then
 				local muffed
 

@@ -305,7 +305,7 @@ hook.Add("Think","bober",function(ply)
 				continue
 			end
 			
-			if string.find(ent:GetClass(), "prop_") and !hg.expItems[ent:GetModel()] then
+			if string.find(ent:GetClass(), "prop_") and not (hg.GetExplosiveData and hg.GetExplosiveData(ent)) then
 				MakeDissolver(ent, ent:GetPos(), 0)
 			end
 		end

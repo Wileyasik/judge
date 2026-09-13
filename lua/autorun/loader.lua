@@ -37,20 +37,28 @@ local function AddFile(File, dir)
 	local fileSide = string.lower(string.Left(File, 3))
 	local fileSide2 = string.lower(string.Right(string.sub(File, 1, -5), 3))
 	local side = sides[fileSide] or sides[fileSide2]
+	local function SafeInclude(includePath)
+		local ok, err = pcall(include, includePath)
+		if not ok then
+			print("[loader] FAILED to load " .. includePath .. ": " .. tostring(err))
+			hg._loaderErrors = hg._loaderErrors or {}
+			hg._loaderErrors[#hg._loaderErrors + 1] = includePath .. " :: " .. tostring(err)
+		end
+	end
 	if SERVER and side == "sv_" then
-		include(dir .. File)
+		SafeInclude(dir .. File)
 	elseif side == "sh_" then
 		if SERVER then AddCSLuaFile(dir .. File) end
-		include(dir .. File)
+		SafeInclude(dir .. File)
 	elseif side == "cl_" then
 		if SERVER then
 			AddCSLuaFile(dir .. File)
 		else
-			include(dir .. File)
+			SafeInclude(dir .. File)
 		end
 	else
 		if SERVER then AddCSLuaFile(dir .. File) end
-		include(dir .. File)
+		SafeInclude(dir .. File)
 	end
 end
 

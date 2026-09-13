@@ -104,7 +104,7 @@ hook.Add("HG_CalcView", "rem_clearround_fov", function(ply, origin, angles, fova
 	local frac = FovFraction(SysTime() - startSys)
 	if frac <= 0 then return end
 
-	local base = hg_fov and math.Clamp(hg_fov:GetFloat(), 75, 100) or 90
+	local base = hg_fov and math.Clamp(hg_fov:GetFloat(), 75, 115) or 90
 	fova[1] = fova[1] + (TARGET_FOV - base) * frac
 end)
 

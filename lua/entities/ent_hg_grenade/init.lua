@@ -262,6 +262,7 @@ function ENT:Explode()
 		--if line.Hit then
 		--	ParticleEffect("pcf_jack_groundsplode_small3",selfPos,-vector_up:Angle())
 		--else
+			ParticleEffect("pcf_jack_airsplode_small3",selfPos,-vector_up:Angle())
 		--end
 	else
 		local effectdata = EffectData()

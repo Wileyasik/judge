@@ -66,6 +66,7 @@ local black = Color(0, 0, 0, 200)
 local list = {
 	"owner",
 	"superfighter",
+	{"lastStand", true, true},
 	"berserkActive2",
 	"temperature",
 	"tempchanging",

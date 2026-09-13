@@ -52,6 +52,12 @@ if SERVER then
 	end
 
 	hook.Add("OnEntityCreated", "drum_spawn", function(ent) timer.Simple(0, function() addDrum(ent) end) end)
+
+	timer.Simple(0.5, function()
+		for _, ent in ipairs(ents.GetAll()) do
+			addDrum(ent)
+		end
+	end)
 end
 
 if SERVER then

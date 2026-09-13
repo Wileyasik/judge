@@ -17,6 +17,9 @@ local PendingWaveShakes = 0
 local MaxPendingWaveShakes = 8
 local ShockwaveScratchA = Vector(0, 0, 0)
 local ShockwaveScratchB = Vector(0, 0, 0)
+local ExplosionFlashMat = Material("sprites/plasma")
+local ExplosionFlashes = {}
+local ExplosionFlashMaxCount = 16
 
 local ExplosiveSound = {
 	Shockwave = {
@@ -100,6 +103,7 @@ PrecacheParticleSystem("fire_jet_01")
 
 local ExplosionVignetteMat = Material("effects/shaders/zb_vignette")
 hook.Add("Post Post Pre Post Processing", "hg_explosion_vignette", function()
+	if ExplosionVignetteMat:IsError() then return end
 	local vig = hg.GetExplosionVignette and hg.GetExplosionVignette() or 0
 	if vig <= 0.001 then return end
 	render.UpdateScreenEffectTexture()
@@ -112,8 +116,29 @@ end)
 
 hook.Add("PostDrawTranslucentRenderables", "hg_explosion_shockwaves", function(_, skybox)
 	if skybox then return end
+	if ShockwaveMaterial:IsError() then return end
 	local time = CurTime()
 	local step = math_pi * 2 / ShockwaveSegments
+
+	if not ExplosionFlashMat:IsError() then
+		for i = #ExplosionFlashes, 1, -1 do
+			local flash = ExplosionFlashes[i]
+			local f = (time - flash.StartTime) / flash.Duration
+			if f >= 1 then
+				table.remove(ExplosionFlashes, i)
+				continue
+			end
+
+			local scale = f ^ 0.55
+			local size = math_max(flash.StartSize, flash.StartSize + (flash.EndSize - flash.StartSize) * scale)
+			local alpha = flash.Alpha * (1 - f)
+			if size > 0 and alpha > 1 then
+				render.SetMaterial(ExplosionFlashMat)
+				render.DrawSprite(flash.Pos, size, size, Color(flash.Color.r, flash.Color.g, flash.Color.b, alpha))
+			end
+		end
+	end
+
 	render.SetMaterial(ShockwaveMaterial)
 
 	for i = #ExplosionShockwaves, 1, -1 do
@@ -168,6 +193,30 @@ net.Receive("hg_booom", function()
 		if data.Effect then ParticleEffect(data.Effect, pos, vector_up:Angle()) end
 		effectPerMSec = effectPerMSec + 1
 		effectCDCurTime = CurTime() + 0.2
+
+		if #ExplosionFlashes >= ExplosionFlashMaxCount then
+			table.remove(ExplosionFlashes, 1)
+		end
+
+		ExplosionFlashes[#ExplosionFlashes + 1] = {
+			Pos = pos,
+			StartTime = CurTime(),
+			Duration = 0.5,
+			StartSize = math.Clamp(radius * 0.12, 24, 280),
+			EndSize = math.Clamp(radius * 0.65, 60, 1750),
+			Alpha = 220,
+			Color = Color(data.ShockwaveColor.r, data.ShockwaveColor.g, data.ShockwaveColor.b, 220)
+		}
+
+		local flash = DynamicLight(0)
+		if flash then
+			flash.Pos = pos
+			flash.r, flash.g, flash.b = 255, 215, 160
+			flash.Size = math.Clamp(radius * 0.35, 120, 800)
+			flash.Decay = math.Clamp(radius * 1.75, 300, 4000)
+			flash.Brightness = 2.6
+			flash.DieTime = CurTime() + 0.13
+		end
 	end
 
 	if #ExplosionShockwaves >= ShockwaveMaxCount then

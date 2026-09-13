@@ -210,7 +210,7 @@ local FireEnts = {
 	["models/props_c17/canister02a.mdl"] = true,
 	["models/props_c17/canister_propane01a.mdl"] = true,
 	["models/props_c17/canister_propane01a.mdl"] = true,
-	["models/props_junk/PropaneCanister001a.mdl"] = true
+	["models/props_junk/propanecanister001a.mdl"] = true
 }
 
 if CLIENT then
@@ -474,7 +474,7 @@ ExplodeTheItem = function(self,ent)
 		return
 	end
 
-	local fireData = entModel and hg and hg.expItems and hg.expItems[entModel]
+	local fireData = entModel and hg and hg.GetExplosiveData and hg.GetExplosiveData(entModel)
 	if entValid and fireData and hg and hg.PropExplosion then
 		local phys = ent:GetPhysicsObject()
 		local mass = IsValid(phys) and phys:GetMass() or 10
@@ -504,7 +504,9 @@ ExplodeTheItem = function(self,ent)
 				net.WriteString(soundWater)
 			hg.SendNetToPlayersWithin(EntPos, 25000)
 
-			if entWaterLevel > 0 then
+			if entWaterLevel == 0 then
+				ParticleEffect("pcf_jack_groundsplode_medium", EntPos, -vector_up:Angle())
+			else
 				local effectdata = EffectData()
 				effectdata:SetOrigin(EntPos)
 				effectdata:SetScale(5)
@@ -557,7 +559,7 @@ ExplodeTheItem = function(self,ent)
 			hgBlastDoors(IsValid(ent) and ent or attacker, EntPos, BlastDamage / 400, BlastDis/8, false)
 			util.ScreenShake( EntPos, 50, 300, 3.5, 4000 )
 
-			if FireEnts[entModel] then
+			if entModel and FireEnts[string.lower(entModel)] then
 				local Tr = util.QuickTrace(EntPos, -vector_up*500, {EntPos})
 				local fire = CreateVFire(game.GetWorld(), Tr.HitPos, Tr.HitNormal, 300, attacker)
 				if IsValid(fire) then

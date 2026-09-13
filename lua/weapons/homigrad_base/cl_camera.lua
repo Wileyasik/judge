@@ -146,7 +146,7 @@ hook.Add("HUDPaint","drawWeaponHUD",function()
 	end
 end)
 
-local hg_fov = ConVarExists("hg_fov") and GetConVar("hg_fov") or CreateClientConVar("hg_fov", "70", true, false, "changes fov to value", 75, 100)
+local hg_fov = ConVarExists("hg_fov") and GetConVar("hg_fov") or CreateClientConVar("hg_fov", "70", true, false, "changes fov to value", 75, 115)
 local fov = hg_fov:GetFloat()
 local fov_mode_lerp = 0
 
@@ -354,7 +354,9 @@ function SWEP:Camera(eyePos, eyeAng, view, vellen, ply)
 	end
 
 	if not hg_nofovzoom:GetBool() then
-		fov_mode_lerp = LerpFT(0.12, fov_mode_lerp, (self:HasAttachment("sight","optic") and not self.viewmode1 and -15 - (hg_fov:GetInt() - 75)) or - (hg_fov:GetInt() - 80))
+		local hgFovInt = hg_fov:GetInt()
+		local aimFov = (self:HasAttachment("sight","optic") and not self.viewmode1) and math.max(60, hgFovInt - 25) or math.max(80, hgFovInt - 15)
+		fov_mode_lerp = LerpFT(0.12, fov_mode_lerp, aimFov - hgFovInt)
 		fov = fovlerp + fov_mode_lerp * k//Lerp(k, fovlerp, fov_mode_lerp)
 	else
 		fov = fovlerp

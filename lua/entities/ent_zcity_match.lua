@@ -72,17 +72,25 @@ function ENT:Initialize()
             if IsValid(data.HitEntity) and hg.drums[data.HitEntity:EntIndex()] then
                 local drum = hg.drums[data.HitEntity:EntIndex()]
                 local drumEnt = data.HitEntity
-                local tbl = hg.expItems[drumEnt:GetModel()]
+				local tbl = hg.GetExplosiveData and hg.GetExplosiveData(drumEnt)
                 if not tbl then return end
 
                 for i, point in ipairs(drum.high_point) do
                     local pos2 = LocalToWorld(point[1], angle_zero, drumEnt:GetPos(), drumEnt:GetAngles())
-                    if pos:DistToSqr(pos2) < 5 * 5 then
+                    if pos:DistToSqr(pos2) < 14 * 14 then
                         drumEnt.owner = ent1.debil or ent1.owner
-                        hg.PropExplosion( drumEnt, tbl.ExpType, (drumEnt.Volume or tbl.Force) * 2, drumEnt:GetPhysicsObject():GetMass() )
+						hg.PropExplosion(drumEnt, tbl.ExpType, (drumEnt.Volume or tbl.Force) * 2, drumEnt:GetPhysicsObject():GetMass(), tbl)
                         return
                     end
                 end
+            end
+
+            if IsValid(data.HitEntity) and hg and hg.GetExplosiveData and hg.GetExplosiveData(data.HitEntity) then
+                local fuelEnt = data.HitEntity
+                local owner2 = ent1.debil or ent1.owner
+                fuelEnt.owner = owner2
+                CreateVFire(fuelEnt, fuelEnt:GetPos(), -vector_up, 160, owner2)
+                return
             end
         end)
     end

@@ -382,9 +382,11 @@ local function send_organism(org, ply, recipientForce, reliable)
 	sendtable.concussion = org.concussion
 	sendtable.nausea = org.nausea
 	sendtable.concussion_tinnitus = org.concussion_tinnitus
-	sendtable.cotard = org.cotard or 0
+sendtable.cotard = org.cotard or 0
 	sendtable.cotardType = org.cotardType or 0
 	sendtable.cotardStarted = org.cotardStarted or 0
+	sendtable.lastStand = org.lastStand
+	sendtable.lastStandEnd = org.lastStandEnd or 0
 	net.Start("organism_send", not reliable and hg_unreliable_nets:GetBool())
 	net.WriteTable(not hg_developer:GetBool() and sendtable or org)
 	net.WriteBool(recipientForce or org.owner.fullsend or false)  -- ORG_NET_FORCE

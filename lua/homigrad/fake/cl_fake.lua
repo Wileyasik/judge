@@ -226,7 +226,7 @@ fakeTimer = fakeTimer or nil
 local hg_cshs_fake = CreateConVar("hg_cshs_fake", "0", FCVAR_ARCHIVE, "Toggle C'SHS-like ragdoll camera view", 0, 1)
 local hg_firstperson_death = CreateClientConVar("hg_firstperson_death", "0", true, false, "Toggle first-person death camera view", 0, 1)
 local hg_firstperson_ragdoll = CreateConVar("hg_firstperson_ragdoll", "0", FCVAR_ARCHIVE, "Toggle first-person ragdoll camera view", 0, 1)
-local hg_fov = CreateClientConVar("hg_fov", "70", true, false, "Change first-person field of view", 75, 100)
+local hg_fov = CreateClientConVar("hg_fov", "70", true, false, "Change first-person field of view", 75, 115)
 local hg_gopro = CreateClientConVar("hg_gopro", "0", true, false, "Toggle GoPro-like camera view", 0, 1)
 local hg_thirdperson = CreateConVar("hg_thirdperson", "0", FCVAR_REPLICATED, "Toggle third-person camera view", 0, 1)
 
@@ -394,7 +394,7 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 	view.angles[3] = view.angles[3] + GetViewPunchAngles4()[3]
 	view.angles:RotateAroundAxis(view.angles:Up(),-LookX)
 	view.angles:RotateAroundAxis(view.angles:Right(),-LookY)
-	view.fov = math.Clamp(hg_fov:GetFloat(),75,100) + lerpfovadd + lerpfovadd2
+	view.fov = math.Clamp(hg_fov:GetFloat(),75,115) + lerpfovadd + lerpfovadd2
 	view.znear = 1
 
 	view = hook.Run("Camera", ply, view.origin, view.angles, view, vector_origin) or view
