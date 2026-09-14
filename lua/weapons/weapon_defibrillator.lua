@@ -193,6 +193,12 @@ local function ShouldShock(org)
 	return org.fibrillation or (org.arrhythmia or 0) > 0.65 or (org.heartbeat or 0) > 200
 end
 
+local function ShouldFalseShock(org)
+	if not org or not org.alive or org.heartstop or org.deathStateKilled then return false end
+	if (org.fibrillation or false) or (org.arrhythmia or 0) > 0.65 then return false end
+	return (org.pulse or org.heartbeat or 0) >= 135 and math.random(100) <= 16
+end
+
 local function IsDefibDead(org)
 	if not org or not org.alive or org.deathStateKilled then return true end
 	local owner = org.owner
@@ -216,17 +222,8 @@ local function ShockChest(target, forceMul)
 
 	if IsValid(phys) then
 		phys:Wake()
-		phys:ApplyForceCenter(-vector_up * 6000 * forceMul)
+		phys:ApplyForceCenter(-vector_up * 1800 * forceMul)
 		applied = true
-	end
-
-	for i = 0, target:GetPhysicsObjectCount() - 1 do
-		local obj = target:GetPhysicsObjectNum(i)
-		if IsValid(obj) and obj != phys then
-			obj:Wake()
-			obj:ApplyForceCenter(-vector_up * 2500 * forceMul)
-			applied = true
-		end
 	end
 
 	if not applied then return end
@@ -247,7 +244,6 @@ local function DropDefib(defib, target, uses, snd)
 	defib.AEDDropped = true
 	defib.AEDFinalized = true
 	defib.AEDState = "dropped"
-	StopAEDSounds(defib)
 
 	local pos = defib:GetPos()
 	local ang = defib:GetAngles()
@@ -356,8 +352,15 @@ local function IsAEDState(defib, state)
 	return IsValid(defib) and not defib.AEDDropped and defib.AEDState == state
 end
 
-local function ApplyAEDShock(org)
+local function ApplyAEDShock(org, accidental)
 	if not org then return end
+
+	if accidental then
+		org.arrhythmia = math.max(org.arrhythmia or 0, 0.35)
+		org.heartStrain = (org.heartStrain or 0) + 0.25
+		org.pulse = math.max(org.pulse or 0, 70)
+		return
+	end
 
 	org.fibrillation = false
 	org.arrhythmia = 0
@@ -380,13 +383,9 @@ local function ApplyAEDShock(org)
 	org.deathStateKilled = nil
 	org.defibDeathGrace = CurTime() + 45
 	org.deathStateEnd = math.max(org.deathStateEnd or 0, org.defibDeathGrace)
-
-	if org.otrub and hg and hg.organism and hg.organism.Rouse then
-		hg.organism.Rouse(org, 30, "defib")
-	end
 end
 
-local function BeginAEDShock(defib, ply, getTarget, uses)
+local function BeginAEDShock(defib, ply, getTarget, uses, accidental)
 	if not SetAEDState(defib, "charging") then return end
 	if defib.AEDCharging or defib.AEDShocked then return end
 
@@ -418,7 +417,7 @@ local function BeginAEDShock(defib, ply, getTarget, uses)
 		PlayAEDSound(defib, AEDSounds.shocksound, 85, 100, 2)
 		PlayAEDSound(defib, AEDSounds.shockdelivered, 75, 100, 3)
 		ShockChest(target, 2)
-		ApplyAEDShock(org)
+		ApplyAEDShock(org, accidental)
 
 		if org then
 			org.painadd = (org.painadd or 0) + 150
@@ -481,7 +480,6 @@ local function StartNoShockWarnings(defib, ply, getTarget, uses)
 		local org = GetDefibOrganism(ply, getTarget())
 		if ShouldShock(org) then BeginAEDShock(defib, ply, getTarget, uses) return end
 		PlayAEDSound(defib, AEDSounds.checkpulse)
-		if org and org.otrub and hg and hg.organism and hg.organism.Rouse then hg.organism.Rouse(org, 25, "defib") end
 	end)
 
 	timer.Simple(9, function()
@@ -489,14 +487,12 @@ local function StartNoShockWarnings(defib, ply, getTarget, uses)
 		local org = GetDefibOrganism(ply, getTarget())
 		if ShouldShock(org) then BeginAEDShock(defib, ply, getTarget, uses) return end
 		PlayAEDSound(defib, AEDSounds.checkbreathing)
-		if org and org.otrub and hg and hg.organism and hg.organism.Rouse then hg.organism.Rouse(org, 30, "defib") end
 	end)
 
 	timer.Simple(13.5, function()
 		if not IsAEDState(defib, "no_shock") or not defib.AEDNoShockWarnings then return end
 		local org = GetDefibOrganism(ply, getTarget())
 		if ShouldShock(org) then BeginAEDShock(defib, ply, getTarget, uses) return end
-		if org and org.otrub and hg and hg.organism and hg.organism.Rouse then hg.organism.Rouse(org, 40, "defib") end
 		DropDefib(defib, getTarget(), uses)
 	end)
 end
@@ -519,6 +515,11 @@ local function StartAEDSequence(defib, ply, getTarget, uses)
 		end
 
 		if not ShouldShock(org) then
+			if ShouldFalseShock(org) then
+				BeginAEDShock(defib, ply, getTarget, uses, true)
+				return
+			end
+
 			StartNoShockWarnings(defib, ply, getTarget, uses)
 			return
 		end
@@ -762,8 +763,135 @@ function SWEP:AttachDefib(owner, target, ply)
 		end
 	end)
 
-	StartAEDSequence(defib, ply, function() return activeTarget end, uses)
+	if hook.Run("DefibOnAttached", defib, owner, target, ply, function() return activeTarget end, uses) ~= true then
+		StartAEDSequence(defib, ply, function() return activeTarget end, uses)
+	end
 	owner:StripWeapon(self:GetClass())
+end
+
+function hg.DefibReviveIncapacitated(defib, owner, ply, getTarget, uses)
+	if not IsValid(defib) then return end
+	if defib.AEDDropped or defib.AEDFinalized then return end
+	if not SetAEDState(defib, "charging") then return end
+
+	defib.AEDCharging = true
+	defib.AEDNoShockWarnings = false
+	PlayAEDSound(defib, AEDSounds.shockadvised)
+	PlayAEDSound(defib, AEDSounds.charging)
+
+	timer.Simple(1.5, function()
+		if IsAEDState(defib, "charging") then PlayAEDSound(defib, AEDSounds.standclear) end
+	end)
+
+	timer.Simple(3, function()
+		if not IsAEDState(defib, "charging") or defib.AEDShocked then return end
+
+		defib.AEDCharging = false
+		local target = GetCurrentDefibTarget(ply, getTarget())
+		if not IsValid(target) then
+			DropDefib(defib, nil, uses)
+			return
+		end
+
+		local org = GetDefibOrganism(ply, target)
+		if not org then
+			DropDefib(defib, target, uses)
+			return
+		end
+
+		defib.AEDState = "shocked"
+		defib.AEDFinalized = true
+		defib.AEDShocked = true
+
+		PlayAEDSound(defib, AEDSounds.shocksound, 85, 100, 2)
+		PlayAEDSound(defib, AEDSounds.shockdelivered, 75, 100, 3)
+		ShockChest(target, 2)
+
+		local victim = IsValid(ply) and ply or org.owner
+
+		if hg.organism and hg.organism.Clear then
+			hg.organism.Clear(org)
+		else
+			org.otrub = false
+			org.needotrub = false
+			org.incapacitated = false
+			org.heartstop = false
+			org.fibrillation = false
+			org.arrhythmia = 0
+			org.heartStrain = 0
+			org.heartbeat = 70
+			org.pulse = 70
+			org.blood = 5000
+			org.bloodPressure = 120
+			org.myocardialOxygen = 1
+			org.consciousness = 1
+			org.shock = 0
+			org.painadd = 0
+			org.pain = 0
+			org.immobilization = 0
+			org.disorientation = 0
+			org.bleed = 0
+			org.internalBleed = 0
+			org.wounds = {}
+			org.arterialwounds = {}
+			if IsValid(org.owner) then
+				org.owner:SetNetVar("wounds", {})
+				org.owner:SetNetVar("arterialwounds", {})
+			end
+		end
+
+		org.deathStateEnd = nil
+		org.deathStateKilled = nil
+		org.needotrub = false
+		org.needfake = false
+		org.defibDeathGrace = CurTime() + 45
+
+		if IsValid(victim) and victim:IsPlayer() then
+			victim.fullsend = true
+		end
+		if IsValid(org.owner) then
+			org.owner.fullsend = true
+		end
+
+		timer.Simple(1, function()
+			if not IsValid(victim) or not victim:IsPlayer() or not victim:Alive() then return end
+			if org.otrub or org.incapacitated then return end
+			if not IsValid(victim.FakeRagdoll) then return end
+			if hg and hg.FakeUp then hg.FakeUp(victim, true) end
+		end)
+
+		for _, otherPly in ipairs(player.GetAll()) do
+			if not otherPly:Alive() or otherPly == ply then continue end
+			local isTouching = false
+
+			if IsShockTarget(otherPly:GetNetVar("carryent"), target) or IsShockTarget(otherPly:GetNetVar("carryent2"), target) then
+				isTouching = true
+			end
+
+			local fakeRag = otherPly.FakeRagdoll
+			if not isTouching and IsValid(fakeRag) then
+				if (IsValid(fakeRag.ConsLH) and (IsShockTarget(fakeRag.ConsLH.Ent2, target) or IsShockTarget(fakeRag.ConsLH.choking, target))) or
+				   (IsValid(fakeRag.ConsRH) and (IsShockTarget(fakeRag.ConsRH.Ent2, target) or IsShockTarget(fakeRag.ConsRH.choking, target))) then
+					isTouching = true
+				end
+			end
+
+			if isTouching then
+				local otherOrg = otherPly.organism
+				if otherOrg then
+					otherOrg.painadd = (otherOrg.painadd or 0) + 150
+					otherOrg.shock = (otherOrg.shock or 0) + 150
+					if hg and hg.StunPlayer then hg.StunPlayer(otherPly, 2) end
+				end
+			end
+		end
+
+		timer.Simple(2, function()
+			if not IsValid(defib) then return end
+			PlayAEDSound(defib, AEDSounds.startcpr, 75, 100, 3)
+			DropDefib(defib, target, uses - 1)
+		end)
+	end)
 end
 
 function SWEP:SecondaryAttack()
