@@ -91,10 +91,9 @@ local fixbones = {
 	//["ValveBiped.Bip01_L_Hand"] = true,
 }
 
-local function Ragdoll_CreateInternal(ply)
+function hg.Ragdoll_Create(ply)
 	local Data = duplicator.CopyEntTable( ply )
 	local ragdoll = ents.Create("prop_ragdoll")
-	ply.hgPendingRagdoll = ragdoll
 	duplicator.DoGeneric( ragdoll, Data )
 
 	ragdoll:SetPos(ply:GetPos())
@@ -113,13 +112,14 @@ local function Ragdoll_CreateInternal(ply)
 
 	hg.queue_ragdolls[ragdoll] = {}
 
+	if IsValid(ply.bull) then ply.bull:Remove() ply.bull = nil end
 	ragdoll.bull = ents.Create("npc_bullseye")
 	local bull = ragdoll.bull
 	bull.ply = ply
 	bull.rag = ragdoll
 	local eyeatt = ragdoll:GetAttachment(ragdoll:LookupAttachment("eyes"))
 	local bodyphy = ragdoll:GetPhysicsObjectNum(10)
-	if not IsValid(bodyphy) then return end
+	if !bodyphy then return end
 	bull:SetPos(bodyphy:GetPos()+bodyphy:GetAngles():Right()*7)
 	--bull:SetPos( eyeatt.Pos + eyeatt.Ang:Up() * 3.5 )
 	bull:SetAngles( ragdoll:GetAngles() )
@@ -157,9 +157,6 @@ local function Ragdoll_CreateInternal(ply)
 
 	ragdoll:CallOnRemove("removeBull", function()
 		hg.queue_ragdolls[ragdoll] = nil
-		if IsValid(ragdoll.hgRagdollVehicle) and ragdoll.hgRagdollVehicle.rags then
-			table.RemoveByValue(ragdoll.hgRagdollVehicle.rags, ragdoll)
-		end
 
 		if IsValid(ragdoll.bull) then
 			ragdoll.bull:Remove()
@@ -179,28 +176,20 @@ local function Ragdoll_CreateInternal(ply)
 	local model = ragdoll:GetModel()
 	
 	cacheModel(ragdoll)
-	if ply.NoDismembermentPhysics then
-		ragdoll.NoDismembermentPhysics = true
-		ply.NoDismembermentPhysics = nil
-	end
 
-	local rootMatrix = ply:GetBoneMatrix(0)
-	local offset = vector_up * 36
-	if rootMatrix then offset = ply:GetPos() - rootMatrix:GetTranslation() + vector_up * 36 end
+	local offset = ply:GetPos() - ply:GetBoneMatrix(0):GetTranslation() + vector_up * 36
 	
 	if ply:InVehicle() then
 		local veh = ply:GetVehicle()
 		veh.rags = veh.rags or {}
 		table.insert(veh.rags, ragdoll)
-		ragdoll.hgRagdollVehicle = veh
 	end
 
 	for physNum = 0, ragdoll:GetPhysicsObjectCount() - 1 do
 		local phys = ragdoll:GetPhysicsObjectNum(physNum)
 		local bone = ragdoll:TranslatePhysBoneToBone(physNum)
-		if not IsValid(phys) or not isnumber(bone) or bone < 0 then continue end
+		if bone < 0 then continue end
 		local matrix = ply:GetBoneMatrix(bone)
-		if not matrix then continue end
 		ply.AddForceRag = ply.AddForceRag or {}
 		ply.AddForceRag[physNum] = ply.AddForceRag[physNum] or {}
 		local vel = (ply.AddForceRag[physNum][2] or vecZero) * math.max(0, (ply.AddForceRag[physNum][1] or CurTime()) - CurTime()) / 0.25
@@ -224,7 +213,7 @@ local function Ragdoll_CreateInternal(ply)
 		local bonename = ragdoll:GetBoneName(bone)
 		local hitgroup = hg.bonetohitgroup[bonename]--( ent:IsPlayer() and tr.HitGroup or hg.bonetohitgroup[bonename])
 		
-		if hg.amputeetable[bonename] and ply.organism and ply.organism[hg.amputeetable[bonename].."amputated"] then
+		if hg.amputeetable[bonename] and ply.organism[hg.amputeetable[bonename].."amputated"] then
 			--phys:SetContents(CONTENTS_EMPTY)
 			Gib_RemoveBone(ragdoll, bone, physNum, true)
 			--phys:SetCollisionGroup(COLLISION_GROUP_WORLD)
@@ -287,9 +276,7 @@ local function Ragdoll_CreateInternal(ply)
 							for physNum = 0, ragdoll:GetPhysicsObjectCount() - 1 do
 								local phys = ragdoll:GetPhysicsObjectNum(physNum)
 								local bone = ragdoll:TranslatePhysBoneToBone(physNum)
-								if IsValid(phys) and isnumber(bone) and bone >= 0 then
-									phys:SetMass(IdealMassPlayer[ragdoll:GetBoneName(bone)] or 4)
-								end
+								phys:SetMass(IdealMassPlayer[ragdoll:GetBoneName(bone)] or 4)
 							end
 						end
 					end)
@@ -366,70 +353,10 @@ local function Ragdoll_CreateInternal(ply)
 	end]]
 
 	hook_Run("Ragdoll_Create", ply, ragdoll)
-	ragdoll.hgRagdollInitialized = true
 	
 	ragdoll.ply = ply
 	ApplyAppearanceRagdoll(ragdoll, ply)
-	if IsValid(ply.bull) then ply.bull:Remove() ply.bull = nil end
 	return ragdoll
-end
-
-function hg.Ragdoll_Create(ply)
-	if not IsValid(ply) or ply.hgRagdollCreating then return end
-	if (ply.hgRagdollCreateRetry or 0) > CurTime() then return end
-
-	ply.hgRagdollCreating = true
-	local ok, result = xpcall(function()
-		return Ragdoll_CreateInternal(ply)
-	end, debug.traceback)
-	ply.hgRagdollCreating = nil
-
-	local pending = ply.hgPendingRagdoll
-	ply.hgPendingRagdoll = nil
-
-	if not ok or not IsValid(result) or result ~= pending then
-		ply.hgRagdollCreateFailures = math.min((ply.hgRagdollCreateFailures or 0) + 1, 5)
-		ply.hgRagdollCreateRetry = CurTime() + math.min(2 ^ (ply.hgRagdollCreateFailures - 1), 30)
-
-		if IsValid(pending) then
-			pending.removingwelds = true
-			if pending.welds then
-				for _, weld in pairs(pending.welds) do
-					if IsValid(weld) then weld:Remove() end
-				end
-				pending.welds = nil
-			end
-			hg.queue_ragdolls[pending] = nil
-			if IsValid(pending.hgRagdollVehicle) and pending.hgRagdollVehicle.rags then
-				table.RemoveByValue(pending.hgRagdollVehicle.rags, pending)
-			end
-			pending.hgRagdollVehicle = nil
-			pending:SetParent(nil)
-			if IsValid(pending.bull) then pending.bull:Remove() end
-			if ply:GetNWEntity("FakeRagdoll") == pending then
-				ply:SetNWEntity("FakeRagdoll", NULL)
-			end
-			pending:Remove()
-		end
-		if IsValid(result) and result ~= pending then
-			hg.queue_ragdolls[result] = nil
-			if IsValid(result.bull) then result.bull:Remove() end
-			if ply:GetNWEntity("FakeRagdoll") == result then
-				ply:SetNWEntity("FakeRagdoll", NULL)
-			end
-			result:Remove()
-		end
-
-		if not ok then
-			ErrorNoHalt("[Homigrad] Failed to create ragdoll:\n" .. tostring(result) .. "\n")
-		end
-
-		return
-	end
-
-	ply.hgRagdollCreateRetry = nil
-	ply.hgRagdollCreateFailures = nil
-	return result
 end
 
 local Ragdoll_Create = hg.Ragdoll_Create
@@ -461,7 +388,6 @@ local function NET_Fake2(num, ply, send)
 end
 
 local function NET_Up(ply, send)
-	ply:SetNWEntity("FakeRagdoll", NULL)
 	net.Start("Player Ragdoll")
 	net.WriteEntity(ply)
 	net.WriteEntity(NULL)
@@ -508,17 +434,12 @@ end)
 hg.ragdollFake = hg.ragdollFake or {}
 --local ragdollFake = hg.ragdollFake
 hook.Add("DoPlayerDeath", "Fake", function(ply)
-	ply:SetNoDraw(true)
-	ply:DrawShadow(false)
-
 	local ragdoll = ply.FakeRagdoll
 	--if not IsValid(ragdoll) then return end
 	if (not ply.Removed) and not IsValid(ragdoll) then
 		ragdoll = Ragdoll_Create(ply)
-		if IsValid(ragdoll) then
-			ply.FakeRagdoll = ragdoll
-			NET_Fake(ragdoll, ply)
-		end
+		ply.FakeRagdoll = ragdoll
+		NET_Fake(ragdoll, ply)
 	end
 
 	if not IsValid(ragdoll) then return end
@@ -527,7 +448,6 @@ hook.Add("DoPlayerDeath", "Fake", function(ply)
 	ply:SetNWEntity("RagdollDeath", ragdoll)
 	ragdoll:SetNetVar("wounds", ply:GetNetVar("wounds"))
 	ragdoll:SetNetVar("arterialwounds", ply:GetNetVar("arterialwounds"))
-	ragdoll:SetNWFloat("hgThermalDeathTime", CurTime())
 	ply.RagdollDeath = ragdoll
 end)
 
@@ -548,16 +468,6 @@ end)
 local function RemoveRag(self, ply)
 	if self.override then return end
 	if not IsValid(ply) or ply.FakeRagdoll ~= self then return end
-	
-	if hg.ClearRagdollSlideState then
-		hg.ClearRagdollSlideState(self)
-	else
-		self._slideActive = false
-		self._slideStartTime = nil
-		self._slideDir = nil
-		self._slideCooldown = nil
-	end
-	
 	ply.FakeRagdoll = nil
 	ply.Removed = true
 	if ply:Alive() then ply:Kill() end
@@ -598,13 +508,8 @@ function hg.SavePoses(ply)
 	if IsValid(ply.FakeRagdoll) then
 		for i = 0, ply.FakeRagdoll:GetPhysicsObjectCount() - 1 do
 			local obj = ply.FakeRagdoll:GetPhysicsObjectNum(i)
-			if not IsValid(obj) then continue end
-			local bone = ply.FakeRagdoll:TranslatePhysBoneToBone(i)
-			if not bone or bone < 0 then continue end
-			local boneName = ply.FakeRagdoll:GetBoneName(bone)
-			if not boneName then continue end
 			local p, a = obj:GetPos(), obj:GetAngles()
-			ply.poses[boneName] = {p, a}
+			ply.poses[ply.FakeRagdoll:GetBoneName(ply.FakeRagdoll:TranslatePhysBoneToBone(i))] = {p, a}
 		end
 	end
 end
@@ -612,13 +517,9 @@ end
 function hg.ApplyPoses(ply)
 	if IsValid(ply.FakeRagdoll) and ply.poses then
 		for i, t in pairs(ply.poses) do
-			local bone = ply.FakeRagdoll:LookupBone(i)
-			if not bone then continue end
-			local bon = ply.FakeRagdoll:TranslateBoneToPhysBone(bone)
-			if not bon or bon < 0 then continue end
+			local bon = ply.FakeRagdoll:TranslateBoneToPhysBone(ply.FakeRagdoll:LookupBone(i))
 
 			local obj = ply.FakeRagdoll:GetPhysicsObjectNum(bon)
-			if not IsValid(obj) then continue end
 
 			obj:SetPos(t[1])
 			obj:SetAngles(t[2])
@@ -637,20 +538,8 @@ hg.fakeBoneFlop = hg.fakeBoneFlop or {}
 local fakeBoneFlop = hg.fakeBoneFlop
 local fakeBoneMatrixCache = fakeBoneFlop.matrix_cache or {}
 fakeBoneFlop.matrix_cache = fakeBoneMatrixCache
-local serverOnlyEFlag = EFL_SERVER_ONLY or 512
-
-local networkOriginLimit = 16000
-local function isSafeNetworkPos(pos)
-	if not isvector(pos) then return false end
-	return pos.x == pos.x and pos.y == pos.y and pos.z == pos.z
-		and math.abs(pos.x) < networkOriginLimit
-		and math.abs(pos.y) < networkOriginLimit
-		and math.abs(pos.z) < networkOriginLimit
-end
 
 local fakeBoneParents = {
-	["ValveBiped.Bip01_Head1"] = "ValveBiped.Bip01_Spine3",
-	["ValveBiped.Bip01_Spine3"] = "ValveBiped.Bip01_Spine2",
 	["ValveBiped.Bip01_R_UpperArm"] = "ValveBiped.Bip01_Spine2",
 	["ValveBiped.Bip01_L_UpperArm"] = "ValveBiped.Bip01_Spine2",
 	["ValveBiped.Bip01_R_Forearm"] = "ValveBiped.Bip01_R_UpperArm",
@@ -662,16 +551,6 @@ local fakeBoneParents = {
 }
 
 local fakeBoneLimits = {
-	["ValveBiped.Bip01_Head1"] = {
-		[0] = {[0] = "55", [1] = "-55"},
-		[1] = {[0] = "35", [1] = "-90"},
-		[2] = {[0] = "50", [1] = "-50"},
-	},
-	["ValveBiped.Bip01_Spine3"] = {
-		[0] = {[0] = "45", [1] = "-45"},
-		[1] = {[0] = "45", [1] = "-45"},
-		[2] = {[0] = "45", [1] = "-45"},
-	},
 	["ValveBiped.Bip01_R_UpperArm"] = {
 		[0] = {[0] = "100", [1] = "-100"},
 		[1] = {[0] = "50", [1] = "-50"},
@@ -747,14 +626,6 @@ local fakeBoneCrookedOffsets = {
 		pos = Vector(0, 2, -1),
 		ang = Angle(-55, 10, -30),
 	},
-	["ValveBiped.Bip01_Spine3"] = {
-		pos = Vector(0, 0, -2),
-		ang = Angle(-30, 0, 0),
-	},
-	["ValveBiped.Bip01_Head1"] = {
-		pos = Vector(0, 0, -4),
-		ang = Angle(-45, 0, 0),
-	},
 }
 
 local fakeLimbBoneGroups = {
@@ -806,14 +677,14 @@ end
 function fakeBoneFlop.FlagBone(org, bone, active)
 	if not org or not bone then return false end
 
+	org.fake_floppy_bones = org.fake_floppy_bones or {}
+
 	if active then
-		org.fake_floppy_bones = org.fake_floppy_bones or {}
 		if org.fake_floppy_bones[bone] then return false end
 		org.fake_floppy_bones[bone] = true
 		return true
 	end
 
-	if not org.fake_floppy_bones then return false end
 	if not org.fake_floppy_bones[bone] then return false end
 	org.fake_floppy_bones[bone] = nil
 
@@ -825,17 +696,7 @@ function fakeBoneFlop.FlagBone(org, bone, active)
 end
 
 function fakeBoneFlop.SetLimbSegmentState(org, limb, segment, active)
-	local bone = fakeBoneFlop.ResolveBone(limb, segment)
-	local changed = fakeBoneFlop.FlagBone(org, bone, active)
-	if not changed or not IsValid(org.owner) then return changed end
-	if not active then
-		fakeBoneFlop.ScheduleRebuild(org.owner)
-		return true
-	end
-
-	local rag = hg.GetCurrentCharacter(org.owner)
-	if IsValid(rag) and rag:IsRagdoll() then fakeBoneFlop.ScheduleApply(rag, bone, org) end
-	return changed
+	return fakeBoneFlop.FlagBone(org, fakeBoneFlop.ResolveBone(limb, segment), active)
 end
 
 function fakeBoneFlop.ClearStoredLimb(org, limb)
@@ -881,7 +742,6 @@ function fakeBoneFlop.BendBone(rag, bone, forceMul)
 	local physIDChild = rag:TranslateBoneToPhysBone(boneIDChild)
 	local physIDParent = rag:TranslateBoneToPhysBone(boneIDParent)
 	if physIDChild < 0 or physIDParent < 0 then return end
-	if rag.gibRemove and (rag.gibRemove[physIDChild] or rag.gibRemove[physIDParent]) then return end
 
 	local phys = rag:GetPhysicsObjectNum(physIDChild)
 	local physParent = rag:GetPhysicsObjectNum(physIDParent)
@@ -926,11 +786,7 @@ local function fakeBoneBuildMatrixCache(rag)
 		local boneID = rag:TranslatePhysBoneToBone(i)
 		local mesh = meshes[boneID]
 		if mesh and mesh.matrix then
-			local inv = mesh.matrix:GetInverse()
-			local t = inv:GetTranslation()
-			if isSafeNetworkPos(t) then
-				fakeBoneMatrixCache[model][boneID] = inv
-			end
+			fakeBoneMatrixCache[model][boneID] = mesh.matrix:GetInverse()
 		end
 	end
 
@@ -952,46 +808,10 @@ function fakeBoneFlop.ApplyBone(rag, bone)
 	local physIDChild = rag:TranslateBoneToPhysBone(boneIDChild)
 	local physIDParent = rag:TranslateBoneToPhysBone(boneIDParent)
 	if physIDChild < 0 or physIDParent < 0 then return end
-	if rag.gibRemove and (rag.gibRemove[physIDChild] or rag.gibRemove[physIDParent]) then return end
 
 	local phys = rag:GetPhysicsObjectNum(physIDChild)
 	local physParent = rag:GetPhysicsObjectNum(physIDParent)
-	if not IsValid(phys) or not IsValid(physParent) or phys == physParent then return end
-
-	if bone == "ValveBiped.Bip01_Head1" then
-		local anchor = WorldToLocal(
-			phys:GetPos() + phys:GetAngles():Forward() * -2 + phys:GetAngles():Up() * -1.5,
-			angle_zero,
-			physParent:GetPos(),
-			physParent:GetAngles()
-		)
-
-		rag:RemoveInternalConstraint(physIDChild)
-		phys:SetPos(physParent:GetPos() + physParent:GetAngles():Forward() * 12.9 + physParent:GetAngles():Right() * -1)
-
-		local cons = ents.Create("phys_ragdollconstraint")
-		if not IsValid(cons) then return end
-		cons:AddEFlags(serverOnlyEFlag)
-		cons:SetPos(physParent:LocalToWorld(anchor))
-		cons:SetKeyValue("xmin", "-55")
-		cons:SetKeyValue("xmax", "55")
-		cons:SetKeyValue("ymin", "-90")
-		cons:SetKeyValue("ymax", "35")
-		cons:SetKeyValue("zmin", "-50")
-		cons:SetKeyValue("zmax", "50")
-		cons:SetKeyValue("spawnflags", "0")
-		cons:SetPhysConstraintObjects(physParent, phys)
-		cons:Spawn()
-		cons:Activate()
-		phys:AddAngleVelocity(Vector(0, 45, 20))
-
-		rag.hg_floppy_constraints = rag.hg_floppy_constraints or {}
-		rag.hg_floppy_bones = rag.hg_floppy_bones or {}
-		rag.hg_floppy_constraints[bone] = cons
-		rag.hg_floppy_bones[bone] = true
-		rag:SetSaveValue("m_ragdoll.allowStretch", false)
-		return
-	end
+	if not IsValid(phys) or not IsValid(physParent) then return end
 
 	local matrixCache = fakeBoneBuildMatrixCache(rag)
 	if not matrixCache then return end
@@ -999,10 +819,6 @@ function fakeBoneFlop.ApplyBone(rag, bone)
 	local matrix = matrixCache[boneIDChild]
 	local matrixParent = matrixCache[boneIDParent]
 	if not matrix or not matrixParent then return end
-
-	local childTrans = matrix:GetTranslation()
-	local parentTrans = matrixParent:GetTranslation()
-	if not isSafeNetworkPos(childTrans) or not isSafeNetworkPos(parentTrans) then return end
 
 	rag.hg_floppy_constraints = rag.hg_floppy_constraints or {}
 	rag.hg_floppy_bones = rag.hg_floppy_bones or {}
@@ -1031,8 +847,6 @@ function fakeBoneFlop.ApplyBone(rag, bone)
 	physParent:SetAngles(rag:LocalToWorldAngles(matrixParent:GetAngles()))
 
 	local cons = ents.Create("phys_ragdollconstraint")
-	if not IsValid(cons) then return end
-	cons:AddEFlags(serverOnlyEFlag)
 	cons:SetPos(childPos)
 	cons:SetKeyValue("xmin", limits[0][1])
 	cons:SetKeyValue("xmax", limits[0][0])
@@ -1040,7 +854,6 @@ function fakeBoneFlop.ApplyBone(rag, bone)
 	cons:SetKeyValue("ymax", limits[1][0])
 	cons:SetKeyValue("zmin", limits[2][1])
 	cons:SetKeyValue("zmax", limits[2][0])
-	cons:SetKeyValue("spawnflags", "0")
 	cons:SetPhysConstraintObjects(phys, physParent)
 	cons:Spawn()
 	cons:Activate()
@@ -1065,37 +878,22 @@ function fakeBoneFlop.ApplyBone(rag, bone)
 	rag:SetSaveValue("m_ragdoll.allowStretch", false)
 end
 
-function fakeBoneFlop.ScheduleApply(rag, bone, org)
-	if not IsValid(rag) or not bone then return end
-	rag.hg_floppy_pending = rag.hg_floppy_pending or {}
-	if rag.hg_floppy_pending[bone] then return end
-	rag.hg_floppy_pending[bone] = true
-
-	timer.Simple(0, function()
-		if not IsValid(rag) then return end
-		rag.hg_floppy_pending[bone] = nil
-		local activeOrg = rag.organism or org
-		if activeOrg and not (activeOrg.fake_floppy_bones and activeOrg.fake_floppy_bones[bone]) then return end
-		fakeBoneFlop.ApplyBone(rag, bone)
-	end)
-end
-
 function fakeBoneFlop.ApplyStored(rag, org)
 	if not IsValid(rag) or not org or not org.fake_floppy_bones then return end
 
 	for bone in pairs(org.fake_floppy_bones) do
-		fakeBoneFlop.ScheduleApply(rag, bone, org)
+		fakeBoneFlop.ApplyBone(rag, bone)
 	end
 
-	timer.Simple(0.01, function()
+	timer.Simple(0, function()
 		if IsValid(rag) then
-			fakeBoneFlop.BendStored(rag, rag.organism or org, 0.35)
+			fakeBoneFlop.BendStored(rag, org, 0.35)
 		end
 	end)
 
 	timer.Simple(0.12, function()
 		if IsValid(rag) then
-			fakeBoneFlop.BendStored(rag, rag.organism or org, 0.2)
+			fakeBoneFlop.BendStored(rag, org, 0.2)
 		end
 	end)
 end
@@ -1113,17 +911,15 @@ function fakeBoneFlop.ScheduleRebuild(ply)
 			return
 		end
 
-		local ok, err = xpcall(function()
-			hg.SavePoses(ply)
-			hg.FakeUp(ply, true, true)
+		hg.SavePoses(ply)
+		hg.FakeUp(ply, true, true)
 
-			if IsValid(ply) and ply:Alive() then
-				hg.Fake(ply, nil, true, true)
-				hg.ApplyPoses(ply)
-			end
-		end, debug.traceback)
+		if IsValid(ply) and ply:Alive() then
+			hg.Fake(ply, nil, true, true)
+			hg.ApplyPoses(ply)
+		end
+
 		ply.hg_floppy_rebuild = nil
-		if not ok then ErrorNoHalt("[Homigrad] Failed to rebuild ragdoll:\n" .. tostring(err) .. "\n") end
 	end)
 end
 
@@ -1169,51 +965,24 @@ hook.Add("Org Think", "hg-fakeboneflop-sync", function(owner, org)
 	end
 end)
 
-local amputatedRootBones = {
-	larm = "ValveBiped.Bip01_L_Forearm",
-	rarm = "ValveBiped.Bip01_R_Forearm",
-	lhand = "ValveBiped.Bip01_L_Hand",
-	rhand = "ValveBiped.Bip01_R_Hand",
-	larmup = "ValveBiped.Bip01_L_UpperArm",
-	rarmup = "ValveBiped.Bip01_R_UpperArm",
-	lleg = "ValveBiped.Bip01_L_Calf",
-	rleg = "ValveBiped.Bip01_R_Calf",
-	llegup = "ValveBiped.Bip01_L_Thigh",
-	rlegup = "ValveBiped.Bip01_R_Thigh"
-}
-
 hook.Add("OnAmputateLimb", "hg-fakeboneflop-amputation", function(org, ent, limb)
-	if IsValid(ent) and ent:IsRagdoll() then
-		local bone = ent:LookupBone(amputatedRootBones[limb] or "")
-		local physBone = bone and ent:TranslateBoneToPhysBone(bone)
-		if bone and physBone and physBone >= 0 then Gib_RemoveBone(ent, bone, physBone, true) end
-	end
-
 	if fakeBoneFlop.ClearStoredLimb(org, limb) and IsValid(org.owner) and org.owner:IsPlayer() then
 		fakeBoneFlop.ScheduleRebuild(org.owner)
 	end
 end)
 
 function hg.Fake(ply, huyragdoll, no_freemove, force)
-	if not IsValid(ply) or not ply:IsPlayer() or not ply:Alive() then return end
 	ply.switchingseat = nil
+	if not force and (ply.hg_no_fake_until or 0) > CurTime() then return end
 	if ply:GetMoveType() == 0 then return end
 	if ply.InVehicle and ply:InVehicle() and not force then return end
 	if not IsValid(huyragdoll) and (not IsValid(ply) or IsValid(ply.FakeRagdoll) or not (ply:IsPlayer() and ply:Alive())) then return end
 	local ragdoll = IsValid(huyragdoll) and huyragdoll or Ragdoll_Create(ply, true)
 	
 	if IsValid(huyragdoll) then
-		if ply.FakeRagdoll == ragdoll then return ragdoll end
-		if IsValid(ply.FakeRagdoll) then return end
-		local existingOwner = ragdoll.ply
-		if IsValid(existingOwner) and existingOwner ~= ply and existingOwner.FakeRagdoll == ragdoll then return end
 		ply:SetNWEntity("FakeRagdoll", ragdoll)
 		ragdoll:SetNWEntity("ply", ply)
-		ragdoll.ply = ply
-		if not ragdoll.hgRagdollInitialized then
-			hook_Run("Ragdoll_Create", ply, ragdoll)
-			ragdoll.hgRagdollInitialized = true
-		end
+		hook_Run("Ragdoll_Create", ply, ragdoll)
 	end
 	if !IsValid(ragdoll) then return end
 	ragdoll:CallOnRemove("Fake", RemoveRag, ply)
@@ -1228,8 +997,6 @@ function hg.Fake(ply, huyragdoll, no_freemove, force)
 
 	ply.FakeRagdollOld = nil
 	ply.OldRagdoll = nil
-	ply:SetNWEntity("FakeRagdollOld", NULL)
-	ply:SetNWBool("FakeGettingUp", false)
 
 	if timer.Exists("faking_up"..ply:EntIndex()) then
 		timer.Remove("faking_up"..ply:EntIndex(), 0)
@@ -1250,13 +1017,12 @@ function hg.Fake(ply, huyragdoll, no_freemove, force)
 		--ply:SetSolidFlags(bit.bor(ply:GetSolidFlags(), FSOLID_NOT_SOLID, FSOLID_TRIGGER, FSOLID_USE_TRIGGER_BOUNDS))
 		ply:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
 		ply:SetPos(pos)
-		ply:SetNoDraw(true)
+		ply:SetNoDraw(false)
 		ply:SetRenderMode(RENDERMODE_NONE)
 		//ply:ExitVehicle()
 	--end)
 
 	timer.Simple(0, function() -- bandaid shitfix for now
-		if not IsValid(ply) then return end
 		ply:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
 	end)
 
@@ -1336,7 +1102,6 @@ local tr = {
 }
 
 hook.Add("Should Fake Up","speedhuy",function(ply)
-	if ply.organism and ply.organism.lastStand then return end
 	if IsValid(ply.FakeRagdoll) then
 		if ply.FakeRagdoll:GetVelocity():Length() > 200 then return false end
 		if (ply.organism.stun - CurTime()) > 0 then return false end
@@ -1366,15 +1131,6 @@ function hg.FakeUp(ply, forced, instant)
 	
 	if !IsValid(ragdoll) then return end
 
-	if hg.ClearRagdollSlideState then
-		hg.ClearRagdollSlideState(ragdoll)
-	else
-		ragdoll._slideActive = false
-		ragdoll._slideStartTime = nil
-		ragdoll._slideDir = nil
-		ragdoll._slideCooldown = nil
-	end
-
 	if ragdoll.welds then
 		if ply:InVehicle() then
 			local veh = ply:GetVehicle()
@@ -1399,27 +1155,12 @@ function hg.FakeUp(ply, forced, instant)
 	if not forced and (not IsValid(ply.FakeRagdoll) or not ply:Alive() or hook_Run("Should Fake Up", ply) ~= nil) then return false end
 	ply.fakecd = CurTime() + 2
 
-	if not forced and not instant and ply.organism and ply.organism.pain and ply.organism.pain > 60 then
-		local delay = math.Clamp((ply.organism.pain - 60) * 0.05, 0.3, 4)
-		ply.fakecd = CurTime() + delay
-		ply._slowGetup = true
-		timer.Simple(delay, function()
-			if not IsValid(ply) or not ply:Alive() then return end
-			if not IsValid(ply.FakeRagdoll) then return end
-			if hook_Run("Should Fake Up", ply) ~= nil then return end
-			hg.FakeUp(ply, forced, instant)
-		end)
-		return false
-	end
-
 	if ply:InVehicle() then
 		return
 	end
 
 	local ent = (IsValid(ragdoll) and ragdoll or ply)
-	local pelvisBone = ent:LookupBone("ValveBiped.Bip01_Pelvis")
-	local pelvisMatrix = pelvisBone and ent:GetBoneMatrix(pelvisBone)
-	local posit = pelvisMatrix and pelvisMatrix:GetTranslation() or ent:GetPos()
+	local posit = ent:GetBoneMatrix(ent:LookupBone("ValveBiped.Bip01_Pelvis")):GetTranslation()
 	local pos = hg.GetUpPos(ply, posit, 50, 50)
 	
 	if not pos and not forced then return end
@@ -1430,7 +1171,6 @@ function hg.FakeUp(ply, forced, instant)
 	ply.FakeRagdollOld = ragdoll
 	ply.OldRagdoll = ragdoll
 	ply:SetNWEntity("FakeRagdollOld", ragdoll)
-	ply:SetNWBool("FakeGettingUp", not instant)
 	ply.FakeRagdoll = nil
 	
 	ply:ConCommand("+duck")
@@ -1462,35 +1202,18 @@ function hg.FakeUp(ply, forced, instant)
 	end
 
 	OverrideSpawn = true
-	-- player_spawn is delivered after Spawn returns, so keep a per-player marker
-	-- until the custom game-event handler consumes it.
-	ply.hgOverrideSpawnPending = (ply.hgOverrideSpawnPending or 0) + 1
 	local hp, armor = ply:Health(), ply:Armor()
 	local ang, wep = ply:EyeAngles(), ply:GetActiveWeapon()
-	local getUpYaw = ang.y
-	if IsValid(ragdoll) then
-		local eyesID = ragdoll:LookupAttachment("eyes")
-		local eyes = eyesID and ragdoll:GetAttachment(eyesID)
-		if eyes then
-			local forward = eyes.Ang:Forward()
-			forward.z = 0
-			if forward:LengthSqr() > 0.001 then
-				forward:Normalize()
-				getUpYaw = forward:Angle().y
-			end
-		end
-	end
 	hg.OverrideSpawn(ply)
 	//local pos = ply:GetPos()
 	ply:Spawn()
 	//ply:SetPos(pos)
-	ply:SetNoDraw(not instant)
-	ply:SetRenderMode(instant and RENDERMODE_NORMAL or RENDERMODE_NONE)
+	ply:SetRenderMode(RENDERMODE_NORMAL)
 	ply.LastFakeUp = CurTime()
-	ply:DrawWorldModel(instant)
+	ply.hg_no_fake_until = CurTime() + 1
+	ply:DrawWorldModel(true)
 	ply:SetHealth(hp)
 	ply:SetArmor(armor)
-	ply:SetAngles(Angle(0, getUpYaw, 0))
 	ply:SetEyeAngles(ang)
         if IsValid(wep) then ply:SelectWeapon(wep:GetClass()) else ply:SelectWeapon(hg.GetHandsWeaponClass and hg.GetHandsWeaponClass(ply) or "weapon_hands_sh") end
 	
@@ -1515,19 +1238,14 @@ function hg.FakeUp(ply, forced, instant)
 		NET_Up(ply)
 
 		if not instant then
+			ply:SetRenderMode(RENDERMODE_NORMAL)
 			--ply:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
 			--ply:SetSolidFlags(bit.bor(ply:GetSolidFlags(), FSOLID_NOT_SOLID, FSOLID_TRIGGER, FSOLID_USE_TRIGGER_BOUNDS))
 			ply:DrawShadow(false)
 
 			timer.Create("faking_up"..ply:EntIndex(), 1, 1, function()
-				if not IsValid(ply) then
-					if IsValid(ragdoll) then ragdoll:Remove() end
-					return
-				end
 				if IsValid(ragdoll) then
-					local spineBone = ragdoll:LookupBone("ValveBiped.Bip01_Spine4")
-					local spineMatrix = spineBone and ragdoll:GetBoneMatrix(spineBone)
-					local posit = spineMatrix and spineMatrix:GetTranslation()
+					local posit = ragdoll:GetBoneMatrix(ragdoll:LookupBone("ValveBiped.Bip01_Spine4")):GetTranslation()
 					//pos = hg.GetUpPos(ply, posit, 50, 50) or oldpos
 				end
 
@@ -1535,17 +1253,8 @@ function hg.FakeUp(ply, forced, instant)
 					ragdoll:Remove()
 				end
 
-				if ply.FakeRagdollOld == ragdoll then ply.FakeRagdollOld = nil end
-				if ply.OldRagdoll == ragdoll then ply.OldRagdoll = nil end
-				if ply:GetNWEntity("FakeRagdollOld") == ragdoll then
-					ply:SetNWEntity("FakeRagdollOld", NULL)
-				end
-				ply:SetNWBool("FakeGettingUp", false)
+				ply:SetNWEntity("FakeRagdoll",NULL)
 
-				if IsValid(ply.FakeRagdoll) then return end
-
-				ply:SetNoDraw(false)
-				ply:DrawWorldModel(true)
 				ply:DrawShadow(true)
 				ply:SetRenderMode(RENDERMODE_NORMAL)
 				ply:SetCollisionGroup(COLLISION_GROUP_PLAYER)
@@ -1554,20 +1263,11 @@ function hg.FakeUp(ply, forced, instant)
 				hg.ragdollFake[ply] = nil
 				ply:SetMoveType(MOVETYPE_WALK)
 
-				if ply._slowGetup then
-					ply._slowGetup = nil
-					if ply:LookupSequence("getup") and ply:LookupSequence("getup") >= 0 then
-						ply:PlayCustomAnims("getup", true, 1.5)
-					end
-				end
-
 				if pos then
 					--ply:SetPos(pos)
 				end
 			end)
 		else
-			ply:SetNoDraw(false)
-			ply:DrawWorldModel(true)
 			ply:DrawShadow(true)
 			ply:SetRenderMode(RENDERMODE_NORMAL)
 			ply:SetCollisionGroup(ply.switchingseat and COLLISION_GROUP_IN_VEHICLE or COLLISION_GROUP_PLAYER)
@@ -1575,15 +1275,12 @@ function hg.FakeUp(ply, forced, instant)
 			
 			--ply:SetSolidFlags(bit.band(ply:GetSolidFlags(), bit.bnot(FSOLID_NOT_SOLID), bit.bnot(FSOLID_TRIGGER), bit.bnot(FSOLID_USE_TRIGGER_BOUNDS)))
 			hg.ragdollFake[ply] = nil
+			NET_Up(ply)
+			ply:SetNWEntity("FakeRagdoll",NULL)
+
 			if IsValid(ragdoll) then
 				ragdoll:Remove()
 			end
-			if ply.FakeRagdollOld == ragdoll then ply.FakeRagdollOld = nil end
-			if ply.OldRagdoll == ragdoll then ply.OldRagdoll = nil end
-			if ply:GetNWEntity("FakeRagdollOld") == ragdoll then
-				ply:SetNWEntity("FakeRagdollOld", NULL)
-			end
-			ply:SetNWBool("FakeGettingUp", false)
 		end
 	end
 
@@ -1605,17 +1302,12 @@ function hg.GetCurrentCharacter(ply)
 	return (IsValid(rag) and rag) or ply
 end
 
-hook.Add("PlayerDisconnected", "Fake", function(ply)
-	hg.ragdollFake[ply] = nil
-	timer.Remove("faking_up" .. ply:EntIndex())
-end)
+hook.Add("PlayerDisconnected", "Fake", function(ply) hg.ragdollFake[ply] = nil end)
 hook.Add("PlayerFootstep", "CustomFootstep", function(ply) if IsValid(ply.FakeRagdoll) then return true end end)
 function hg.RagdollOwner(ragdoll)
 	if not IsValid(ragdoll) then return end
 	local ply = ragdoll.ply
-	if not IsValid(ply) then return end
-	if ply.FakeRagdoll == ragdoll then return ply end
-	if ply:GetNWBool("FakeGettingUp", false) and ply.OldRagdoll == ragdoll then return ply end
+	return IsValid(ply) and ply.FakeRagdoll == ragdoll and ply
 end
 
 hook.Add("PlayerDisconnected", "hg-killniers", function(ply)
@@ -1637,14 +1329,8 @@ function hg.RemoveDeadBodies(veh)
 	local anydeadbodies = false
 
 	if veh.rags then
-		for i = #veh.rags, 1, -1 do
-			local ragdoll = veh.rags[i]
-			if not IsValid(ragdoll) then
-				table.remove(veh.rags, i)
-				continue
-			end
-			local owner = hg.RagdollOwner(ragdoll)
-			if IsValid(owner) and owner:Alive() then continue end
+		for i, ragdoll in pairs(veh.rags) do
+			if ragdoll.organism and ragdoll.organism.isPly then continue end
 			ragdoll.removingwelds = true
 			if ragdoll.welds then
 				for i, weld in pairs(ragdoll.welds) do
@@ -1654,9 +1340,6 @@ function hg.RemoveDeadBodies(veh)
 				ragdoll.welds = nil
 			end
 			ragdoll.removingwelds = nil
-			ragdoll.hgRagdollVehicle = nil
-			ragdoll:SetParent(nil)
-			table.remove(veh.rags, i)
 
 			anydeadbodies = true
 		end
@@ -1686,7 +1369,6 @@ hook.Add("PlayerEnteredVehicle","allowweapons",function(ply,veh,role)
 	//local veh2 = veh:GetParent()
 
 	timer.Create("EnterVehicleRag"..ply:EntIndex(), (veh:GetVehicleClass() == "Pod") and 0.5 or 1, 1, function()
-		if not IsValid(ply) or not ply:Alive() or not ply:InVehicle() then return end
 		ply:SetEyeAngles(angle_zero)
 		hg.Fake(ply, nil, nil, true)
 		
@@ -1759,14 +1441,8 @@ hook.Add("PlayerLeaveVehicle","allowweapons",function(ply,veh)
 			ragdoll:SetParent()
 
 			if fast then
-				local phys = ragdoll:GetPhysicsObject()
-				if IsValid(phys) then
-					local vel = ragdoll:GetVelocity()
-					if vel:LengthSqr() < 1e6 then
-						phys:ApplyForceCenter(vel:GetNormalized() * 5000)
-					end
-					phys:ApplyForceCenter(vector_up * 5000)
-				end
+				ragdoll:GetPhysicsObject():ApplyForceCenter(ragdoll:GetVelocity():GetNormalized() * 10000)
+				ragdoll:GetPhysicsObject():ApplyForceCenter(vector_up * 10000)
 
 				veh:EmitSound("zbattle/glass_shatter.ogg")
 			end
@@ -1948,11 +1624,6 @@ hook.Add("Ragdoll Collide", "FallSounds", function(rag, data)
 	if not IsValid(rag) then return end
 	if not data.HitEntity:IsWorld() then return end
 	if data.OurOldVelocity:LengthSqr() < 165000 or (rag.NextSND or 0) > data.DeltaTime then return end
-
-	-- удушающий держит жертву: телом об землю/стены не шумим
-	local ragPly = hg and hg.RagdollOwner and hg.RagdollOwner(rag)
-	if IsValid(ragPly) and ragPly:IsPlayer() and ragPly.BeingVictimOfChoke then return end
-
 	rag:EmitSound("player/falling_foley/fall_foley"..mRandom(13)..".wav", 60, mRandom(95, 115), 1, CHAN_AUTO)
 	if mRandom(3) == 2 then
 		rag:EmitSound("physics/flesh/flesh_impact_hard"..mRandom(6)..".wav", 55, mRandom(85, 105), 1, CHAN_AUTO)
@@ -1966,8 +1637,6 @@ hook.Add("Ragdoll Collide", "FallSounds", function(rag, data)
 
 	rag.NextSND = data.DeltaTime + 1
 end)
-
-
 
 local hg_shitty_fake = CreateConVar("hg_shitty_fake", "1", FCVAR_ARCHIVE + FCVAR_NOTIFY, "enable shitty fake", 0, 1)
 SetGlobalBool("hg_shitty_fake", hg_shitty_fake:GetBool())

@@ -23,9 +23,6 @@ end
 
 ENT.LegacyInDoorSound = false
 
-ENT.TrapSettleTime = 1.5
-ENT.TrapSettleLen = 40
-
 function ENT:Initialize()
 	self:SetModel(self.Model)
 	self:PhysicsInit(SOLID_VPHYSICS)
@@ -71,45 +68,26 @@ function ENT:Think()
 	end
 
 	if not self.timer then
-		if self.Disarmed then return true end
-
-		local settling = ( curTime - ( self.trapSetTime or curTime ) ) < ( self.TrapSettleTime or 1.5 )
-
 		if IsValid(self.ent) or self.ent == Entity(0) then
-			if not self.trapSetTime then
-				self.trapSetTime = curTime
-			end
-
 			local ent,lpos,origlen = self.ent,self.lpos,self.origlen
 			
 			local wpos = ent:LocalToWorld(lpos)
-			local dist = wpos:Distance(self:GetPos())
 
-			if settling then
-				if dist > origlen + ( self.TrapSettleLen or 40 ) then
-					self:DisarmTrap()
-				end
-			else
-				if dist > origlen + 20 then
-					self:Arm(curTime - self.timeToBoom + 1)
-				end
+			if wpos:Distance(self:GetPos()) > origlen + 20 then
+				self:Arm(curTime - self.timeToBoom + 1)
+			end
 
-				local tr = {}
-				tr.start = self:GetPos()
-				tr.endpos = wpos
-				tr.filter = {self,self.ent2,self.ent,self.peg}
-				local trace = util.TraceLine(tr)
-				if IsValid(trace.Entity) and trace.Entity != self.ent and trace.Entity != self.peg then
-					self:Arm(curTime - self.timeToBoom + 1,trace.Entity:GetVelocity())
-				end
+			local tr = {}
+			tr.start = self:GetPos()
+			tr.endpos = wpos
+			tr.filter = {self,self.ent2,self.ent}
+			local trace = util.TraceLine(tr)
+			if IsValid(trace.Entity) then
+				self:Arm(curTime - self.timeToBoom + 1,trace.Entity:GetVelocity())
 			end
 		end
 		if not IsValid(self.cons2) then
-			if settling then
-				self:DisarmTrap()
-			else
-				self:Arm(curTime - self.timeToBoom + 1,0)
-			end
+			self:Arm(curTime - self.timeToBoom + 1,0)
 		end
 		return true
 	end
@@ -119,19 +97,6 @@ function ENT:Think()
 	if time > self.timeToBoom and not self.Exploded then self:Explode() end
 	
 	return true
-end
-
-function ENT:DisarmTrap()
-	if self.Disarmed then return end
-	self.Disarmed = true
-	if IsValid(self.cons) then self.cons:Remove() end
-	if IsValid(self.ent2) then self.ent2:Remove() end
-	if IsValid(self.cons2) then self.cons2:Remove() end
-	if IsValid(self.peg) then self.peg:Remove() end
-	if IsValid(self.peg2) then self.peg2:Remove() end
-	self.ent = nil
-	self.lpos = nil
-	self.origlen = nil
 end
 
 local clr = Color(50, 40, 0)
@@ -170,10 +135,7 @@ function ENT:Arm(time,vel)
 
 		timer.Simple(0.1,function()
 			if wpos and IsValid(self) then
-				local phys = self:GetPhysicsObject()
-				if IsValid(phys) then
-					phys:SetVelocity((wpos - self:GetPos()):GetNormalized())
-				end
+				self:GetPhysicsObject():SetVelocity((wpos - self:GetPos()):GetNormalized())
 			end
 		end)
 
@@ -182,12 +144,6 @@ function ENT:Arm(time,vel)
 		end
 		if IsValid(self.ent2) then
 			self.ent2:Remove()
-		end
-		if IsValid(self.peg) then
-			self.peg:Remove()
-		end
-		if IsValid(self.peg2) then
-			self.peg2:Remove()
 		end
 		self.ent = nil
 		self.lpos = nil
@@ -279,7 +235,7 @@ function ENT:Explode()
 		net.WriteEntity(self)
 		net.WriteBool(self:WaterLevel() > 0)
 		net.WriteString(self.SoundWater[math.random(#self.SoundWater)])
-	hg.SendNetToPlayersWithin(self:GetPos(), 25000)
+	net.Broadcast()
 
 	if self:WaterLevel() > 0 then
 		self:EmitSound(self.SoundWater, 140, 85, 1, CHAN_WEAPON)
@@ -328,10 +284,7 @@ function ENT:Explode()
 		EmitSound(self.DebrisSounds[math.random(#self.DebrisSounds)], self:GetPos(), self:EntIndex(), CHAN_AUTO, 1, 80)
 	end
 
-	hg.BlastDamageWithShockwave(self, IsValid(self.owner) and self.owner or self, selfPos, self.BlastDis / 0.01905 * GRENADE_BLAST_RADIUS_MULT, GRENADE_BLAST_DAMAGE, {
-		Force = GRENADE_KNOCKBACK_FORCE,
-		ExplosionType = "Small"
-	})
+	util.BlastDamage(self, IsValid(self.owner) and self.owner or self, selfPos, self.BlastDis / 0.01905 * GRENADE_BLAST_RADIUS_MULT, GRENADE_BLAST_DAMAGE)
 
 	--;; Расскажу вам тайну но у нас трассировка делалась просто ужасно
 	local dis = self.BlastDis / 0.01905 * GRENADE_BLAST_RADIUS_MULT
@@ -347,21 +300,63 @@ function ENT:Explode()
 
 		local force = entPos - selfPos
 		local len = force:Length()
-		local frac = math.Clamp((disorientation_dis - len) / disorientation_dis, 0.1, 1)
-		local tracePos = enta:IsPlayer() and (entPos + enta:OBBCenter()) or entPos
-		local tr = hg.ExplosionTrace(selfPos, tracePos, {self})
 
 		if enta.organism then
 			if IsValid(enta.organism.owner) and enta.organism.owner:IsPlayer() then
-				if not enta.organism.owner.organism or not enta.organism.owner.organism.godmode then
-					local behindwall = tr.Entity != enta and tr.MatType != MAT_GLASS
-					local div = behindwall and hg.GetBlastWallAttenuation(tr) or 1
-					hg.ExplosionDisorientation(enta, 5 * frac / div, 6 * frac / div)
-					hg.RunZManipAnim(enta.organism.owner, "shieldexplosion")
-				end
+				local frac = math.Clamp((disorientation_dis - len) / disorientation_dis, 0.1, 1)
+				hg.ExplosionDisorientation(enta, 5 * frac, 6 * frac)
+				hg.RunZManipAnim(enta.organism.owner, "shieldexplosion")
 			end
 		end
 
+		if len > dis then continue end
+		if len > 0 then
+			force:Div(len)
+		else
+			force:Set(vector_up)
+		end
+
+		local physics_frac = math.Clamp((dis - len) / dis, 0.5, 1)
+		local forceadd = force * physics_frac * GRENADE_KNOCKBACK_FORCE
+		local liftForce = Vector(0, 0, GRENADE_LIFT_FORCE * physics_frac * GRENADE_LIFT_FRAC)
+		local tracePos = enta:IsPlayer() and (entPos + enta:OBBCenter()) or entPos
+		local tr = hg.ExplosionTrace(selfPos, tracePos, {self})
+		if tr.Entity != enta then continue end
+
+		if enta:IsPlayer() then
+			hg.AddForceRag(enta, 0, (forceadd + liftForce) * 0.5, 0.5)
+			hg.AddForceRag(enta, 1, (forceadd + liftForce) * 0.5, 0.5)
+
+			hg.LightStunPlayer(enta)
+		end
+
+		if not IsValid(phys) then continue end
+		local totalForce = forceadd + liftForce
+		if string.StartWith(enta:GetClass(), "prop_physics") then
+			propForces[#propForces + 1] = {phys, totalForce}
+		else
+			phys:ApplyForceCenter(totalForce)
+		end
+	end
+
+	if #propForces > 0 then
+		local forceIndex = 1
+		local function applyPropForceBatch()
+			local lastIndex = math.min(forceIndex + 15, #propForces)
+			for i = forceIndex, lastIndex do
+				local forceData = propForces[i]
+				if IsValid(forceData[1]) then
+					forceData[1]:ApplyForceCenter(forceData[2])
+				end
+			end
+
+			forceIndex = lastIndex + 1
+			if forceIndex <= #propForces then
+				timer.Simple(0, applyPropForceBatch)
+			end
+		end
+
+		applyPropForceBatch()
 	end
 
 	if entsCount > 10 and not self.LegacyInDoorSound then
@@ -383,8 +378,7 @@ function ENT:Explode()
 	util.Effect("eff_jack_hmcd_shrapnel",Poof,true,true)
 
 	timer.Simple(0, function()
-		if not IsValid(self) then return end
-		util.ScreenShake( selfPos, 35, 200, 1, 1000, false, nil, 2 )
+		util.ScreenShake( selfPos, 35, 200, 1, 1000 )
 
 		local ammo = "Metal Debris"
 		local ammotype = hg.ammotypeshuy[ammo].BulletSettings
@@ -422,7 +416,6 @@ function ENT:Explode()
 					local Tr = util.QuickTrace(selfPos, dir * 10000, self)
 
 					if Tr.Hit and !Tr.HitSky and !Tr.HitWorld then
-						if not IsValid(self) then return end
 						bullet.penetrated = 0
 						bullet.Penetration = penetration
 						bullet.Diameter = diameter
@@ -441,34 +434,23 @@ function ENT:Explode()
 			self.ShrapnelDone = true
 		end)
 
-		local index = self:EntIndex()
-		local timerName = "GrenadeCheck_" .. index
-		local function finishShrapnel()
-			timer.Remove(timerName)
-			timer.Simple(0, function()
-				if IsValid(self) then SafeRemoveEntity(self) end
-			end)
-		end
-		local function resumeShrapnel()
-			local ok, err = coroutine.resume(co)
-			if not ok then
-				ErrorNoHalt("[ent_hg_grenade] Shrapnel coroutine failed: " .. tostring(err) .. "\n")
-			end
-			if not ok or coroutine.status(co) == "dead" or self.ShrapnelDone then
-				finishShrapnel()
-				return false
-			end
-			return true
-		end
+		coroutine.resume(co)
 
-		timer.Create(timerName, 0, 0, function()
+		local index = self:EntIndex()
+
+		timer.Create("GrenadeCheck_" .. index, 0, 0, function()
 			if !IsValid(self) then
-				timer.Remove(timerName)
+				timer.Remove("GrenadeCheck_" .. index)
 				return
 			end
-			resumeShrapnel()
+
+			coroutine.resume(co)
+
+			if self.ShrapnelDone then
+				SafeRemoveEntity(self)
+				timer.Remove("GrenadeCheck_" .. index)
+			end
 		end)
-		resumeShrapnel()
 		if self.ExplodeAdd then
 			self:ExplodeAdd()
 		end

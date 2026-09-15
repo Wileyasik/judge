@@ -9,17 +9,10 @@ local laserMaterial = CreateMaterial("tripmine_laser", "UnlitGeneric", {
 	["$brightness"] = "64",
 	["$textureScrollRate"] = "25.6",
 })
-local laserColor = Color(255, 55, 52, 64)
 
 function ENT:CreateLaserHook()
 	self.HookAdded = true
-	local hookName = "SlamRender" .. self:EntIndex()
-	hook.Add("PostDrawOpaqueRenderables", hookName, function(depth, skybox, skybox3D)
-		if not IsValid(self) then
-			hook.Remove("PostDrawOpaqueRenderables", hookName)
-			return
-		end
-		if depth or skybox or skybox3D then return end
+	hook.Add("PostDrawOpaqueRenderables","SlamRender"..self:EntIndex(),function() -- a crutch cuz draw is not being called if entity is not in player view
 		if not self.TraceStart or not self.TraceHitPos then return end
 
 		render.SetMaterial(laserMaterial)
@@ -29,7 +22,7 @@ function ENT:CreateLaserHook()
 			0.35,
 			0,
 			1,
-			laserColor
+			Color(255, 55, 52, 64)
 		)
 	end)
 end
@@ -39,5 +32,5 @@ function ENT:Draw()
 end
 
 function ENT:OnRemove()
-	hook.Remove("PostDrawOpaqueRenderables", "SlamRender" .. self:EntIndex())
+	hook.Remove("PostDrawOpaqueRenderables","SlaMRender"..self:EntIndex())
 end

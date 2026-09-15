@@ -130,7 +130,7 @@
 --    ["POLICE_Lockers"] = { 
 --        EntTable = {
 --            "weapon_ar15", "weapon_remington870", "ent_ammo_5.56x45mm", "ent_ammo_12/70beanbag", "ent_ammo_12/70gauge",
---            "ent_armor_vest3", "ent_armor_vest2", "ent_armor_helmet3", "ent_att_holo15", "ent_att_optic2",
+--            "ent_armor_vest3", "ent_armor_vest2", "ent_armor_helmet3", "ent_armor_vest6", "ent_att_holo15", "ent_att_optic2", 
 --            "ent_att_optic2", "ent_att_holo14", "ent_att_laser3", "ent_att_grip2", "weapon_ram", "hg_sling", "weapon_walkie_talkie"
 --        }, 
 --        Models = {"models/props_c17/Lockers001a.mdl"}
@@ -175,13 +175,13 @@
 --    },
 --    ["MEDICAL_Small"] = { 
 --        EntTable = {
---            "weapon_bandage_sh", "weapon_betablock_tpik", "weapon_painkillers_tpik", "weapon_tourniquet", "weapon_naloxone"
+--            "weapon_bandage_sh", "weapon_betablock", "weapon_painkillers", "weapon_tourniquet", "weapon_naloxone"
 --        }, 
 --        Models = {"models/props_wasteland/controlroom_filecabinet001a.mdl"}
 --    },
 --    ["MEDICAL_Big"] = { 
 --        EntTable = {
---            "weapon_bandage_sh", "weapon_betablock_tpik", "weapon_painkillers_tpik", "weapon_tourniquet", "weapon_naloxone",
+--            "weapon_bandage_sh", "weapon_betablock", "weapon_painkillers", "weapon_tourniquet", "weapon_naloxone",
 --            "weapon_medkit_sh", "weapon_adrenaline", "weapon_needle", "weapon_morphine", "weapon_naloxone",
 --            "weapon_traitor_poison1"
 --        }, 

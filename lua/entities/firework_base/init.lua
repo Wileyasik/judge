@@ -55,25 +55,14 @@ end
 function ENT:Think()
 	AeroDrag(self, self:GetAngles():Up(), .75)
 	if not self.Activated then return end
-	if self.Osejka then
-		if self.LoopSndID ~= nil then
-			self:StopLoopingSound(self.LoopSndID)
-			self.LoopSndID = nil
-		end
-		return
-	end
+	if self.Osejka then self:StopLoopingSound(self.LoopSndID ) return end
 	self.Truhst = self.Truhst or CurTime() + self.TruhstTime
 	if not self.EffectTrail then
 		self.EffectTrail = true
 		ParticleEffectAttach(self.RocketTrail,PATTACH_ABSORIGIN_FOLLOW,self,1)
 	end
 	if self.Truhst < CurTime() then self:Detonate() return end
-	local phys = self:GetPhysicsObject()
-	if not IsValid(phys) then
-		self:Remove()
-		return
-	end
-	phys:ApplyForceCenter(self:GetAngles():Up() * self.Speed)
+	self:GetPhysicsObject():ApplyForceCenter( self:GetAngles():Up() * self.Speed )
 	self:NextThink(CurTime() + 0.1)
 end
 
@@ -95,10 +84,7 @@ function ENT:OnTakeDamage(dmginfo)
 end
 
 function ENT:OnRemove()
-	if self.LoopSndID ~= nil then
-		self:StopLoopingSound(self.LoopSndID)
-		self.LoopSndID = nil
-	end
+	self:StopLoopingSound(self.LoopSndID)
 end
 util.AddNetworkString("projectileFarSound")
 function ENT:Detonate()
@@ -122,10 +108,12 @@ function ENT:Detonate()
 	boom:SetInflictor(self)
 
 	util.BlastDamageInfo( boom, SelfPos, self.BlastDis / 0.01905 )]]--
-	hg.BlastDamageWithShockwave(self, Owner, SelfPos, self.BlastDis / 0.01905, self.BlastDamage * 1, { ExplosionType = "Air" })
+	util.BlastDamage(self, Owner, SelfPos, self.BlastDis / 0.01905, self.BlastDamage * 1)
 	hgWreckBuildings(self, SelfPos, self.BlastDamage / 100, self.BlastDis/6, false)
 	hgBlastDoors(self, SelfPos, self.BlastDamage / 100, self.BlastDis/6, false)
-	if self:WaterLevel() > 0 then
+	if self:WaterLevel() == 0 then
+		ParticleEffect("gf2_rocket_large_explosion_01",self:GetPos(),-vector_up:Angle())
+	else
 		local effectdata = EffectData()
 		effectdata:SetOrigin(SelfPos)
 		effectdata:SetScale(self.BlastDis/2.5)
@@ -137,9 +125,11 @@ function ENT:Detonate()
 
 	timer.Simple(.01, function()
 		if not IsValid(self) then return end
-		local Tr = util.QuickTrace(SelfPos, -vector_up, {self})
-		if Tr.Hit then
-			util.Decal("Scorch", Tr.HitPos + Tr.HitNormal, Tr.HitPos - Tr.HitNormal)
+		for i = 0, 10 do
+			local Tr = util.QuickTrace(SelfPos, -vector_up, {self})
+			if Tr.Hit then
+				util.Decal("Scorch", Tr.HitPos + Tr.HitNormal, Tr.HitPos - Tr.HitNormal)
+			end
 		end
 	end)
 

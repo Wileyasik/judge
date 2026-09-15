@@ -23,4 +23,4 @@ sound.Add( {
 	level = 80,
 	pitch = {95, 110},
 	sound = "weapons/floppa/incendiary/an_m14_burn_loop_end.wav"
-} )
+} )

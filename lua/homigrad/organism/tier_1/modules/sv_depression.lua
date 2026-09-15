@@ -22,6 +22,19 @@ local depression_o2_gain = 0.02
 local depression_bones_gain = 0.012
 local depression_cold_threshold = 35
 local depression_cold_gain = 0.01
+
+local depression_apathy_gain = 0.012
+local depression_apathy_speed = 90
+local depression_apathy_trigger = 0.15
+local depression_fear_cap_speed = 90
+local depression_fear_cap = 0.35
+local depression_fear_cap_speed = 90
+local depression_fear_cap_speed = 90
+local depression_anger_block = 0.5
+
+local depression_psyche_apathy_gain = 0.015
+local depression_psyche_fear_cap = 0.35
+local depression_psyche_apathy_speed = 90
 local depression_panic_gain = 0.02
 local depression_amputation_gain = 0.015
 
@@ -329,6 +342,11 @@ local function rollSelfHarm(owner, org)
 
 	org.selfharmNextRoll = CurTime() + math.Rand(selfharm_roll_time_min, selfharm_roll_time_max)
 
+	local anger = org.psycheAnger or 0
+	if anger >= depression_anger_block then
+		return
+	end
+
 	if org.otrub or owner.suiciding or org.larmamputated then return end
 
 	local frac = Clamp((org.depression - selfharm_threshold) / (depression_max - selfharm_threshold), 0, 1)
@@ -409,6 +427,11 @@ module[2] = function(owner, org, timeValue)
 		add = add + depression_otrub_gain * timeValue
 	end
 
+	local psycheApathy = org.psycheApathy or 0
+	if psycheApathy > depression_apathy_trigger then
+		add = Approach(add, add + depression_apathy_gain * psycheApathy * timeValue, timeValue / 30)
+	end
+
 	if (org.depressionadd or 0) > 0 then
 		local applied = min(org.depressionadd, timeValue / 5)
 		org.depressionadd = max(org.depressionadd - applied, 0)
@@ -436,6 +459,10 @@ module[2] = function(owner, org, timeValue)
 	end
 
 	org.depression = max((org.depression or 0) - drainRate, 0)
+
+	if (org.fear or 0) > 0.05 then
+		org.fear = Approach(org.fear, 1 - depression_fear_cap * (org.depression or 0), timeValue / depression_fear_cap_speed)
+	end
 
 	if owner:IsPlayer() then
 		local dep = org.depression or 0
@@ -506,6 +533,9 @@ module[2] = function(owner, org, timeValue)
 		elseif not owner.selfharming and not owner.suiciding and not owner.remUrgeEnd then
 			org.depressionNextMinigamePhrase = nil
 		end
+
+		local apathyTarget = dep > depression_apathy_trigger and min((dep - depression_apathy_trigger) / (1 - depression_apathy_trigger), 1) or 0
+		org.psycheApathy = Approach((org.psycheApathy or 0), apathyTarget, timeValue / depression_psyche_apathy_speed)
 	end
 
 	if owner.selfharming then

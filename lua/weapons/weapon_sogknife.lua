@@ -225,7 +225,7 @@ end
 
 if CLIENT then
     function SWEP:ModelAnim(model)
-        local pos, ang = self.BaseClass.ModelAnim(self, model)
+        local pos, ang = weapons.GetStored("weapon_melee").ModelAnim(self, model)
         local isCutting = self.Canselfharm and self:IsSelfHarming() and self.SelfHarmStart and self.SelfHarmStart + self.SelfHarmTime > CurTime()
         local cutTarget = 0
 

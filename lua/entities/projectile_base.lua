@@ -25,15 +25,9 @@ ENT.ExplosionEffect = "pcf_jack_airsplode_medium"
 ENT.WaterExplosionEffect = "eff_jack_genericboom"
 ENT.ShrapnelEffect = "eff_jack_hmcd_shrapnel"
 
-local function AddParticlesIfExists(path)
-	if file.Exists(path, "GAME") then
-		game.AddParticles(path)
-	end
-end
-
-AddParticlesIfExists("particles/pcfs_jack_muzzleflashes.pcf")
-AddParticlesIfExists("particles/pcfs_jack_explosions_small3.pcf")
-AddParticlesIfExists("particles/pcfs_jack_explosions_incendiary2.pcf")
+game.AddParticles("particles/pcfs_jack_muzzleflashes.pcf")
+game.AddParticles("particles/pcfs_jack_explosions_small3.pcf")
+game.AddParticles("particles/pcfs_jack_explosions_incendiary2.pcf")
 
 if SERVER then
 	function ENT:Initialize()
@@ -166,16 +160,14 @@ if SERVER then
 		local offset = VectorRand() * 10
 		SelfPos = SelfPos + offset
 
-		if not self.NoExplosionSound then
-			net.Start("projectileFarSound")
-				net.WriteString(self.Sound)
-				net.WriteString(self.SoundFar)
-				net.WriteVector(SelfPos)
-				net.WriteEntity(self)
-				net.WriteBool(self:WaterLevel() > 0)
-				net.WriteString(self.SoundWater)
-			net.Broadcast()
-		end
+		net.Start("projectileFarSound")
+			net.WriteString(self.Sound)
+			net.WriteString(self.SoundFar)
+			net.WriteVector(SelfPos)
+			net.WriteEntity(self)
+			net.WriteBool(self:WaterLevel() > 0)
+			net.WriteString(self.SoundWater)
+		net.Broadcast()
 
 
 		local dis = self.BlastDis / 0.01905
@@ -192,17 +184,8 @@ if SERVER then
 			local behindwall = tr.Entity != enta and tr.MatType != MAT_GLASS
 			if behindwall then continue end
 
-			if enta.organism then
-				local behindwall = tr.Entity != enta and tr.MatType != MAT_GLASS
-				if IsValid(enta.organism.owner) and enta.organism.owner:IsPlayer() then
-					local div = behindwall and hg.GetBlastWallAttenuation(tr) or 1
-					hg.ExplosionDisorientation(enta, 5 * frac / div, 6 * frac / div)
-					hg.RunZManipAnim(enta.organism.owner, "shieldexplosion")
-				end
-			end
-
-			if len > dis then continue end
-			if tr.Entity != enta then continue end
+			hg.ExplosionDisorientation(enta, 5 * frac, 6 * frac)
+			hg.RunZManipAnim(enta.organism.owner, "shieldexplosion")
 		end
 
 		--[[local boom = DamageInfo()
@@ -212,7 +195,7 @@ if SERVER then
 		boom:SetInflictor(self)
 
 		util.BlastDamageInfo( boom, SelfPos, self.BlastDis / 0.01905 )]]--
-		hg.BlastDamageWithShockwave(self, IsValid(self.owner) and self.owner or Owner, SelfPos, self.BlastDis / 0.01905, self.BlastDamage * 1, { ExplosionType = "Air" })
+		util.BlastDamage(self, IsValid(self.owner) and self.owner or Owner, SelfPos, self.BlastDis / 0.01905, self.BlastDamage * 1)
 		hgWreckBuildings(self, SelfPos, self.BlastDamage / 100, self.BlastDis/6, false)
 		hgBlastDoors(self, SelfPos, self.BlastDamage / 100, self.BlastDis/6, false)
 		
@@ -220,11 +203,15 @@ if SERVER then
 
 		timer.Simple(.01, function()
 			if not IsValid(self) then return end
-			local Tr = util.QuickTrace(SelfPos, -vector_up, {self})
-			if Tr.Hit then
-				util.Decal("Scorch", Tr.HitPos + Tr.HitNormal, Tr.HitPos - Tr.HitNormal)
+			for i = 0, 10 do
+				local Tr = util.QuickTrace(SelfPos, -vector_up, {self})
+				if Tr.Hit then
+					util.Decal("Scorch", Tr.HitPos + Tr.HitNormal, Tr.HitPos - Tr.HitNormal)
+				end
 			end
-			if self:WaterLevel() > 0 then
+			if self:WaterLevel() == 0 then
+				ParticleEffect(self.ExplosionEffect,SelfPos+vector_up*1,-vector_up:Angle())
+			else
 				local effectdata = EffectData()
 				effectdata:SetOrigin(SelfPos)
 				effectdata:SetScale(self.BlastDis/2.5)
@@ -271,11 +258,11 @@ if SERVER then
 						local Tr = util.QuickTrace(SelfPos, dir * 10000, self)
 						if Tr.Hit and !Tr.HitSky and !Tr.HitWorld then
 							bullet.Dir = dir
-							local bulletSource = IsValid(self) and self or Entity(1)
-							--bullet.Spread = vecCone * i / self.Fragmentation
-							if IsValid(bulletSource) then
-								bulletSource:FireLuaBullets(bullet, true)
+							if not IsValid(self) then
+								self = Entity(1)
 							end
+							--bullet.Spread = vecCone * i / self.Fragmentation
+							self:FireLuaBullets(bullet, true)
 						end
 
 						LastShrapnel = SysTime() - LastShrapnel
@@ -287,74 +274,41 @@ if SERVER then
 			end)
 		end
 
-		util.ScreenShake(SelfPos,100,200,1,3000)
+        util.ScreenShake(SelfPos,100,200,1,3000)
 
+		coroutine.resume(co)
 		local index = self:EntIndex()
-		local timerName = "GrenadeCheck_" .. index
-		local function finishShrapnel()
-			timer.Remove(timerName)
-			timer.Simple(0.02, function()
+		timer.Create("GrenadeCheck_" .. index, 0, 0, function()
+			if !IsValid(self) then
+				timer.Remove("GrenadeCheck_" .. index)
+				return
+			end
+			coroutine.resume(co)
+			if self.ShrapnelDone then
 				if not IsValid(self) then return end
 				self:StopSound("weapons/ins2rpg7/rpg_rocket_loop.wav")
 				SafeRemoveEntity(self)
-			end)
-		end
-
-		local function resumeShrapnel()
-			if not co then
-				finishShrapnel()
-				return false
+				timer.Remove("GrenadeCheck_" .. index)
 			end
-
-			local ok, err = coroutine.resume(co)
-			if not ok then
-				ErrorNoHalt("[projectile_base] Shrapnel coroutine failed: " .. tostring(err) .. "\n")
-				finishShrapnel()
-				return false
-			end
-
-			if coroutine.status(co) == "dead" or self.ShrapnelDone then
-				finishShrapnel()
-				return false
-			end
-
-			return true
-		end
-
-		timer.Create(timerName, 0, 0, function()
-			if !IsValid(self) then
-				timer.Remove(timerName)
-				return
-			end
-			resumeShrapnel()
 		end)
-		resumeShrapnel()
 	end
 elseif CLIENT then
 	function ENT:Draw()
 		self:DrawModel()
 	end
 	
-	local PendingDelayedSounds = 0
-	local MaxPendingDelayedSounds = 64
 	local function PlaySndDist(snd,snd2,pos,isOnWater,watersnd)
 		if SERVER then return end
-		if PendingDelayedSounds >= MaxPendingDelayedSounds then return end
-		PendingDelayedSounds = PendingDelayedSounds + 1
 		local view = render.GetViewSetup(true)
-		local time = pos:Distance(view.origin) / 13504
+		local time = pos:Distance(view.origin) / 17836
 		--print(time)
 		timer.Simple(time, function()
-			PendingDelayedSounds = math.max(PendingDelayedSounds - 1, 0)
 			local owner = Entity(0)
-			local dist = pos:Distance(view.origin)
-			local vol = math.Clamp(1 - (dist - 300) / 24000, 0.3, 1)
-			local nearVol = vol * (1 - math.Clamp((dist - 1200) / 8000, 0, 1))
 			if not isOnWater then
-				EmitSound(snd, pos, 0, CHAN_VOICE, vol, time > 0.2 and 150 or 120, 0, 175, 0, 1)
-				EmitSound(snd2, pos, 0, CHAN_VOICE_BASE, nearVol, 140, 0, 175, 0, 1)
+				EmitSound(snd, pos, 0, CHAN_VOICE, 1, time > 0.2 and 150 or 120, 0, 100, 0, 1)
+				EmitSound(snd2, pos, 0, CHAN_VOICE_BASE, 1, 140, 0, 100, 0, 1)
 			else
-				EmitSound(watersnd, pos, 0, CHAN_VOICE, vol, 130, 0, 85, 0, 1)
+				EmitSound(watersnd, pos, 0, CHAN_VOICE, 1, 130, 0, 85, 0, 1)
 			end
 		end)
 	end

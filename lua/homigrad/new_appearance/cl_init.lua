@@ -700,3 +700,55 @@ end
 hook.Add("InitPostEntity", "HG_LoadAccessoryPoses", function()
 	timer.Simple(1, function() hg.Appearance.LoadPoses() end)
 end)
+
+function hg.RenderBandageGloves(ent, ply)
+	if not IsValid(ent) then return end
+
+	local glovesMdl = ent:GetNWString("BandageGlovesMdl", "") or (IsValid(ply) and ply:GetNWString("BandageGlovesMdl", "")) or ""
+	if glovesMdl == "" then
+		if ent.bandageGlovesModel and IsValid(ent.bandageGlovesModel) then
+			ent.bandageGlovesModel:Remove()
+			ent.bandageGlovesModel = nil
+		end
+		return
+	end
+
+	if not IsValid(ent.bandageGlovesModel) or ent.bandageGlovesMdl ~= glovesMdl then
+		if ent.bandageGlovesModel and IsValid(ent.bandageGlovesModel) then
+			ent.bandageGlovesModel:Remove()
+		end
+
+		ent.bandageGlovesModel = ClientsideModel(glovesMdl)
+		ent.bandageGlovesMdl = glovesMdl
+
+		local model = ent.bandageGlovesModel
+		if not IsValid(model) then return end
+
+		model:SetNoDraw(true)
+		model:SetParent(ent)
+		model:AddEffects(EF_BONEMERGE)
+
+		local bgNames = { [6] = "HandLeft", [9] = "HandRight" }
+		for idx, name in pairs(bgNames) do
+			local bgI = model:FindBodygroupByName(name)
+			if not bgI or bgI < 0 then bgI = model:FindBodygroupByName(name .. "-f") end
+			if bgI and bgI >= 0 then model:SetBodygroup(bgI, 1) end
+		end
+
+		ent:CallOnRemove("removebandagegloves", function()
+			if IsValid(model) then
+				model:Remove()
+				model = nil
+			end
+		end)
+	end
+
+	local model = ent.bandageGlovesModel
+	if not IsValid(model) then return end
+
+	local clr = GetAppearanceBaseColor(ply, ent)
+	if clr then render.SetColorModulation((clr.r or 255) / 255, (clr.g or 255) / 255, (clr.b or 255) / 255) end
+	model:SetupBones()
+	model:DrawModel()
+	if clr then render.SetColorModulation(1, 1, 1) end
+end

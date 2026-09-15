@@ -4,11 +4,11 @@ resource.AddFile("sound/schizosong1.mp3")
 if file.Exists("sound/schizosong2.mp3", "GAME") then resource.AddFile("sound/schizosong2.mp3") end
 if file.Exists("sound/schizowhisper.mp3", "GAME") then resource.AddFile("sound/schizowhisper.mp3") end
 
-local stress_gain = 0.004
-local brain_gain = 0.0025
-local drug_gain = 0.006
+local lonely_radius = 6000
+local lonely_start = 60
+local lonely_full = 900
+local lonely_gain = 0.002
 local decay_time = 1200
-local schizo_ramp_speed = 0.01
 
 local schizo_phrases = {
 	"Someone is watching you.",
@@ -69,55 +69,45 @@ hook.Add("Org Clear", "SchizoInit", function(org)
 	org.schizoEpisodeEnd = 0
 	org.schizoLastPhrase = 0
 	org.schizoVoiceAt = 0
-	org.schizoRelapseAt = CurTime() + math.Rand(480, 900)
-	org.schizoRampTarget = nil
+	org.schizoNextCheck = 0
+	org.schizoLonelySince = nil
 end)
-
-local function stressFactor(org)
-	local f = 0
-	local fear = Clamp(org.fear or 0, 0, 1)
-	if fear > 0.6 then f = f + (fear - 0.6) / 0.4 end
-	local panic = org.panicattack or 0
-	if panic > 0.4 then f = f + Clamp((panic - 0.4) / 0.6, 0, 1) end
-	local pain = org.pain or 0
-	if pain > 40 then f = f + Clamp((pain - 40) / 60, 0, 1) end
-	return Clamp(f, 0, 1)
-end
-
-local function brainFactor(org)
-	local brain = org.brain or 0
-	local o2frac = 0
-	if org.o2 and org.o2.range then
-		local low = org.o2.range * 0.75
-		if org.o2[1] < low then o2frac = Clamp((low - org.o2[1]) / low, 0, 1) end
-	end
-	local concussion = Clamp((org.concussion or 0) / 2, 0, 1)
-	return Clamp(brain * 0.9 + o2frac * 0.7 + concussion * 0.5, 0, 1)
-end
-
-local function drugFactor(org)
-	if (org.analgesia or 0) > 1.5 or (org.painkiller or 0) > 2.4 then return 1 end
-	return 0
-end
 
 hook.Add("Org Think", "SchizoThink", function(owner, org, timeValue)
 	if not org.isPly then return end
 	if org.lastStand then return end
+	if not owner:Alive() then return end
 
 	local schizo = org.psycheSchizo or 0
-	local gain = timeValue * (stressFactor(org) * stress_gain + brainFactor(org) * brain_gain + drugFactor(org) * drug_gain)
-	schizo = min(schizo + gain, 1)
+	local now = CurTime()
 
-	local active = (org.fear or 0) > 0.6 or (org.panicattack or 0) > 0.4 or (org.pain or 0) > 40 or (org.brain or 0) > 0.1 or (org.concussion or 0) > 0.5 or (org.o2 and org.o2[1] < org.o2.range * 0.75) or (org.analgesia or 0) > 1.5 or (org.painkiller or 0) > 2.4
-	if not active then
+	if not org.schizoNextCheck or now >= org.schizoNextCheck then
+		org.schizoNextCheck = now + 1
+
+		local pos = owner:GetPos()
+		local lonely = true
+		for _, ent in ipairs(player.GetAll()) do
+			if ent ~= owner and ent:Alive() and ent:GetPos():Distance(pos) <= lonely_radius then
+				lonely = false
+				break
+			end
+		end
+
+		if lonely then
+			org.schizoLonelySince = org.schizoLonelySince or now
+		else
+			org.schizoLonelySince = nil
+		end
+	end
+
+	if org.schizoLonelySince then
+		local alone = now - org.schizoLonelySince
+		local factor = Clamp((alone - lonely_start) / (lonely_full - lonely_start), 0, 1)
+		schizo = min(schizo + timeValue * factor * lonely_gain, 1)
+	else
 		schizo = max(schizo - timeValue / decay_time, 0)
 	end
 
-	local rampTarget = org.schizoRampTarget
-	if rampTarget then
-		schizo = min(schizo + timeValue * schizo_ramp_speed, rampTarget)
-		if schizo >= rampTarget then org.schizoRampTarget = nil end
-	end
 	org.psycheSchizo = schizo
 
 	if schizo > 0.35 then
@@ -130,16 +120,7 @@ hook.Add("Org Think", "SchizoThink", function(owner, org, timeValue)
 		org.fear = max(0, (org.fear or 0) - timeValue * 2)
 	end
 
-	if schizo <= 0.35 then
-		if CurTime() >= (org.schizoRelapseAt or 0) then
-			org.schizoEpisodeEnd = CurTime() + math.Rand(8, 14)
-			org.schizoRampTarget = 0.5 + math.random() * 0.25
-			org.schizoTimer = 0
-			org.schizoRelapseAt = CurTime() + math.Rand(300, 700)
-			schizoThought(owner, "It never really left.", math.Rand(10, 15), "psyche_schizo", schizo_color)
-		end
-		return
-	end
+	if schizo <= 0.35 then return end
 
 	org.schizoTimer = (org.schizoTimer or 0) + timeValue
 	local interval = 120 - schizo * 70

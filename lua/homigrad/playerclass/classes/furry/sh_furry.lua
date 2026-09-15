@@ -761,6 +761,7 @@ if CLIENT then
 			local mdl = ply.mdlfur
 			mdl:SetPos(ent:GetPos())
 			mdl:SetupBones()
+			ent:SetupBones()
 			//PrintBones(mdl)
 			/*for i = 0, mdl:GetBoneCount() - 1 do
 				local bon = ent:LookupBone(mdl:GetBoneName(i))

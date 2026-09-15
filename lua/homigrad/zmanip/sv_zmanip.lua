@@ -43,18 +43,9 @@ hook.Add("Player Think", "ZManipSwimAnim", function(ply, time, dtime)
 end)
 
 local gestures = {
-	["fuckyou"]     = {"fuckyou", false},
-	["thumb_up"]    = {"thump_up", false},
-	["point"]       = {"point", false},
-	["acknowledge"] = {"acknowledge", false},
-	["wait"]        = {"wait", false},
-	["danger"]      = {"danger", false},
-	["thanks"]      = {"thanks", false},
-	["omw"]         = {"omw", false},
-	["regroup"]     = {"regroup", false},
-	["help"]        = {"help", false},
-	["hello"]       = {"hello", false},
-	["point_of"]    = {"point_of", false},
+	["fuckyou"] = {"fuckyou", false},
+	["thumb_up"] = {"thump_up", false},
+	["point"] = {"point", false},
 	--["door_open_back"] = {"door_open_back", false},
 	--["door_open_forward"] = {"door_open_forward", false},
 	--["usedoor"] = "usedoor",

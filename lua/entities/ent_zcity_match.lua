@@ -28,19 +28,6 @@ local ignitable = { -- Very sorry for this silly table, but i don't want allow t
     ["models/gibs/wood_gib01e.mdl"] = true
 }
 
-local function IgniteGasoline(pos, owner)
-    for _, gasoline in ipairs(hg.gasolinePath or {}) do
-        if gasoline[2] == false and gasoline[1]:DistToSqr(pos) <= 30 * 30 then
-            gasoline[2] = CurTime()
-            gasoline[3] = owner
-        end
-    end
-end
-
-local function GetFlamePos(ent)
-    return ent:GetPos() - ent:GetForward() * 1.3 + ent:GetUp() * (2 * ent:GetFireLeft())
-end
-
 function ENT:Initialize()
     self:SetModel(self.Model)
 
@@ -67,30 +54,22 @@ function ENT:Initialize()
                 ent:Ignite()
             end
 
-            IgniteGasoline(pos, ent1.debil or ent1.owner)
-
+            for _,v in ipairs(hg.gasolinePath) do
+                if v[1]:Distance(pos) > 30 or v[2] ~= false then continue end
+                v[2] = CurTime()
+                v[3] = owner
+            end
             if IsValid(data.HitEntity) and hg.drums[data.HitEntity:EntIndex()] then
                 local drum = hg.drums[data.HitEntity:EntIndex()]
                 local drumEnt = data.HitEntity
-				local tbl = hg.GetExplosiveData and hg.GetExplosiveData(drumEnt)
-                if not tbl then return end
-
+                local tbl = hg.expItems[drumEnt:GetModel()]
                 for i, point in ipairs(drum.high_point) do
                     local pos2 = LocalToWorld(point[1], angle_zero, drumEnt:GetPos(), drumEnt:GetAngles())
-                    if pos:DistToSqr(pos2) < 14 * 14 then
-                        drumEnt.owner = ent1.debil or ent1.owner
-						hg.PropExplosion(drumEnt, tbl.ExpType, (drumEnt.Volume or tbl.Force) * 2, drumEnt:GetPhysicsObject():GetMass(), tbl)
-                        return
+                    if pos:DistToSqr(pos2) < 5 * 5 then
+                        drumEnt.owner = ent1.debil
+                        hg.PropExplosion( drumEnt, tbl.ExpType, (drumEnt.Volume or tbl.Force) * 2, drumEnt:GetPhysicsObject():GetMass() )
                     end
                 end
-            end
-
-            if IsValid(data.HitEntity) and hg and hg.GetExplosiveData and hg.GetExplosiveData(data.HitEntity) then
-                local fuelEnt = data.HitEntity
-                local owner2 = ent1.debil or ent1.owner
-                fuelEnt.owner = owner2
-                CreateVFire(fuelEnt, fuelEnt:GetPos(), -vector_up, 160, owner2)
-                return
             end
         end)
     end
@@ -130,7 +109,7 @@ function ENT:Draw()
         self.eff = CreateParticleSystem(attach,"Lighter_flame",PATTACH_POINT_FOLLOW,1,Vector(0,0,0))
         eff = self.eff
     end
-    local pos = GetFlamePos(self)
+    local pos = self:GetPos() + self:GetForward() * -1.3 + self:GetUp() * (2 * self:GetFireLeft())
     attach:SetPos(pos)
     self:DrawModel()
 end
@@ -139,10 +118,6 @@ local color_b = Color(255,255,255)
 function ENT:Think()
     if SERVER then
         self:SetFireLeft(math.max(0,self:GetFireLeft() - 1 * FrameTime()))
-
-        if self:GetFireLeft() > 0 then
-            IgniteGasoline(GetFlamePos(self), self.debil or self.owner)
-        end
     end
 
     if CLIENT then

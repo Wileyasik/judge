@@ -78,10 +78,22 @@ local chatMinHeight = 140
 local chatHatHeight = 20
 local chatHatGap = 0
 local chatHatWidthPadding = 0
+local chatHatTickerSpeed = 32
+local chatHatTickerPadding = 8
+local chatHatTickerSpacing = 16
 local settingsRowHeight = 36
 local settingsSliderWidth = 120
 local settingsNumberWidth = 60
 local settingsStringWidth = 170
+local chatHatText = {
+	"Do you feel remorse?",
+	"Hold ALT to whisper.",
+	"True wisdom.",
+	"Theres nothing you can do.",
+	"You can kick down doors eventually.",
+	"Check their pulses."
+}
+
 local function RunZChatConVar(name, value)
 	RunConsoleCommand(name, tostring(value))
 end
@@ -120,6 +132,34 @@ local function PaintHatPanel(self, w, h)
 	surface.DrawRect(0, 0, w, h)
 	surface.SetDrawColor(chatOutlineColor)
 	surface.DrawOutlinedRect(0, 0, w, h, 1)
+
+	local reserved = IsValid(self.settingsButton) and (self.settingsButton:GetWide() + 12) or 38
+	local clipX = chatHatTickerPadding
+	local clipW = math.max(0, w - reserved - clipX)
+	if clipW <= 0 then return end
+	if #chatHatText <= 0 then return end
+
+	surface.SetFont("zChatFontHat")
+	local index = self.tickerIndex or 1
+	local tickerText = tostring(chatHatText[index] or "")
+	local tw = surface.GetTextSize(tickerText)
+	local now = RealTime()
+
+	self.tickerLast = self.tickerLast or now
+	self.tickerOffset = self.tickerOffset or -tw
+	self.tickerOffset = self.tickerOffset + math.max(0, now - self.tickerLast) * chatHatTickerSpeed
+	self.tickerLast = now
+
+	if self.tickerOffset > clipW + chatHatTickerSpacing then
+		self.tickerIndex = index % #chatHatText + 1
+		self.tickerOffset = -surface.GetTextSize(tostring(chatHatText[self.tickerIndex] or ""))
+	end
+
+	local x1, y1 = self:LocalToScreen(clipX, 1)
+	local x2, y2 = self:LocalToScreen(clipX + clipW, h - 1)
+	render.SetScissorRect(x1, y1, x2, y2, true)
+	draw.SimpleText(tickerText, "zChatFontHat", clipX + self.tickerOffset, h * 0.5, settingsColorWhite, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+	render.SetScissorRect(0, 0, 0, 0, false)
 end
 
 local function PaintSettingsButton(self, w, h)
@@ -479,7 +519,6 @@ local PANEL = {}
 
 function PANEL:Init()
 	self.text = ""
-	self.linkButtons = {}
 	self.alpha = 0
 	self.fadeDelay = 15
 	self.fadeDuration = 5
@@ -488,73 +527,13 @@ function PANEL:Init()
 	self.yAnim = 5
 end
 
-function PANEL:BuildLinkButtons()
-	for _, button in ipairs(self.linkButtons) do
-		if IsValid(button) then button:Remove() end
-	end
-	self.linkButtons = {}
-
-	if not self.markup or not self.markup.blocks then return end
-	for _, block in ipairs(self.markup.blocks) do
-		local url = block.url
-		if isstring(url) and url:match("^https?://") then
-			local linkURL = url
-			local linkText = block.text
-			local linkFont = block.font
-			local button = vgui.Create("DButton", self)
-			button:SetText("")
-			button:SetCursor("hand")
-			button:SetPos(block.offset.x, (block.height - block.thisY) + block.offset.y)
-			button:SetSize(block.thisX, block.thisY)
-			button.Paint = function(panel, width, height)
-				if not panel:IsHovered() then return end
-
-				surface.SetFont(linkFont)
-				surface.SetTextColor(255, 255, 255, 255)
-				surface.SetTextPos(0, 0)
-				surface.DrawText(linkText)
-				surface.SetDrawColor(255, 255, 255, 255)
-				surface.DrawRect(0, height - 1, width, 1)
-			end
-			button.DoClick = function()
-				if not Derma_Query then
-					gui.OpenURL(linkURL)
-					return
-				end
-
-				Derma_Query(
-					linkURL,
-					"Link",
-					"Open", function() gui.OpenURL(linkURL) end,
-					"Copy", function() SetClipboardText(linkURL) end,
-					"Cancel", function() end
-				)
-			end
-			self.linkButtons[#self.linkButtons + 1] = button
-		end
-	end
-end
-
-function PANEL:QueueLinkButtonBuild()
-	if self.linkBuildQueued then return end
-	self.linkBuildQueued = true
-
-	timer.Simple(0, function()
-		if not IsValid(self) then return end
-		self.linkBuildQueued = false
-		self:BuildLinkButtons()
-	end)
-end
-
 function PANEL:SetMarkup(text)
 	self.text = text
 
-	self.markupWidth = self:GetWide()
-	self.markup = hg.markup.Parse(self.text, self.markupWidth)
+	self.markup = hg.markup.Parse(self.text, self:GetWide())
 	self.markup.onDrawText = PaintMarkupOverride
 
 	self:SetTall(self.markup:GetHeight())
-	self:QueueLinkButtonBuild()
 
 	timer.Simple(self.fadeDelay, function()
 		if (!IsValid(self)) then
@@ -580,14 +559,10 @@ function PANEL:SetMarkup(text)
 end
 
 function PANEL:PerformLayout(width, height)
-	if self.markup and self.markupWidth == width then return end
-
-	self.markupWidth = width
 	self.markup = hg.markup.Parse(self.text, width)
 	self.markup.onDrawText = PaintMarkupOverride
 
 	self:SetTall(self.markup:GetHeight())
-	self:QueueLinkButtonBuild()
 end
 
 function PANEL:Paint(width, height)
@@ -1090,9 +1065,7 @@ function PANEL:AddLine(elements)
 			buffer[#buffer + 1] = string.format("<color=%d,%d,%d>%s", color.r, color.g, color.b,
 				v:GetName():gsub("<", "&lt;"):gsub(">", "&gt;"))
 		else
-			local text = tostring(v):gsub("<", "&lt;"):gsub(">", "&gt;")
-			text = text:gsub("(https?://[%w%-%._~:/%?#%[%]@!$&'%(%)%*%+,;=]+)", "<url=%1><color=88,101,242>%1</color></url>")
-			buffer[#buffer + 1] = text
+			buffer[#buffer + 1] = tostring(v):gsub("<", "&lt;"):gsub(">", "&gt;")
 		end
 	end
 

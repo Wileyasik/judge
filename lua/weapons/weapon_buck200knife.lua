@@ -46,10 +46,10 @@ SWEP.SelfHarmCutLeftPos = Vector(-2, 1, 16)
 SWEP.SelfHarmCutLeftAng = Angle(-12, 70, 85)
 
 
+
 SWEP.PenetrationSizePrimary = 2
 SWEP.PenetrationSizeSecondary = 0
-SWEP.AttackLen1 = 41
-SWEP.AttackLen2 = 39
+
 
 SWEP.PenetrationPrimary = 4
 SWEP.PenetrationSecondary = 0
@@ -66,6 +66,8 @@ SWEP.BlockSound = {"physics/metal/metal_sheet_impact_hard2.wav", 85, {145, 155}}
 
 SWEP.setlh = true
 SWEP.setrh = true
+SWEP.BlockHoldType = "slam"
+SWEP.DisableLHIKWhileBlocking = true
 SWEP.TwoHanded = false
 
 SWEP.basebone = 76
@@ -73,7 +75,7 @@ SWEP.basebone = 76
 SWEP.HoldPos = Vector(-2,-5,-5)
 SWEP.HoldAng = Angle(-15,20,-10)
 
-SWEP.   Pos = Vector(0,0,0)
+SWEP.AttackPos = Vector(0,0,0)
 SWEP.AttackingPos = Vector(0,0,0)
 
 SWEP.weaponPos = Vector(-1,0,0)
@@ -227,7 +229,7 @@ end
 
 if CLIENT then
     function SWEP:ModelAnim(model)
-        local pos, ang = self.BaseClass.ModelAnim(self, model)
+        local pos, ang = weapons.GetStored("weapon_melee").ModelAnim(self, model)
         local isCutting = self.Canselfharm and self:IsSelfHarming() and self.SelfHarmStart and self.SelfHarmStart + self.SelfHarmTime > CurTime()
         local cutTarget = 0
 

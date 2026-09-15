@@ -88,7 +88,7 @@ hook.Add("HG_PlayerFootstep", "nationalguard_footsteps", function(ply, pos, foot
 			if SoundDuration(snd) <= 0 then
 				snd = sound -- missing footsteps fix
 			end
-			EmitSound(snd, pos, ply:EntIndex(), CHAN_AUTO, volume, 75, nil, changePitch(math.random(95,105)) )
+			hg.EmitFootstepSound(snd, pos, ply, volume, 75, changePitch(math.random(95,105)) )
 
 			return true
 		end

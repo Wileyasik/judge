@@ -22,6 +22,14 @@ if CLIENT then
 	SWEP.BounceWeaponIcon = false
 end
 
+local function SendNetToPlayersWithin(pos, radius)
+	local crf = RecipientFilter()
+	for _, ply in ipairs(player.GetAll()) do
+		if ply:GetPos():Distance(pos) <= radius then crf:AddPlayer(ply) end
+	end
+	net.Send(crf)
+end
+
 SWEP.Weight = 0
 SWEP.AutoSwitchTo = false
 SWEP.AutoSwitchFrom = false
@@ -502,7 +510,7 @@ ExplodeTheItem = function(self,ent)
 				net.WriteEntity(IsValid(ent) and ent or Entity(0))
 				net.WriteBool(entWaterLevel > 0)
 				net.WriteString(soundWater)
-			hg.SendNetToPlayersWithin(EntPos, 25000)
+			SendNetToPlayersWithin(EntPos, 25000)
 
 			if entWaterLevel == 0 then
 				ParticleEffect("pcf_jack_groundsplode_medium", EntPos, -vector_up:Angle())

@@ -47,42 +47,6 @@ if (CLIENT) then
     	hook.Run("OnLocalVarSet", key, var)
     end)
 
-    net.Receive("ZB_fullsync", function()
-        local count = net.ReadUInt(16)
-        for i = 1, count do
-            local scope = net.ReadUInt(2)
-            if scope == 0 then
-                local index = net.ReadUInt(16)
-                local key = net.ReadString()
-                local var = net.ReadType()
-
-                zb.net[index] = zb.net[index] or {}
-                zb.net[index][key] = var
-
-                if IsValid(Entity(index)) then
-                    hook.Run("OnNetVarSet", index, key, var)
-                else
-                    zb.net[index].waiting = true
-                end
-            elseif scope == 1 then
-    	        local key = net.ReadString()
-    	        local var = net.ReadType()
-
-    	        zb.net.globals[key] = var
-
-    	        hook.Run("OnGlobalVarSet", key, var)
-            else
-    	        local key = net.ReadString()
-    	        local var = net.ReadType()
-
-    	        zb.net[LocalPlayer():EntIndex()] = zb.net[LocalPlayer():EntIndex()] or {}
-    	        zb.net[LocalPlayer():EntIndex()][key] = var
-
-    	        hook.Run("OnLocalVarSet", key, var)
-            end
-        end
-    end)
-
     function GetNetVar(key, default) -- luacheck: globals GetNetVar
     	local value = zb.net.globals[key]
 
@@ -142,7 +106,6 @@ else
     util.AddNetworkString("zbLocalVarSet")
     util.AddNetworkString("zbNetVarSet")
     util.AddNetworkString("zbNetVarDelete")
-    util.AddNetworkString("ZB_fullsync")
 
     local function CheckBadType(name, object)
 		return false
@@ -159,11 +122,6 @@ else
     	end--]]
     end
 
-	local function isScalarNetValue(value)
-		local valueType = type(value)
-		return valueType == "number" or valueType == "string" or valueType == "boolean"
-	end
-
     function GetNetVar(key, default)
     	local value = zb.net.globals[key]
 
@@ -171,8 +129,8 @@ else
     end
 
     function SetNetVar(key, value, receiver, unreliable)
-		if (CheckBadType(key, value)) then return end
-		if receiver == nil and not unreliable and isScalarNetValue(value) and zb.net.globals[key] == value then return end
+    	if (CheckBadType(key, value)) then return end
+    	--if (GetNetVar(key) == value) then return end
 		
     	zb.net.globals[key] = value
 
@@ -188,19 +146,18 @@ else
     end
 	
     function playerMeta:SyncVars()
-    	local SYNC_CHUNK = 32
-
-    	local entries = {}
-    	local n = 0
-
     	for k, v in pairs(zb.net.globals) do
-    		n = n + 1
-    		entries[n] = {1, 0, k, v}
+    		net.Start("zbGlobalVarSet")
+    			net.WriteString(k)
+    			net.WriteType(v)
+    		net.Send(self)
     	end
 
     	for k, v in pairs(zb.net.locals[self] or {}) do
-    		n = n + 1
-    		entries[n] = {2, 0, k, v}
+    		net.Start("zbLocalVarSet")
+    			net.WriteString(k)
+    			net.WriteType(v)
+    		net.Send(self)
     	end
 
     	for entity, data in pairs(zb.net.list) do
@@ -208,31 +165,15 @@ else
     			local index = entity:EntIndex()
 
     			for k, v in pairs(data) do
-    				n = n + 1
-    				entries[n] = {0, index, k, v}
+    				net.Start("zbNetVarSet")
+    					net.WriteUInt(index, 16)
+    					net.WriteString(k)
+    					net.WriteType(v)
+    				net.Send(self)
     			end
-    		else
-    			zb.net.list[entity] = nil
+			else
+				zb.net.list[entity] = nil
     		end
-    	end
-
-    	for i = 1, n, SYNC_CHUNK do
-    		local count = math.min(SYNC_CHUNK, n - i + 1)
-
-    		net.Start("ZB_fullsync")
-    		net.WriteUInt(count, 16)
-
-    		for j = i, i + count - 1 do
-    			local entry = entries[j]
-    			net.WriteUInt(entry[1], 2)
-    			if entry[1] == 0 then
-    				net.WriteUInt(entry[2], 16)
-    			end
-    			net.WriteString(entry[3])
-    			net.WriteType(entry[4])
-    		end
-
-    		net.Send(self)
     	end
     end
 	
@@ -245,11 +186,10 @@ else
     end
 
     function playerMeta:SetLocalVar(key, value)
-		if (CheckBadType(key, value)) then return end
+    	if (CheckBadType(key, value)) then return end
 
-		zb.net.locals[self] = zb.net.locals[self] or {}
-		if isScalarNetValue(value) and zb.net.locals[self][key] == value then return end
-		zb.net.locals[self][key] = value
+    	zb.net.locals[self] = zb.net.locals[self] or {}
+    	zb.net.locals[self][key] = value
 
     	net.Start("zbLocalVarSet")
     		net.WriteString(key)
@@ -266,10 +206,11 @@ else
     end
 
     function entityMeta:SetNetVar(key, value, receiver)
-		if (CheckBadType(key, value)) then return end
+    	if (CheckBadType(key, value)) then return end
 
 		zb.net.list[self] = zb.net.list[self] or {}
-		if receiver == nil and isScalarNetValue(value) and zb.net.list[self][key] == value then return end
+
+		--if not hg.IsChanged(value, key, zb.net.list[self]) then return end
 
     	if (zb.net.list[self][key] != value) then
     		zb.net.list[self][key] = value 

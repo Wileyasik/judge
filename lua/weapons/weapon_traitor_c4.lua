@@ -15,6 +15,14 @@ if CLIENT then
 	SWEP.BounceWeaponIcon = false
 end
 
+local function SendNetToPlayersWithin(pos, radius)
+	local crf = RecipientFilter()
+	for _, ply in ipairs(player.GetAll()) do
+		if ply:GetPos():Distance(pos) <= radius then crf:AddPlayer(ply) end
+	end
+	net.Send(crf)
+end
+
 SWEP.Primary.ClipSize = -1
 SWEP.Primary.DefaultClip = -1
 SWEP.Primary.Automatic = false
@@ -330,7 +338,7 @@ function SWEP:DetonateC4()
 		net.WriteEntity(self)
 		net.WriteBool(false)
 		net.WriteString("ied/ied_detonate_01.wav")
-	hg.SendNetToPlayersWithin(pos, 25000)
+	SendNetToPlayersWithin(pos, 25000)
 	charge:EmitSound("ied/ied_detonate_01.wav", 100, math.random(90, 105))
 	charge:Remove()
 

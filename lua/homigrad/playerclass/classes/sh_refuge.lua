@@ -111,12 +111,6 @@ local primary = {
     "weapon_sks",
     "weapon_vpo136",
     "weapon_winchester",
-    "weapon_mts255",
-    "weapon_mr43_short",
-    "weapon_mr43",
-    "weapon_vpo215",
-    "weapon_mp18",
-    "weapon_mxlr",
 }
 
 local secondary = {
@@ -129,6 +123,7 @@ local secondary = {
 }
 
 local helmet = {
+    "helmet1",
     "",
     "",
 }
@@ -213,7 +208,7 @@ function CLASS.GiveEquipment(self, class)
     if class == "medic" then
         ply:Give("weapon_bandage_sh")
         ply:Give("weapon_medkit_sh")
-        ply:Give("weapon_painkillers_tpik")
+        ply:Give("weapon_painkillers")
         ply:Give("weapon_tourniquet")
     end
 end

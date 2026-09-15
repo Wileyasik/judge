@@ -98,36 +98,23 @@ function ENT:ActivateExplosive()
 		self.ShrapnelDone = true
 	end)
 
+	coroutine.resume(co)
+
 	local index = self:EntIndex()
-	local timerName = "GrenadeCheck_" .. index
-	local function finishShrapnel()
-		timer.Remove(timerName)
-		timer.Simple(0, function()
-			if not IsValid(self) then return end
+
+	timer.Create("GrenadeCheck_" .. index, 0, 0, function()
+		if !IsValid(self) then
+			timer.Remove("GrenadeCheck_" .. index)
+		end
+
+		coroutine.resume(co)
+
+		if self.ShrapnelDone then
 			util.ScreenShake(selfPos, 20, 20, 1, self.ConcussionDis)
 			SafeRemoveEntity(self)
-		end)
-	end
-	local function resumeShrapnel()
-		local ok, err = coroutine.resume(co)
-		if not ok then
-			ErrorNoHalt("[ent_claymore] Shrapnel coroutine failed: " .. tostring(err) .. "\n")
+			timer.Remove("GrenadeCheck_" .. index)
 		end
-		if not ok or coroutine.status(co) == "dead" or self.ShrapnelDone then
-			finishShrapnel()
-			return false
-		end
-		return true
-	end
-
-	timer.Create(timerName, 0, 0, function()
-		if !IsValid(self) then
-			timer.Remove(timerName)
-			return
-		end
-		resumeShrapnel()
 	end)
-	resumeShrapnel()
 
 	net.Start("projectileFarSound")
 		net.WriteString(table.Random(self.Sound))
@@ -139,9 +126,11 @@ function ENT:ActivateExplosive()
 	net.Broadcast()
 	local normal = self:GetAngles():Right()
 	local blastdist = self.BlastDis
-	timer.Simple(0.3, function()
-		ParticleEffect("pcf_jack_groundsplode_medium", selfPos + vector_up, -normal:Angle())
+	timer.Simple(0.3,function()
+		ParticleEffect("pcf_jack_groundsplode_medium",selfPos+vector_up*1,-normal:Angle())
+		--hg.ExplosionEffect(selfPos, blastdist, 80)
 	end)
+
 	local attacker = IsValid(self.owner) and self.owner or Entity(0)
 	
 	for _, ply in ipairs(ents.FindInSphere(selfPos,self.ConcussionDis)) do
@@ -151,23 +140,10 @@ function ENT:ActivateExplosive()
 		local dist = ply:GetPos():Distance(selfPos)
 		local tinnitusDuration = math.Clamp(10 * (1 - dist/self.ConcussionDis), 2, 10)
 		ply:AddTinnitus(math.max(tinnitusDuration,1.5), true)
-		if ply.organism then
-			local clayConc = math.Clamp(tinnitusDuration * 0.18, 0.15, 1.5)
-			hg.organism.module.concussion.AddConcussion(ply.organism, clayConc, tinnitusDuration)
-		end
 	end
 	   
 	--util.BlastDamage(self, attacker, selfPos, self.ShrapnelDis, self.BlastDamage)
-	hg.BlastDamageWithShockwave(self, attacker, selfPos, self.BlastDis, self.ShrapnelDamage, {Shockwave = false})
-	hg.ApplyExplosionShockwave({
-		Origin = selfPos,
-		Radius = self.ConcussionDis,
-		MaxDistance = self.ConcussionDis,
-		Damage = self.ConcussionDamage,
-		Attacker = attacker,
-		Inflictor = self,
-		Filter = {self}
-	})
+	util.BlastDamage(self, attacker, selfPos, self.BlastDis, self.ShrapnelDamage)
 	--util.BlastDamage(self, attacker, selfPos, self.ConcussionDis, self.ConcussionDamage)
 end
 

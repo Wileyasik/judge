@@ -50,16 +50,10 @@ function ENT:AddThink()
 	--return true
 end
 function ENT:ExplodeAdd()
-	if self.snd ~= nil then
-		self:StopLoopingSound(self.snd)
-		self.snd = nil
-	end
+	self:StopLoopingSound(self.snd)
 end
 
 function ENT:PoopBomb()
-	if self.snd ~= nil then
-		self:StopLoopingSound(self.snd)
-		self.snd = nil
-	end
+	self:StopLoopingSound(self.snd)
 	return math.random(1, 100) < 5
 end

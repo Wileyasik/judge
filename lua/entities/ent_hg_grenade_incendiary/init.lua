@@ -5,14 +5,8 @@ include("shared.lua")
 function ENT:InitAdd()
 end
 
-ENT.TrapSettleTime = 1.5
-ENT.TrapSettleLen = 40
-
-local clr = Color(50, 40, 0)
-
 local function createSpoon(self)
 	local entasd = ents.Create("ent_hg_spoon")
-	if not IsValid(entasd) then return end
 	entasd:SetModel(self.spoon)
 	entasd:SetPos(self:GetPos())
 	entasd:SetAngles(self:GetAngles())
@@ -129,10 +123,7 @@ function ENT:Arm(time,vel)
 
 		timer.Simple(0.1,function()
 			if wpos and IsValid(self) then
-				local phys = self:GetPhysicsObject()
-				if IsValid(phys) then
-					phys:SetVelocity((wpos - self:GetPos()):GetNormalized())
-				end
+				self:GetPhysicsObject():SetVelocity((wpos - self:GetPos()):GetNormalized())
 			end
 		end)
 
@@ -141,12 +132,6 @@ function ENT:Arm(time,vel)
 		end
 		if IsValid(self.ent2) then
 			self.ent2:Remove()
-		end
-		if IsValid(self.peg) then
-			self.peg:Remove()
-		end
-		if IsValid(self.peg2) then
-			self.peg2:Remove()
 		end
 		self.ent = nil
 		self.lpos = nil
@@ -180,46 +165,27 @@ function ENT:Think()
 	end
 
 	if not self.timer then
-		if self.Disarmed then return true end
-
-		local settling = ( CurTime() - ( self.trapSetTime or CurTime() ) ) < ( self.TrapSettleTime or 1.5 )
-
 		if IsValid(self.ent) or self.ent == Entity(0) then
-			if not self.trapSetTime then
-				self.trapSetTime = CurTime()
-			end
-
 			local ent,lpos,origlen = self.ent,self.lpos,self.origlen
 			
 			local wpos = ent:LocalToWorld(lpos)
-			local dist = wpos:Distance(self:GetPos())
 
-			if settling then
-				if dist > origlen + ( self.TrapSettleLen or 40 ) then
-					self:DisarmTrap()
-				end
-			else
-				if dist > origlen + 20 then
-					self:Arm(CurTime() - self.timeToBoom + 1)
-				end
+			if wpos:Distance(self:GetPos()) > origlen + 20 then
+				self:Arm(CurTime() - self.timeToBoom + 1)
+			end
 
-				local tr = {}
-				tr.start = self:GetPos()
-				tr.endpos = wpos
-				tr.filter = {self,self.ent2,self.ent,self.peg}
-				local trace = util.TraceLine(tr)
-				if IsValid(trace.Entity) and trace.Entity != self.ent and trace.Entity != self.peg then
-					self:Arm(CurTime() - self.timeToBoom + 1,trace.Entity:GetVelocity())
-				end
+			local tr = {}
+			tr.start = self:GetPos()
+			tr.endpos = wpos
+			tr.filter = {self,self.ent2,self.ent}
+			local trace = util.TraceLine(tr)
+			if IsValid(trace.Entity) then
+				self:Arm(CurTime() - self.timeToBoom + 1,trace.Entity:GetVelocity())
 			end
 		end
 
 		if not IsValid(self.cons2) then
-			if settling then
-				self:DisarmTrap()
-			else
-				self:Arm(CurTime() - self.timeToBoom + 1,0)
-			end
+			self:Arm(CurTime() - self.timeToBoom + 1,0)
 		end
 
 		return true
@@ -229,19 +195,6 @@ function ENT:Think()
 	if (CurTime() - self.timer) > self.timeToBoom and not self.Exploded then self:Explode() end
 
 	return true
-end
-
-function ENT:DisarmTrap()
-	if self.Disarmed then return end
-	self.Disarmed = true
-	if IsValid(self.cons) then self.cons:Remove() end
-	if IsValid(self.ent2) then self.ent2:Remove() end
-	if IsValid(self.cons2) then self.cons2:Remove() end
-	if IsValid(self.peg) then self.peg:Remove() end
-	if IsValid(self.peg2) then self.peg2:Remove() end
-	self.ent = nil
-	self.lpos = nil
-	self.origlen = nil
 end
 
 function ENT:Burn()
@@ -324,6 +277,8 @@ function ENT:Burn()
 		CreateVFireBall(10, 50, self:GetPos(), (vel / 2) - vector_up + VectorRand() * 150, self.owner or self)
 	end
 end
+
+local clr = Color(50, 40, 0)
 
 local vecCone = Vector(0, 0, 0)
 

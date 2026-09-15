@@ -5,23 +5,16 @@ concommand.Add("fake", function(ply)
 	if ply.fakecd and ply.fakecd > CurTime() then return end
 	if ply:IsFlagSet( FL_FROZEN ) then return end
 	--ply.fakecd = CurTime() + cooldown
-	ply._godFakeBypass = true
 	if not IsValid(ply.FakeRagdoll) then
-		if hook.Run("CanPlayerFake", ply) == false then ply._godFakeBypass = nil return end
 		hg.Fake(ply)
 	else
 		hg.FakeUp(ply)
 	end
-	ply._godFakeBypass = nil
 end)
 
 hook.Add("PlayerInitialSpawn", "PlayerColideCallback", function(ply) ply:AddCallback("PhysicsCollide", function(phys, data) hook.Run("PlayerCollide", ply, data.HitEntity, data) end) end)
 hook.Add("PlayerCollide", "Fake", function(ply, ent, data)
-	if not IsValid(ply) or not IsValid(ent) or not data or not isnumber(data.Speed) then return end
-	local phys = IsValid(data.HitObject) and data.HitObject or ent:GetPhysicsObject()
-	if not IsValid(phys) then return end
-	local mass = phys:GetMass()
-	if (not ent:IsPlayerHolding()) and data.Speed > math.max(700 - mass, 200) and mass > 20 and ent:GetClass() ~= "prop_ragdoll" and phys:GetVelocity():LengthSqr() > 50 * 50 then		--[[local d = DamageInfo()
+	if (not ent:IsPlayerHolding()) and data.Speed > math.max(700 - ent:GetPhysicsObject():GetMass(), 200) and ent:GetPhysicsObject():GetMass() > 20 and ent:GetClass() ~= "prop_ragdoll" and ent:GetPhysicsObject():GetVelocity():Length() > 50 then		--[[local d = DamageInfo()
 		d:SetDamageType(DMG_CRUSH)
 		d:SetAttacker(data.HitEntity)
 		d:SetDamage(data.Speed / 40)
@@ -64,26 +57,6 @@ hook.Add("OnPlayerHitGround","fallStun",function(ply,inwater,onfloater,speed)
 
 	if speed > 600 then
 		hg.LightStunPlayer(ply,2)
-
-		if speed > 650 and ply:Alive() then
-			local org = ply.organism
-			if org and not org.superfighter then
-				local dmgInfo = DamageInfo()
-				dmgInfo:SetDamageType(DMG_FALL)
-				dmgInfo:SetInflictor(game.GetWorld())
-				dmgInfo:SetAttacker(game.GetWorld())
-				local fallDmg = math.Clamp((speed - 650) / 800, 0.1, 3)
-				hg.organism.input_list.llegup(org, 0, fallDmg, dmgInfo)
-				hg.organism.input_list.rlegup(org, 0, fallDmg, dmgInfo)
-				if speed > 1100 then
-					hg.organism.input_list.spine1(org, 0, fallDmg * 0.5, dmgInfo)
-					hg.organism.input_list.spine2(org, 0, fallDmg * 0.6, dmgInfo)
-					if hg.organism.module.concussion then
-						hg.organism.module.concussion.AddConcussion(org, math.Clamp((speed - 1000) * 0.0008, 0.2, 1.5), math.Clamp((speed - 1000) * 0.05, 10, 40))
-					end
-				end
-			end
-		end
 	end
 end)
 

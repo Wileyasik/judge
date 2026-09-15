@@ -837,12 +837,11 @@ if SERVER then
 
 				-- If we're burning a character, use the oppurtunity to spread to it
 				if vFireIsCharacter(ent) and vFireEnableSpread then
-					local target = ent:IsPlayer() and hg.GetCurrentCharacter(ent) or ent
-					-- Players spread fire less often; fake players burn through their physical ragdoll.
-					if IsValid(target) and (!ent:IsPlayer() or math.random(1, 6) == 1) then
-						local newFeed = self.feed + vFireTakeFuel(target, 12)
+					-- If we're burning an NPC, spread to it, if it's a player, lower the chance of spread
+					if (ent:IsPlayer() and hg.GetCurrentCharacter(ent):IsPlayer() and math.random(1, 6) == 1) or !ent:IsPlayer() then
+						local newFeed = self.feed + vFireTakeFuel(ent, 12)
 						if newFeed > 0 then
-							CreateVFire(target, target:GetPos(), Vector(), newFeed, self)
+							CreateVFire(ent, ent:GetPos(), Vector(), newFeed, self)
 						end
 					end
 				end

@@ -85,41 +85,26 @@ function ENT:ActivateExplosive()
 				coroutine.yield()
 			end
 
+			self.ShrapnelDone = true
 			--end
 		end
-		self.ShrapnelDone = true
 	end)
 
+	coroutine.resume(co)
 	local index = self:EntIndex()
-	local timerName = "GrenadeCheck_" .. index
-	local function finishShrapnel()
-		timer.Remove(timerName)
-		timer.Simple(0.01, function()
-			if not IsValid(self) then return end
+	timer.Create("GrenadeCheck_" .. index, 0, 0, function()
+		if !IsValid(self) then
+			timer.Remove("GrenadeCheck_" .. index)
+		end
+
+		coroutine.resume(co)
+
+		if self.ShrapnelDone then
 			util.ScreenShake(selfPos, 20, 20, 1, 500)
 			SafeRemoveEntity(self)
-		end)
-	end
-	local function resumeShrapnel()
-		local ok, err = coroutine.resume(co)
-		if not ok then
-			ErrorNoHalt("[ent_hg_slam] Shrapnel coroutine failed: " .. tostring(err) .. "\n")
+			timer.Remove("GrenadeCheck_" .. index)
 		end
-		if not ok or coroutine.status(co) == "dead" or self.ShrapnelDone then
-			finishShrapnel()
-			return false
-		end
-		return true
-	end
-
-	timer.Create(timerName, 0, 0, function()
-		if !IsValid(self) then
-			timer.Remove(timerName)
-			return
-		end
-		resumeShrapnel()
 	end)
-	resumeShrapnel()
 
 	net.Start("projectileFarSound")
 		net.WriteString(table.Random(self.Sound))
@@ -130,14 +115,15 @@ function ENT:ActivateExplosive()
 		net.WriteString(self.SoundWater)
 	net.Broadcast()
 
-	timer.Simple(0.1, function()
-		ParticleEffect("pcf_jack_airsplode_small", selfPos - vector_up * 5, vector_up:Angle())
+	timer.Simple(0.1,function()
+		ParticleEffect("pcf_jack_airsplode_small",selfPos+vector_up*-5,vector_up:Angle())
+		--hg.ExplosionEffect(selfPos, blastdist, 80)
 	end)
 	hg.ExplosionEffect(selfPos, self.BlastDis, 5)
 
 	timer.Simple(0, function()
 		if not IsValid(self) then return end
-		hg.BlastDamageWithShockwave(self, Entity(0), selfPos, self.BlastDis / 0.01905, self.BlastDamage * 1, { ExplosionType = "Small" })
+		util.BlastDamage(self, Entity(0), selfPos, self.BlastDis / 0.01905, self.BlastDamage * 1)
 	end)
 end
 

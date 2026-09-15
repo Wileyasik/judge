@@ -4,8 +4,46 @@ local hg_gopro = ConVarExists("hg_gopro") and GetConVar("hg_gopro") or CreateCli
 local hg_coolcamera = ConVarExists("hg_coolcamera") and GetConVar("hg_coolcamera") or CreateConVar("hg_coolcamera", 0, FCVAR_ARCHIVE + FCVAR_REPLICATED, "Cool camera movement", 0, 1)
 
 --\\ custom footsteps
-	local EmitSound, SoundDuration, hg, ViewPunch, CurTime, math = EmitSound, SoundDuration, hg, ViewPunch, CurTime, math
+	local EmitSound, SoundDuration, hg, ViewPunch, CurTime, math, net, RecipientFilter = EmitSound, SoundDuration, hg, ViewPunch, CurTime, math, net, RecipientFilter
 	local math_max = math.max
+	local footstepNet = "hg_footstep_snd"
+	local serverOnlyFootsteps = {
+		headcrabzombie = true,
+		Combine = true
+	}
+
+	local function PlayFootstepSound(snd, pos, ply, volume, soundLevel, pitch)
+		EmitSound(snd, pos, IsValid(ply) and ply:EntIndex() or 0, CHAN_AUTO, volume or 1, soundLevel or 75, nil, pitch or 100)
+	end
+
+	if SERVER then
+		util.AddNetworkString(footstepNet)
+	end
+
+	function hg.EmitFootstepSound(snd, pos, ply, volume, soundLevel, pitch)
+		if SERVER then
+			local rf = RecipientFilter()
+			rf:AddAllPlayers()
+			if IsValid(ply) and ply:IsPlayer() then rf:RemovePlayer(ply) end
+
+			net.Start(footstepNet)
+				net.WriteString(snd)
+				net.WriteVector(pos)
+				net.WriteEntity(ply)
+				net.WriteFloat(volume or 1)
+				net.WriteFloat(soundLevel or 75)
+				net.WriteFloat(pitch or 100)
+			net.Send(rf)
+		else
+			PlayFootstepSound(snd, pos, ply, volume, soundLevel, pitch)
+		end
+	end
+
+	if CLIENT then
+		net.Receive(footstepNet, function()
+			PlayFootstepSound(net.ReadString(), net.ReadVector(), net.ReadEntity(), net.ReadFloat(), net.ReadFloat(), net.ReadFloat())
+		end)
+	end
 
 	hook.Add("PlayerStepSoundTime", "hguhuy", function(ply, type, walking)
 		return 1
@@ -55,6 +93,26 @@ local hg_coolcamera = ConVarExists("hg_coolcamera") and GetConVar("hg_coolcamera
 			org.painadd = org.painadd + ((org.lleg or 0) > 0.75 and (org.lleg - 0.75) or 0) + ((org.rleg or 0) > 0.75 and (org.rleg - 0.75) or 0)
 		end
 
+		if CLIENT and ply == lply then
+			if serverOnlyFootsteps[ply.PlayerClassName] then return true end
+
+			local Hook = hook_Run("HG_PlayerFootstep", ply, pos, foot, sound, volume, rf)
+			if Hook then return true end
+
+			if !(ply:IsWalking() or ply:Crouching()) and ent == ply then
+				local snd
+				if ply.PlayerClassName == "furry" then
+					snd = "zbattle/footstep/hardbarefoot" .. math.random(1, 5) .. ".ogg"
+				else
+					snd = sound
+				end
+				if SoundDuration(snd) <= 0 or ply.PlayerClassName == "Gordon" then
+					snd = sound
+				end
+				hg.EmitFootstepSound(snd, pos, ply, volume, 75, changePitch(math.random(95,105)))
+			end
+		end
+
 		if SERVER then
 			if ply:GetNetVar("Armor", {})["torso"] then
 				EmitSound("arc9_eft_shared/weapon_generic_rifle_spin"..math.random(9)..".ogg", pos, ply:EntIndex(), CHAN_AUTO, changePitch(math.min(len / 100, 0.89)), 80)
@@ -73,7 +131,7 @@ local hg_coolcamera = ConVarExists("hg_coolcamera") and GetConVar("hg_coolcamera
 				if SoundDuration(snd) <= 0 or ply.PlayerClassName == "Gordon" then
 					snd = sound
 				end
-				EmitSound(snd, pos, ply:EntIndex(), CHAN_AUTO, volume, 75, nil, changePitch(math.random(95,105)) )
+				hg.EmitFootstepSound(snd, pos, ply, volume, 75, changePitch(math.random(95,105)) )
 			end
 		end
 

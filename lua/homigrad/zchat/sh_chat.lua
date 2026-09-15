@@ -63,8 +63,6 @@ if CLIENT then
 		bind = bind:lower()
 
 		if (bind:find("messagemode") and pressed) then
-			if not IsValid(hg.chat) then CreateChat() end
-			if not IsValid(hg.chat) then return end
 			hg.chat:SetActive(true)
 
 			return true
@@ -72,7 +70,7 @@ if CLIENT then
 	end)
 
 	hook.Add("OnShowZCityPause", "ZChat", function()
-		if not IsValid(hg.chat) or !hg.chat:GetActive() then return end
+		if !hg.chat:GetActive() then return end
 		hg.chat:SetActive(false)
 
 		return false
@@ -302,7 +300,6 @@ else
 		if text == "" then return end
 
 		if ply:Alive() and ply.organism and ply.organism.otrub then return end
-		hook.Run("HG_PlayerChatSent", ply, text)
 
 		ply.ChatWhisper = ply:Alive() and ply.ChatWhisper or false
 

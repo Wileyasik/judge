@@ -183,13 +183,13 @@ end
 RemoveOldBinds()
 
 hg.Binds:CreateBind("hg_kick", KEY_NONE, nil, true, "Kick", "hg_kick")
+hg.Binds:CreateBind("fake", KEY_NONE, nil, true, "Ragdoll/Get up", "fake")
 hg.Binds:CreateBind("hmcd_togglelaser", KEY_NONE, nil, true, "Toggle weapon laser", "hmcd_togglelaser")
 hg.Binds:CreateBind("+alt1", KEY_NONE, nil, true, "Lean left", "+alt1")
 hg.Binds:CreateBind("+alt2", KEY_NONE, nil, true, "Lean right", "+alt2")
 hg.Binds:CreateBind("+hmcd_holdbreath", KEY_NONE, nil, true, "Hold breath", "+hmcd_holdbreath")
 hg.Binds:CreateBind("+altlook", KEY_NONE, nil, true, "Look around", "+altlook")
 hg.Binds:CreateBind("+hg_zoom", KEY_NONE, nil, true, "Zoom camera", "+hg_zoom")
-hg.Binds:CreateBind("hg_drop", KEY_NONE, nil, true, "Drop weapon", "drop")
 
 if CLIENT then
     hg.Binds.LoadBinds()
@@ -221,8 +221,17 @@ function GAMEMODE:MouthMoveAnimation(ply)
 end
 
 if CLIENT then
-    for _, ply in ipairs(player.GetAll()) do
-        hg.InstallPlayerRenderOverride(ply)
+    local entities = ents.FindByClass("prop_ragdoll")
+    table.Add(entities, player.GetAll())
+
+    for i, ply in ipairs(entities) do
+        ply.RenderOverride = function(self, flags)
+            if not IsValid(self) then return end
+            local ent = self.FakeRagdoll
+            if IsValid(ent) then return end
+            
+            hg.renderOverride(self, ent, flags)
+        end
     end
 end
 

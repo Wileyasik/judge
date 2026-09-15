@@ -3,27 +3,7 @@ hg.Version = "Release 1.4.1"
 hg.GitHub_ReposOwner = "uzelezz123"
 hg.GitHub_ReposName = "Z-City" -- please add your real git fork!
 
-if SERVER then
-	resource.AddWorkshop("3657285193") -- main addon
-	resource.AddWorkshop("3657897364") -- main content addon
-	resource.AddWorkshop("3657294321") -- first content addon
-	resource.AddWorkshop("3544105055") -- second content addon
-	resource.AddWorkshop("3257937532") -- distac content
-end
--- if hg.GitHub_ReposOwner and hg.GitHub_ReposOwner != "" then
--- 	http.Fetch( "https://api.github.com/repos/" .. hg.GitHub_ReposOwner .. "/" .. hg.GitHub_ReposName .. "/commits?sha=" .. hg.GitHub_Branch .. "&per_page=1",
--- 		function( body, length, headers, code )
--- 			--PrintTable(headers)
--- 			local tbl = util.JSONToTable(body)
--- 			hg.Git_LastCommitTime = tbl[1]["committer"]["date"]
 
--- 		end
--- 	)
--- else
--- 	hg.GitHub_ReposOwner = "Unknown"
--- 	hg.GitHub_ReposName = "Please add your github fork"
--- 	hg.Git_CommitNumber = "Unknown"
--- end
 local sides = {
 	["sv_"] = "sv_",
 	["sh_"] = "sh_",
@@ -33,36 +13,34 @@ local sides = {
 	["_cl"] = "cl_",
 }
 
+local blockedDirs = {
+	["homigrad/abnormalty_detection"] = true,
+}
+
 local function AddFile(File, dir)
 	local fileSide = string.lower(string.Left(File, 3))
 	local fileSide2 = string.lower(string.Right(string.sub(File, 1, -5), 3))
 	local side = sides[fileSide] or sides[fileSide2]
-	local function SafeInclude(includePath)
-		local ok, err = pcall(include, includePath)
-		if not ok then
-			print("[loader] FAILED to load " .. includePath .. ": " .. tostring(err))
-			hg._loaderErrors = hg._loaderErrors or {}
-			hg._loaderErrors[#hg._loaderErrors + 1] = includePath .. " :: " .. tostring(err)
-		end
-	end
 	if SERVER and side == "sv_" then
-		SafeInclude(dir .. File)
+		include(dir .. File)
 	elseif side == "sh_" then
 		if SERVER then AddCSLuaFile(dir .. File) end
-		SafeInclude(dir .. File)
+		include(dir .. File)
 	elseif side == "cl_" then
 		if SERVER then
 			AddCSLuaFile(dir .. File)
 		else
-			SafeInclude(dir .. File)
+			include(dir .. File)
 		end
 	else
 		if SERVER then AddCSLuaFile(dir .. File) end
-		SafeInclude(dir .. File)
+		include(dir .. File)
 	end
 end
 
 local function IncludeDir(dir)
+	if blockedDirs[dir] then return end
+
 	dir = dir .. "/"
 	local files, directories = file.Find(dir .. "*", "LUA")
 	if files then

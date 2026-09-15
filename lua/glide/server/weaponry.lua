@@ -201,13 +201,7 @@ do
         end
 
         -- Deal damage
-        if not inflictor.SkipGlideExplosionDamage then
-            if hg and hg.BlastDamageWithShockwave then
-                hg.BlastDamageWithShockwave( inflictor, attacker, origin, radius, damage )
-            else
-                BlastDamage( inflictor, attacker, origin, radius, damage )
-            end
-        end
+        BlastDamage( inflictor, attacker, origin, radius, damage )
 
         -- Let nearby players handle sounds and effects client side
         local targets, count = GetNearbyPlayers( origin, Glide.MAX_EXPLOSION_DISTANCE )
