@@ -10,11 +10,13 @@ local painPhrases = {
 local bigPainPhrases = {
 	[1] = {
 		{"vo/npc/male01/pain", ".wav", 7, 9},
+		{"painSounds/bigPain", ".mp3", 1, 7, true},
 	},
 	[2] = {
 		{"vo/npc/female01/pain", ".wav", 9, 9},
 		{"vo/npc/female01/pain", ".wav", 6, 6},
 		{"vo/npc/female01/ow", ".wav", 2, 2},
+		{"painSounds/bigFemalePain", ".mp3", 1, 4, true},
 	}
 }
 
@@ -235,6 +237,7 @@ local file, math, table, CurTime, timer, string = file, math, table, CurTime, ti
 
 local function GetPlayerClassPhrases(ply, phraseType)
 	local playerClass = ply.PlayerClassName
+	if playerClass == "terrorist" or playerClass == "swat" or playerClass == "arena_cleaner" then return nil end
 
 	if playerClass == "terrorist" and terrorist_phrases[phraseType] then
 		return terrorist_phrases[phraseType]
@@ -267,7 +270,7 @@ local function PlayClassPhrase(ply, phraseType)
 
 	local randomPhrase = classPhrases[mRandom(#classPhrases)]
 	local ent = hg.GetCurrentCharacter(ply)
-	local muffed = ply.armors and ply.armors["face"] == "mask2"
+	local muffed = hg.IsVoiceMuffled and hg.IsVoiceMuffled(ply)
 
 	ent:EmitSound(randomPhrase, muffed and 75 or 85, ply.VoicePitch or 100, 1, CHAN_AUTO, 0, muffed and 14 or 0)
 
@@ -330,7 +333,7 @@ net.Receive("hg_phrase", function(len, ply)
 		random = mRandom(phr[3], phr[4])
 	end
 
-	local huy = random < 10 and "0" or ""
+	local huy = random < 10 and not phr[5] and "0" or ""
 	local phrase = phr[1] .. huy .. random .. phr[2]
 	local ent = hg.GetCurrentCharacter(ply)
 	local muffed = false
@@ -415,9 +418,41 @@ local painScreamFolders = {
 		"female2"
 	}
 }
-local painScreamRestartFade = 0.6
+local painScreamSounds = {
+	[false] = {
+		"painSounds/bigPain1.mp3",
+		"painSounds/bigPain2.mp3",
+		"painSounds/bigPain3.mp3",
+		"painSounds/bigPain4.mp3",
+		"painSounds/bigPain5.mp3",
+		"painSounds/bigPain6.mp3",
+		"painSounds/bigPain7.mp3",
+	},
+	[true] = {
+		"painSounds/bigFemalePain1.mp3",
+		"painSounds/bigFemalePain2.mp3",
+		"painSounds/bigFemalePain3.mp3",
+		"painSounds/bigFemalePain4.mp3",
+	},
+}
+local painScreamUniversalChance = 1
+local burnScreamSounds = {
+	"screams/universal1/burnOne.mp3",
+	"screams/universal1/burnTwo.mp3",
+	"screams/universal1/burnThree.mp3",
+	"screams/universal1/burnFour.mp3",
+	"screams/universal1/burnFive.mp3",
+	"screams/universal1/burnSix.mp3",
+}
+local burnScreamUniversalChance = 0.5
+local painScreamRestartFade = 0.8
 local painScreamEndFade = 0.05
-local painScreamChance = 0.42
+local painScreamChance = 0.52
+local silentCombatClasses = {
+	arena_cleaner = true,
+	terrorist = true,
+	swat = true,
+}
 
 function hg.AssignPainScreamFolder(ply)
 	if !IsValid(ply) or !ply:IsPlayer() then return end
@@ -428,7 +463,7 @@ function hg.AssignPainScreamFolder(ply)
 		return ply.painScreamFolder
 	end
 
-	local folders = painScreamFolders[female]
+	local folders = painScreamFolders[female] or painScreamFolders[false]
 	ply.painScreamFolderFemale = female
 	ply.painScreamFolder = folders[mRandom(#folders)]
 
@@ -446,9 +481,10 @@ end)
 
 local function canPainScream(ply)
 	if !IsValid(ply) or !ply:IsPlayer() or !ply:Alive() then return false end
+	if silentCombatClasses[ply.PlayerClassName] then return false end
 
 	local org = ply.organism
-	if !org or org.otrub or ply:WaterLevel() >= 3 then return false end
+	if !org or org.otrub or (org.cotard or 0) > 0 or ply:WaterLevel() >= 3 then return false end
 
 	return true
 end
@@ -460,6 +496,7 @@ local function clearPainScream(ply, patch)
 	ply.painScreamPatch = nil
 	ply.painScreamEnt = nil
 	ply.painScreamPhrase = nil
+	ply:SetNWFloat("PainScreamUntil", 0)
 end
 
 function hg.StopPainScream(ply, fade)
@@ -503,12 +540,17 @@ function hg.StopPainScream(ply, fade)
 		end
 		stopOnEntities()
 	end
+
+	if IsValid(ply) then
+		ply:SetNWFloat("PainScreamUntil", 0)
+	end
 end
 
 function hg.QueuePainScream(ply, amount)
 	if !canPainScream(ply) then return end
 
 	local org = ply.organism
+	if (org.cotard or 0) > 0 then return end
 	amount = mClamp(amount or 0, 0, 2)
 
 	if amount <= 0 then return end
@@ -528,8 +570,14 @@ local function playPainScream(ply)
 
 	hg.StopPainScream(ply, painScreamRestartFade)
 
-	local prefix = string.match(folder, "^(female)") or string.match(folder, "^(male)") or folder
-	local phrase = "screams/" .. folder .. "/rem_" .. prefix .. "partial" .. mRandom(1, 4) .. ".mp3"
+	local phrase
+	if mRandom(1, 100) <= mClamp(painScreamUniversalChance, 0, 1) * 100 then
+		local sounds = painScreamSounds[ThatPlyIsFemale(ply)] or painScreamSounds[false]
+		phrase = sounds[mRandom(#sounds)]
+	else
+		local prefix = string.match(folder, "^(female)") or string.match(folder, "^(male)") or folder
+		phrase = "screams/" .. folder .. "/rem_" .. prefix .. "partial" .. mRandom(1, 4) .. ".mp3"
+	end
 	local rf = RecipientFilter()
 	rf:AddPAS(ent:GetPos())
 
@@ -541,6 +589,8 @@ local function playPainScream(ply)
 
 	patch:SetSoundLevel(75)
 	patch:PlayEx(1, mClamp(ply.VoicePitch or 100, 92, 108))
+
+	ply:SetNWFloat("PainScreamUntil", CurTime() + duration + 0.15)
 
 	ply.painScreamPatch = patch
 	ply.painScreamEnt = ent
@@ -616,14 +666,22 @@ hook.Add("PreHomigradDamage","BurnScream", function( ent, dmgInfo )
 	local ply = ent:IsRagdoll() and hg.RagdollOwner(ent) or ent
 
 	if dmgInfo:IsDamageType(DMG_BURN) and IsValid(ply) and ply:IsPlayer() 
-	and ply.organism and !ply.organism.otrub and ply:Alive() then
-		local phrase = "zcitysnd/"..(ThatPlyIsFemale(ply) and "fe" or "").."male/burn/death_burn"..mRandom(1,ThatPlyIsFemale(ply) and femaleCount or maleCount)..".mp3"
+	and ply.organism and !ply.organism.otrub and (ply.organism.cotard or 0) <= 0 and ply:Alive() then
+		local phrase
+		if mRandom(1, 100) <= mClamp(burnScreamUniversalChance, 0, 1) * 100 then
+			phrase = burnScreamSounds[mRandom(#burnScreamSounds)]
+		else
+			phrase = "zcitysnd/"..(ThatPlyIsFemale(ply) and "fe" or "").."male/burn/death_burn"..mRandom(1,ThatPlyIsFemale(ply) and femaleCount or maleCount)..".mp3"
+		end
 
 		-- overrides
 		override_ply, override_phrase = hook.Run("HG_ReplaceBurnPhrase", ply, phrase)
 		if override_ply ~= nil then
 			ply, phrase = override_ply, override_phrase
 		end
+
+		local burnDuration = SoundDuration(phrase)
+		ply:SetNWFloat("PainScreamUntil", CurTime() + (burnDuration or 2) + 0.15)
 
 		ply:Notify(hg.sharp_pain[math.random(#hg.sharp_pain)], 
 		SoundDuration(phrase), "ply_burn", 0.5, function(ply)
@@ -637,10 +695,11 @@ hook.Add("PreHomigradDamage","BurnScream", function( ent, dmgInfo )
 end)
 
 hook.Add("Org Think", "WhatsSoFunny",function(owner, org, timeValue)
+	if zb and zb.modes and zb.modes.juggernaut and zb.modes.juggernaut:IsJuggernaut(owner) then return end
 	if (owner.lastBerserkLaughSoundCD or 0) < CurTime() and !org.otrub and owner:IsBerserk() and mRandom(1, 50) == 1 then
 		local phrase = (ThatPlyIsFemale(owner) and table.Random(f_laugh)) or table.Random(laugh)
 
-		local muffed = owner.armors["face"] == "mask2"
+		local muffed = hg.IsVoiceMuffled and hg.IsVoiceMuffled(owner)
 
 		owner:EmitSound(phrase, muffed and 90 or 100,owner.VoicePitch or 100,1 * math.min(2, org.berserk),CHAN_AUTO,0, pitch and 56 or muffed and 16 or 0)
 
@@ -766,6 +825,7 @@ hook.Add("HGReloading", "Perezaryad", function(wep)
 	
 	local playerClass = ply.PlayerClassName
 	if !(playerClass == "terrorist" or playerClass == "nationalguard" or playerClass == "swat") then return end
+	if silentCombatClasses[playerClass] then return end
 	
 	ply.ClassReloadSND_CD = ply.ClassReloadSND_CD or 0
 	if ply.ClassReloadSND_CD > CurTime() then return end

@@ -77,6 +77,10 @@ local IsValid, math_Clamp = IsValid, math.Clamp
 
 		ent:SetupBones()
 
+		if IsValid(wep) and (wep.ismelee or wep.isTPIKBase) and wep.DrawWorldModel2 then
+			wep:DrawWorldModel2(true)
+		end
+
 		hg.MainTPIKFunction(ent, ply, wep)
 
 		if IsValid(ply.OldRagdoll) then

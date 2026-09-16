@@ -1005,6 +1005,10 @@ local function SetupModel(mp, ply, model, pose, spec, appearance, playerClassNam
 				ApplyAppearance(ent, ply)
 				self.RSApplied = true
 			end
+			if istable(appearance) then
+				ent.CurAppearance = appearance
+				ent.PreviewAccessoryColors = appearance.AAttachmentColors
+			end
 		end
 		if self.RSFallback then
 			ent:SetMaterial("models/debug/debugwhite")

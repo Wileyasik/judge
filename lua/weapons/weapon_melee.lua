@@ -949,19 +949,6 @@ function SWEP:ModelAnim(model, pos, ang)
     self.lerpedAddAng = LerpFT(holdLerp, self.lerpedAddAng or Angle(), addAngLerp)
 
     if self:IsLocal() then
-        addPos.z = x * 2 * vellenlerp * 0.3 - vellenlerp * 1
-        addPos.y = y * 2 * vellenlerp * 0.3
-    
-        addAng.z = -x * 2// * vellenlerp * 0.3
-        addAng.y = -y * 2// * vellenlerp * 0.3
-
-        addAng.p = addAng.p + math.cos(CurTime() * 2) * 1
-
-        //addPos.z = addPos.z + eyeAng[1] * 0.05
-        addPos.x = addPos.x + eyeAng[1] * 0.05
-
-        addAng.r = addAng.r + math.cos(CurTime() * 5) * walk * 2
-
         //addAng.p = addAng.p + math.cos(CurTime() * 2) * 1
 
     end

@@ -1,11 +1,20 @@
+--
 hg = hg or {}
 hg.WeaponSelector = hg.WeaponSelector or {}
 local WS = hg.WeaponSelector
+local WS_FALLBACK_ACCENT = Color(55, 55, 55, 255)
+local WS_FALLBACK_PANEL = Color(10, 10, 10, 255)
+local WS_BOX_COLOR = Color(10, 10, 10, 0)
+local WS_BADGE_PANEL_COLOR = Color(10, 10, 10, 0)
+local WS_BADGE_TEXT_COLOR = Color(100, 100, 100, 0)
+local WS_NAME_COLOR = Color(160, 160, 160, 0)
 
 function WS.GetPrintName( self )
-	local class = self:GetClass()
-	local phrase = language.GetPhrase(class)
-	return phrase ~= class and phrase or self:GetPrintName()
+    local class = self:GetClass()
+    local phrase = language.GetPhrase(class)
+    if phrase ~= class and phrase ~= "" then return phrase end
+    local printName = self:GetPrintName()
+    return isstring(printName) and printName ~= "" and printName or class
 end
 
 WS.Show = 0
@@ -16,407 +25,769 @@ WS.LastSelectedSlotPos = 0
 WS.SelectedSlot = 0
 WS.SelectedSlotPos = 0
 
-WS.HighlightProgress = WS.HighlightProgress or {}
-WS.StackProgress = WS.StackProgress or {}
-WS.StackState = WS.StackState or {}
-
-local WS_OutlineColor = Color(255, 255, 255)
-local WS_OutlineBlinkSpeed = 1.5
-local WS_OutlineBlinkMin = 80
-local WS_OutlineBlinkMax = 220
-local WS_SwitchAnimSpeed = 0.25
-local WS_FadeSpeed = 0.2
-local WS_CarouselSpeed = 0.35
-local WS_GradientAlpha = 25
-local WS_CardWidth = 0.12
-local WS_CardHeight = 0.17
-local WS_CardSpacing = 0.12
-local WS_CardYOffset = 0.05
-local WS_CardDepthYOffset = 0.035
-local WS_CardSideScale = 0.78
-local WS_CardFarScale = 0.62
-local WS_CardSideAlpha = 0.45
-local WS_CardFarAlpha = 0.22
-local WS_CardNumberY = 0.035
-local WS_CardNameY = 0.13
-local WS_CardIconY = 0.35
-local WS_CardIconBottom = 0.03
-local WS_IconSwingAngle = 21
-local WS_IconSwingSpeed = 1.5
-local WS_IconSwingLerp = 0.18
-local WS_StackTextY = 0.02
-local WS_StackTextAlpha = 0.8
-local WS_StackMax = 3
-local WS_StackOffsetY = 0.016
-local WS_StackInset = 0.035
-local WS_StackAlpha = 0.42
-local WS_StackAnimTime = 0.32
-local WS_StackFadeSplit = 0.55
-local WS_StackRise = 0.03
+WS.InfoAlpha = 0
+WS.InfoWeapon = nil
 
 function WS.DrawText(text, font, posX, posY, color, textAlign)
-    local alpha = color.a or 255
-    draw.DrawText( text, font, posX + 2, posY + 2, ColorAlpha(color_black, alpha), textAlign )
-    draw.DrawText( text, font, posX, posY, ColorAlpha(color, alpha), textAlign )
+    local t = tostring(text or "")
+    draw.DrawText( t, font, posX + 1, posY + 1, Color(10, 10, 10, 200), textAlign )
+    draw.DrawText( t, font, posX, posY, color, textAlign )
 end
 
-function WS.GetSelectedWeapon()
-    if not IsValid( LocalPlayer() ) or not LocalPlayer():Alive() then return end
-    local Weapons = WS.GetWeaponTable( LocalPlayer() )
-    return Weapons[WS.SelectedSlot] and Weapons[WS.SelectedSlot][WS.SelectedSlotPos] or Weapons[WS.LastSelectedSlot][WS.LastSelectedSlotPos] or Weapons[0][0]
+function WS.GetSelectedWeapon(Weapons)
+    local ply = LocalPlayer()
+    if not IsValid(ply) or not ply:Alive() then return end
+    Weapons = Weapons or WS.GetWeaponTable(ply)
+    local slotTbl = Weapons and Weapons[WS.SelectedSlot]
+    local wep = slotTbl and slotTbl[WS.SelectedSlotPos]
+    return IsValid(wep) and wep or nil
 end
 
 function WS.GetWeaponTable( ply )
     if not IsValid( ply ) or not ply:Alive() then return end
-    local WeaponsGet = ply:GetWeapons()
-    local FormatedTable = {
-        [0] = {}, [1] = {}, [2] = {}, [3] = {}, [4] = {}, [5] = {},
-    }
+    local currentWeapons = ply:GetWeapons()
+    local cache = WS.WeaponTableCache
+    local validCount = 0
+    local cacheValid = cache and cache.ply == ply
 
-    table.sort(WeaponsGet, function(a, b) return (a.SlotPos or 0) > (b.SlotPos or 0) end)
-
-    for k,wep in ipairs(WeaponsGet) do
-        local tTbl = FormatedTable[wep.Slot or 0]
-        local iMinPos = math.min( (wep.SlotPos and wep.SlotPos) or 1, ((#tTbl or 0) + 1)) - 1
-        local iPos = tTbl[ iMinPos ] and #tTbl + 1 or iMinPos
-        tTbl[ iPos ] = wep
+    for _, wep in ipairs(currentWeapons) do
+        if not IsValid(wep) then continue end
+        validCount = validCount + 1
+        if cacheValid then
+            local cached = cache.meta[wep]
+            local slot = tonumber(wep.Slot) or 0
+            local slotPos = tonumber(wep.SlotPos) or 0
+            if not cached or cached.slot ~= slot or cached.slotPos ~= slotPos or cached.class ~= wep:GetClass() then
+                cacheValid = false
+            end
+        end
     end
+    if cacheValid and cache.count == validCount then return cache.formatted end
+
+    local WeaponsGet = {}
+    for _, wep in ipairs(currentWeapons) do
+        if IsValid(wep) then WeaponsGet[#WeaponsGet + 1] = wep end
+    end
+    local FormatedTable = {}
+    for slot = 0, 5 do
+        FormatedTable[slot] = {count = 0}
+    end
+
+    table.sort(WeaponsGet, function(a, b)
+        local slotA, slotB = tonumber(a.Slot) or 0, tonumber(b.Slot) or 0
+        if slotA ~= slotB then return slotA < slotB end
+        local posA, posB = tonumber(a.SlotPos) or 0, tonumber(b.SlotPos) or 0
+        if posA ~= posB then return posA < posB end
+        local classA, classB = a:GetClass(), b:GetClass()
+        if classA ~= classB then return classA < classB end
+        return a:EntIndex() < b:EntIndex()
+    end)
+
+    for _, wep in ipairs(WeaponsGet) do
+        if not IsValid(wep) then continue end
+        local tTbl = FormatedTable[tonumber(wep.Slot) or 0]
+        if not tTbl then continue end
+        tTbl[tTbl.count] = wep
+        tTbl.count = tTbl.count + 1
+    end
+
+    local meta = {}
+    for _, wep in ipairs(WeaponsGet) do
+        meta[wep] = {
+            slot = tonumber(wep.Slot) or 0,
+            slotPos = tonumber(wep.SlotPos) or 0,
+            class = wep:GetClass()
+        }
+    end
+    WS.WeaponTableCache = {
+        ply = ply,
+        count = validCount,
+        meta = meta,
+        formatted = FormatedTable
+    }
     return FormatedTable
 end
 
-local scrW, scrH = ScrW(), ScrH()
-
-local gradient_u = Material("vgui/gradient-d")
-
-local function WS_GetOrderedSlotWeapons(slotTbl, slotID, activeWep, selectedWep)
-    local ordered = {}
-    local added = {}
-
-    local function addWeapon(wep)
-        if not IsValid(wep) or added[wep] then return end
-        ordered[#ordered + 1] = wep
-        added[wep] = true
-    end
-
-    if slotID == WS.SelectedSlot then
-        addWeapon(selectedWep)
-    end
-
-    if IsValid(activeWep) and (activeWep.Slot or 0) == slotID then
-        addWeapon(activeWep)
-    end
-
-    for i = 0, #slotTbl do
-        addWeapon(slotTbl[i])
-    end
-
-    return ordered
-end
-
-local function WS_CopyWeaponList(list)
-    local copied = {}
-
-    for i, wep in ipairs(list) do
-        copied[i] = wep
-    end
-
-    return copied
-end
-
-local function WS_GetWeaponIndex(list, wep)
-    if not IsValid(wep) then return end
-
-    for i, testWep in ipairs(list or {}) do
-        if testWep == wep then
-            return i
+local function WS_FindWeapon(Weapons, target)
+    if not IsValid(target) then return end
+    for slot = 0, 5 do
+        local slotTbl = Weapons[slot]
+        for pos = 0, slotTbl.count - 1 do
+            if slotTbl[pos] == target then return slot, pos end
         end
     end
 end
 
-local function WS_GetStackSignature(list)
-    local parts = {}
-
-    for i, wep in ipairs(list) do
-        parts[i] = IsValid(wep) and wep:EntIndex() or 0
+local function WS_SelectFallback(Weapons, ply)
+    local slot, pos = WS_FindWeapon(Weapons, ply:GetActiveWeapon())
+    if slot then
+        WS.SelectedSlot, WS.SelectedSlotPos = slot, pos
+        return Weapons[slot][pos]
     end
 
-    return table.concat(parts, ":")
-end
-
-local function WS_GetStackState(slotID, stack)
-    local signature = WS_GetStackSignature(stack)
-    local state = WS.StackState[slotID]
-
-    if not state then
-        state = {
-            signature = signature,
-            from = WS_CopyWeaponList(stack),
-            to = WS_CopyWeaponList(stack),
-            start = CurTime() - WS_StackAnimTime
-        }
-        WS.StackState[slotID] = state
-    elseif state.signature ~= signature then
-        state.signature = signature
-        state.from = WS_CopyWeaponList(state.to or stack)
-        state.to = WS_CopyWeaponList(stack)
-        state.start = CurTime()
-    end
-
-    local raw = math.Clamp((CurTime() - state.start) / WS_StackAnimTime, 0, 1)
-    local eased = 1 - (1 - raw) ^ 3
-
-    if raw >= 1 then
-        state.from = WS_CopyWeaponList(state.to)
-    end
-
-    return state, raw, eased
-end
-
-local function WS_GetStackRect(posX, posY, width, height, scale, appear, layer)
-    local inset = width * WS_StackInset * layer
-    local offsetY = scrH * WS_StackOffsetY * scale * layer * appear
-
-    return posX + inset, posY + offsetY, math.max(width - inset * 2, 1), math.max(height - offsetY * 0.35, 1)
-end
-
-local function WS_DrawStackBox(x, y, w, h, alpha)
-    if alpha <= 0 then return end
-
-    draw.RoundedBox(0, x, y, w, h, ColorAlpha(color_black, alpha))
-    surface.SetDrawColor(WS_OutlineColor.r, WS_OutlineColor.g, WS_OutlineColor.b, alpha * 0.45)
-    surface.DrawOutlinedRect(x, y, w, h, 1)
-end
-
-local function WS_DrawWeaponIcon(wep, x, y, w, h, alpha, angle)
-    if h <= 0 then return end
-
-    local drawX = x
-    local drawY = y
-    local drawW = w
-    local drawH = h
-    local useFilter = false
-
-    surface.SetDrawColor(255, 255, 255, alpha)
-
-    if wep.IconOverride and wep.IconOverride ~= "" and wep.WepSelectIcon2 then
-        useFilter = true
-        surface.SetMaterial(wep.WepSelectIcon2)
-        if wep.WepSelectIcon2box then
-            drawW = w / 1.95
-            drawH = drawW
-            drawX = x + w * 0.5 - drawW * 0.5
-            drawY = y
-        else
-            drawW = w
-            drawH = w / 2
+    for fallbackSlot = 0, 5 do
+        if Weapons[fallbackSlot].count > 0 then
+            WS.SelectedSlot, WS.SelectedSlotPos = fallbackSlot, 0
+            return Weapons[fallbackSlot][0]
         end
-    elseif isnumber(wep.WepSelectIcon) then
-        surface.SetTexture(wep.WepSelectIcon)
-        drawX = x + 10
-        drawY = y + 10
-        drawW = math.max(w - 20, 1)
-        drawH = drawW / 2
-    elseif wep.WepSelectIcon then
-        surface.SetMaterial(wep.WepSelectIcon)
-        drawX = x + 10
-        drawY = y + 10
-        drawW = math.max(w - 20, 1)
-        drawH = drawW / 2
-    elseif wep.DrawWeaponSelection then
-        wep:DrawWeaponSelection(x, y, w, h, alpha)
-        return
+    end
+end
+
+local function WS_GetFontFace()
+    local cv = ConVarExists("hg_font") and GetConVar("hg_font") or nil
+    if cv then
+        local v = tostring(cv:GetString() or "")
+        if v ~= "" then return v end
+    end
+
+    return "x14y24pxHeadUpDaisy"
+end
+
+surface.CreateFont("WS_CourierNew", {
+    font = WS_GetFontFace(),
+    size = ScreenScale(8),
+    weight = 500,
+    antialias = true,
+})
+
+surface.CreateFont("WS_WeaponName", {
+    font = WS_GetFontFace(),
+    size = ScreenScale(7),
+    weight = 500,
+    antialias = true,
+})
+
+surface.CreateFont("WS_WeaponNameSmall", {
+    font = WS_GetFontFace(),
+    size = ScreenScale(5.5),
+    weight = 500,
+    antialias = true,
+})
+
+surface.CreateFont("WS_SlotBadge", {
+    font = WS_GetFontFace(),
+    size = math.floor(ScreenScale(6) + 0.5),
+    weight = 700,
+    antialias = true,
+})
+
+surface.CreateFont("WS_InfoLabel", {
+    font = WS_GetFontFace(),
+    size = ScreenScale(5.5),
+    weight = 700,
+    antialias = true,
+})
+
+surface.CreateFont("WS_InfoText", {
+    font = WS_GetFontFace(),
+    size = ScreenScale(5.5),
+    weight = 500,
+    antialias = true,
+})
+
+local SLOT_BADGE_TEXT_OFFSET_X = 0
+local SLOT_BADGE_TEXT_OFFSET_Y = -2
+local WS_ICON_INFO_CACHE = setmetatable({}, {__mode = "k"})
+local WS_NUMERIC_ICON_INFO_CACHE = {}
+
+local function WS_GetCornerMetrics()
+    local lineWidth = math.max(1, math.floor(ScreenScale(0.5) + 0.5))
+    local cornerLength = math.max(lineWidth * 3, math.floor(ScreenScale(5) + 0.5))
+    local inset = math.max(2, math.floor(ScreenScale(1) + 0.5))
+    local opticalGap = math.max(1, math.floor(ScreenScale(0.5) + 0.5))
+
+    return lineWidth, cornerLength, inset, inset + cornerLength + opticalGap
+end
+
+local function WS_DrawBoxCorners( x, y, wide, tall, alpha, accentColor, flash )
+    local lineWidth, cornerLength, inset = WS_GetCornerMetrics()
+    local maxLength = math.floor(math.min(wide, tall) / 2) - inset
+    local cornerExtension = math.floor(ScreenScale(1.75) * (flash or 0) + 0.5)
+    cornerLength = math.min(cornerLength + cornerExtension, maxLength)
+    if cornerLength <= lineWidth then return end
+
+    local left = math.floor(x + inset + 0.5)
+    local top = math.floor(y + inset + 0.5)
+    local right = math.floor(x + wide - inset - lineWidth + 0.5)
+    local bottom = math.floor(y + tall - inset - lineWidth + 0.5)
+
+    local whiteMix = (flash or 0) * 0.18
+    local red = Lerp(whiteMix, accentColor.r, 255)
+    local green = Lerp(whiteMix, accentColor.g, 255)
+    local blue = Lerp(whiteMix, accentColor.b, 255)
+    local cornerAlpha = Lerp(flash or 0, 160, 198)
+    surface.SetDrawColor(red, green, blue, alpha * cornerAlpha)
+    surface.DrawRect(left, top, cornerLength, lineWidth)
+    surface.DrawRect(left, top, lineWidth, cornerLength)
+    surface.DrawRect(right - cornerLength + lineWidth, bottom, cornerLength, lineWidth)
+    surface.DrawRect(right, bottom - cornerLength + lineWidth, lineWidth, cornerLength)
+end
+
+local function WS_DrawSlotBadge( slot, x, y, wide, alpha, accentColor )
+    local badgeSize = math.floor(ScreenScale(7) + 0.5)
+    if badgeSize % 2 ~= 0 then badgeSize = badgeSize + 1 end
+
+    local badgeGap = math.floor(ScreenScale(1.5) + 0.5)
+    local badgeX = math.floor(x + (wide - badgeSize) / 2 + 0.5)
+    local badgeY = math.floor(y - badgeGap - badgeSize + 0.5)
+    local panelColor = hg.theme and hg.theme.c.panel or WS_FALLBACK_PANEL
+
+    WS_BADGE_PANEL_COLOR.r = panelColor.r
+    WS_BADGE_PANEL_COLOR.g = panelColor.g
+    WS_BADGE_PANEL_COLOR.b = panelColor.b
+    WS_BADGE_PANEL_COLOR.a = alpha * 205
+    draw.RoundedBox(0, badgeX, badgeY, badgeSize, badgeSize, WS_BADGE_PANEL_COLOR)
+    surface.SetDrawColor(accentColor.r, accentColor.g, accentColor.b, alpha * 80)
+    surface.DrawOutlinedRect(badgeX, badgeY, badgeSize, badgeSize, 1)
+
+    -- Pixel fonts sit optically high even when their line box is mathematically centered.
+    local textX = badgeX + badgeSize / 2 + SLOT_BADGE_TEXT_OFFSET_X
+    local textY = badgeY + badgeSize / 1.85 + SLOT_BADGE_TEXT_OFFSET_Y
+    WS_BADGE_TEXT_COLOR.a = alpha * 255
+    draw.SimpleText(slot, "WS_SlotBadge", textX, textY, WS_BADGE_TEXT_COLOR, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+end
+
+local function WS_WrapText(text, font, maxWide)
+    surface.SetFont(font)
+    local paragraphs = string.Explode("\n", text)
+    local lines = {}
+    for _, paragraph in ipairs(paragraphs) do
+        local words = string.Explode(" ", paragraph)
+        local currentLine = ""
+        for _, word in ipairs(words) do
+            local test = currentLine == "" and word or (currentLine .. " " .. word)
+            local tw = surface.GetTextSize(test)
+            if tw > maxWide and currentLine ~= "" then
+                lines[#lines + 1] = currentLine
+                currentLine = word
+            else
+                currentLine = test
+            end
+        end
+        if currentLine ~= "" then
+            lines[#lines + 1] = currentLine
+        end
+    end
+    if #lines == 0 then
+        lines[1] = ""
+    end
+    return lines
+end
+
+function WS.DrawInfoPanel(wep, x, y, wide, alpha)
+    if not IsValid(wep) then return 0 end
+
+    local author = wep.Author or ""
+    local instructions = wep.Instructions or ""
+
+    if author == "" and instructions == "" then return 0 end
+
+    local now = CurTime()
+    local target = IsValid(wep) and 1 or 0
+    WS.InfoAlpha = LerpFT(0.2, WS.InfoAlpha or 0, target)
+    if WS.InfoWeapon ~= wep then
+        WS.InfoWeapon = wep
+        WS.InfoAnimStart = now
+    end
+    local fade = WS.InfoAlpha * WS.InfoAlpha * (3 - 2 * WS.InfoAlpha)
+    if fade < 0.001 then return 0 end
+
+    local scrW, scrH = ScrW(), ScrH()
+    local accentColor = hg.theme and hg.theme.c.accent or WS_FALLBACK_ACCENT
+    local panelColor = hg.theme and hg.theme.c.panel or WS_FALLBACK_PANEL
+
+    local padX = math.max(8, math.floor(ScreenScale(5) + 0.5))
+    local padY = math.max(6, math.floor(ScreenScale(4) + 0.5))
+    local innerWide = wide - padX * 2
+
+    surface.SetFont("WS_InfoText")
+    local _, fontH = surface.GetTextSize("Wg")
+    local lineHeight = fontH + math.max(2, math.floor(ScreenScale(1) + 0.5))
+    local gap = math.floor(ScreenScale(3) + 0.5)
+
+    local authorLines = author ~= "" and WS_WrapText(author, "WS_InfoText", innerWide) or {}
+    local instLines = instructions ~= "" and WS_WrapText(instructions, "WS_InfoText", innerWide) or {}
+
+    local contentH = 0
+    if #authorLines > 0 then
+        contentH = contentH + lineHeight + #authorLines * lineHeight
+    end
+    if #instLines > 0 then
+        if contentH > 0 then contentH = contentH + gap end
+        contentH = contentH + lineHeight + #instLines * lineHeight
+    end
+    if contentH == 0 then return 0 end
+
+    local totalH = contentH + padY * 2
+
+    WS_BOX_COLOR.r = panelColor.r
+    WS_BOX_COLOR.g = panelColor.g
+    WS_BOX_COLOR.b = panelColor.b
+    WS_BOX_COLOR.a = alpha * fade * 212
+    draw.RoundedBox(0, x, y, wide, totalH, WS_BOX_COLOR)
+
+    local _, cornerLen, cornerInset = WS_GetCornerMetrics()
+    local cornerAlpha = alpha * fade * 180
+    local lineW = math.max(1, math.floor(ScreenScale(0.5) + 0.5))
+    local cl = math.min(cornerLen, math.floor(math.min(wide, totalH) / 2) - cornerInset)
+    if cl > lineW then
+        surface.SetDrawColor(accentColor.r, accentColor.g, accentColor.b, cornerAlpha)
+        local lx = math.floor(x + cornerInset + 0.5)
+        local ly = math.floor(y + cornerInset + 0.5)
+        local rx = math.floor(x + wide - cornerInset - lineW + 0.5)
+        local ry = math.floor(y + totalH - cornerInset - lineW + 0.5)
+        surface.DrawRect(lx, ly, cl, lineW)
+        surface.DrawRect(lx, ly, lineW, cl)
+        surface.DrawRect(rx - cl + lineW, ry, cl, lineW)
+        surface.DrawRect(rx, ry - cl + lineW, lineW, cl)
+    end
+
+    local textX = x + padX
+    local textY = y + padY
+    local textAlpha = alpha * fade * 255
+    local labelAlpha = alpha * fade * 200
+    local textColor = Color(180, 180, 180, textAlpha)
+    local labelColor = Color(accentColor.r, accentColor.g, accentColor.b, labelAlpha)
+
+    if #authorLines > 0 then
+        draw.DrawText("Manufacturer", "WS_InfoLabel", textX, textY, labelColor, TEXT_ALIGN_LEFT)
+        textY = textY + lineHeight
+        for _, line in ipairs(authorLines) do
+            draw.DrawText(line, "WS_InfoText", textX, textY, textColor, TEXT_ALIGN_LEFT)
+            textY = textY + lineHeight
+        end
+    end
+
+    if #instLines > 0 then
+        if #authorLines > 0 then textY = textY + gap end
+        draw.DrawText("Information", "WS_InfoLabel", textX, textY, labelColor, TEXT_ALIGN_LEFT)
+        textY = textY + lineHeight
+        for _, line in ipairs(instLines) do
+            draw.DrawText(line, "WS_InfoText", textX, textY, textColor, TEXT_ALIGN_LEFT)
+            textY = textY + lineHeight
+        end
+    end
+
+    return totalH
+end
+
+local function WS_GetUsableIcon( icon )
+    if not icon then return end
+    local cache = isnumber(icon) and WS_NUMERIC_ICON_INFO_CACHE or WS_ICON_INFO_CACHE
+    local cached = cache[icon]
+    if cached then return icon, cached[1], cached[2] end
+
+    local iconWide, iconTall
+    if isnumber(icon) then
+        iconWide, iconTall = surface.GetTextureSize(icon)
     else
-        return
+        if not isfunction(icon.Width) or not isfunction(icon.Height) or not isfunction(icon.IsError) or icon:IsError() then return end
+        local iconName = isfunction(icon.GetName) and string.lower(icon:GetName() or "") or ""
+        if iconName == "null" or iconName == "__error" then return end
+        iconWide = icon:Width()
+        iconTall = icon:Height()
+    end
+    if not isnumber(iconWide) or not isnumber(iconTall) or iconWide <= 0 or iconTall <= 0 then return end
+
+    cache[icon] = {iconWide, iconTall}
+    return icon, iconWide, iconTall
+end
+
+local function WS_DrawInactiveIcon( wep, x, y, wide, tall, alpha )
+    local icon, iconWide, iconTall = WS_GetUsableIcon(wep.WepSelectIcon2)
+    if not icon then
+        icon, iconWide, iconTall = WS_GetUsableIcon(wep.WepSelectIcon)
+    end
+    if not icon then return end
+
+    local padding = math.max(2, math.floor(ScreenScale(1.5) + 0.5))
+    local maxWide = wide - padding * 2
+    local maxTall = tall - padding * 2
+    if maxWide <= 0 or maxTall <= 0 then return end
+    local scale = math.min(maxWide / iconWide, maxTall / iconTall)
+    local drawWide = iconWide * scale
+    local drawTall = iconTall * scale
+
+    render.SetScissorRect(math.ceil(x), math.ceil(y), math.floor(x + wide), math.floor(y + tall), true)
+    surface.SetDrawColor(190, 190, 190, alpha)
+    if isnumber(icon) then
+        surface.SetTexture( icon )
+    else
+        surface.SetMaterial( icon )
+    end
+    surface.DrawTexturedRect(x + (wide - drawWide) / 2, y + (tall - drawTall) / 2, drawWide, drawTall)
+    render.SetScissorRect(0, 0, 0, 0, false)
+end
+
+local function WS_DrawFittedIcon( wep, x, y, wide, tall, alpha )
+    if wide <= 0 or tall <= 0 then return false end
+
+    local icon, iconWide, iconTall = WS_GetUsableIcon(wep.WepSelectIcon2)
+    if not icon then
+        icon, iconWide, iconTall = WS_GetUsableIcon(wep.WepSelectIcon)
+    end
+    if not icon then return false end
+
+    local iconScale = tonumber(wep.WSIconScale) or 1.05
+    if wep.WepSelectIcon2box and wep.WSIconScale == nil then iconScale = iconScale * 1.02 end
+    iconScale = math.Clamp(iconScale, 0.75, 1.15)
+    local offsetX = math.Clamp(tonumber(wep.WSIconOffsetX) or 0, -0.2, 0.2) * wide
+    local offsetY = math.Clamp(tonumber(wep.WSIconOffsetY) or -0.035, -0.2, 0.2) * tall
+    local scale = math.min(wide / iconWide, tall / iconTall) * iconScale
+    local drawWide = iconWide * scale
+    local drawTall = iconTall * scale
+    local drawX = x + (wide - drawWide) / 2 + offsetX
+    local drawY = y + (tall - drawTall) / 2 + offsetY
+
+    render.PushFilterMag(TEXFILTER.ANISOTROPIC)
+    render.PushFilterMin(TEXFILTER.ANISOTROPIC)
+    surface.SetDrawColor(255, 255, 255, alpha)
+    if isnumber(icon) then
+        surface.SetTexture(icon)
+    else
+        surface.SetMaterial(icon)
+    end
+    surface.DrawTexturedRect(drawX, drawY, drawWide, drawTall)
+    render.PopFilterMin()
+    render.PopFilterMag()
+
+    return true
+end
+
+local function WS_FitWeaponName( text, maxWide )
+    local font = "WS_WeaponName"
+    surface.SetFont(font)
+    local textWide, textTall = surface.GetTextSize(text)
+    if textWide <= maxWide then return text, font, textWide, textTall end
+
+    font = "WS_WeaponNameSmall"
+    surface.SetFont(font)
+    textWide, textTall = surface.GetTextSize(text)
+    if textWide <= maxWide then return text, font, textWide, textTall end
+
+    local suffix = "..."
+    local suffixWide = surface.GetTextSize(suffix)
+    if suffixWide > maxWide then return "", font, 0, textTall end
+    local boundaries = {0}
+    for byteIndex = 2, #text do
+        local byte = string.byte(text, byteIndex)
+        if byte < 128 or byte >= 192 then
+            boundaries[#boundaries + 1] = byteIndex - 1
+        end
+    end
+    boundaries[#boundaries + 1] = #text
+
+    local low, high, best = 1, #boundaries, 1
+    while low <= high do
+        local middle = math.floor((low + high) / 2)
+        local candidate = string.sub(text, 1, boundaries[middle])
+        local candidateWide = surface.GetTextSize(candidate)
+
+        if candidateWide + suffixWide <= maxWide then
+            best = middle
+            low = middle + 1
+        else
+            high = middle - 1
+        end
     end
 
-    if useFilter then
-        render.PushFilterMag(TEXFILTER.ANISOTROPIC)
-        render.PushFilterMin(TEXFILTER.ANISOTROPIC)
+    local fitted = string.TrimRight(string.sub(text, 1, boundaries[best])) .. suffix
+    textWide, textTall = surface.GetTextSize(fitted)
+    return fitted, font, textWide, textTall
+end
+
+local function WS_GetUTF8Length( text )
+    local length = 0
+    for byteIndex = 1, #text do
+        local byte = string.byte(text, byteIndex)
+        if byte < 128 or byte >= 192 then length = length + 1 end
+    end
+    return length
+end
+
+local function WS_GetUTF8Prefix( text, characterCount )
+    if characterCount <= 0 then return "" end
+
+    local length = 0
+    for byteIndex = 1, #text do
+        local byte = string.byte(text, byteIndex)
+        if byte < 128 or byte >= 192 then
+            length = length + 1
+            if length > characterCount then
+                return string.sub(text, 1, byteIndex - 1)
+            end
+        end
     end
 
-    surface.DrawTexturedRectRotated(drawX + drawW * 0.5, drawY + drawH * 0.5, drawW, drawH, angle)
+    return text
+end
 
-    if useFilter then
-        render.PopFilterMin()
-        render.PopFilterMag()
+local function WS_GetFittedName( text, maxWide )
+    local cache = WS.NameFitCache
+    if cache and cache.source == text and cache.maxWide == maxWide then
+        return cache.text, cache.font, cache.width, cache.height, cache.length
     end
+
+    local fitted, font, width, height = WS_FitWeaponName(text, maxWide)
+    local length = WS_GetUTF8Length(fitted)
+    cache = cache or {}
+    cache.source = text
+    cache.maxWide = maxWide
+    cache.text = fitted
+    cache.font = font
+    cache.width = width
+    cache.height = height
+    cache.length = length
+    WS.NameFitCache = cache
+    return fitted, font, width, height, length
+end
+
+function WS.HookWeapon(wep)
+    if not IsValid(wep) or wep.IsScrambledHooked then return end
+
+    local oldPrint = wep.PrintWeaponInfo
+
+    wep.PrintWeaponInfo = function(self, x, y, alpha)
+        local oldInst = self.Instructions
+        local oldPurp = self.Purpose
+        local oldDesc = self.Description
+        local oldAuth = self.Author
+        
+        -- Scramble
+        self.Instructions = WS.Scramble(self.Instructions)
+        self.Purpose = WS.Scramble(self.Purpose)
+        self.Description = WS.Scramble(self.Description)
+        self.Author = WS.Scramble(self.Author)
+        
+        -- Call original
+        if oldPrint then
+            oldPrint(self, x, y, alpha)
+        elseif isfunction(self.DrawWeaponInfoBox) then
+            self:DrawWeaponInfoBox(x, y, alpha)
+        end
+        
+        -- Restore
+        self.Instructions = oldInst
+        self.Purpose = oldPurp
+        self.Description = oldDesc
+        self.Author = oldAuth
+    end
+    
+    wep.IsScrambledHooked = true
 end
 
 function WS.WeaponSelectorDraw( ply )
-    if not IsValid( ply ) or not ply:Alive() or GetGlobalBool("RadialInventory", false) then return end
-    if WS.Show < CurTime() then
-        WS.SelectedSlot = WS.LastSelectedSlot
+    if not IsValid( ply ) or not ply:Alive() then return end
+    local now = CurTime()
+    if WS.Show < now then
+        WS.BoxAnim = nil
+        WS.NameAnimWeapon = nil
+        WS.CornerFlashWeapon = nil
+        WS.InfoWeapon = nil
+        WS.InfoAlpha = 0
+        WS.SelectedSlot = WS.LastSelectedSlot 
         WS.SelectedSlotPos = -1
-
+        WS.Transparent = 0
         return
     end
+
+    local scrW, scrH = ScrW(), ScrH()
+    local AcsentColor = hg.theme and hg.theme.c.accent or WS_FALLBACK_ACCENT -- colors.presetBorder
+
     local Weapons = WS.GetWeaponTable( ply )
-    local SelectedWep = WS.GetSelectedWeapon()
-    local ActiveWep = ply:GetActiveWeapon()
+    local SelectedWep = WS.GetSelectedWeapon(Weapons)
+    if not IsValid(SelectedWep) then
+        SelectedWep = WS_SelectFallback(Weapons, ply)
+    end
     if not IsValid(SelectedWep) then return end
-    WS.Transparent = LerpFT( WS_FadeSpeed, WS.Transparent, math.min( WS.Show - CurTime(), 1 ) )
-    local visibleSlots = {}
-    local targetIndex = 1
-
-    for i = 0, #Weapons do
+    WS.Transparent = LerpFT(0.2, WS.Transparent, math.min(WS.Show - now, 1))
+    local AmmoutSlots = 0
+    WS.BoxAnim = WS.BoxAnim or {}
+    WS.SlotBadgeAnim = WS.SlotBadgeAnim or {}
+    for i = 0, 5 do
         local slotTbl = Weapons[i]
-        if table.Count(slotTbl) < 1 then continue end
-        local orderedWeapons = WS_GetOrderedSlotWeapons(slotTbl, i, ActiveWep, SelectedWep)
-        local displayWep = orderedWeapons[1]
-        if not IsValid(displayWep) then continue end
-        visibleSlots[#visibleSlots + 1] = {
-            slot = i,
-            wep = displayWep,
-            stack = orderedWeapons
-        }
-        if i == WS.SelectedSlot then
-            targetIndex = #visibleSlots
-        end
+        if slotTbl.count < 1 then continue end
+        AmmoutSlots = AmmoutSlots + 1
     end
+    local columnIndex = 0
+    local sizeX = scrW * 0.085
+    local columnGap = math.max(2, math.floor(ScreenScale(2) + 0.5))
+    local rowGap = math.max(1, math.floor(ScreenScale(1) + 0.5))
+    local groupWide = AmmoutSlots * sizeX + math.max(0, AmmoutSlots - 1) * columnGap
+    local groupX = (scrW - groupWide) / 2
+    local firstRowY = scrH * 0.05
+    local compactH = scrH * 0.025
+    local selectedH = scrH * 0.12
 
-    if #visibleSlots < 1 then return end
+    for i = 0, 5 do
+        local slotTbl = Weapons[i]
+        if slotTbl.count < 1 then continue end
+        local position = groupX + columnIndex * (sizeX + columnGap)
+        local rowY = firstRowY
+        local badgeTarget = i == WS.SelectedSlot and 1 or 0
+        WS.SlotBadgeAnim[i] = LerpFT(0.18, WS.SlotBadgeAnim[i] or 0, badgeTarget)
 
-    WS.CarouselPos = WS.CarouselPos or targetIndex
-    WS.CarouselPos = LerpFT( WS_CarouselSpeed, WS.CarouselPos, targetIndex )
-
-    local blinkAlpha = Lerp( WS_OutlineBlinkMin / 255, WS_OutlineBlinkMax / 255, (math.sin( CurTime() * WS_OutlineBlinkSpeed ) + 1) / 2 )
-    local appear = 1 - (1 - math.Clamp(WS.Transparent, 0, 1)) ^ 3
-    local cards = {}
-
-    for idx, data in ipairs(visibleSlots) do
-        local offset = idx - WS.CarouselPos
-        if math.abs(offset) > 2.25 then continue end
-        cards[#cards + 1] = {
-            offset = offset,
-            slot = data.slot,
-            wep = data.wep,
-            stack = data.stack
-        }
-    end
-
-    table.sort(cards, function(a, b)
-        return math.abs(a.offset) > math.abs(b.offset)
-    end)
-
-    for _, data in ipairs(cards) do
-        local depth = math.abs(data.offset)
-        local sideLerp = math.min(depth, 1)
-        local farLerp = math.min(math.max(depth - 1, 0), 1)
-        local scale
-        local alphaMul
-
-        if depth <= 1 then
-            scale = Lerp(sideLerp, 1, WS_CardSideScale)
-            alphaMul = Lerp(sideLerp, 1, WS_CardSideAlpha)
-        else
-            scale = Lerp(farLerp, WS_CardSideScale, WS_CardFarScale)
-            alphaMul = Lerp(farLerp, WS_CardSideAlpha, WS_CardFarAlpha)
+        if WS.SlotBadgeAnim[i] > 0.001 then
+            local badgeFade = WS.SlotBadgeAnim[i] * WS.SlotBadgeAnim[i] * (3 - 2 * WS.SlotBadgeAnim[i])
+            WS_DrawSlotBadge(i + 1, position, firstRowY, sizeX, WS.Transparent * badgeFade, AcsentColor)
         end
 
-        local width = scrW * WS_CardWidth * scale * appear
-        local height = scrH * WS_CardHeight * scale * appear
-        local centerX = scrW * 0.5 + data.offset * scrW * WS_CardSpacing * appear
-        local posX = centerX - width * 0.5
-        local posY = scrH * WS_CardYOffset + depth * scrH * WS_CardDepthYOffset + (1 - appear) * scrH * 0.03
-        local baseAlpha = WS.Transparent * 255 * alphaMul
-        local stackTotal = math.max(#data.stack - 1, 0)
-        local stackCount = math.min(stackTotal, WS_StackMax)
-        local state, stackRaw, stackEase = WS_GetStackState(data.slot, data.stack)
-        local oldTop = state.from[1]
-        local newTop = state.to[1]
-        local mainX, mainY, mainW, mainH = posX, posY, width, height
+        for Id = 0, slotTbl.count - 1 do
+            local wepId = Id
+            local wep = slotTbl[wepId]
+            if not wep then continue end
+            local isSelected = SelectedWep == wep
+            local targetH = isSelected and selectedH or compactH
+            WS.BoxAnim[wep] = WS.BoxAnim[wep] or {h = compactH}
+            WS.BoxAnim[wep].h = LerpFT(0.18, WS.BoxAnim[wep].h, targetH)
 
-        WS.StackProgress[data.slot] = WS.StackProgress[data.slot] or 0
-        WS.StackProgress[data.slot] = LerpFT(WS_SwitchAnimSpeed, WS.StackProgress[data.slot], stackCount)
+            local drawX, drawY, drawW, drawH = position, rowY, sizeX, WS.BoxAnim[wep].h
+            local panelColor = hg.theme and hg.theme.c.panel or WS_FALLBACK_PANEL
+            WS_BOX_COLOR.r = panelColor.r
+            WS_BOX_COLOR.g = panelColor.g
+            WS_BOX_COLOR.b = panelColor.b
+            WS_BOX_COLOR.a = WS.Transparent * (isSelected and 212 or 132)
+            draw.RoundedBox(
+                0,
+                drawX,
+                drawY,
+                drawW,
+                drawH, 
+                WS_BOX_COLOR -- colors.secondary
+            )
 
-        local currentTopPrevIndex = WS_GetWeaponIndex(state.from, newTop)
-        if currentTopPrevIndex and currentTopPrevIndex > 1 and stackRaw < 1 then
-            local fromLayer = math.min(currentTopPrevIndex - 1, WS_StackMax)
-            local fromX, fromY, fromW, fromH = WS_GetStackRect(posX, posY, width, height, scale, appear, fromLayer)
-            mainX = Lerp(stackEase, fromX, posX)
-            mainY = Lerp(stackEase, fromY, posY)
-            mainW = Lerp(stackEase, fromW, width)
-            mainH = Lerp(stackEase, fromH, height)
-        end
+            if isSelected then
+                local showName = WS.Scramble(WS.GetPrintName(wep))
+                local _, _, _, cornerSafe = WS_GetCornerMetrics()
+                local namePad = math.max(3, math.floor(ScreenScale(3) + 0.5))
+                local nameLift = math.max(1, math.floor(ScreenScale(1) + 0.5))
+                local titleH = math.max(ScreenScale(8), compactH)
+                local nameMaxWide = math.max(0, drawW - cornerSafe * 2)
+                local nameFont
+                local textW, textH
+                local characterCount
+                showName, nameFont, textW, textH, characterCount = WS_GetFittedName(showName, nameMaxWide)
+                if WS.NameAnimWeapon ~= wep then
+                    WS.NameAnimWeapon = wep
+                    WS.NameAnimStarted = nil
+                end
+                local titleY = drawY + drawH - titleH
+                local nameY = titleY + math.max(0, (titleH - textH) / 2) - nameLift
+                local nameX = math.floor(drawX + (drawW - textW) / 2 + 0.5)
+                local nameRoom = titleY - drawY - cornerSafe
 
-        for layer = WS_StackMax, 1, -1 do
-            local targetIndex = layer + 1
-            local targetWep = data.stack[targetIndex]
-            local showFrac = math.Clamp(WS.StackProgress[data.slot] - (layer - 1), 0, 1)
+                if nameRoom > 0 then
+                    local nameReveal = math.Clamp(nameRoom / math.max(1, ScreenScale(3)), 0, 1)
+                    if nameReveal >= 0.65 then
+                        WS.NameAnimStarted = WS.NameAnimStarted or now
+                    end
+                    local typeDuration = math.Clamp(characterCount * 0.02, 0.14, 0.27)
+                    local visibleCharacters = 0
+                    if characterCount > 0 and WS.NameAnimStarted then
+                        visibleCharacters = math.min(
+                            characterCount,
+                            math.floor((now - WS.NameAnimStarted) / typeDuration * characterCount)
+                        )
+                    end
+                    local visibleName = WS_GetUTF8Prefix(showName, visibleCharacters)
+                    surface.SetDrawColor(AcsentColor.r, AcsentColor.g, AcsentColor.b, WS.Transparent * nameReveal * 50)
+                    surface.DrawRect(
+                        math.floor(drawX + namePad + 0.5),
+                        math.floor(titleY + 0.5),
+                        math.max(0, math.floor(drawW - namePad * 2 + 0.5)),
+                        1
+                    )
 
-            if not IsValid(targetWep) or showFrac <= 0 then continue end
-            if stackRaw < 1 and oldTop == targetWep and oldTop ~= newTop then continue end
-
-            local targetX, targetY, targetW, targetH = WS_GetStackRect(posX, posY, width, height, scale, appear, layer)
-            local prevIndex = WS_GetWeaponIndex(state.from, targetWep)
-            local drawX, drawY, drawW, drawH = targetX, targetY, targetW, targetH
-            local alphaFrac = showFrac
-
-            if prevIndex and prevIndex > 1 and stackRaw < 1 then
-                local fromLayer = math.min(prevIndex - 1, WS_StackMax)
-                local fromX, fromY, fromW, fromH = WS_GetStackRect(posX, posY, width, height, scale, appear, fromLayer)
-                drawX = Lerp(stackEase, fromX, targetX)
-                drawY = Lerp(stackEase, fromY, targetY)
-                drawW = Lerp(stackEase, fromW, targetW)
-                drawH = Lerp(stackEase, fromH, targetH)
-            elseif (not prevIndex or prevIndex == 1) and stackRaw < 1 then
-                local fadeIn = math.max((stackRaw - WS_StackFadeSplit) / (1 - WS_StackFadeSplit), 0)
-                alphaFrac = alphaFrac * fadeIn
+                    render.SetScissorRect(
+                        math.ceil(drawX + cornerSafe),
+                        math.ceil(titleY),
+                        math.floor(drawX + drawW - cornerSafe),
+                        math.floor(drawY + drawH - nameLift),
+                        true
+                    )
+                    WS_NAME_COLOR.a = WS.Transparent * nameReveal * 255
+                    draw.DrawText(visibleName, nameFont, nameX, nameY, WS_NAME_COLOR, TEXT_ALIGN_LEFT)
+                    render.SetScissorRect(0, 0, 0, 0, false)
+                end
+            else
+                WS_DrawInactiveIcon( wep, drawX, drawY, drawW, drawH, WS.Transparent * 95 )
             end
 
-            local layerAlpha = baseAlpha * WS_StackAlpha * (1 - (layer - 1) * 0.14) * alphaFrac
-            WS_DrawStackBox(drawX, drawY, drawW, drawH, layerAlpha)
-        end
+            if isSelected then
+                local titleH = math.max(ScreenScale(8), compactH)
+                local _, _, _, cornerSafe = WS_GetCornerMetrics()
+                local iconNameGap = math.max(2, math.floor(ScreenScale(1.25) + 0.5))
+                local titleY = drawY + drawH - titleH
+                local iconLeft = math.ceil(drawX + cornerSafe)
+                local iconTop = math.ceil(drawY + cornerSafe)
+                local iconRight = math.floor(drawX + drawW - cornerSafe)
+                local iconBottom = math.floor(titleY - iconNameGap)
+                local iconW = iconRight - iconLeft
+                local iconH = iconBottom - iconTop
+                local minimumIconH = math.max(16, math.floor(ScreenScale(7) + 0.5))
+                if iconW > 1 and iconH >= minimumIconH then
+                    local iconReveal = math.Clamp((iconH - minimumIconH) / math.max(1, ScreenScale(4)), 0, 1)
+                    iconReveal = iconReveal * iconReveal * (3 - 2 * iconReveal)
+                    render.SetScissorRect(
+                        iconLeft,
+                        iconTop,
+                        iconRight,
+                        iconBottom,
+                        true
+                    )
+                    local iconDrawn = WS_DrawFittedIcon(
+                        wep,
+                        iconLeft,
+                        iconTop,
+                        iconW,
+                        iconH,
+                        WS.Transparent * iconReveal * 255
+                    )
 
-        if stackRaw < 1 and IsValid(oldTop) and oldTop ~= newTop then
-            local oldTargetIndex = WS_GetWeaponIndex(data.stack, oldTop)
-
-            if stackRaw < WS_StackFadeSplit then
-                local ghostFrac = stackRaw / WS_StackFadeSplit
-                local ghostY = posY - scrH * WS_StackRise * scale * ghostFrac
-                local ghostW = Lerp(ghostFrac, width, width * 0.94)
-                local ghostH = Lerp(ghostFrac, height, height * 0.94)
-                local ghostX = posX + (width - ghostW) * 0.5
-                local ghostAlpha = baseAlpha * (1 - ghostFrac)
-                WS_DrawStackBox(ghostX, ghostY, ghostW, ghostH, ghostAlpha * 0.8)
-            elseif oldTargetIndex and oldTargetIndex > 1 then
-                local settleFrac = (stackRaw - WS_StackFadeSplit) / (1 - WS_StackFadeSplit)
-                local targetLayer = math.min(oldTargetIndex - 1, WS_StackMax)
-                local targetX, targetY, targetW, targetH = WS_GetStackRect(posX, posY, width, height, scale, appear, targetLayer)
-                local startY = targetY - scrH * WS_StackRise * scale * 0.5
-                local ghostAlpha = baseAlpha * WS_StackAlpha * (1 - (targetLayer - 1) * 0.14) * settleFrac
-                WS_DrawStackBox(targetX, Lerp(settleFrac, startY, targetY), targetW, targetH, ghostAlpha)
+                    if not iconDrawn and wep.DrawWeaponSelection then
+                        -- Common SWEP bases derive icon height from width instead of the supplied height.
+                        local customWide = math.min(iconW, iconH * 1.95)
+                        local customX = iconLeft + (iconW - customWide) / 2
+                        WS.HookWeapon(wep)
+                        wep:DrawWeaponSelection(
+                            customX,
+                            iconTop,
+                            customWide,
+                            iconH,
+                            WS.Transparent * iconReveal * 230
+                        )
+                    end
+                    render.SetScissorRect(0, 0, 0, 0, false)
+                end
             end
+            if isSelected then
+                if WS.CornerFlashWeapon ~= wep then
+                    WS.CornerFlashWeapon = wep
+                    WS.CornerFlashStarted = now
+                end
+                local flashAge = now - (WS.CornerFlashStarted or 0)
+                local flash = 0
+                if flashAge >= 0.06 and flashAge < 0.1 then
+                    local progress = (flashAge - 0.06) / 0.04
+                    flash = 1 - (1 - progress) * (1 - progress)
+                elseif flashAge >= 0.1 and flashAge < 0.16 then
+                    flash = 1
+                elseif flashAge >= 0.16 and flashAge < 0.34 then
+                    local progress = math.Clamp((flashAge - 0.16) / 0.18, 0, 1)
+                    flash = 1 - progress * progress * (3 - 2 * progress)
+                end
+                WS_DrawBoxCorners(drawX, drawY, drawW, drawH, WS.Transparent, AcsentColor, flash)
+            end
+
+            rowY = rowY + drawH + rowGap
         end
-
-        local outlineAlpha = data.slot == WS.SelectedSlot and baseAlpha * blinkAlpha or baseAlpha * 0.5
-        local textAlpha = data.slot == WS.SelectedSlot and baseAlpha or baseAlpha * 0.9
-        local slotY = mainY + mainH * WS_CardNumberY
-        local nameY = mainY + mainH * WS_CardNameY
-        local iconY = mainY + mainH * WS_CardIconY
-        local iconH = math.max(mainH - mainH * WS_CardIconBottom - (iconY - mainY), 0)
-        WS.HighlightProgress[data.slot] = WS.HighlightProgress[data.slot] or 0
-        WS.HighlightProgress[data.slot] = LerpFT(WS_IconSwingLerp, WS.HighlightProgress[data.slot], data.slot == WS.SelectedSlot and 1 or 0)
-        local iconAngle = math.sin(CurTime() * WS_IconSwingSpeed) * WS_IconSwingAngle * WS.HighlightProgress[data.slot]
-
-        draw.RoundedBox(0, mainX, mainY, mainW, mainH, ColorAlpha(color_black, baseAlpha * 0.9))
-        surface.SetDrawColor(255, 255, 255, baseAlpha * WS_GradientAlpha / 255)
-        surface.SetMaterial(gradient_u)
-        surface.DrawTexturedRect(mainX, mainY, mainW, mainH)
-        surface.SetDrawColor(WS_OutlineColor.r, WS_OutlineColor.g, WS_OutlineColor.b, outlineAlpha)
-        surface.DrawOutlinedRect(mainX, mainY, mainW, mainH, 1)
-
-        WS.DrawText(data.slot + 1, "HomigradFontSmall", mainX + mainW * 0.5, slotY, ColorAlpha(color_white, textAlpha), TEXT_ALIGN_CENTER)
-        WS.DrawText(WS.GetPrintName(data.wep), "HomigradFontSmall", mainX + mainW * 0.5, nameY, ColorAlpha(color_white, textAlpha), TEXT_ALIGN_CENTER)
-
-        if stackTotal > 0 then
-            local moreY = mainY + mainH + scrH * WS_StackTextY
-            local moreAlpha = textAlpha * WS_StackTextAlpha * math.min(WS.StackProgress[data.slot], 1)
-            WS.DrawText("+" .. stackTotal .. " more", "HomigradFontSmall", mainX + mainW * 0.5, moreY, ColorAlpha(color_white, moreAlpha), TEXT_ALIGN_CENTER)
-        end
-
-        WS_DrawWeaponIcon(data.wep, mainX + 6, iconY, mainW - 12, iconH, baseAlpha, iconAngle)
+        columnIndex = columnIndex + 1
     end
+
+    local infoWide = math.min(scrW * 0.22, 320)
+    local infoX = scrW - infoWide - math.floor(ScreenScale(8) + 0.5)
+    local infoY = math.floor(scrH * 0.055 + 0.5)
+    WS.DrawInfoPanel(SelectedWep, infoX, infoY, infoWide, WS.Transparent)
 end
 
 -- Changer
@@ -429,58 +800,36 @@ local tAcceptKeys = {
     ["slot6"] = 6,
 }
 
---[[
-    Table:
-        [1]	=	Weapon [52][weapon_hands_sh]
-        [2]	=	Weapon [117][weapon_bigconsumable]
-        [3]	=	Weapon [121][weapon_handcuffs_key]
-        [4]	=	Weapon [122][weapon_handcuffs]
-        [5]	=	Weapon [123][weapon_traitor_poison1]
-        [6]	=	Weapon [124][weapon_traitor_suit]
-        [7]	=	Weapon [125][weapon_matches]
+local function WS_StepSelection(Weapons, direction, useCurrentSelection)
+    local ordered = {}
+    local currentIndex
+    local selected = useCurrentSelection and WS.GetSelectedWeapon(Weapons) or nil
 
-    TableFormated:
-    [0]:
-		[0]	=	Weapon [126][weapon_physgun]
-		[1]	=	Weapon [52][weapon_hands_sh]
-    [1]:
-    [2]:
-    [3]:
-		[1]	=	Weapon [117][weapon_bigconsumable]
-		[2]	=	Weapon [121][weapon_handcuffs_key]
-		[3]	=	Weapon [122][weapon_handcuffs]
-		[4]	=	Weapon [123][weapon_traitor_poison1]
-		[5]	=	Weapon [125][weapon_matches]
-    [4]:
-    [5]:
-		[1]	=	Weapon [124][weapon_traitor_suit]
---]]
-
-local function GetUpper(Weapons)
-    if #LocalPlayer():GetWeapons() < 1 then return end
-    WS.SelectedSlot = WS.SelectedSlot < 0 and #Weapons or WS.SelectedSlot - 1
-    WS.SelectedSlotPos = Weapons[WS.SelectedSlot] and #Weapons[WS.SelectedSlot] or 0
-
-    --print(WS.SelectedSlot, WS.SelectedSlotPos)
-
-    if Weapons[WS.SelectedSlot] == nil or Weapons[WS.SelectedSlot][WS.SelectedSlotPos] == nil then
-        GetUpper(Weapons)
+    for slot = 0, 5 do
+        local slotTbl = Weapons[slot]
+        for pos = 0, slotTbl.count - 1 do
+            ordered[#ordered + 1] = {wep = slotTbl[pos], slot = slot, pos = pos}
+            if slotTbl[pos] == selected then currentIndex = #ordered end
+        end
     end
-end
 
-local function GetDown(Weapons)
-    if #LocalPlayer():GetWeapons() < 1 then return end
-    WS.SelectedSlot = WS.SelectedSlot > #Weapons and 0 or WS.SelectedSlot + 1
-    WS.SelectedSlotPos = 0
-
-    --print(WS.SelectedSlot, WS.SelectedSlotPos)
-
-    if Weapons[WS.SelectedSlot] == nil or Weapons[WS.SelectedSlot][WS.SelectedSlotPos] == nil then
-        GetDown(Weapons)
+    if #ordered < 1 then return false end
+    if not currentIndex then
+        local activeSlot, activePos = WS_FindWeapon(Weapons, LocalPlayer():GetActiveWeapon())
+        for index, entry in ipairs(ordered) do
+            if entry.slot == activeSlot and entry.pos == activePos then
+                currentIndex = index
+                break
+            end
+        end
     end
-end
 
-local LastSelected = 0
+    currentIndex = currentIndex or (direction > 0 and 0 or 1)
+    local nextIndex = ((currentIndex - 1 + direction) % #ordered) + 1
+    local entry = ordered[nextIndex]
+    WS.SelectedSlot, WS.SelectedSlotPos = entry.slot, entry.pos
+    return true
+end
 
 local function get_active_tool(ply, tool)
     local activeWep = ply:GetActiveWeapon()
@@ -495,77 +844,86 @@ local function canUseSelector(ply)
         return true
     end
 
-    return IsAiming(ply) or (IsValid(wep) and wep:GetClass() == "weapon_physgun" and ply:KeyDown(IN_ATTACK)) or (lply.organism and lply.organism.pain and lply.organism.pain > 100) or GetGlobalBool("RadialInventory", false)
-end
+    return IsAiming(ply) or (IsValid(wep) and wep:GetClass() == "weapon_physgun" and ply:KeyDown(IN_ATTACK))
+ end
 
-function WS.ChangeSelectionWep( ply, key )
-    if not IsValid( ply ) or not ply:Alive() or GetGlobalBool("RadialInventory", false) then return end
+local lastSelectorBind
+local lastSelectorBindCode
+local lastSelectorBindTime = 0
+local SELECTOR_BIND_DEBOUNCE = 0.075
+
+function WS.ChangeSelectionWep( ply, key, pressed, code )
+    if pressed == false then return end
+    if not IsValid( ply ) or not ply:Alive() then return end
     if ply.organism and ply.organism.otrub then return end
     if canUseSelector( ply ) then return end
-    --print(canUseSelector( ply ))
-    --print("Table")
-    --PrintTable( WS.GetWeaponTable( ply ) )
-    local iPos = tAcceptKeys[ key ]
+
+    key = string.lower(string.Trim(tostring(key or "")))
+    key = string.match(key, "^([^%s;]+)") or key
+    local bindTime = SysTime()
+    local iPos = tAcceptKeys[key]
+    if iPos and key == lastSelectorBind and code == lastSelectorBindCode and bindTime - lastSelectorBindTime < SELECTOR_BIND_DEBOUNCE then
+        return true
+    end
+
     if iPos or key == "invnext" or key == "invprev" or key == "lastinv" then
 
         local Weapons = WS.GetWeaponTable( ply )
+        if iPos then
+            local slotTbl = Weapons[iPos - 1]
+            if not slotTbl or slotTbl.count < 1 then return true end
+        end
+        if key == "lastinv" and not IsValid(WS.LastInv) then return end
+
+        lastSelectorBind = key
+        lastSelectorBindCode = code
+        lastSelectorBindTime = bindTime
+        local selectorWasOpen = WS.Show > CurTime()
 
         WS.Show = CurTime() + 4
-        --print(key)
         surface.PlaySound("arc9_eft_shared/weapon_generic_rifle_spin"..math.random(10)..".ogg")
         if iPos then
             iPos = iPos - 1
-            if LastSelected ~= iPos then
-                WS.SelectedSlotPos = -1
-            end
-            WS.SelectedSlotPos = (Weapons[iPos] and LastSelected == iPos and WS.SelectedSlotPos + 1 > #Weapons[iPos] and 0 or math.min( WS.SelectedSlotPos + 1, #Weapons[iPos] )) or 0
+            local slotTbl = Weapons[iPos]
+            local continueSlot = selectorWasOpen and WS.SelectedSlot == iPos and WS.SelectedSlotPos >= 0
+            WS.SelectedSlotPos = continueSlot and (WS.SelectedSlotPos + 1) % slotTbl.count or 0
             WS.SelectedSlot = iPos
-            LastSelected = iPos
-            --print(WS.SelectedSlotPos)
-            --print(iPos)
-            --print( Weapons[WS.SelectedSlot][WS.SelectedSlotPos] )
         elseif key == "invprev" then
-            WS.SelectedSlotPos = WS.SelectedSlotPos - 1
-            --print(WS.SelectedSlotPos)
-            if Weapons[WS.SelectedSlot] and WS.SelectedSlotPos < 0  then
-                GetUpper(Weapons)
-            end
-            --WS.SelectedSlot = Weapons[WS.SelectedSlot] and #Weapons[WS.SelectedSlot] > (WS.SelectedSlotPos + 1) and WS.SelectedSlot + 1 or WS.SelectedSlot + 1 > #Weapons - 1 and 0 or 0
+            WS_StepSelection(Weapons, -1, selectorWasOpen)
         elseif key == "invnext" then
-            WS.SelectedSlotPos = WS.SelectedSlotPos + 1
-            --print(WS.SelectedSlotPos)
-            if Weapons[WS.SelectedSlot] and WS.SelectedSlotPos > #Weapons[WS.SelectedSlot] then
-                GetDown(Weapons)
-            end
+            WS_StepSelection(Weapons, 1, selectorWasOpen)
         elseif key == "lastinv" and IsValid(WS.LastInv) then
             WS.Show = 0
-            WS.LastInv = WS.LastInv or "weapon_hands_sh"
             local oldwep = ply:GetActiveWeapon()
             input.SelectWeapon( WS.LastInv )
             WS.LastInv = oldwep
         end
 
+        return true
     end
 end
 
 function WS.SetActuallyWeapon( ply, cmd )
-    if not IsValid( ply ) or not ply:Alive() or GetGlobalBool("RadialInventory", false) then return end
+    if not IsValid( ply ) or not ply:Alive() then return end
     if (cmd:KeyDown( IN_ATTACK ) or cmd:KeyDown( IN_ATTACK2 )) and WS.Show > CurTime() then
 
-        if WS.Selected and WS.Selected > CurTime() then
-            cmd:RemoveKey(IN_ATTACK)
-            cmd:RemoveKey(IN_ATTACK2)
+        if WS.Selected and WS.Selected > CurTime() then 
+            cmd:RemoveKey(IN_ATTACK) 
+            cmd:RemoveKey(IN_ATTACK2) 
         else
             cmd:RemoveKey(IN_ATTACK)
-            cmd:RemoveKey(IN_ATTACK2)
-            --print(WS.GetSelectedWeapon())
-
-            if IsValid(WS.GetSelectedWeapon()) then
-                WS.LastInv = WS.LastInv ~= ply:GetActiveWeapon() and WS.LastInv or ply:GetActiveWeapon()
-                input.SelectWeapon( WS.GetSelectedWeapon() )
+            cmd:RemoveKey(IN_ATTACK2) 
+            
+            local target = WS.GetSelectedWeapon()
+            local active = ply:GetActiveWeapon()
+            if IsValid(target) then
+                if target ~= active then
+                    WS.LastInv = IsValid(active) and active or nil
+                end
+                input.SelectWeapon(target)
             end
             cmd:RemoveKey(IN_ATTACK)
-            cmd:RemoveKey(IN_ATTACK2)
+            cmd:RemoveKey(IN_ATTACK2) 
 
             WS.LastSelectedSlot = WS.SelectedSlot
             WS.LastSelectedSlotPos = WS.SelectedSlotPos
@@ -592,13 +950,22 @@ hook.Add("HUDShouldDraw", "WeaponSelector_HUDShouldDraw", function(sElementName)
     if tHideElements[sElementName] then return false end
 end)
 
--- Я ТАК ЗАДОЛБАЛСЯ ПРОСТО УБЕЙТЕ МЕНЯ ХАХАХАХАХАХАХАХАХАХААХАХАХАХАХАХА
--- ПОЛЧАСА Я ПЫТАЛСЯ СДЕЛАТЬ НОРМЛАЬНОЕ ПЕРЕКЛЮЧЕНИЕ ГОВНА!!!
--- ЗАТО ПОЛУЧИЛОСЬ!!!!
--- УЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭЭ
---[[
-    /\_/\
-    |_ _|
-    |   |__
-   /_|_____\ -- IT'S SO OVER
---]]
+function WS.Scramble(target)
+    target = tostring(target or "")
+    local ply = LocalPlayer()
+    if ply.organism and ply.organism.brain and ply.organism.brain > 0.05 then
+        local len = #target
+        local scrambled = {}
+        local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?"
+        for i = 1, len do
+            if string.sub(target, i, i) == " " then
+                scrambled[i] = " "
+            else
+                local r = math.random(1, #chars)
+                scrambled[i] = string.sub(chars, r, r)
+            end
+        end
+        return table.concat(scrambled)
+    end
+    return target
+end

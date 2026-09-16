@@ -134,3 +134,29 @@ function hg.IsOnGround(ent)
 	tr.mask = MASK_PLAYERSOLID
 	return util.TraceEntityHull(tr, ent).Hit
 end
+
+local legacyWeaponClasses = {
+	weapon_thiamine = "weapon_thiamine_tpik",
+	weapon_painkillers = "weapon_painkillers_tpik",
+	weapon_betablock = "weapon_betablock_tpik",
+}
+
+function hg.CanonicalWeaponClass(class)
+	return legacyWeaponClasses[class] or class
+end
+
+function hg.MigrateLegacyWeaponInventory(inventory)
+	local weapons = istable(inventory) and inventory.Weapons
+	if not istable(weapons) then return false end
+
+	local changed = false
+	for oldClass, newClass in pairs(legacyWeaponClasses) do
+		if weapons[oldClass] ~= nil then
+			if weapons[newClass] == nil then weapons[newClass] = weapons[oldClass] end
+			weapons[oldClass] = nil
+			changed = true
+		end
+	end
+
+	return changed
+end

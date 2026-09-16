@@ -30,7 +30,7 @@ if CLIENT then
 	local PixVis
 	hook.Add("Initialize", "SetupPixVis", function() PixVis = util.GetPixelVisibleHandle() end)
 	local islply
-	
+
 	local blmodels = {
 		["models/monolithservers/kerry/swat_male_02.mdl"] = true,
 		["models/monolithservers/kerry/swat_male_04.mdl"] = true,
@@ -125,6 +125,15 @@ if CLIENT then
 
 	end	
 
+	local swatTorsoArmorScale = 1.08
+	local swatHelmetOffset = Vector(0, 0, 1)
+	local swatHelmetPlacements = {
+		["helmet"] = true,
+		["visor"] = true,
+		["helmet_jaw"] = true,
+		["helmet_ears"] = true
+	}
+
 	function DrawArmors(ply, armors, ent)
 		if not IsValid(ply) or not armors then return end
 		if blmodels[ply:GetModel()] then return end
@@ -142,12 +151,19 @@ if CLIENT then
 
 			ply.modelArmor = ply.modelArmor or {}
 			local fem = ThatPlyIsFemale(ent)
+			local wearerScale = placement == "torso" and ply.PlayerClassName == "swat" and swatTorsoArmorScale or 1
+			local armorScale = ((fem and armorData.femscale) or armorData.scale or 1) * wearerScale
+			local armorModel = ply:GetNWString("ArmorModel" .. armor, "")
+			if armorModel == "" then armorModel = armorData["model"] end
+			if not armorModel or armorModel == "" then continue end
 
 			if not IsValid(ply.modelArmor[armor]) then
-				ply.modelArmor[armor] = ClientsideModel(armorData["model"])
-				local model = ply.modelArmor[armor]
+				local model = ClientsideModel(armorModel)
+				if not IsValid(model) then model = ClientsideModel(armorData["model"]) end
+				if not IsValid(model) then continue end
+				ply.modelArmor[armor] = model
 				model:SetNoDraw(true)
-				model:SetModelScale( (fem and armorData.femscale) or armorData.scale or 1 )
+				model:SetModelScale(armorScale)
 				local fallback_mat = istable(armorData.material) and armorData.material[1] or armorData.material
 				if model.materialset != ply:GetNWString("ArmorMaterials" .. armor, fallback_mat) then
 					model.materialset = ply:GetNWString("ArmorMaterials" .. armor, fallback_mat)
@@ -161,7 +177,6 @@ if CLIENT then
 				if not armorData.nobonemerge then
 					model:AddEffects(EF_BONEMERGE)
 				end
-				
 				ply:CallOnRemove("removearmors"..placement,function()
 					if ply.modelArmor and IsValid(model) then
 						model:Remove()
@@ -174,6 +189,49 @@ if CLIENT then
 						model = nil
 					end
 				end)
+
+				ply.modelArmorBroken = ply.modelArmorBroken or {}
+				if not IsValid(ply.modelArmorBroken[armor]) then
+					local omodel = ClientsideModel(armorModel)
+					if not IsValid(omodel) then omodel = ClientsideModel(armorData["model"]) end
+					if IsValid(omodel) then
+						omodel:SetNoDraw(true)
+						omodel:SetModelScale(armorScale * 1.01)
+						omodel:SetSubMaterial(0, "armor/brokenarmor")
+						omodel:SetRenderMode(RENDERMODE_TRANSALPHA)
+						omodel:SetColor(Color(255, 255, 255, 0))
+						if not armorData.nobonemerge then
+							omodel:AddEffects(EF_BONEMERGE)
+						end
+						ply.modelArmorBroken[armor] = omodel
+					end
+				end
+			end
+
+			local extraModelsData = armorData.extraModels or (armorData.extraModel and {armorData.extraModel})
+			if extraModelsData then
+				ply.modelArmorExtra = ply.modelArmorExtra or {}
+				if not istable(ply.modelArmorExtra[armor]) then
+					if IsValid(ply.modelArmorExtra[armor]) then ply.modelArmorExtra[armor]:Remove() end
+					ply.modelArmorExtra[armor] = {}
+				end
+				for index, extraData in ipairs(extraModelsData) do
+					if not IsValid(ply.modelArmorExtra[armor][index]) then
+						local extraModel = ClientsideModel(extraData.model)
+						extraModel:SetNoDraw(true)
+						extraModel:SetModelScale(((fem and extraData.femscale) or extraData.scale or 1) * wearerScale)
+						if extraData.material then extraModel:SetMaterial(extraData.material) end
+						if extraData.skin ~= nil then extraModel:SetSkin(extraData.skin) end
+						if not extraData.nobonemerge then extraModel:AddEffects(EF_BONEMERGE) end
+						ply.modelArmorExtra[armor][index] = extraModel
+						ply:CallOnRemove("removearmorextra" .. placement .. index, function()
+							if IsValid(extraModel) then extraModel:Remove() end
+						end)
+						ent:CallOnRemove("removearmorextra" .. placement .. index, function()
+							if IsValid(extraModel) then extraModel:Remove() end
+						end)
+					end
+				end
 			end
 			
 			local ent = hg.GetCurrentCharacter(ply)
@@ -183,6 +241,10 @@ if CLIENT then
 			local model = ply.modelArmor[armor]
 			
 			if not IsValid(model) then return end
+			model:SetModelScale(armorScale)
+			if armorData.toggleableVisor then
+				model:SetBodygroup(0, hg.IsVisorLowered(ent, armor, armorData) and 0 or 1)
+			end
 			
 			if ent.NotSeen or not ent.shouldTransmit then
 				return
@@ -193,23 +255,69 @@ if CLIENT then
 				model:SetFlexWeight(model:GetFlexIDByName(mdl),1)
 			end
 			
-			local matrix = ent:GetBoneMatrix(ent:LookupBone(armorData["bone"]))
-			if not matrix then
-				return
-			end
-			
+			local armorAng = (fem and armorData.femAng) or armorData[4]
+			local bone = ent:LookupBone(armorData["bone"])
+			local matrix = bone and ent:GetBoneMatrix(bone)
+			if not matrix then return end
+
 			local bonePos, boneAng = matrix:GetTranslation(), matrix:GetAngles()
-			bonePos:Add(boneAng:Forward() * (fem and armorData.femPos[1] or 0) + boneAng:Up() * (fem and armorData.femPos[2] or 0) + boneAng:Right() * (fem and armorData.femPos[3] or 0))
-			local pos, ang = LocalToWorld(armorData[3], armorData[4], bonePos, boneAng)
+			local femPos = armorData.femPos or vector_origin
+			bonePos:Add(boneAng:Forward() * (fem and femPos[1] or 0) + boneAng:Up() * (fem and femPos[2] or 0) + boneAng:Right() * (fem and femPos[3] or 0))
+			local pos, ang = LocalToWorld(armorData[3], armorAng, bonePos, boneAng)
+			if swatHelmetPlacements[placement] and ply.PlayerClassName == "swat" then
+				pos:Add(swatHelmetOffset)
+			end
 			model:SetRenderOrigin(pos)
 			model:SetRenderAngles(ang)
-
-			model:SetParent(ent,ent:LookupBone(armorData["bone"]))
+			model:SetParent(ent, bone)
 			
 			--model:SetupBones()
 			
 			if not (islply and armorData.norender) then
 				model:DrawModel()
+			end
+
+			for index, extraData in ipairs(extraModelsData or {}) do
+				local extraModel = ply.modelArmorExtra and ply.modelArmorExtra[armor] and ply.modelArmorExtra[armor][index]
+				if IsValid(extraModel) and not (islply and (extraData.norender or armorData.norender)) then
+					extraModel:SetModelScale(((fem and extraData.femscale) or extraData.scale or 1) * wearerScale)
+					local extraLocalAng = (fem and extraData.femAng) or extraData.ang or angle_zero
+					local extraBone = ent:LookupBone(extraData.bone or armorData.bone)
+					local extraMatrix = extraBone and ent:GetBoneMatrix(extraBone)
+					if not extraMatrix then continue end
+					local extraBonePos, extraBoneAng = extraMatrix:GetTranslation(), extraMatrix:GetAngles()
+					local extraFemPos = extraData.femPos or vector_origin
+					extraBonePos:Add(extraBoneAng:Forward() * (fem and extraFemPos[1] or 0) + extraBoneAng:Up() * (fem and extraFemPos[2] or 0) + extraBoneAng:Right() * (fem and extraFemPos[3] or 0))
+					local extraPos, extraAng = LocalToWorld(extraData.pos or vector_origin, extraLocalAng, extraBonePos, extraBoneAng)
+					if swatHelmetPlacements[placement] and ply.PlayerClassName == "swat" then
+						extraPos:Add(swatHelmetOffset)
+					end
+					extraModel:SetRenderOrigin(extraPos)
+					extraModel:SetRenderAngles(extraAng)
+					extraModel:SetParent(ent, extraBone)
+					extraModel:DrawModel()
+				end
+			end
+
+			local omodel = ply.modelArmorBroken and ply.modelArmorBroken[armor]
+			if IsValid(omodel) then
+				omodel:SetModelScale(armorScale * 1.01)
+				if armorData.toggleableVisor then
+					omodel:SetBodygroup(0, hg.IsVisorLowered(ent, armor, armorData) and 0 or 1)
+				end
+				-- Prefer the ragdoll/corpse's own wear value so it doesn't "heal"
+				-- when the player respawns and hg.AddArmor resets the player's NWVar.
+				local wear = (ent ~= ply and ent:GetNWFloat("ArmorWear" .. armor, -1) or -1)
+				if wear < 0 then wear = ply:GetNWFloat("ArmorWear" .. armor, 0) end
+				if wear > 0.005 and not (islply and armorData.norender) then
+					omodel:SetRenderOrigin(pos)
+					omodel:SetRenderAngles(ang)
+					omodel:SetParent(ent, bone)
+					local a = math.Clamp(wear, 0, 1)
+					a = a * a * (3 - 2 * a)
+					omodel:SetColor(Color(255, 255, 255, a * 255))
+					omodel:DrawModel()
+				end
 			end
 		end
 	end
@@ -277,8 +385,79 @@ if CLIENT then
 					ent.modelArmor[k] = nil
 				end
 
+				for k,models in pairs(ent.modelArmorExtra or {}) do
+					if istable(models) then
+						for _, model in pairs(models) do
+							if IsValid(model) then model:Remove() end
+						end
+					elseif IsValid(models) then
+						models:Remove()
+					end
+					ent.modelArmorExtra[k] = nil
+				end
+
+				if ent.modelArmorBroken then
+					for k,v in pairs(ent.modelArmorBroken) do
+						if IsValid(ent.modelArmorBroken[k]) then
+							ent.modelArmorBroken[k]:Remove()
+						end
+						ent.modelArmorBroken[k] = nil
+					end
+				end
+
 				ent.armors = var
 			end)
+		elseif key == "ArmorStates" then
+			local ent = Entity(index)
+			if IsValid(ent) then ent.armor_states = var end
+		end
+	end)
+
+	local droppedBrokenOverlays = {}
+
+	local function EnsureDroppedBrokenOverlay(ent)
+		if not IsValid(ent) then return end
+		local idx = ent:EntIndex()
+		if droppedBrokenOverlays[idx] then return end
+		local mdl = ent:GetModel()
+		if not mdl or mdl == "" or mdl == "models/error.mdl" then return end
+		local omodel = ClientsideModel(mdl)
+		if not IsValid(omodel) then return end
+		omodel:SetNoDraw(true)
+		omodel:SetModelScale(1.01)
+		omodel:SetSubMaterial(0, "armor/brokenarmor")
+		omodel:SetRenderMode(RENDERMODE_TRANSALPHA)
+		omodel:SetColor(Color(255, 255, 255, 230))
+		droppedBrokenOverlays[idx] = omodel
+	end
+
+	hook.Add("OnNetVarSet", "BrokenDroppedArmorOverlay", function(index, key, var)
+		if key ~= "ArmorBroken" or not var then return end
+		EnsureDroppedBrokenOverlay(Entity(index))
+	end)
+
+	hook.Add("OnEntityCreated", "BrokenDroppedArmorCheck", function(ent)
+		if not IsValid(ent) then return end
+		local cls = ent:GetClass()
+		if not (cls and (cls:find("ent_armor") or cls == "armor_base")) then return end
+		timer.Simple(0.1, function()
+			if IsValid(ent) and ent:GetNWBool("ArmorBroken", false) then
+				EnsureDroppedBrokenOverlay(ent)
+			end
+		end)
+	end)
+
+	hook.Add("PostDrawTranslucentRenderables", "DroppedBrokenOverlayDraw", function()
+		for idx, omodel in pairs(droppedBrokenOverlays) do
+			local parent = Entity(idx)
+			if not IsValid(parent) or not IsValid(omodel) then
+				if IsValid(omodel) then omodel:Remove() end
+				droppedBrokenOverlays[idx] = nil
+			else
+				omodel:SetRenderOrigin(parent:GetPos())
+				omodel:SetRenderAngles(parent:GetAngles())
+				omodel:DrawModel()
+			end
 		end
 	end)
 	
@@ -328,7 +507,7 @@ if CLIENT then
 	hook.Add("Post Pre Post Processing", "renderHelmetThingy", function()
 		cam.IgnoreZ(true)
 		//cam.Start2D()
-		local armors = lply.armors
+		local armors = lply.armors or {}
 
 		if lply.soundhuy and not (armors["face"] and hg.armor.face[armors["face"]].loopsound) then
 			lply:StopSound(lply.soundhuy)
@@ -407,6 +586,16 @@ if CLIENT then
 			local customviewfunc = armors["head"] and hg.armor.head[armors["head"]].customviewrender
 			if customviewfunc then
 				customviewfunc(lply)
+			end
+		end
+
+		if armors and armors["visor"] then
+			local visor = armors["visor"]
+			local visorData = hg.armor.visor and hg.armor.visor[visor]
+			if visorData and visorData.viewmaterial and hg.IsVisorLowered(lply, visor, visorData) and not hg_gopro:GetBool() then
+				surface.SetDrawColor(255,255,255,255)
+				surface.SetMaterial(visorData.viewmaterial)
+				surface.DrawTexturedRect(-1, -1, ScrW()+1, ScrH()+1)
 			end
 		end
 
@@ -731,6 +920,23 @@ if CLIENT then
 			end, ply:GetNWBool("NVG_Enabled", false) and "Disable NVG" or "Enable NVG"}
 			hg.radialOptions[#hg.radialOptions + 1] = tbl
 		end
+	end)
+
+	hook.Add("radialOptions", "ArmorVisorToggle", function()
+		local ply = LocalPlayer()
+		local organism = ply.organism or {}
+		local armor = ply.armors and ply.armors.visor
+		local armorData = armor and hg.armor.visor and hg.armor.visor[armor]
+		if not armorData or not armorData.toggleableVisor or not ply:Alive() or organism.otrub then return end
+
+		local lowered = hg.IsVisorLowered(ply, armor, armorData)
+		hg.radialOptions[#hg.radialOptions + 1] = {
+			function()
+				net.Start("hg_toggle_visor")
+				net.SendToServer()
+			end,
+			lowered and "Raise Visor" or "Lower Visor"
+		}
 	end)
 end
 
