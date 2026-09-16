@@ -622,14 +622,52 @@ local function HasSelectedAttachment(loadout, slotID, att)
 	return table.HasValue(GetSelectedAttachments(loadout, slotID), att)
 end
 
+local attCategoryMap = nil
+
+local function GetAttachmentCategory(att)
+	if attCategoryMap == nil then
+		attCategoryMap = {}
+		for category, list in pairs(hg.attachments or {}) do
+			if istable(list) then
+				for id in pairs(list) do
+					attCategoryMap[id] = category
+				end
+			end
+		end
+	end
+
+	return attCategoryMap[att] or "other"
+end
+
+local attCategoryLabels = {
+	sight = "Sights",
+	barrel = "Muzzles & Suppressors",
+	grip = "Grips",
+	underbarrel = "Underbarrel / Lasers",
+	magwell = "Magazines",
+	stock = "Stocks",
+	mount = "Mounts",
+	other = "Other",
+}
+
+local attCategoryOrder = {"sight", "barrel", "grip", "underbarrel", "magwell", "stock", "mount", "other"}
+
 local function ToggleAttachment(loadout, slotID, att)
 	local attachments = GetSelectedAttachments(loadout, slotID)
 
 	if table.HasValue(attachments, att) then
 		table.RemoveByValue(attachments, att)
-	else
-		attachments[#attachments + 1] = att
+		return
 	end
+
+	local category = GetAttachmentCategory(att)
+	for i = #attachments, 1, -1 do
+		if GetAttachmentCategory(attachments[i]) == category then
+			table.remove(attachments, i)
+		end
+	end
+
+	attachments[#attachments + 1] = att
 end
 
 local function GetAttachmentIcon(att)
@@ -1408,32 +1446,61 @@ local function OpenMenu(force, customize, attachmentPage, heroMode, streakMode)
 			local option = GetSelectedOption(selectedLoadout, selectedSlot)
 
 			if attachmentPage and option then
-				for i, att in ipairs(option.attachments or {}) do
-					local x = margin + ((i - 1) % columns) * (cell + margin)
-					local y = yOffset + math.floor((i - 1) / columns) * (cell + margin)
-					local button = vgui.Create("DButton", canvas)
-					button:SetPos(x, y)
-					button:SetSize(cell, cell)
-					button:SetText("")
-					button.DoClick = function()
-						ToggleAttachment(selectedLoadout, selectedSlot, att)
-						SendLoadout(selectedLoadout, selectedArmor)
-						rebuildItems()
-						surface.PlaySound("buttons/button14.wav")
-					end
-					button.Paint = function(self, bw, bh)
-						local selected = HasSelectedAttachment(selectedLoadout, selectedSlot, att)
-						local icon = GetAttachmentIcon(att)
-						surface.SetDrawColor(selected and Color(45, 115, 95, 230) or Color(20, 20, 20, 210))
-						surface.DrawRect(0, 0, bw, bh)
-						surface.SetDrawColor(selected and orange or Color(255, 255, 255, 80))
-						surface.DrawOutlinedRect(0, 0, bw, bh, selected and 2 or 1)
-						if icon then
-							surface.SetMaterial(icon)
-							surface.SetDrawColor(255, 255, 255, 235)
-							surface.DrawTexturedRect(bw * 0.18, bh * 0.14, bw * 0.64, bh * 0.52)
+				local grouped = {}
+				for _, att in ipairs(option.attachments or {}) do
+					local category = GetAttachmentCategory(att)
+					grouped[category] = grouped[category] or {}
+					grouped[category][#grouped[category] + 1] = att
+				end
+
+				local yPos = yOffset
+
+				for _, category in ipairs(attCategoryOrder) do
+					local list = grouped[category]
+					if list then
+						local header = vgui.Create("DButton", canvas)
+						header:SetPos(margin, yPos)
+						header:SetSize(midW - margin * 2, 22)
+						header:SetText("")
+						header.DoClick = function() end
+						header.Paint = function(self, bw, bh)
+							surface.SetDrawColor(0, 0, 0, 230)
+							surface.DrawRect(0, 0, bw, bh)
+							surface.SetDrawColor(palette.accent)
+							surface.DrawOutlinedRect(0, 0, bw, bh, 1)
+							draw.SimpleText(attCategoryLabels[category] or category, "RealishMedium", 6, bh * 0.5, category == "other" and locked or teal, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 						end
-						DrawFittedText((hg.attachmentslaunguage and hg.attachmentslaunguage[att]) or att, fitSmallFonts, bw * 0.5, bh - 14, white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, bw - 8, bh * 0.35)
+						yPos = yPos + 28
+
+						for i, att in ipairs(list) do
+							local x = margin + ((i - 1) % columns) * (cell + margin)
+							local y = yPos + math.floor((i - 1) / columns) * (cell + margin)
+							local button = vgui.Create("DButton", canvas)
+							button:SetPos(x, y)
+							button:SetSize(cell, cell)
+							button:SetText("")
+							button.DoClick = function()
+								ToggleAttachment(selectedLoadout, selectedSlot, att)
+								SendLoadout(selectedLoadout, selectedArmor)
+								rebuildItems()
+								surface.PlaySound("buttons/button14.wav")
+							end
+							button.Paint = function(self, bw, bh)
+								local selected = HasSelectedAttachment(selectedLoadout, selectedSlot, att)
+								local icon = GetAttachmentIcon(att)
+								surface.SetDrawColor(selected and Color(45, 115, 95, 230) or Color(20, 20, 20, 210))
+								surface.DrawRect(0, 0, bw, bh)
+								surface.SetDrawColor(selected and orange or Color(255, 255, 255, 80))
+								surface.DrawOutlinedRect(0, 0, bw, bh, selected and 2 or 1)
+								if icon then
+									surface.SetMaterial(icon)
+									surface.SetDrawColor(255, 255, 255, 235)
+									surface.DrawTexturedRect(bw * 0.18, bh * 0.14, bw * 0.64, bh * 0.52)
+								end
+								DrawFittedText((hg.attachmentslaunguage and hg.attachmentslaunguage[att]) or att, fitSmallFonts, bw * 0.5, bh - 14, white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, bw - 8, bh * 0.35)
+							end
+						end
+						yPos = yPos + math.ceil(#list / columns) * (cell + margin)
 					end
 				end
 				return

@@ -300,8 +300,9 @@ if CLIENT then
             ["hl2dm"] = true,
             ["riot"] = true,
             ["gwars"] = true,
-            ["criresp"] = true,
-        }
+["criresp"] = true,
+			["realish"] = true,
+		}
         
         for i, mode in SortedPairsByMemberValue(zb.availableModes,"canlaunch",true) do
             if !LocalPlayer():IsSuperAdmin() and !allowedModes[mode.key] then continue end

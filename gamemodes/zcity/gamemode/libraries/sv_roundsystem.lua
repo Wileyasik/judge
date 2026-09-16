@@ -26,7 +26,8 @@ local ZB_FORCED_MODE_POOL = {
 	["riot"] = true,
 	["juggernaut"] = true,
 	["criresp"] = true,
-	["gwars"] = true
+	["gwars"] = true,
+	["realish"] = true
 }
 local ZB_NO_BACK_TO_BACK_MODES = {
 	["dm"] = true,

@@ -248,6 +248,23 @@ local function HasAttachment(option, att)
 	end
 end
 
+local attCategoryCache = {}
+
+local function GetAttachmentCategory(att)
+	if attCategoryCache[att] ~= nil then return attCategoryCache[att] end
+
+	local category = "other"
+	for cat, list in pairs(hg.attachments or {}) do
+		if istable(list) and list[att] then
+			category = cat
+			break
+		end
+	end
+
+	attCategoryCache[att] = category
+	return category
+end
+
 local function SanitizeAttachments(loadout, choices, attachments)
 	local sanitized = {}
 
@@ -257,7 +274,17 @@ local function SanitizeAttachments(loadout, choices, attachments)
 
 		for _, att in ipairs(attachments and attachments[slot.id] or {}) do
 			if HasAttachment(option, att) and not table.HasValue(sanitized[slot.id], att) then
-				sanitized[slot.id][#sanitized[slot.id] + 1] = att
+				local category = GetAttachmentCategory(att)
+				local conflict = false
+				for _, prev in ipairs(sanitized[slot.id]) do
+					if GetAttachmentCategory(prev) == category then
+						conflict = true
+						break
+					end
+				end
+				if not conflict then
+					sanitized[slot.id][#sanitized[slot.id] + 1] = att
+				end
 			end
 		end
 	end
@@ -673,7 +700,7 @@ function MODE:SyncMenuCamera()
 end
 
 function MODE:CanLaunch()
-	return false
+	return true
 end
 
 function MODE:GuiltCheck()
