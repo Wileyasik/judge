@@ -236,7 +236,6 @@ local function TraceShockwavePath(startPos, endPos, filter, target)
 end
 
 local blastWallDensity = {
-<<<<<<< Updated upstream
 	[MAT_WOOD] = 0.5,
 	[MAT_CONCRETE] = 1,
 	[MAT_METAL] = 1,
@@ -254,25 +253,6 @@ local blastWallDensity = {
 	[MAT_BLOODYFLESH] = 0.2,
 	[MAT_ALIENFLESH] = 0.2,
 	[MAT_ANTLION] = 0.5,
-=======
-	[0] = 0.15,
-	[1] = 0.5,
-	[2] = 1,
-	[3] = 0.2,
-	[5] = 1,
-	[6] = 0.4,
-	[7] = 0.25,
-	[8] = 1.2,
-	[9] = 0.25,
-	[10] = 0.75,
-	[12] = 0.1,
-	[13] = 0.2,
-	[14] = 0.35,
-	[15] = 0.6,
-	[16] = 0.3,
-	[18] = 0.2,
-	[19] = 0.5,
->>>>>>> Stashed changes
 }
 
 function hg.GetBlastWallAttenuation(tr)

@@ -972,6 +972,7 @@ hook.Add("OnAmputateLimb", "hg-fakeboneflop-amputation", function(org, ent, limb
 end)
 
 function hg.Fake(ply, huyragdoll, no_freemove, force)
+	if not IsValid(ply) then return end
 	ply.switchingseat = nil
 	if not force and (ply.hg_no_fake_until or 0) > CurTime() then return end
 	if ply:GetMoveType() == 0 then return end
