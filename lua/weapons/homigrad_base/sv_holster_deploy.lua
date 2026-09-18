@@ -92,8 +92,12 @@ end)
 SWEP.Initialzed = false
 function SWEP:Deploy()
 	local time = CurTime()
+
+	self.QuickDrawing = self:IsQuickDrawing()
+	self:SetQuickDraw(self.QuickDrawing)
+
 	if SERVER and self.Initialzed and not self:GetOwner().noSound then
-		timer.Simple(self.CooldownDeploy / self.Ergonomics * 0.4, function()
+		timer.Simple(self:GetDeployDur() * 0.4, function()
 			if IsValid(self) and IsValid(self:GetOwner()) then
 				self:GetOwner():EmitSound(self.DeploySnd[1], 65)
 			end
@@ -103,9 +107,20 @@ function SWEP:Deploy()
 
 	self.holster = nil
 	self:SetHolster(0)
-	
-	self.deploy = time + self.CooldownDeploy / self.Ergonomics
+
+	self.deploy = time + self:GetDeployDur()
 	self:SetDeploy(self.deploy)
+
+	if self.QuickDrawing then
+		local ply = self:GetOwner()
+		if IsValid(ply) and ply:IsPlayer() then
+			ply.posture = 8
+			net.Start("change_posture")
+			net.WriteEntity(ply)
+			net.WriteInt(8, 9)
+			net.Broadcast()
+		end
+	end
 
 	--self.endedholster = false
 

@@ -360,7 +360,7 @@ local function get_status_message(ply)
 
 	local org = ply.organism
 	
-	if not org or not org.brain then return "" end
+	if not org then return "" end
 
 	local pain = org.pain
 	local brain = org.brain
@@ -462,7 +462,7 @@ function hg.get_phraselist(ply, type)
     if ply:GetInfoNum("hg_showthoughts", 1) == 0 then return "" end
 
 	local org = ply.organism	
-	if not org or not org.brain then return "" end
+	if not org then return "" end
 
 	if not isstring(type) or not allowedlist_types[type] then return "" end
 

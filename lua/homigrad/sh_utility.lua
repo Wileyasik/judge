@@ -5,6 +5,12 @@ local PLAYER = FindMetaTable("Player")
 
 hg.ConVars = hg.ConVars or {}
 
+--\\ Realish round detection (shared)
+	function hg.IsRealish()
+		return zb and zb.CROUND == "realish" or false
+	end
+--//
+
 --\\ Is Changed
 	local ChangedTable = {}
 
@@ -869,12 +875,8 @@ local IsValid = IsValid
 			if not IsValid(ply) or not ply:IsPlayer() then return end
 			if ply:GetNWFloat("rem_urges_end", 0) > CurTime() then return end
 			if ply.remUrgeEnd then return end
-			if not ply.suiciding and ply.organism and (ply.organism.depression or 0) < 0.5 then
-				if ply:GetInfoNum("hg_newthoughts", 0) > 0 then
-					ply:Thought("You shouldnt do this.", 6, "depression_block_suicide", 0)
-				else
-					ply:Notify("I shouldnt do this", 6, "depression_block_suicide", 0)
-				end
+			if ply.organism and (ply.organism.depression or 0) < 0.5 then
+				if hg.PressSuicideAim then hg.PressSuicideAim(ply) end
 				return
 			end
 			if not ply.suiciding then

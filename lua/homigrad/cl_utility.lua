@@ -510,7 +510,7 @@ players : 1 humans, 0 bots (20 max)
 	hook.Add("AdjustMouseSensitivity", "AdjustRunSensivityHUY", function(defaultSensitivity)
 		if not lply:Alive() then return end--kakoy sencivity NOOB
 		local org = lply.organism or {}
-		if not org or not org.brain then return end
+		if not org then return end
 
 		local vel = lply:GetVelocity()
 		local isrunning = lply:KeyDown(IN_SPEED) and vel:Length() >= 10 and not lply:Crouching() and not IsValid(lply:GetNWEntity("FakeRagdoll"))

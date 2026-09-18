@@ -224,6 +224,29 @@ local function isAchievementCompleted(ply, key, val)
     return val >= ach.needed_value and oldValue < ach.needed_value
 end
 
+local ACHIEVEMENT_PROGRESS_COOLDOWN = 1.5
+
+local function sendAchievementProgress(ply, key, ach, val)
+    local now = CurTime()
+    ply.hgAchProgressAt = ply.hgAchProgressAt or {}
+    if (ply.hgAchProgressAt[key] or 0) > now then return end
+    ply.hgAchProgressAt[key] = now + ACHIEVEMENT_PROGRESS_COOLDOWN
+
+    local rarity = hg.achievements.achievements_data.rarity[key] or {owners = 0, total = 0, percent = 0}
+    local rarityName = rarity.name or getRarityName(tonumber(rarity.percent) or 0, tonumber(rarity.owners) or 0)
+
+    net.Start("hg_AchievementProgress")
+        net.WriteString(key)
+        net.WriteString(ach.name)
+        net.WriteString(ach.img or replacement_img)
+        net.WriteString(rarityName)
+        net.WriteInt(math.floor(tonumber(val) or 0), 32)
+        net.WriteInt(math.floor(tonumber(ach.needed_value) or 1), 32)
+        net.WriteInt(math.floor(tonumber(ach.start_value) or 0), 32)
+    net.Send(ply)
+end
+
+util.AddNetworkString("hg_AchievementProgress")
 util.AddNetworkString("hg_NewAchievement")
 
 function hg.achievements.SetPlayerAchievement(ply, key, val)
@@ -244,6 +267,7 @@ function hg.achievements.SetPlayerAchievement(ply, key, val)
     local playerAchievements = hg.achievements.achievements_data.player_achievements[steamID]
     playerAchievements[key] = playerAchievements[key] or {}
 
+    local oldValue = tonumber(playerAchievements[key].value) or tonumber(ach.start_value) or 0
     local completedNow = isAchievementCompleted(ply, key, val)
     playerAchievements[key].value = val
 
@@ -267,10 +291,17 @@ function hg.achievements.SetPlayerAchievement(ply, key, val)
         timer.Remove("hg_achievement_save_" .. steamID)
         hg.achievements.SaveToSQL(ply, playerAchievements)
         timer.Simple(3, hg.achievements.RefreshRarity)
-    elseif hg.achievements.SqlActive then
-        timer.Create("hg_achievement_save_" .. steamID, 10, 1, function()
-            if IsValid(ply) then hg.achievements.SaveToSQL(ply) end
-        end)
+    else
+        if hg.achievements.SqlActive then
+            timer.Create("hg_achievement_save_" .. steamID, 10, 1, function()
+                if IsValid(ply) then hg.achievements.SaveToSQL(ply) end
+            end)
+        end
+
+        local needed = tonumber(ach.needed_value) or 1
+        if val > oldValue and val < needed and not playerAchievements[key].obtained_at then
+            sendAchievementProgress(ply, key, ach, val)
+        end
     end
 
     return true

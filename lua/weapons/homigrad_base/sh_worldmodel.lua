@@ -948,7 +948,7 @@ function SWEP:WorldModel_Transform_Holstered()
 			newPos, newAng = LocalToWorld(self.FakePos, self.FakeAng, newPos, newAng)
 		end
 		local booba = self.deploy
-		local booba2 = self.deploy and (self.CooldownDeploy / self.Ergonomics)
+		local booba2 = self.deploy and self:GetDeployDur()
 		
 		local lerp = (not booba) and 0 or math.Clamp(1 - ((booba - CurTime()) / booba2) * 1.2, 0, 1)
 		lerp = math.ease.InOutExpo(lerp)

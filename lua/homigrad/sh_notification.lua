@@ -310,7 +310,7 @@ if CLIENT then
 		time_spent = CurTime()
 		lply = LocalPlayer()
 		local org = lply.organism
-		if not org or not org.pain or not org.brain then return end
+		if not org or not org.pain then return end
 		//if org.otrub and !last_message then return end
 
 		//if hg_old_notificate:GetBool() then return end

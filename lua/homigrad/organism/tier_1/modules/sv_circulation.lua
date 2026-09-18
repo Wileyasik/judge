@@ -136,7 +136,7 @@ module[2] = function(owner, org, timeValue)
 	local heartbeat = org.bloodPressure < 70 and 70 + (70 - org.bloodPressure) * 3 or 70
 	local runnin_or_exhausted = org.analgesia < 1 and (org.stamina.sub > 0 or org.stamina[1] < (org.stamina.max * 0.66))
 	org.heartbeat = math.Approach(org.heartbeat, math.max(heartbeat - 10, runnin_or_exhausted and ((1 - math.min(1, org.stamina[1] / (org.stamina.max * 1))) * 110 + 90) or 60), !runnin_or_exhausted and timeValue * 2 or timeValue * 15)
-	heartbeat = heartbeat + (owner.suiciding and 50 or 0)
+	heartbeat = heartbeat + (owner.suiciding and math.max(owner.hgSuicideAim or 1, 0) or 0) * 50
 	heartbeat = heartbeat + 40 * math.max(0, org.fear)
 	heartbeat = heartbeat + math.Clamp(org.shock, 0, 40)
 	heartbeat = heartbeat + math.Clamp(org.pain, 40, 80) - 40
@@ -180,7 +180,7 @@ module[2] = function(owner, org, timeValue)
 		org.fibrillation = false
 		org.arrhythmia = 0
 	end
-	if org.lastStand then
+	if org.lastStand or hg.IsRealish() then
 		org.fear = 0
 		org.fearadd = 0
 	else
@@ -728,13 +728,13 @@ function hg.organism.Defecate(owner)
 		net.WriteEntity(owner)
 	net.SendPVS(owner:GetPos())
 end
-function hg.organism.CoughBlood(org)
+function hg.organism.CoughBlood(org, forceBlood)
 	local ply = org.owner
 	local phr = "zcitysnd/real_sonar/" .. (ThatPlyIsFemale(ply) and "female" or "male") .. "_cough" .. math.random(4) .. ".mp3"
 	ply:EmitSound(phr)
 	ply.phrCld = CurTime() + 2
 	ply.lastPhr = phr
-	if math.random(5) == 1 then
+	if forceBlood or math.random(5) == 1 then
 		org.vomitInThroat = nil
 		local ent = hg.GetCurrentCharacter(ply)
 		if not IsValid(ent) then return end

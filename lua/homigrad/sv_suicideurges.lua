@@ -144,6 +144,95 @@ end
 
 hg.StartSuicideUrge = startUrge
 
+local aim_step = 0.125
+local aim_hold_window = 0.5
+local aim_raise_time = 5
+local aim_decay_speed = 0.3
+
+function hg.PressSuicideAim(ply)
+	if not IsValid(ply) or not ply:IsPlayer() then return end
+	if not ply:Alive() then return end
+	if not hasSuicideWeapon(ply) then return end
+	if ply.remUrgeEnd or ply.selfharming then return end
+
+	autoEquipSuicideWeapon(ply)
+
+	local wep = ply.GetActiveWeapon and ply:GetActiveWeapon()
+	local isMelee = IsValid(wep) and (wep.ismelee2 or wep.Base == "weapon_melee")
+
+	ply.hgSuicideAim = math.min((ply.hgSuicideAim or 0) + aim_step, 1)
+	ply.hgSuicideLastPress = CurTime()
+
+	if ply.hgSuicideAim >= 1 and isMelee then
+		ply.suiciding = true
+
+		doUrgeCut(ply)
+
+		ply.hgSuicideAim = 0
+		ply.suiciding = false
+		ply:SetNWFloat("willsuicide", 0)
+		ply:SetNWFloat("rem_suicide_aim", 0)
+
+		return
+	end
+
+	ply.suiciding = true
+
+	if ply.hgSuicideAim >= 1 then
+		ply:SetNWFloat("willsuicide", CurTime() - 0.2)
+	else
+		ply:SetNWFloat("willsuicide", CurTime() + (1 - ply.hgSuicideAim) * aim_raise_time)
+	end
+	ply:SetNWFloat("rem_suicide_aim", ply.hgSuicideAim)
+end
+
+hook.Add("Player Think", "REM_SuicideAimThink", function(ply)
+	local aim = ply.hgSuicideAim or 0
+	if aim <= 0 then return end
+
+	local wep = ply:GetActiveWeapon()
+	if not IsValid(wep) or not wep.CanSuicide then
+		ply.hgSuicideAim = 0
+		ply.suiciding = false
+		ply:SetNWFloat("rem_suicide_aim", 0)
+		ply:SetNWFloat("willsuicide", 0)
+		return
+	end
+
+	local isMelee = wep.ismelee2 or wep.Base == "weapon_melee"
+
+	if aim < 1 then
+		if (ply.hgSuicideLastPress or 0) + aim_hold_window < CurTime() then
+			aim = math.max(aim - FrameTime() * aim_decay_speed, 0)
+		end
+
+		if aim <= 0 then
+			ply.hgSuicideAim = 0
+			ply.suiciding = false
+			ply:SetNWFloat("rem_suicide_aim", 0)
+			ply:SetNWFloat("willsuicide", 0)
+			return
+		end
+
+		ply.hgSuicideAim = aim
+		ply.suiciding = true
+
+		if isMelee then
+			ply:SetNWFloat("willsuicide", 0)
+		else
+			ply:SetNWFloat("willsuicide", CurTime() + (1 - aim) * aim_raise_time)
+		end
+		ply:SetNWFloat("rem_suicide_aim", aim)
+		return
+	end
+
+	if isMelee or ply:GetNWFloat("willsuicide", 0) == 0 then
+		ply.hgSuicideAim = 0
+		ply.suiciding = false
+		ply:SetNWFloat("rem_suicide_aim", 0)
+	end
+end)
+
 timer.Create("rem_suicideurges_roll", 1, 0, function()
 	local now = CurTime()
 
@@ -187,6 +276,15 @@ hook.Add("PlayerDeath", "REM_UrgesCleanup", function(ply)
 	ply.remUrgePresses = 0
 	ply:SetNWFloat("rem_urges_end", 0)
 	ply.suiciding = false
+end)
+
+hook.Add("PlayerDeath", "REM_SuicideAim_Cleanup", function(ply)
+	if (ply.hgSuicideAim or 0) <= 0 and ply:GetNWFloat("willsuicide", 0) <= 0 then return end
+
+	ply.hgSuicideAim = 0
+	ply.suiciding = false
+	ply:SetNWFloat("rem_suicide_aim", 0)
+	ply:SetNWFloat("willsuicide", 0)
 end)
 
 hook.Add("PlayerDisconnected", "REM_UrgesCleanup", function(ply)

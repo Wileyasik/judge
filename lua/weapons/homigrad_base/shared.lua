@@ -527,6 +527,10 @@ function SWEP:CanPrimaryAttack()
 		return false
 	end
 
+	if owner.suiciding and owner:GetNWFloat("rem_suicide_aim", 0) > 0 and owner:GetNWFloat("willsuicide", 0) > CurTime() then
+		return false
+	end
+
 	//local owner = self:GetOwner()
 	--[[if owner.suiciding then
 		if (owner:GetNetVar("suicide_time",CurTime()) + 8) < CurTime() then if SERVER then owner:SetNetVar("suicide_time",nil) end return true end
@@ -1854,7 +1858,7 @@ function SWEP:GetAdditionalValues()
 
 	--self.AdditionalPosPreLerp[3] = self.AdditionalPosPreLerp[3] - ((ply.lean or 0) * 2)
 	
-	local val = math.Clamp((self.deploy and ((self.deploy - CurTime()) * 10) --[[or self.holster and (((self.CooldownDeploy / self.Ergonomics) - (self.holster - CurTime())) * 10)]] or 0) / (self.CooldownDeploy / self.Ergonomics),0,10)
+	local val = math.Clamp((self.deploy and ((self.deploy - CurTime()) * 10) --[[or self.holster and (((self.CooldownDeploy / self.Ergonomics) - (self.holster - CurTime())) * 10)]] or 0) / self:GetDeployDur(),0,10)
 
 	self.AdditionalPosPreLerp[2] = self.AdditionalPosPreLerp[2] - val * 1.5
 	self.AdditionalPosPreLerp[1] = self.AdditionalPosPreLerp[1] - val * 2 * (self:IsPistolHoldType() and 0.5 or 0.75)
@@ -2646,6 +2650,7 @@ function SWEP:SetupDataTables()
 	self:NetworkVar( "Entity", 2, "HolsterWep" )
 	self:NetworkVar( "Angle", 3, "OffsetView" )
 	self:NetworkVar( "Float", 4, "ButtstockAttack" )
+	self:NetworkVar( "Bool", 5, "QuickDraw" )
 
 	//if (SERVER) then
 		//self:NetworkVarNotify( "OffsetView", self.OnVarChanged )

@@ -383,6 +383,77 @@ end
 
 timer.Create(heroCheckTimer, 1, 0, EvaluateHeroTrigger)
 
+local spawnDangerTimer = "realish_spawn_danger"
+local spawnDangerRadius = 500
+local spawnDangerTime = 10
+local spawnDangerInterval = 1
+local spawnDangerEnemySpawns = { [0] = {}, [1] = {} }
+local spawnDangerOwnSpawns = { [0] = {}, [1] = {} }
+
+local function RealishCacheSpawnDangerPoints()
+	local atlasSpawns = zb.GetMapPoints("REALISH_ATLAS")
+	local revenantSpawns = zb.GetMapPoints("REALISH_REVENANT")
+	spawnDangerOwnSpawns[0] = atlasSpawns and zb.TranslatePointsToVectors(atlasSpawns) or {}
+	spawnDangerOwnSpawns[1] = revenantSpawns and zb.TranslatePointsToVectors(revenantSpawns) or {}
+	spawnDangerEnemySpawns[0] = spawnDangerOwnSpawns[1]
+	spawnDangerEnemySpawns[1] = spawnDangerOwnSpawns[0]
+end
+
+local function RealishNearSpawn(pos, points, radiusSqr)
+	for _, spawnPos in ipairs(points) do
+		if pos:DistToSqr(spawnPos) < radiusSqr then return true end
+	end
+	return false
+end
+
+local function RealishPlayerInEnemySpawn(ply)
+	local teamID = ply:Team()
+	if teamID ~= 0 and teamID ~= 1 then return false end
+
+	local enemyPoints = spawnDangerEnemySpawns[teamID]
+	if #enemyPoints == 0 then return false end
+
+	local pos = ply:GetPos()
+	local radiusSqr = spawnDangerRadius * spawnDangerRadius
+
+	if RealishNearSpawn(pos, spawnDangerOwnSpawns[teamID], radiusSqr) then return false end
+	return RealishNearSpawn(pos, enemyPoints, radiusSqr)
+end
+
+local function RealishCheckSpawnDanger()
+	if not IsRealishRound() then return end
+
+	for _, ply in player.Iterator() do
+		if not IsValid(ply) or not ply:IsPlayer() or not ply:Alive() then continue end
+		if ply:Team() ~= 0 and ply:Team() ~= 1 then continue end
+
+		if RealishPlayerInEnemySpawn(ply) then
+			local untilT = ply.RealishSpawnDangerUntil
+			if not untilT then
+				untilT = CurTime() + spawnDangerTime
+				ply.RealishSpawnDangerUntil = untilT
+				ply.RealishSpawnDangerLastWarn = CurTime()
+				ply:Notify("You are too close to an enemy spawn! You will die in " .. spawnDangerTime .. " seconds!", 1, "realish_spawn_danger", 0)
+			else
+				local secondsLeft = math.max(math.ceil(untilT - CurTime()), 0)
+				if secondsLeft > 0 and (ply.RealishSpawnDangerLastWarn or -math.huge) < CurTime() - 1 then
+					ply.RealishSpawnDangerLastWarn = CurTime()
+					ply:Notify("Too close to an enemy spawn! Leave immediately, or die in " .. secondsLeft .. " second" .. (secondsLeft == 1 and "" or "s") .. "!", 1, "realish_spawn_danger", 0)
+				end
+			end
+
+			if (ply.RealishSpawnDangerUntil or 0) <= CurTime() then
+				ply.RealishSpawnDangerUntil = nil
+				ply.RealishSpawnDangerLastWarn = nil
+				ply:Kill()
+			end
+		else
+			ply.RealishSpawnDangerUntil = nil
+			ply.RealishSpawnDangerLastWarn = nil
+		end
+	end
+end
+
 local function GetBalancedRealishTeam(skip)
 	local atlas = 0
 	local revenant = 0
@@ -709,6 +780,7 @@ end
 
 function MODE:Intermission()
 	game.CleanUpMap()
+	timer.Remove(spawnDangerTimer)
 
 	self:SetLives(0, self.StartLives)
 	self:SetLives(1, self.StartLives)
@@ -756,6 +828,8 @@ end
 
 function MODE:RoundStart()
 	RegisterDropBlock()
+	RealishCacheSpawnDangerPoints()
+	timer.Create(spawnDangerTimer, spawnDangerInterval, 0, RealishCheckSpawnDanger)
 	timer.Create(cleanupTimer, cleanupInterval, 0, CleanupEntities)
 	SetGlobalFloat("Realish_DeployTime", CurTime() + self.DeployCooldown)
 	SetGlobalFloat("Realish_RoundEndTime", CurTime() + self.MaxRoundTime)
@@ -931,7 +1005,7 @@ function MODE:GivePlayerEquipment(ply)
 		ply:Give("weapon_tourniquet")
 
 		if hg.AddArmor then
-			hg.AddArmor(ply, {"vest1", "nightvision1", "helmet1"})
+			hg.AddArmor(ply, {"vest17", "nightvision1", "helmet15", "mandible_caiman", "visor_caiman", "headphones1"})
 		end
 
 		ply:SetWalkSpeed(hero.walkSpeed or 110)
@@ -966,9 +1040,11 @@ function MODE:GivePlayerEquipment(ply)
 
 	if hg.AddArmor then
 		if armor == "Light" then
-			hg.AddArmor(ply, {"vest3"})
+			hg.AddArmor(ply, {"vest26", "headphones1"})
 		elseif armor == "Heavy" then
-			hg.AddArmor(ply, {"vest4", "helmet1"})
+			hg.AddArmor(ply, {"vest11", "helmet10", "headphones1"})
+		else
+			hg.AddArmor(ply, {"headphones1"})
 		end
 	end
 
@@ -1200,8 +1276,11 @@ end
 
 function MODE:EndRound(forcedWinner)
 	timer.Remove(cleanupTimer)
+	timer.Remove(spawnDangerTimer)
 	for _, ply in player.Iterator() do
 		RealishClearSpawnProtect(ply)
+		ply.RealishSpawnDangerUntil = nil
+		ply.RealishSpawnDangerLastWarn = nil
 	end
 
 	local atlasDead = self:GetLives(0) <= 0 and self:GetAliveCount(0) <= 0

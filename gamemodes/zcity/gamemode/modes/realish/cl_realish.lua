@@ -370,6 +370,7 @@ local realishFontSizes = {
 	RealishSmall = ScreenScale(15),
 	RealishMedium = ScreenScale(15),
 	RealishMediumLarge = ScreenScale(25),
+	RealishTitle = ScreenScale(21),
 	RealishTiny = ScreenScale(11),
 	RealishMicro = ScreenScale(8),
 	RealishInterfaceLarge = ScreenScale(20)
@@ -1070,10 +1071,10 @@ local function OpenMenu(force, customize, attachmentPage, heroMode, streakMode)
 			subtitle = "Select weapons and attachments for this class."
 		end
 
-		draw.SimpleText(title, "RealishMediumLarge", w * 0.5, 28, yellow, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-		draw.SimpleText(subtitle, "RealishMedium", w * 0.5, h - 152, palette.accent, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		draw.SimpleText(title, "RealishTitle", w * 0.5, 28, yellow, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		DrawFittedText(subtitle, fitMediumFonts, w * 0.5, h - 178, palette.accent, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, w - 24, 44)
 		if not heroMode and not streakMode then
-			draw.SimpleText("Armor Cost: " .. cost .. " Coins | Coins: " .. coins, "RealishMedium", w * 0.5, h - 126, yellow, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+			DrawFittedText("Armor Cost: " .. cost .. " Coins | Coins: " .. coins, fitMediumFonts, w * 0.5, h - 132, yellow, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, w - 24, 30)
 		end
 	end
 
@@ -1145,14 +1146,18 @@ local function OpenMenu(force, customize, attachmentPage, heroMode, streakMode)
 				surface.DrawTexturedRect(bw * 0.18, 66, bw * 0.64, bh * 0.30)
 			end
 
-			local descY = bh * 0.45
-			for i, line in ipairs(WrapText(data.desc, "RealishMedium", bw * 0.84)) do
+			local streakDescLines = WrapText(data.desc, "RealishMedium", bw * 0.84)
+			local streakDescTop = bh * 0.45
+			local streakDescBottom = bh * 0.68
+			local streakDescCount = math.min(#streakDescLines, 8)
+			local streakDescLineH = streakDescCount > 0 and math.floor((streakDescBottom - streakDescTop) / streakDescCount) or 18
+			for i, line in ipairs(streakDescLines) do
 				if i > 8 then break end
-				draw.SimpleText(line, "RealishMedium", bw * 0.08, descY + (i - 1) * 18, white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+				DrawFittedText(line, fitSmallFonts, bw * 0.08, streakDescTop + (i - 1) * streakDescLineH, white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, bw * 0.84, streakDescLineH)
 			end
 
-			draw.SimpleText("Kills required: " .. (data.kills or 5), "RealishMedium", bw * 0.08, bh * 0.70, palette.accent, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-			draw.SimpleText("Reward: " .. GetKillstreakWeaponName(data), "RealishMedium", bw * 0.08, bh * 0.70 + 26, palette.accent, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+			DrawFittedText("Kills required: " .. (data.kills or 5), fitMediumFonts, bw * 0.08, bh * 0.70, palette.accent, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER, bw * 0.84, 28)
+			DrawFittedText("Reward: " .. GetKillstreakWeaponName(data), fitMediumFonts, bw * 0.08, bh * 0.70 + 32, palette.accent, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER, bw * 0.84, 28)
 			draw.SimpleText("LMB to toggle selection", "RealishMedium", bw * 0.5, bh - 34, yellow, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 		end
 
@@ -1277,10 +1282,14 @@ local function OpenMenu(force, customize, attachmentPage, heroMode, streakMode)
 				surface.DrawTexturedRect(bw * 0.18, 66, bw * 0.64, bh * 0.30)
 			end
 
-			local descY = bh * 0.45
-			for i, line in ipairs(WrapText(hero.desc, "RealishMedium", bw * 0.84)) do
+			local heroDescLines = WrapText(hero.desc, "RealishMedium", bw * 0.84)
+			local heroDescTop = bh * 0.45
+			local heroDescBottom = bh * 0.96
+			local heroDescCount = math.min(#heroDescLines, 8)
+			local heroDescLineH = heroDescCount > 0 and math.floor((heroDescBottom - heroDescTop) / heroDescCount) or 18
+			for i, line in ipairs(heroDescLines) do
 				if i > 8 then break end
-				draw.SimpleText(line, "RealishMedium", bw * 0.08, descY + (i - 1) * 18, white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+				DrawFittedText(line, fitSmallFonts, bw * 0.08, heroDescTop + (i - 1) * heroDescLineH, white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, bw * 0.84, heroDescLineH)
 			end
 		end
 
@@ -1362,7 +1371,7 @@ local function OpenMenu(force, customize, attachmentPage, heroMode, streakMode)
 			surface.DrawRect(0, 0, bw, bh)
 			surface.SetDrawColor(palette.accent)
 			surface.DrawOutlinedRect(0, 0, bw, bh, 1)
-			draw.SimpleText(attachmentPage and "Attachments" or (selectedSlot or "") .. " weapons", "RealishMedium", bw * 0.5, 18, teal, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+			DrawFittedText(attachmentPage and "Attachments" or (selectedSlot or "") .. " weapons", fitMediumFonts, bw * 0.5, 18, teal, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, bw - 16, 30)
 		end
 
 		detailPanel:SetPos(rightX, topY)
@@ -1377,17 +1386,22 @@ local function OpenMenu(force, customize, attachmentPage, heroMode, streakMode)
 			DrawFittedText(option.name, fitLargeFonts, bw * 0.5, 28, yellow, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, bw - 16)
 			PaintWeaponIcon(option, bw * 0.18, 66, bw * 0.64, bh * 0.30, 235)
 
-			local descY = bh * 0.43
-			for i, line in ipairs(GetDescriptionLines(option, "RealishMedium", bw * 0.84)) do
+			local descLines = GetDescriptionLines(option, "RealishMedium", bw * 0.84)
+			local descTop = bh * 0.43
+			local descBottom = bh * 0.60
+			local descCount = math.min(#descLines, 5)
+			local descLineH = descCount > 0 and math.floor((descBottom - descTop) / descCount) or 18
+			for i, line in ipairs(descLines) do
 				if i > 5 then break end
-				draw.SimpleText(line, "RealishMedium", bw * 0.08, descY + (i - 1) * 18, white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+				DrawFittedText(line, fitSmallFonts, bw * 0.08, descTop + (i - 1) * descLineH, white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, bw * 0.84, descLineH)
 			end
 
 			local lines = GetStatLines(option)
+			local statsTop = bh * 0.63
+			local statsBottom = bh - 60
+			local statLineH = math.floor((statsBottom - statsTop) / math.max(#lines, 1))
 			for i, stat in ipairs(lines) do
-				local x = bw * 0.08
-				local y = bh * 0.61 + (i - 1) * 24
-				draw.SimpleText(stat[1] .. ": " .. stat[2], "RealishMedium", x, y, white, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+				DrawFittedText(stat[1] .. ": " .. stat[2], fitSmallFonts, bw * 0.08, statsTop + (i - 1) * statLineH, white, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER, bw * 0.84, statLineH)
 			end
 
 			draw.SimpleText(attachmentPage and "LMB to toggle attachments" or HasAttachments(option) and "RMB to add attachments" or "No attachments available", "RealishMedium", bw * 0.5, bh - 34, yellow, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
@@ -1468,7 +1482,7 @@ local function OpenMenu(force, customize, attachmentPage, heroMode, streakMode)
 							surface.DrawRect(0, 0, bw, bh)
 							surface.SetDrawColor(palette.accent)
 							surface.DrawOutlinedRect(0, 0, bw, bh, 1)
-							draw.SimpleText(attCategoryLabels[category] or category, "RealishMedium", 6, bh * 0.5, category == "other" and locked or teal, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+							DrawFittedText(attCategoryLabels[category] or category, fitSmallFonts, 8, bh * 0.5, category == "other" and locked or teal, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER, bw - 12, bh - 4)
 						end
 						yPos = yPos + 28
 

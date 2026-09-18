@@ -935,8 +935,11 @@ function SWEP:ModelAnim(model, pos, ang)
     addPosLerp.x = addPosLerp.x - 20 * math.max(0.5 - tr.Fraction, 0)
 
     if self.CanSuicide and owner.suiciding then
-        addPosLerp:Set(self.SuicidePos)
-        addAngLerp:Set(self.SuicideAng)
+        local aimScale = owner:GetNWFloat("rem_suicide_aim", 0)
+        if aimScale <= 0 then aimScale = 1 end
+
+        addPosLerp:Set(self.SuicidePos * aimScale)
+        addAngLerp:Set(self.SuicideAng * aimScale)
     end
 
     if self.Canselfharm and self:IsSelfHarming() then
@@ -3199,7 +3202,7 @@ function SWEP:CustomThink()
 		return
 	end
 
-    if self.CanSuicide and hg.KeyDown(owner, IN_ATTACK) and owner.suiciding and !self.SuicideStart and owner:GetNWFloat("rem_urges_end", 0) < CurTime() then
+    if self.CanSuicide and hg.KeyDown(owner, IN_ATTACK) and owner.suiciding and !self.SuicideStart and owner:GetNWFloat("rem_suicide_aim", 0) <= 0 and owner:GetNWFloat("rem_urges_end", 0) < CurTime() then
         self.SuicideStart = CurTime()
 
         if SERVER then

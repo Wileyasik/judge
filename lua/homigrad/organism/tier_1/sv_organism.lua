@@ -605,6 +605,7 @@ function hg.organism.AddPanicAttack(org, amount, silent)
 	if not org then return 0 end
 	if not isnumber(amount) or amount <= 0 then return org.panicattackadd or 0 end
 	if org.lastStand then return org.panicattackadd or 0 end
+	if hg.IsRealish() then return org.panicattackadd or 0 end
 	if silent and IsValid(org.owner) and org.owner:IsPlayer() and (org.owner.lastKillTime or 0) > CurTime() - 4 then
 		return org.panicattackadd or 0
 	end
@@ -829,6 +830,14 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	end
 	org.neckslit = neckslit
 
+	if isPly then
+		local speaking = owner:Alive() and owner:IsSpeaking() or false
+		if speaking and not org.wasSpeaking and org.neckslit and not org.otrub and (owner.phrCld or 0) <= CurTime() then
+			hg.organism.CoughBlood(org, true)
+		end
+		org.wasSpeaking = speaking
+	end
+
 	if org.neckslit and not org.otrub then
 		org.needfake = true
 		if not org.neckslitDeadline then
@@ -886,8 +895,18 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	org.berserk = math.Approach(org.berserk, 0, timeValue / 60)
 	org.noradrenaline = math.Approach(org.noradrenaline, 0, timeValue / 45)
 	local oldPanicAttack = org.panicattack or 0
-	org.panicattackadd = math.Approach(org.panicattackadd or 0, 0, timeValue / panicattack_add_decay_time)
-	org.panicattack = math.Approach(oldPanicAttack, org.panicattackadd or 0, timeValue / ((org.panicattackadd or 0) > oldPanicAttack and panicattack_rise_time or panicattack_decay_time))
+	if hg.IsRealish() then
+		org.panicattackadd = 0
+		org.panicattack = 0
+		org.disorientation = 0
+		org.depression = 0
+		org.depressionadd = 0
+		org.psycheApathy = 0
+		org.psycheAnger = 0
+	else
+		org.panicattackadd = math.Approach(org.panicattackadd or 0, 0, timeValue / panicattack_add_decay_time)
+		org.panicattack = math.Approach(oldPanicAttack, org.panicattackadd or 0, timeValue / ((org.panicattackadd or 0) > oldPanicAttack and panicattack_rise_time or panicattack_decay_time))
+	end
 	local oldSeizureBrain = org.lastSeizureBrain or (org.brain or 0)
 	local lobeDamage = getSeizureLobeDamage(org)
 	local oldSeizureLobeDamage = org.lastSeizureLobeDamage or lobeDamage
@@ -994,7 +1013,7 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	else
 		org.uncon_timer = 0
 	end
-	local just_went_uncon = not org.otrub and org.needotrub and not org.NoKnockdown
+	local just_went_uncon = not org.otrub and org.needotrub and not org.NoKnockdown and not org.lastStand
 	local just_woke_up = not org.needotrub and org.otrub
 	if isPly and just_went_uncon then hook.Run("HG_OnOtrub", owner); hook.Run("PlayerDropWeapon", owner) end
 	if isPly and just_woke_up then hook.Run("HG_OnWakeOtrub", owner) end
@@ -1046,12 +1065,6 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	else
 		org.deathStateEnd = nil
 		org.deathStateKilled = nil
-	end
-
-	if isPly and org.neckslit and org.neckslitDeadline and CurTime() >= org.neckslitDeadline and owner:Alive() and not org.deathStateKilled then
-		org.deathStateKilled = true
-		owner:Kill()
-		return
 	end
 
 	if isPly and org.brain and org.brain >= 1 and owner:Alive() and not org.deathStateKilled then

@@ -4,6 +4,19 @@ SWEP.CooldownHolster = 0.75
 SWEP.HolsterSnd = {"homigrad/weapons/holster_rifle.mp3", 55, 100, 110}
 SWEP.CooldownDeploy = 1
 SWEP.DeploySnd = {"homigrad/weapons/draw_rifle.mp3", 65, 100, 110}
+SWEP.QuickDrawMul = 0.4
+
+function SWEP:IsQuickDrawing()
+	return self:IsPistolHoldType() and self:KeyDown(IN_SPEED) == true
+end
+
+function SWEP:GetDeployDur()
+	local dur = self.CooldownDeploy / self.Ergonomics
+	local quick = self.QuickDrawing
+	if quick == nil then quick = self:GetQuickDraw() end
+	if quick then dur = dur * (self.QuickDrawMul or 0.4) end
+	return dur
+end
 
 --!! fix ts shit
 function SWEP:Step_HolsterDeploy(time)
@@ -85,7 +98,8 @@ function SWEP:Deploy()
 	--[[self.holster = nil
 	self:SetHolster(0)]]
 
-	self.deploy = time + self.CooldownDeploy / self.Ergonomics
+	self.QuickDrawing = self:IsQuickDrawing()
+	self.deploy = time + self.CooldownDeploy / self.Ergonomics * (self.QuickDrawing and self.QuickDrawMul or 1)
 	self:SetDeploy(self.deploy)
 
 	return true

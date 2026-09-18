@@ -254,7 +254,7 @@ local math_abs, math_Approach, math_AngleDifference, math_Clamp, math_cos, math_
 
 		local org = ply.organism
 
-		if( ( not org ) or ( not org.brain ) )then
+		if( not org )then
 			return
 		end
 

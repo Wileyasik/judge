@@ -939,7 +939,8 @@ end
 
 net.Receive("hg_NewAchievement",function()
     local now = CurTime()
-    local Ach = {start = now, time = now + 7.5, name = net.ReadString(), img = net.ReadString(), rarity = net.ReadString()}
+    local achName = net.ReadString()
+    local Ach = {start = now, time = now + 7.5, name = achName, img = net.ReadString(), rarity = net.ReadString()}
     Ach.sparks = {}
     for i = 1, 12 do
         Ach.sparks[i] = {
@@ -949,6 +950,13 @@ net.Receive("hg_NewAchievement",function()
             size = math.Rand(1, 3),
             phase = math.Rand(0, math.pi * 2)
         }
+    end
+    if hg.achievements.ProgressNotifications then
+        for i = #hg.achievements.ProgressNotifications, 1, -1 do
+            if hg.achievements.ProgressNotifications[i].name == achName then
+                table.remove(hg.achievements.ProgressNotifications, i)
+            end
+        end
     end
     table.insert(AchTable,1,Ach)
 	PlayAchievementSound(Ach.rarity)
@@ -1004,6 +1012,143 @@ hook.Add("HUDPaint","hg_NewAchievement", function()
             local sparkAlpha = (90 + math.sin(now * 6 + spark.phase) * 70) * visibility
             surface.SetDrawColor(rarityColor.r, rarityColor.g, rarityColor.b, sparkAlpha)
             surface.DrawRect(sparkX, sparkY, spark.size, spark.size)
+        end
+    end
+end)
+
+hg.achievements.ProgressNotifications = hg.achievements.ProgressNotifications or {}
+local AchProgressTable = hg.achievements.ProgressNotifications
+
+local ACH_PROGRESS_DURATION = 4.5
+local ACH_PROGRESS_MAX = 4
+local ACH_PROGRESS_GAP = 8
+
+local function AchProgressCardSize()
+    return math.Clamp(ScrW() * 0.185, 260, 340), math.Clamp(ScrH() * 0.072, 58, 72)
+end
+
+net.Receive("hg_AchievementProgress", function()
+    local key = net.ReadString()
+    local name = net.ReadString()
+    local img = net.ReadString()
+    local rarity = net.ReadString()
+    local current = net.ReadInt(32)
+    local needed = net.ReadInt(32)
+    local startValue = net.ReadInt(32)
+    local now = CurTime()
+
+    for _, entry in ipairs(AchProgressTable) do
+        if entry.key == key then
+            entry.name = name
+            entry.img = img
+            entry.rarity = rarity
+            entry.current = current
+            entry.needed = needed
+            entry.start_value = startValue
+            entry.time = now + ACH_PROGRESS_DURATION
+            entry.lastUpdate = now
+            return
+        end
+    end
+
+    table.insert(AchProgressTable, 1, {
+        key = key,
+        name = name,
+        img = img,
+        rarity = rarity,
+        current = current,
+        needed = needed,
+        start_value = startValue,
+        start = now,
+        time = now + ACH_PROGRESS_DURATION,
+        lastUpdate = now,
+        displayCurrent = startValue
+    })
+
+    while #AchProgressTable > ACH_PROGRESS_MAX do
+        table.remove(AchProgressTable)
+    end
+end)
+
+hook.Add("HUDPaint", "hg_AchievementProgress", function()
+    local now = CurTime()
+    local cardW, cardH = AchProgressCardSize()
+    local margin = math.max(20, ScrH() * 0.025)
+
+    for i = #AchProgressTable, 1, -1 do
+        local entry = AchProgressTable[i]
+        if not entry or entry.time < now then
+            table.remove(AchProgressTable, i)
+        else
+            entry.img = isstring(entry.img) and Material(entry.img, "smooth") or entry.img
+        end
+    end
+
+    local unlockCardH = math.Clamp(ScrH() * 0.105, 94, 126)
+    local activeUnlocks = 0
+    for _, ach in ipairs(AchTable) do
+        if ach.time and ach.time >= now then activeUnlocks = activeUnlocks + 1 end
+    end
+    local baseY = ScrH() - margin - activeUnlocks * (unlockCardH + 12)
+
+    for i = #AchProgressTable, 1, -1 do
+        local entry = AchProgressTable[i]
+        if entry then
+            local elapsed = now - entry.start
+            local remaining = entry.time - now
+            local enter = math.ease.OutCubic(math.Clamp(elapsed / 0.35, 0, 1))
+            local leave = math.ease.InCubic(math.Clamp(remaining / 0.5, 0, 1))
+            local visibility = math.min(enter, leave)
+
+            local x = (ScrW() - margin - cardW) + (1 - visibility) * (cardW + margin)
+            local y = baseY - cardH - (i - 1) * (cardH + ACH_PROGRESS_GAP)
+
+            local rarityColor = AchievementGetRarityColor(entry.rarity)
+            draw.RoundedBox(6, x, y, cardW, cardH, Color(9, 10, 16, 240 * visibility))
+            draw.RoundedBox(6, x, y, cardW, cardH, Color(rarityColor.r * 0.12, rarityColor.g * 0.12, rarityColor.b * 0.12, 170 * visibility))
+            surface.SetDrawColor(rarityColor.r, rarityColor.g, rarityColor.b, 240 * visibility)
+            surface.DrawRect(x, y, 4, cardH)
+            surface.DrawOutlinedRect(x, y, cardW, cardH, 1)
+
+            local iconSize = cardH - 20
+            local iconX, iconY = x + 12, y + 10
+            draw.RoundedBox(5, iconX, iconY, iconSize, iconSize, Color(0, 0, 0, 140 * visibility))
+            surface.SetDrawColor(rarityColor.r, rarityColor.g, rarityColor.b, 255 * visibility)
+            surface.SetMaterial(entry.img or achievement_placeholder)
+            surface.DrawTexturedRect(iconX + 7, iconY + 7, iconSize - 14, iconSize - 14)
+
+            local contentX = iconX + iconSize + 13
+            local contentW = (x + cardW - 12) - contentX
+            local needed = math.max(entry.needed or 1, 1)
+
+            entry.displayCurrent = entry.displayCurrent or entry.start_value or 0
+            entry.displayCurrent = Lerp(math.Clamp(FrameTime() * 7, 0, 1), entry.displayCurrent, entry.current)
+
+            local progressLabel = string.format("%d / %d", math.floor(entry.displayCurrent + 0.5), needed)
+            surface.SetFont("ZCity_Ach_Tiny")
+            local labelW = surface.GetTextSize(progressLabel)
+
+            local displayName = entry.name or entry.key
+            surface.SetFont("ZCity_Ach_Small")
+            local nameMaxW = math.max(contentW - labelW - 10, 30)
+            while #displayName > 3 and surface.GetTextSize(displayName) > nameMaxW do
+                displayName = displayName:sub(1, -2)
+            end
+            if displayName ~= entry.name then displayName = displayName:sub(1, -4) .. "..." end
+
+            draw.SimpleText(displayName, "ZCity_Ach_Small", contentX, y + cardH * 0.33, Color(240, 240, 245, 255 * visibility), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+            draw.SimpleText(progressLabel, "ZCity_Ach_Tiny", x + cardW - 12, y + cardH * 0.33, Color(185, 190, 200, 230 * visibility), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+
+            local barX, barY = contentX, y + cardH * 0.6
+            local barW, barH = contentW, 5
+            draw.RoundedBox(2, barX, barY, barW, barH, Color(0, 0, 0, 160 * visibility))
+            local startValue = tonumber(entry.start_value) or 0
+            local frac = math.Clamp((entry.displayCurrent - startValue) / math.max(needed - startValue, 1), 0, 1)
+            if frac > 0 then
+                draw.RoundedBox(2, barX, barY, math.max(barW * frac, barH), barH, Color(rarityColor.r, rarityColor.g, rarityColor.b, 235 * visibility))
+            end
+
+            draw.SimpleText(string.upper(entry.rarity or "Uncommon") .. "  " .. math.floor(frac * 100 + 0.5) .. "%", "ZCity_Ach_Tiny", contentX, y + cardH * 0.84, Color(150, 155, 165, 200 * visibility), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
         end
     end
 end)

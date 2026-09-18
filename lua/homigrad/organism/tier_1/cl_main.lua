@@ -404,6 +404,9 @@ local lastStandSway = 0
 local lastStandSwayT = 0
 local lastStandYaw
 local lastStandRoll
+local lastStandActiveTime = 0
+local lastStandFadeCur = 0
+local lastStandVignetteMat = Material("effects/shaders/zb_vignette")
 
 hook.Add("Player Spawn", "screenshot_game", function(ply)
 	if OverrideSpawn then return end
@@ -737,8 +740,6 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 
 	local org = organism
 	
-	if not org.brain then return end
-	
 	local adrenaline = org.adrenaline or 0
 	local pulse = org.pulse or 70
 	local pain = org.pain or 0
@@ -855,7 +856,9 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 
 	local amount = 1 - math.Clamp(lowpulse + disorientation / 4 + k2 * 2,0,1)
 
-	disorientationLerp = LerpFT(disorientation > disorientationLerp and 1 or 0.15, disorientationLerp, math.max(lply.suiciding and 1.5 or 0, disorientation))
+	local suicScale = lply:GetNWFloat("rem_suicide_aim", 0)
+	if suicScale <= 0 then suicScale = 1 end
+	disorientationLerp = LerpFT(disorientation > disorientationLerp and 1 or 0.15, disorientationLerp, math.max(lply.suiciding and 1.5 * suicScale or 0, disorientation))
 
 	local disVig = math.Clamp((disorientationLerp - 0.4) / 3.6, 0, 1)
 	if disVig > 0.01 and lply:Alive() then
@@ -954,21 +957,64 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 	
 	DrawColorModify(tabblood)
 
-	if lastStand then
+	lastStandFadeCur = Lerp(math.min(FrameTime() * 5, 1), lastStandFadeCur, lastStand and 1 or 0)
+	local lsFade = lastStandFadeCur
+	if lsFade > 0.001 then
+		lastStandActiveTime = lastStandActiveTime + FrameTime()
+	else
+		lastStandActiveTime = 0
+	end
+
+	if lsFade > 0.001 then
+		local urgency = math.Clamp(lastStandActiveTime / 60, 0, 1)
+		local heartbeat = math.max(org.heartbeat or 100, 60)
+		local pulse = math.sin(CurTime() * heartbeat * 0.12) * 0.5 + 0.5
+		local focus = 1 - urgency * 0.18
+
 		DrawColorModify({
-			["$pp_colour_addr"] = 0.03,
-			["$pp_colour_addg"] = 0.03,
-			["$pp_colour_addb"] = 0.03,
-			["$pp_colour_brightness"] = 0.02,
-			["$pp_colour_contrast"] = 1.12,
-			["$pp_colour_colour"] = 1.02,
-			["$pp_colour_mulr"] = 1,
-			["$pp_colour_mulg"] = 1,
-			["$pp_colour_mulb"] = 1,
+			["$pp_colour_addr"] = 0.03 * lsFade,
+			["$pp_colour_addg"] = 0.03 * lsFade,
+			["$pp_colour_addb"] = 0.03 * lsFade,
+			["$pp_colour_brightness"] = 0.02 * lsFade,
+			["$pp_colour_contrast"] = 1 + (0.12 + urgency * 0.08) * lsFade,
+			["$pp_colour_colour"] = 1 + (0.02 - urgency * 0.25) * lsFade,
+			["$pp_colour_mulr"] = 1 + urgency * 0.08 * lsFade,
+			["$pp_colour_mulg"] = 1 + (focus - 1) * lsFade,
+			["$pp_colour_mulb"] = 1 + (focus - 1) * lsFade,
 		})
+
+		render.UpdateScreenEffectTexture()
+		lastStandVignetteMat:SetFloat("$c2_x", CurTime() + 10000)
+		lastStandVignetteMat:SetFloat("$c0_z", (0.22 + urgency * 0.85) * (0.65 + pulse * 0.35) * lsFade)
+		lastStandVignetteMat:SetFloat("$c1_y", (0.45 + urgency * 1.7) * (0.7 + pulse * 0.3) * lsFade)
+		render.SetMaterial(lastStandVignetteMat)
+		render.DrawScreenQuad()
+
+		DrawMotionBlur(0.1 * lsFade, (0.35 + urgency * 1.1 + pulse * 0.25) * lsFade, 0.015 + urgency * 0.06)
+
+		if urgency > 0.8 then
+			local t = (urgency - 0.8) / 0.2
+			local flash = (math.sin(CurTime() * (6 + t * 12)) * 0.5 + 0.5) * t * lsFade
+			render.UpdateScreenEffectTexture()
+			lastStandVignetteMat:SetFloat("$c2_x", CurTime() + 20000)
+			lastStandVignetteMat:SetFloat("$c0_z", flash * 1.6)
+			lastStandVignetteMat:SetFloat("$c1_y", flash * 2.6)
+			render.SetMaterial(lastStandVignetteMat)
+			render.DrawScreenQuad()
+		end
+	end
+
+	if lsFade > 0.001 then
 		lastStandSwayT = math.min(lastStandSwayT + FrameTime() * 5.5, 1)
 		lastStandSway = Lerp(lastStandSwayT, lastStandSway, 0.9)
-		local sway = lastStandSway * 0.15
+	else
+		lastStandSwayT = math.max(lastStandSwayT - FrameTime() * 2.5, 0)
+		lastStandSway = Lerp(lastStandSwayT, lastStandSway, 0)
+		if lastStandSwayT <= 0 then lastStandYaw = nil lastStandRoll = nil end
+	end
+
+	if lastStandSway > 0.001 then
+		local sway = lastStandSway * 0.15 * lsFade
 		local ang = lply:EyeAngles()
 		local yawDelta = ang.y - (lastStandYaw or ang.y)
 		lastStandYaw = ang.y
@@ -978,10 +1024,6 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 		if math.abs(lastStandRoll) > 0.01 then
 			ViewPunch(Angle(0, 0, lastStandRoll))
 		end
-	elseif lastStandSway > 0 or lastStandSwayT > 0 then
-		lastStandSwayT = math.max(lastStandSwayT - FrameTime() * 2.5, 0)
-		lastStandSway = Lerp(lastStandSwayT, lastStandSway, 0)
-		if lastStandSwayT <= 0 then lastStandYaw = nil lastStandRoll = nil end
 	end
 
 	if concussion > 0 and lply:Alive() then

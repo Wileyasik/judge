@@ -332,7 +332,9 @@ function SWEP:Camera(eyePos, eyeAng, view, vellen, ply)
 
 	local suicVal = 0
 	if ply.suiciding and ply:GetNetVar("suicide_time", CurTime()) < CurTime() then
-		suicVal = (1 - math.max(ply:GetNetVar("suicide_time", CurTime()) + 4 - CurTime(), 0) / 4) * 20
+		local suicScale = ply:GetNWFloat("rem_suicide_aim", 0)
+		if suicScale <= 0 then suicScale = 1 end
+		suicVal = (1 - math.max(ply:GetNetVar("suicide_time", CurTime()) + 4 - CurTime(), 0) / 4) * 20 * suicScale
 	end
 
 	self.shot = LerpFT(0.1, self.shot or 0, 0)
