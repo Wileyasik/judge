@@ -9,6 +9,13 @@ SWEP.OpenBolt = false
 SWEP.Notified = false
 function SWEP:CanReload()
 	local ply = self:GetOwner()
+	if not ply:IsNPC() and not IsValid(ply.FakeRagdoll) and self:KeyDown(IN_SPEED) and ply:GetVelocity():LengthSqr() > 22500 then
+		if SERVER and (self._JudgeRunNotice or 0) < CurTime() then
+			self._JudgeRunNotice = CurTime() + 1.5
+			ply:Notify("Нельзя перезаряжаться на бегу", 5)
+		end
+		return false
+	end
 	if self:LastShootTime() + 0.1 > CurTime() then return end
 	if IsValid(ply:GetNetVar("carryent2")) then
 		if SERVER then
@@ -443,6 +450,27 @@ end
 
 function SWEP:ReloadStartPost()
 end
+
+local JUDGE_ReloadSpeedMul = 0.7
+hook.Add("HG_MovementCalc_2", "JudgeReloadSlowdown", function(mul, ply, cmd, mv)
+	local wep = ply:GetActiveWeapon()
+	if not IsValid(wep) or ply:IsNPC() then return end
+	local reloading = wep.reload or (wep.ShotgunTubeReload and wep.IsShotgunBusy and wep:IsShotgunBusy())
+	if not reloading then return end
+	cmd:RemoveKey(IN_SPEED)
+	mv:RemoveKey(IN_SPEED)
+	if ply.hg_isSprinting or ply.hg_isJogging then
+		ply.hg_isSprinting = false
+		ply.hg_isJogging = false
+		if SERVER then
+			if ply:GetNWBool("hg_isSprinting", false) then ply:SetNWBool("hg_isSprinting", false) end
+			if ply:GetNWBool("hg_isJogging", false) then ply:SetNWBool("hg_isJogging", false) end
+			ply.hg_LastIsSprinting = false
+			ply.hg_LastIsJogging = false
+		end
+	end
+	mul[1] = math.min(mul[1] or JUDGE_ReloadSpeedMul, JUDGE_ReloadSpeedMul)
+end)
 
 if SERVER then return end
 

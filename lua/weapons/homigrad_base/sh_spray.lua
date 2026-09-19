@@ -21,6 +21,7 @@ SWEP.addSprayMul = 1
 SWEP.RecoilMul = 0.7
 SWEP.ScreenRecoilMul = 0.6
 SWEP.WeaponRecoilMul = 1.25
+SWEP.AirRecoilMul = 1.6
 
 local cos, sin, math_max, math_min = math.cos, math.sin, math.max, math.min
 function SWEP:GetPrimaryMul()
@@ -69,6 +70,7 @@ function SWEP:PrimarySpread()
 		mul = mul * self.RecoilMul
 		local screenRecoilMul = self.ScreenRecoilMul or 1
 		mul = mul * (owner:Crouching() and 0.75 or 1)
+		mul = mul * (owner:OnGround() and 1 or self.AirRecoilMul)
 		--mul = mul * (hg.IsOnGround(hg.GetCurrentCharacter(owner)) and 1 or 5)
 		mul = mul * (self:IsResting() and 0.1 or 1)
 
